@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TGOne鑄膠計算器</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 700px; margin: 20px auto; padding: 10px; }
+  h1 { display: flex; align-items: center; }
+  #download-btn {
+    margin-left: 20px;
+    font-size: 14px;
+    padding: 4px 12px;
+    border-radius: 5px;
+    border: 1px solid #888;
+    background: #f0f0f0;
+    cursor: pointer;
+    text-decoration: none;
+    color: #222;
+    transition: background 0.2s;
+  }
+  #download-btn:hover {
+    background: #e0e0e0;
+  }
+  h2 { border-bottom: 2px solid #333; padding-bottom: 5px; }
+  label { display: inline-block; width: 160px; margin-top: 8px; }
+  input[type="number"] { width: 100px; padding: 4px; }
+  .section { margin-bottom: 30px; }
+  .result { margin-top: 10px; }
+  .result span { display: inline-block; width: 180px; }
+  button { margin-top: 15px; padding: 8px 16px; font-size: 16px; margin-right: 10px; }
+</style>
+</head>
+<body>
+
+<h1>TGOne鑄膠計算器
+<a id="download-btn" href="https://drive.google.com/file/d/1s86_50cFkxwK6SS1xUkKzgZdFw3dbq9B/view?usp=sharing" target="_blank" rel="noopener noreferrer">下載離線版</a>
+</h1>
+
+<div class="section" id="stacking-gel">
+  <h2>上膠 (Stacking Gel)</h2>
+  <div>
+    <label for="upper-percent">上膠所需%數 (%)</label>
+    <input type="number" id="upper-percent" min="0" step="0.1" />
+  </div>
+  <div>
+    <label for="upper-volume">上膠所需體積 (mL)</label>
+    <input type="number" id="upper-volume" min="0" step="0.1" />
+  </div>
+  <div>
+    <label for="upper-count">所需份數</label>
+    <input type="number" id="upper-count" min="0" step="0.01" />
+  </div>
+  <button onclick="calculateUpperGel()">計算上膠配方</button>
+  <button onclick="clearUpperInputs()">清除</button>
+
+  <div class="result" id="upper-results" style="display:none;">
+    <p><span>30% Acrylamide:</span><span id="upper-acrylamide"></span> mL</p>
+    <p><span>ddH₂O:</span><span id="upper-ddH₂O"></span> mL</p>
+    <p><span>2X TGOne Buffer:</span><span id="upper-gelsolution"></span> mL</p>
+    <p><span>TEMED:</span><span id="upper-temed"></span> µL</p>
+    <p><span>10% APS:</span><span id="upper-aps"></span> µL</p>
+    <p><span>Total:</span><span id="upper-total"></span> mL</p>
+  </div>
+</div>
+
+<div class="section" id="resolving-gel">
+  <h2>下膠 (Resolving Gel)</h2>
+  <div>
+    <label for="lower-percent">下膠所需%數 (%)</label>
+    <input type="number" id="lower-percent" min="0" step="0.1" />
+  </div>
+  <div>
+    <label for="lower-volume">下膠所需體積 (mL)</label>
+    <input type="number" id="lower-volume" min="0" step="0.1" />
+  </div>
+  <div>
+    <label for="lower-count">所需份數</label>
+    <input type="number" id="lower-count" min="0" step="0.01" />
+  </div>
+  <button onclick="calculateLowerGel()">計算下膠配方</button>
+  <button onclick="clearLowerInputs()">清除</button>
+
+  <div class="result" id="lower-results" style="display:none;">
+    <p><span>30% Acrylamide:</span><span id="lower-acrylamide"></span> mL</p>
+    <p><span>ddH₂O:</span><span id="lower-ddH₂O"></span> mL</p>
+    <p><span>2X TGOne Buffer:</span><span id="lower-gelsolution"></span> mL</p>
+    <p><span>TEMED:</span><span id="lower-temed"></span> µL</p>
+    <p><span>10% APS:</span><span id="lower-aps"></span> µL</p>
+    <p><span>Total:</span><span id="lower-total"></span> mL</p>
+  </div>
+</div>
+
+<script>
+function toFixedNumber(num, digits) {
+  return Number.parseFloat(num).toFixed(digits);
+}
+
+function calculateUpperGel() {
+  const A = parseFloat(document.getElementById('upper-percent').value);
+  const B = parseFloat(document.getElementById('upper-volume').value);
+  const C = parseFloat(document.getElementById('upper-count').value);
+
+  if (isNaN(A) || isNaN(B) || isNaN(C) || A <= 0 || B <= 0 || C <= 0) {
+    alert('請輸入有效的上膠參數（皆為正數）');
+    return;
+  }
+
+  const D = ((A * 2) / 30) * (B / 2) * C;  // 30% Acrylamide
+  const E = (B / 2) * C;                   // 2X TGOne Buffer
+  const F = E - D;                         // ddH₂O
+  const G = B * C;                         // TEMED
+  const H = (B * 5) * C;                   // 10% APS
+  const I = B * C;                         // Total
+
+  document.getElementById('upper-acrylamide').textContent = toFixedNumber(D, 3);
+  document.getElementById('upper-ddH₂O').textContent = toFixedNumber(F, 3);
+  document.getElementById('upper-gelsolution').textContent = toFixedNumber(E, 3);
+  document.getElementById('upper-temed').textContent = toFixedNumber(G, 1);
+  document.getElementById('upper-aps').textContent = toFixedNumber(H, 1);
+  document.getElementById('upper-total').textContent = toFixedNumber(I, 3);
+
+  document.getElementById('upper-results').style.display = 'block';
+}
+
+function calculateLowerGel() {
+  const a = parseFloat(document.getElementById('lower-percent').value);
+  const b = parseFloat(document.getElementById('lower-volume').value);
+  const c = parseFloat(document.getElementById('lower-count').value);
+
+  if (isNaN(a) || isNaN(b) || isNaN(c) || a <= 0 || b <= 0 || c <= 0) {
+    alert('請輸入有效的下膠參數（皆為正數）');
+    return;
+  }
+
+  const d = ((a * 2) / 30) * (b / 2) * c;  // 30% Acrylamide
+  const e = (b / 2) * c;                   // 2X TGOne Buffer
+  const f = e - d;                         // ddH₂O
+  const g = (b / 2) * c;                   // TEMED (修改公式)
+  const h = (b * 5) * c;                   // 10% APS
+  const i = b * c;                         // Total
+
+  document.getElementById('lower-acrylamide').textContent = toFixedNumber(d, 3);
+  document.getElementById('lower-ddH₂O').textContent = toFixedNumber(f, 3);
+  document.getElementById('lower-gelsolution').textContent = toFixedNumber(e, 3);
+  document.getElementById('lower-temed').textContent = toFixedNumber(g, 1);
+  document.getElementById('lower-aps').textContent = toFixedNumber(h, 1);
+  document.getElementById('lower-total').textContent = toFixedNumber(i, 3);
+
+  document.getElementById('lower-results').style.display = 'block';
+}
+
+function clearUpperInputs() {
+  document.getElementById('upper-percent').value = '';
+  document.getElementById('upper-volume').value = '';
+  document.getElementById('upper-count').value = '';
+  document.getElementById('upper-results').style.display = 'none';
+}
+
+function clearLowerInputs() {
+  document.getElementById('lower-percent').value = '';
+  document.getElementById('lower-volume').value = '';
+  document.getElementById('lower-count').value = '';
+  document.getElementById('lower-results').style.display = 'none';
+}
+</script>
+
+</body>
+</html>
