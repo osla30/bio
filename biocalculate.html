@@ -174,7 +174,7 @@
   <div class="tabs">
     <div class="tab active" id="tab-mass" onclick="switchTab('mass')">質量計算</div>
     <div class="tab" id="tab-dilution" onclick="switchTab('dilution')">稀釋計算</div>
-    <div class="tab" id="tab-acidbase" onclick="switchTab('acidbase')">酸鹼摩爾濃度</div>
+    <div class="tab" id="tab-acidbase" onclick="switchTab('acidbase')">酸鹼莫耳濃度</div>
     <div class="tab" id="tab-animal" onclick="switchTab('animal')">動物投藥計算</div>
     <div class="tab" id="tab-primer" onclick="switchTab('primer')">Primer回溶/稀釋</div>
     <div class="tab" id="tab-cellcount" onclick="switchTab('cellcount')">細胞計數</div>
@@ -187,7 +187,7 @@
     <input type="number" id="molarMass" step="any" />
     <br />
 
-    <label for="molarity">目標摩爾濃度：</label>
+    <label for="molarity">目標莫耳濃度：</label>
     <input type="number" id="molarity" step="any" />
     <select id="molarityUnit">
       <option value="1">M (莫耳)</option>
@@ -271,7 +271,7 @@
     <div id="dilutionResult" class="result"></div>
   </div>
 
-  <!-- 酸鹼摩爾濃度 -->
+  <!-- 酸鹼莫耳濃度 -->
   <div id="acidbase" class="tab-content" style="display:none;">
     <label for="acidBaseMW">分子量 (g/mol)：</label>
     <input type="number" id="acidBaseMW" step="any" />
@@ -291,7 +291,7 @@
     <input type="number" id="weightPercent" step="any" />
     <br />
     
-    <label for="acidBaseMolarity">摩爾濃度：</label>
+    <label for="acidBaseMolarity">莫耳濃度：</label>
     <input type="number" id="acidBaseMolarity" step="any" />
     <select id="acidBaseMolarityUnit">
       <option value="1">M</option>
@@ -554,7 +554,7 @@
     document.getElementById('dilutionResult').textContent = '';
   }
 
-  // 酸鹼摩爾濃度雙向計算
+  // 酸鹼莫耳濃度雙向計算
   function calculateAcidBase() {
     const weightPercentInput = document.getElementById('weightPercent');
     const molarityInput = document.getElementById('acidBaseMolarity');
@@ -578,19 +578,19 @@
     const densityStd = density * densityUnit;
 
     if (!isNaN(weightPercent) && isNaN(molarity)) {
-      // 計算摩爾濃度 M = (重量百分比 * 密度) / 分子量 * 10
+      // 計算莫耳濃度 M = (重量百分比 * 密度) / 分子量 * 10
       const molarityM = ((weightPercent * densityStd) / molarMass) * 10;
       const molarityConverted = molarityM / molarityUnit;
       molarityInput.value = molarityConverted.toFixed(6);
-      resultDiv.textContent = `計算摩爾濃度：${molarityConverted.toFixed(6)} ${molarityUnitSelect.options[molarityUnitSelect.selectedIndex].text}`;
+      resultDiv.textContent = `計算莫耳濃度：${molarityConverted.toFixed(6)} ${molarityUnitSelect.options[molarityUnitSelect.selectedIndex].text}`;
     } else if (isNaN(weightPercent) && !isNaN(molarity)) {
-      // 計算重量百分比 = (摩爾濃度 * 分子量) / (密度 * 10)
+      // 計算重量百分比 = (莫耳濃度 * 分子量) / (密度 * 10)
       const molarityM = molarity * molarityUnit;
       const weightPercentCalc = (molarityM * molarMass) / (densityStd * 10);
       weightPercentInput.value = weightPercentCalc.toFixed(6);
       resultDiv.textContent = `計算重量百分比：${weightPercentCalc.toFixed(6)} %`;
     } else {
-      alert('請輸入重量百分比或摩爾濃度其中一項，另一項留空');
+      alert('請輸入重量百分比或莫耳濃度其中一項，另一項留空');
     }
   }
 
