@@ -176,6 +176,7 @@
     <div class="tab" id="tab-dilution" onclick="switchTab('dilution')">稀釋計算</div>
     <div class="tab" id="tab-acidbase" onclick="switchTab('acidbase')">酸鹼莫耳濃度</div>
     <div class="tab" id="tab-animal" onclick="switchTab('animal')">動物投藥計算</div>
+    <div class="tab" id="tab-animal2" onclick="switchTab('animal2')">動物投藥計算2</div>
     <div class="tab" id="tab-primer" onclick="switchTab('primer')">Primer回溶/稀釋</div>
     <div class="tab" id="tab-cellcount" onclick="switchTab('cellcount')">細胞計數</div>
     <div class="tab" id="tab-timer" onclick="switchTab('timer')">計時器</div>
@@ -353,6 +354,26 @@
     <div id="animalResult" class="result"></div>
   </div>
 
+  <!-- 動物投藥計算2 -->
+  <div id="animal2" class="tab-content" style="display:none;">
+    <label for="targetDose2">目標藥物劑量 (mg/Kg)：</label>
+    <input type="number" id="targetDose2" step="any" />
+    <br />
+    <br />
+    <label for="drugConc2">使用藥物濃度 (mg/mL)：</label>
+    <input type="number" id="drugConc2" step="any" />
+    <br />
+    <br />
+    <label for="animalWeight2">動物體重 (g)：</label>
+    <input type="number" id="animalWeight2" step="any" />
+    <br />
+    <br />
+    <button onclick="calculateAnimalDose2()">計算</button>
+    <button class="clear" onclick="clearAnimal2()">清除</button>
+
+    <div id="animalResult2" class="result"></div>
+  </div> 
+
   <!-- Primer回溶/稀釋 -->
   <div id="primer" class="tab-content" style="display:none;">
     <div class="primer-flex-container">
@@ -483,7 +504,7 @@
   let audioLoopInterval = null;
   let audioTimeout = null;
   function switchTab(tab) {
-    const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'primer', 'cellcount', 'timer'];
+    const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'animal2', 'primer', 'cellcount', 'timer'];
     tabs.forEach(t => {
       document.getElementById(t).style.display = (t === tab) ? 'block' : 'none';
       document.getElementById('tab-' + t).classList.toggle('active', t === tab);
@@ -658,6 +679,29 @@
     const sel = document.getElementById(id);
     return sel.options[sel.selectedIndex].text;
   }
+
+  // 動物投藥計算2
+    function calculateAnimalDose2() {
+      const a = parseFloat(document.getElementById('targetDose2').value);
+      const b = parseFloat(document.getElementById('drugConc2').value);
+      const c = parseFloat(document.getElementById('animalWeight2').value);
+
+      if (isNaN(a) || isNaN(b) || isNaN(c) || b === 0) {
+        document.getElementById('animalResult2').textContent = '請輸入有效數值，且藥物濃度不可為零';
+        return;
+      }
+
+      // d = ((a/1000)*c)/b
+      const d = ((a / 1000) * c) / b;
+      document.getElementById('animalResult2').textContent = `投藥量：${d.toFixed(3)} mL`;
+    }
+
+    function clearAnimal2() {
+      document.getElementById('targetDose2').value = '';
+      document.getElementById('drugConc2').value = '';
+      document.getElementById('animalWeight2').value = '';
+      document.getElementById('animalResult2').textContent = '';
+    }
 
   // Primer回溶雙向計算
   function calcPrimer() {
