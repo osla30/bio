@@ -850,26 +850,28 @@ function clearRBC() {
   }
 
   function startCountdown(idx) {
-    if (countdowns[idx].running) return;
+  if (countdowns[idx].running) return;
 
-    if (countdowns[idx].remaining === 0) {
-      const h = parseInt(document.getElementById(`cd-hours${idx + 1}`).value) || 0;
-      const m = parseInt(document.getElementById(`cd-minutes${idx + 1}`).value) || 0;
-      const s = parseInt(document.getElementById(`cd-seconds${idx + 1}`).value) || 0;
-      countdowns[idx].remaining = h * 3600 + m * 60 + s;
-    }
+  if (countdowns[idx].remaining === 0) {
+    const h = parseInt(document.getElementById(`cd-hours${idx + 1}`).value) || 0;
+    const m = parseInt(document.getElementById(`cd-minutes${idx + 1}`).value) || 0;
+    const s = parseInt(document.getElementById(`cd-seconds${idx + 1}`).value) || 0;
+    countdowns[idx].remaining = h * 3600 + m * 60 + s;
+  }
+  if (countdowns[idx].remaining <= 0) return;
 
-    if (countdowns[idx].remaining <= 0) return;
+  countdowns[idx].running = true;
+  countdowns[idx].startTimestamp = Date.now();
+  countdowns[idx].targetTimestamp = Date.now() + countdowns[idx].remaining * 1000;
 
-    countdowns[idx].running = true;
-
-    countdowns[idx].interval = setInterval(() => {
-      if (countdowns[idx].remaining > 0) {
-        countdowns[idx].remaining--;
-        updateCountdownDisplay(idx);
-      } else {
-        clearInterval(countdowns[idx].interval);
-        countdowns[idx].running = false;
+  countdowns[idx].interval = setInterval(() => {
+    const now = Date.now();
+    let left = Math.round((countdowns[idx].targetTimestamp - now) / 1000);
+    countdowns[idx].remaining = Math.max(0, left);
+    updateCountdownDisplay(idx);
+    if (countdowns[idx].remaining <= 0) {
+      clearInterval(countdowns[idx].interval);
+      countdowns[idx].running = false;
 
 // 播放鈴聲持續 30 秒
         const audio = document.getElementById('timer-audio');
@@ -888,15 +890,19 @@ function clearRBC() {
           }, 30000);
         }
       }
-    }, 1000);
+    }, 200);
     updateCountdownDisplay(idx);
   }
 
   function pauseCountdown(idx) {
-    if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
-    countdowns[idx].interval = null;
-    countdowns[idx].running = false;
-    stopAudio(idx);
+  if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
+  countdowns[idx].interval = null;
+  countdowns[idx].running = false;
+  // 修正剩餘秒數
+  if (countdowns[idx].targetTimestamp) {
+    countdowns[idx].remaining = Math.max(0, Math.round((countdowns[idx].targetTimestamp - Date.now()) / 1000));
+  }
+  stopAudio(idx);
   }
 
   function resetCountdown(idx) {
