@@ -223,6 +223,7 @@
       <option value="0.000000000000001">fg</option>
     </select>
     <br />
+    <br />
 
     <button onclick="calculateMass()">計算目標質量</button>
     <button class="clear" onclick="clearMass()">清除</button>
@@ -232,7 +233,7 @@
 
   <!-- 稀釋計算 -->
   <div id="dilution" class="tab-content" style="display:none;">
-    <label for="c1">原始濃度 C₁：</label>
+    <label for="c1">原液濃度 C₁：</label>
     <input type="number" id="c1" step="any" />
     <select id="c1Unit">
       <option value="1">M</option>
@@ -241,18 +242,6 @@
       <option value="0.000000001">nM</option>
       <option value="0.000000000001">pM</option>
       <option value="0.000000000000001">fM</option>
-    </select>
-    <br />
-
-    <label for="v1">原始體積 V₁：</label>
-    <input type="number" id="v1" step="any" />
-    <select id="v1Unit">
-      <option value="1">L</option>
-      <option value="0.001">mL</option>
-      <option value="0.000001">μL</option>
-      <option value="0.000000001">nL</option>
-      <option value="0.000000000001">pL</option>
-      <option value="0.000000000000001">fL</option>
     </select>
     <br />
 
@@ -278,6 +267,19 @@
       <option value="0.000000000001">pL</option>
       <option value="0.000000000000001">fL</option>
     </select>
+    <br />
+
+    <label for="v1">原液體積 V₁：</label>
+    <input type="number" id="v1" step="any" />
+    <select id="v1Unit">
+      <option value="1">L</option>
+      <option value="0.001">mL</option>
+      <option value="0.000001">μL</option>
+      <option value="0.000000001">nL</option>
+      <option value="0.000000000001">pL</option>
+      <option value="0.000000000000001">fL</option>
+    </select>
+    <br />
     <br />
 
     <button onclick="calculateDilution()">計算缺失值</button>
@@ -346,6 +348,7 @@
 
     <label for="animalCount">預估動物數量 (pc)：</label>
     <input type="number" id="animalCount" step="any" />
+    <br />
     <br />
 
     <button onclick="calculateAnimalDose()">計算</button>
@@ -566,12 +569,12 @@
         const val = (c2 * c2Unit) * (v2 * v2Unit) / (v1 * v1Unit);
         const result = val / c1Unit;
         document.getElementById('c1').value = result.toFixed(6);
-        document.getElementById('dilutionResult').textContent = `計算出原始濃度 C₁ = ${result.toFixed(6)} ${getSelectedText('c1Unit')}`;
+        document.getElementById('dilutionResult').textContent = `計算出原液濃度 C₁ = ${result.toFixed(6)} ${getSelectedText('c1Unit')}`;
       } else if (isNaN(v1)) {
         const val = (c2 * c2Unit) * (v2 * v2Unit) / (c1 * c1Unit);
         const result = val / v1Unit;
         document.getElementById('v1').value = result.toFixed(6);
-        document.getElementById('dilutionResult').textContent = `計算出原始體積 V₁ = ${result.toFixed(6)} ${getSelectedText('v1Unit')}`;
+        document.getElementById('dilutionResult').textContent = `計算出原液體積 V₁ = ${result.toFixed(6)} ${getSelectedText('v1Unit')}`;
       } else if (isNaN(c2)) {
         const val = (c1 * c1Unit) * (v1 * v1Unit) / (v2 * v2Unit);
         const result = val / c2Unit;
