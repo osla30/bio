@@ -85,7 +85,7 @@
     }
     .note {
       font-size: 0.9em;
-      color: #555;
+      color: #ff0000;
       margin-bottom: 12px;
       max-width: 500px;
     }
@@ -281,6 +281,8 @@
     </select>
     <br />
     <br />
+    <div class="note" style="margin-left: 20px;">請輸入任意三個值，將可計算第四個值</div>
+    <br />
 
     <button onclick="calculateDilution()">計算缺失值</button>
     <button class="clear" onclick="clearDilution()">清除</button>
@@ -321,6 +323,9 @@
     <div class="note" style="margin-left: 20px;">硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N</div>
     <div class="note" style="margin-left: 20px;">磷酸 (Phosphoric acid)  H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N</div>
     <br />
+    <div class="note" style="margin-left: 20px;">請輸入[分子量]、[密度]、[重量百分比 or 莫耳濃度]
+    <br />將可計算另一項 [重量百分比 or 莫耳濃度]</div>
+    <br />
 
     <button onclick="calculateAcidBase()">計算</button>
     <button class="clear" onclick="clearAcidBase()">清除</button>
@@ -339,7 +344,8 @@
     <br />
     <label style="width: 140px; margin-left: 20px;">(mL)：</label>
     <input type="number" id="doseB2" step="any" style="width: 140px;" />
-    <div class="note" style="margin-left: 20px;">例如：每 10g 投 0.1mL，則動物體重測量 27g，投 0.27mL</div>
+    <div class="note" style="margin-left: 20px;">例如：輸入 10、0.1 ⮕ 每 10g 投 0.1mL
+    <br />則動物體重測量 27g，投 0.27mL</div>
     <br />
 
     <label for="animalWeight">每隻動物預估體重 (g)：</label>
@@ -390,6 +396,7 @@
         <label>Primer產量 (nmole)：<input type="number" id="primerAmount" step="any"></label><br>
         <label>回溶水量 (µL)：<input type="number" id="primerVolume" step="any"></label><br>
         <label>回溶後濃度 (µM)：<input type="number" id="primerConc" step="any"></label><br>
+        <div class="note" style="margin-left: 20px;">請輸入任意兩個值，將可計算第三個值</div>
         <button onclick="calcPrimer()">計算</button>
         <button class="clear" onclick="clearPrimer()">清除</button>
         <div id="primerResult" class="result"></div>
@@ -427,7 +434,7 @@
       </div>
       <div class="primer-block">
         <h2>紅血球計數</h2>
-        <div class="note">(紅血球：一般使用25中格並任選5格)</div>
+        <div class="note">(紅血球：一般使用25中格並選5格錯開不重疊格子)</div>
         <label>細胞數：<input type="number" id="rbcCount" step="any"></label><br>
         <label>格數：<input type="number" id="rbcSquares" step="any"></label><br>
         <label>稀釋倍數：<input type="number" id="rbcDilution" step="any"></label><br>
