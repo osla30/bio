@@ -790,9 +790,20 @@ function calculateWBC() {
     alert('請輸入所有必填欄位，且格數不可為0');
     return;
   }
+
+  // 取得單位字串
+  const unitText = document.getElementById("wbcUnit").selectedOptions[0].text;
+
   // 計算公式：(A*C)/(B*0.1)
   const result = (count * dilution) / (squares * 0.1) * unit;
+  const sciNotation = result.toExponential(2);
+  const sciParts = sciNotation.split('e');
+  const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}</sup>`;
+
+  // 顯示結果並加上單位
   document.getElementById('wbcResult').textContent = `結果：${result.toFixed(2)} ${document.getElementById('wbcUnit').options[document.getElementById('wbcUnit').selectedIndex].text}`;
+  document.getElementById("wbcResult").innerHTML =
+    `計算結果：${result.toFixed(2)} ${unitText}<br>科學記號表示：${sciDisplay} ${unitText}`;
 }
 
 function updateWBCResult() {
@@ -817,9 +828,20 @@ function calculateRBC() {
     alert('請輸入所有必填欄位，且格數不可為0');
     return;
   }
+
+  // 取得單位字串
+  const unitText = document.getElementById("rbcUnit").selectedOptions[0].text;
+
   // 計算公式：(a*c)/(b*0.04*0.1)
   const result = (count * dilution) / (squares * 0.04 * 0.1) * unit;
+  const sciNotation = result.toExponential(2);
+  const sciParts = sciNotation.split('e');
+  const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}</sup>`;
+
+  // 顯示結果並加上單位
   document.getElementById('rbcResult').textContent = `結果：${result.toFixed(2)} ${document.getElementById('rbcUnit').options[document.getElementById('rbcUnit').selectedIndex].text}`;
+  document.getElementById("rbcResult").innerHTML =
+    `計算結果：${result.toFixed(2)} ${unitText}<br>科學記號表示：${sciDisplay} ${unitText}`;
 }
 
 function updateRBCResult() {
