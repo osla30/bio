@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bio-Rad TGX鑄膠計算器</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 700px; margin: 20px auto; padding: 10px; }
+  h1 { display: flex; align-items: center; }
+  #download-btn {
+    margin-left: 20px;
+    font-size: 14px;
+    padding: 4px 12px;
+    border-radius: 5px;
+    border: 1px solid #888;
+    background: #f0f0f0;
+    cursor: pointer;
+    text-decoration: none;
+    color: #222;
+    transition: background 0.2s;
+  }
+  #download-btn:hover {
+    background: #e0e0e0;
+  }
+  h2 { border-bottom: 2px solid #333; padding-bottom: 5px; }
+  label { display: inline-block; width: 160px; margin-top: 8px; }
+  input[type="number"] { width: 100px; padding: 4px; }
+  .section { margin-bottom: 30px; }
+  .result { margin-top: 10px; }
+  .result span { display: inline-block; width: 180px; }
+  button { margin-top: 15px; padding: 8px 16px; font-size: 16px; margin-right: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Bio-Rad TGX鑄膠計算器
+<a id="download-btn" href="https://drive.google.com/file/d/1eMIwSO2ybXZS-Zmom-gTqU_8yRhM_Xu_/view?usp=sharing" target="_blank" rel="noopener noreferrer">下載離線版</a>
+</h1>
+
+<div class="section" id="stacking-gel">
+  <h2>上膠 (Stacking Gel)</h2>
+  <div>
+    <label for="upper-volume">上膠所需體積 (mL)</label>
+    <input type="number" id="upper-volume" min="0" step="0.1" />
+  </div>
+  <div>
+    <label for="upper-count">所需份數</label>
+    <input type="number" id="upper-count" min="0" step="0.01" />
+  </div>
+  <button onclick="calculateUpperGel()">計算上膠配方</button>
+  <button onclick="clearUpperInputs()">清除</button>
+
+  <div class="result" id="upper-results" style="display:none;">
+    <p><span>Stacker A:</span><span id="upper-a"></span> mL</p>
+    <p><span>Stacker B:</span><span id="upper-b"></span> mL</p>
+    <p><span>TEMED:</span><span id="upper-temed"></span> µL</p>
+    <p><span>10% APS:</span><span id="upper-aps"></span> µL</p>
+    <p><span>Total:</span><span id="upper-total"></span> mL</p>
+  </div>
+</div>
+
+<div class="section" id="resolving-gel">
+  <h2>下膠 (Resolving Gel)</h2>
+  <div>
+    <label for="lower-volume">下膠所需體積 (mL)</label>
+    <input type="number" id="lower-volume" min="0" step="0.1" />
+  </div>
+  <div>
+    <label for="lower-count">所需份數</label>
+    <input type="number" id="lower-count" min="0" step="0.01" />
+  </div>
+  <button onclick="calculateLowerGel()">計算下膠配方</button>
+  <button onclick="clearLowerInputs()">清除</button>
+
+  <div class="result" id="lower-results" style="display:none;">
+    <p><span>Resolver A:</span><span id="lower-a"></span> mL</p>
+    <p><span>Resolver B:</span><span id="lower-b"></span> mL</p>
+    <p><span>TEMED:</span><span id="lower-temed"></span> µL</p>
+    <p><span>10% APS:</span><span id="lower-aps"></span> µL</p>
+    <p><span>Total:</span><span id="lower-total"></span> mL</p>
+  </div>
+</div>
+
+<script>
+function toFixedNumber(num, digits) {
+  return Number.parseFloat(num).toFixed(digits);
+}
+
+function calculateUpperGel() {
+  const B = parseFloat(document.getElementById('upper-volume').value);
+  const C = parseFloat(document.getElementById('upper-count').value);
+
+  if (isNaN(B) || isNaN(C) || B <= 0 || C <= 0) {
+    alert('請輸入有效的上膠參數（皆為正數）');
+    return;
+  }
+
+  const D = (B / 2) * C;                   // Stacker A
+  const E = (B / 2) * C;                   // Stacker B
+  const G = B * C;                         // TEMED
+  const H = (B * 5) * C;                   // 10% APS
+  const I = B * C;                         // Total
+
+  document.getElementById('upper-a').textContent = toFixedNumber(D, 3);
+  document.getElementById('upper-b').textContent = toFixedNumber(E, 3);
+  document.getElementById('upper-temed').textContent = toFixedNumber(G, 1);
+  document.getElementById('upper-aps').textContent = toFixedNumber(H, 1);
+  document.getElementById('upper-total').textContent = toFixedNumber(I, 3);
+
+  document.getElementById('upper-results').style.display = 'block';
+}
+
+function calculateLowerGel() {
+  const b = parseFloat(document.getElementById('lower-volume').value);
+  const c = parseFloat(document.getElementById('lower-count').value);
+
+  if (isNaN(b) || isNaN(c) || b <= 0 || c <= 0) {
+    alert('請輸入有效的下膠參數（皆為正數）');
+    return;
+  }
+
+  const d = (b / 2) * c;                   // Resolver A
+  const e = (b / 2) * c;                   // Resolver B
+  const g = (b / 2) * c;                   // TEMED (修改公式)
+  const h = (b * 5) * c;                   // 10% APS
+  const i = b * c;                         // Total
+
+  document.getElementById('lower-a').textContent = toFixedNumber(d, 3);
+  document.getElementById('lower-b').textContent = toFixedNumber(e, 3);
+  document.getElementById('lower-temed').textContent = toFixedNumber(g, 1);
+  document.getElementById('lower-aps').textContent = toFixedNumber(h, 1);
+  document.getElementById('lower-total').textContent = toFixedNumber(i, 3);
+
+  document.getElementById('lower-results').style.display = 'block';
+}
+
+function clearUpperInputs() {
+  document.getElementById('upper-volume').value = '';
+  document.getElementById('upper-count').value = '';
+  document.getElementById('upper-results').style.display = 'none';
+}
+
+function clearLowerInputs() {
+  document.getElementById('lower-volume').value = '';
+  document.getElementById('lower-count').value = '';
+  document.getElementById('lower-results').style.display = 'none';
+}
+</script>
+
+</body>
+</html>
