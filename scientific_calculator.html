@@ -411,44 +411,46 @@
 
   <!-- 質量計算 -->
   <div id="mass" class="tab-content">
-    <div class="form-container">
-      <div class="form-row-inline">
-        <label for="molarMass">Molecular Weight (g/mol)：</label>
-        <input type="number" id="molarMass" step="any" />
-      </div>
+  <div class="form-container">
+    <div class="form-row-inline">
+      <label for="molarMass">Molecular weight (g/mol)：</label>
+      <input type="number" id="molarMass" step="any" />
+    </div>
 
-      <div class="form-row-inline">
-        <label for="molarity">Target Molarity：</label>
-        <div class="input-group">
-          <input type="number" id="molarity" step="any" />
-          <select id="molarityUnit">
-            <option value="1">M</option>
-            <option value="0.001">mM</option>
-            <option value="0.000001">μM</option>
-            <option value="0.000000001">nM</option>
-            <option value="0.000000000001">pM</option>
-            <option value="0.000000000000001">fM</option>
-          </select>
-        </div>
+    <div class="form-row-inline">
+      <label for="molarity">Molarity：</label>
+      <div class="input-group">
+        <input type="number" id="molarity" step="any" />
+        <select id="molarityUnit">
+          <option value="1">M</option>
+          <option value="0.001">mM</option>
+          <option value="0.000001">μM</option>
+          <option value="0.000000001">nM</option>
+          <option value="0.000000000001">pM</option>
+          <option value="0.000000000000001">fM</option>
+        </select>
       </div>
+    </div>
 
-      <div class="form-row-inline">
-        <label for="volume">Target Volume：</label>
-        <div class="input-group">
-          <input type="number" id="volume" step="any" />
-          <select id="volumeUnit">
-            <option value="1">L</option>
-            <option value="0.001">mL</option>
-            <option value="0.000001">μL</option>
-            <option value="0.000000001">nL</option>
-            <option value="0.000000000001">pL</option>
-            <option value="0.000000000000001">fL</option>
-          </select>
-        </div>
+    <div class="form-row-inline">
+      <label for="volume">Volume：</label>
+      <div class="input-group">
+        <input type="number" id="volume" step="any" />
+        <select id="volumeUnit">
+          <option value="1">L</option>
+          <option value="0.001">mL</option>
+          <option value="0.000001">μL</option>
+          <option value="0.000000001">nL</option>
+          <option value="0.000000000001">pL</option>
+          <option value="0.000000000000001">fL</option>
+        </select>
       </div>
+    </div>
 
-      <div class="form-row-inline">
-        <label for="massUnit">Mass Unit：</label>
+    <div class="form-row-inline">
+      <label for="massValue">Mass：</label>
+      <div class="input-group">
+        <input type="number" id="massValue" step="any" />
         <select id="massUnit">
           <option value="1">g</option>
           <option value="1000">kg</option>
@@ -460,14 +462,17 @@
         </select>
       </div>
     </div>
-
-    <div class="button-group">
-      <button onclick="calculateMass()">Calculate Target Mass</button>
-      <button class="clear" onclick="clearMass()">Clear</button>
-    </div>
-
-    <div id="massResult" class="result" style="display:none;"></div>
   </div>
+
+  <div class="note">Please enter the [Molecular weight] and any two of the following: [Molarity, Volume, or Mass]. The remaining value will be calculated automatically.</div>
+
+  <div class="button-group">
+    <button onclick="calculateMass()">計算</button>
+    <button class="clear" onclick="clearMass()">清除</button>
+  </div>
+
+  <div id="massResult" class="result" style="display:none;"></div>
+</div>
 
   <!-- 稀釋計算 -->
   <div id="dilution" class="tab-content" style="display:none;">
@@ -587,7 +592,7 @@
 
     <div class="note">Sulfuric acid (H₂SO₄) → Two H⁺ ions → 1M = 2N<br>
     Phosphoric acid (H₃PO₄) → Three H⁺ ions → 1M = 3N</div>
-    <div class="note">Please enter [Molecular weight], [Density], [Weight percentage or Molarity]<br>The other item [Weight percentage or Molarity] will be calculated.</div>
+    <div class="note">Please enter the [Molecular weight and Density], along with either the [Weight percentage or Molarity]. The remaining value will be calculated automatically.</div>
 
     <div class="button-group">
       <button onclick="calculateAcidBase()">Calculate</button>
@@ -878,30 +883,60 @@
 
   // 質量計算
   function calculateMass() {
-    const molarity = parseFloat(document.getElementById('molarity').value);
-    const molarityUnit = parseFloat(document.getElementById('molarityUnit').value);
-    const molarMass = parseFloat(document.getElementById('molarMass').value);
-    const volume = parseFloat(document.getElementById('volume').value);
-    const volumeUnit = parseFloat(document.getElementById('volumeUnit').value);
-    const massUnit = parseFloat(document.getElementById('massUnit').value);
+  const molarMass = parseFloat(document.getElementById('molarMass').value);
+  const molarity = parseFloat(document.getElementById('molarity').value);
+  const molarityUnit = parseFloat(document.getElementById('molarityUnit').value);
+  const volume = parseFloat(document.getElementById('volume').value);
+  const volumeUnit = parseFloat(document.getElementById('volumeUnit').value);
+  const massValue = parseFloat(document.getElementById('massValue').value);
+  const massUnit = parseFloat(document.getElementById('massUnit').value);
 
-    if (isNaN(molarity) || isNaN(molarMass) || isNaN(volume)) {
-      alert('Please enter all required fields');
-      return;
-    }
+  if (isNaN(molarMass) || molarMass <= 0) {
+    alert('Please enter the Molecular weight');
+    return;
+  }
 
-    const molarityM = molarity * molarityUnit;
-    const volumeL = volume * volumeUnit;
-    const massG = molarityM * volumeL * molarMass;
+  let filledCount = 0;
+  if (!isNaN(molarity)) filledCount++;
+  if (!isNaN(volume)) filledCount++;
+  if (!isNaN(massValue)) filledCount++;
+
+  if (filledCount < 2) {
+    alert('Please enter at least any two of Molarity, Volume, or Mass');
+    return;
+  }
+
+  let resultText = '';
+
+  if (isNaN(molarity)) {
+    // 計算 molarity = mass / (MW * volume)
+    const molarityM = (massValue * massUnit) / (molarMass * volume * volumeUnit);
+    const molarityConverted = molarityM / molarityUnit;
+    document.getElementById('molarity').value = molarityConverted.toFixed(6);
+    resultText = `Calculate molarity：${molarityConverted.toFixed(6)} ${getSelectedText('molarityUnit')}`;
+  } else if (isNaN(volume)) {
+    // 計算 volume = mass / (MW * molarity)
+    const volumeL = (massValue * massUnit) / (molarMass * molarity * molarityUnit);
+    const volumeConverted = volumeL / volumeUnit;
+    document.getElementById('volume').value = volumeConverted.toFixed(6);
+    resultText = `Calculate volume：${volumeConverted.toFixed(6)} ${getSelectedText('volumeUnit')}`;
+  } else if (isNaN(massValue)) {
+    // 計算 mass = molarity * volume * MW
+    const massG = (molarity * molarityUnit) * (volume * volumeUnit) * molarMass;
     const massConverted = massG / massUnit;
-
-    showResult('massResult', `Mass：${massConverted.toFixed(6)} ${getSelectedText('massUnit')}`);
+    document.getElementById('massValue').value = massConverted.toFixed(6);
+    resultText = `Calculate mass：${massConverted.toFixed(6)} ${getSelectedText('massUnit')}`;
+  } else {
+    resultText = 'Please clear one field of Molarity, Volume, or Mass to calculate its value';
   }
 
-  function clearMass() {
-    ['molarity', 'molarMass', 'volume'].forEach(id => document.getElementById(id).value = '');
-    hideResult('massResult');
-  }
+  showResult('massResult', resultText);
+}
+
+function clearMass() {
+  ['molarity', 'volume', 'massValue', 'molarMass'].forEach(id => document.getElementById(id).value = '');
+  hideResult('massResult');
+}
 
   // 稀釋計算
   function calculateDilution() {
