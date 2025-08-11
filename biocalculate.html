@@ -445,9 +445,9 @@
   </h1>
 
   <div class="tabs">
-    <div class="tab active" id="tab-mass" onclick="switchTab('mass')">質量計算</div>
+    <div class="tab active" id="tab-mass" onclick="switchTab('mass')">莫耳濃度</div>
     <div class="tab" id="tab-dilution" onclick="switchTab('dilution')">稀釋計算</div>
-    <div class="tab" id="tab-acidbase" onclick="switchTab('acidbase')">酸鹼莫耳濃度</div>
+    <div class="tab" id="tab-acidbase" onclick="switchTab('acidbase')">酸鹼濃度</div>
     <div class="tab" id="tab-animal" onclick="switchTab('animal')">動物投藥計算</div>
     <div class="tab" id="tab-animal2" onclick="switchTab('animal2')">動物投藥計算2</div>
     <div class="tab" id="tab-primer" onclick="switchTab('primer')">Primer回溶/稀釋</div>
@@ -455,7 +455,7 @@
     <div class="tab" id="tab-timer" onclick="switchTab('timer')">計時器</div>
   </div>
 
-  <!-- 質量計算 -->
+  <!-- 莫耳濃度 -->
 <div id="mass" class="tab-content">
   <div class="form-container">
     <div class="form-row-inline">
@@ -594,7 +594,7 @@
     <div id="dilutionResult" class="result" style="display:none;"></div>
   </div>
 
-  <!-- 酸鹼莫耳濃度 -->
+  <!-- 酸鹼濃度 -->
   <div id="acidbase" class="tab-content" style="display:none;">
     <div class="form-container">
       <div class="form-row-inline">
@@ -910,16 +910,16 @@
       "download-btn": "下載離線版",
       
       // 分頁標籤
-      "tab-mass": "質量計算",
+      "tab-mass": "莫耳濃度",
       "tab-dilution": "稀釋計算", 
-      "tab-acidbase": "酸鹼莫耳濃度",
+      "tab-acidbase": "酸鹼濃度",
       "tab-animal": "動物投藥計算",
       "tab-animal2": "動物投藥計算2",
       "tab-primer": "Primer回溶/稀釋",
       "tab-cellcount": "細胞計數",
       "tab-timer": "計時器",
       
-      // 質量計算
+      // 莫耳濃度
       "分子量 (g/mol)：": "分子量 (g/mol)：",
       "莫耳濃度：": "莫耳濃度：",
       "體積：": "體積：",
@@ -933,7 +933,7 @@
       "原液體積 V₁：": "原液體積 V₁：",
       "請輸入任意三個值，將可計算第四個值": "請輸入任意三個值，將可計算第四個值",
       
-      // 酸鹼莫耳濃度
+      // 酸鹼濃度
       "密度：": "密度：",
       "重量百分比 (%)：": "重量百分比 (%)：",
       "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N",
@@ -1033,7 +1033,7 @@
       "download-btn": "Download Offline Version",
       
       // 分頁標籤
-      "tab-mass": "Mass",
+      "tab-mass": "Molarity",
       "tab-dilution": "Dilute", 
       "tab-acidbase": "Acid-Base",
       "tab-animal": "Animal Drug Dosage",
@@ -1042,7 +1042,7 @@
       "tab-cellcount": "Cell Count",
       "tab-timer": "Timer",
       
-      // 質量計算
+      // 莫耳濃度
       "分子量 (g/mol)：": "Molecular weight (g/mol)：",
       "莫耳濃度：": "Molarity：",
       "體積：": "Volume：",
@@ -1056,7 +1056,7 @@
       "原液體積 V₁：": "Stock Volume V₁：",
       "請輸入任意三個值，將可計算第四個值": "Please enter any three values to calculate the fourth value.",
       
-      // 酸鹼莫耳濃度
+      // 酸鹼濃度
       "密度：": "Density：",
       "重量百分比 (%)：": "Weight Percentage (%)：",
       "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "Sulfuric acid (H₂SO₄) → Two H⁺ ions → 1M = 2N<br>Phosphoric acid (H₃PO₄) → Three H⁺ ions → 1M = 3N",
@@ -1248,7 +1248,7 @@
     element.textContent = '';
   }
 
-  // 質量計算
+  // 莫耳濃度
   function calculateMass() {
     const molarMass = parseFloat(document.getElementById('molarMass').value);
     const molarity = parseFloat(document.getElementById('molarity').value);
@@ -1355,7 +1355,7 @@
     hideResult('dilutionResult');
   }
 
-  // 酸鹼莫耳濃度雙向計算
+  // 酸鹼濃度雙向計算
   function calculateAcidBase() {
     const weightPercentInput = document.getElementById('weightPercent');
     const molarityInput = document.getElementById('acidBaseMolarity');
