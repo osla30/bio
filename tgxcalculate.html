@@ -3,10 +3,24 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bio-Rad TGX鑄膠計算器</title>
+<title>Bio-Rad TGX鑄膠計算器 | Bio-Rad TGX Gel Calculator</title>
 <style>
   body { font-family: Arial, sans-serif; max-width: 700px; margin: 20px auto; padding: 10px; }
-  h1 { display: flex; align-items: center; }
+  
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  h1 { 
+    display: flex; 
+    align-items: center; 
+    margin: 0;
+    flex-grow: 1;
+  }
+  
   #download-btn {
     margin-left: 20px;
     font-size: 14px;
@@ -19,9 +33,38 @@
     color: #222;
     transition: background 0.2s;
   }
+  
   #download-btn:hover {
     background: #e0e0e0;
   }
+  
+  .language-toggle {
+    display: flex;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #f9f9f9;
+  }
+  
+  .language-toggle button {
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+    margin: 0;
+  }
+  
+  .language-toggle button.active {
+    background: #007bff;
+    color: white;
+  }
+  
+  .language-toggle button:hover:not(.active) {
+    background: #e9ecef;
+  }
+  
   h2 { border-bottom: 2px solid #333; padding-bottom: 5px; }
   label { display: inline-block; width: 160px; margin-top: 8px; }
   input[type="number"] { width: 100px; padding: 4px; }
@@ -30,26 +73,58 @@
   .result span { display: inline-block; width: 180px; }
   .total-result { font-weight: bold; color: red; }
   button { margin-top: 15px; padding: 8px 16px; font-size: 16px; margin-right: 10px; }
+  
+  .lang-zh { display: block; }
+  .lang-en { display: none; }
+  
+  body.english .lang-zh { display: none; }
+  body.english .lang-en { display: block; }
 </style>
 </head>
 <body>
 
-<h1>Bio-Rad TGX鑄膠計算器
-<a id="download-btn" href="https://drive.google.com/file/d/1eMIwSO2ybXZS-Zmom-gTqU_8yRhM_Xu_/view?usp=sharing" target="_blank" rel="noopener noreferrer">下載離線版</a>
-</h1>
+<div class="header-container">
+  <h1>
+    <span class="lang-zh">Bio-Rad TGX鑄膠計算器</span>
+    <span class="lang-en">Bio-Rad TGX Gel Calculator</span>
+    <a id="download-btn" href="https://drive.google.com/file/d/1eMIwSO2ybXZS-Zmom-gTqU_8yRhM_Xu_/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+      <span class="lang-zh">下載離線版</span>
+      <span class="lang-en">Download Offline</span>
+    </a>
+  </h1>
+  <div class="language-toggle">
+    <button id="btn-zh" class="active" onclick="switchLanguage('zh')">中文</button>
+    <button id="btn-en" onclick="switchLanguage('en')">English</button>
+  </div>
+</div>
 
 <div class="section" id="stacking-gel">
-  <h2>上膠 (Stacking Gel)</h2>
+  <h2>
+    <span class="lang-zh">上膠 (Stacking Gel)</span>
+    <span class="lang-en">Stacking Gel</span>
+  </h2>
   <div>
-    <label for="upper-volume">上膠體積 (mL)</label>
+    <label for="upper-volume">
+      <span class="lang-zh">上膠體積 (mL)</span>
+      <span class="lang-en">Gel Volume (mL)</span>
+    </label>
     <input type="number" id="upper-volume" min="0" step="0.1" />
   </div>
   <div>
-    <label for="upper-count">所需份數</label>
+    <label for="upper-count">
+      <span class="lang-zh">所需份數</span>
+      <span class="lang-en">Number of Gels</span>
+    </label>
     <input type="number" id="upper-count" min="0" step="0.01" />
   </div>
-  <button onclick="calculateUpperGel()">計算上膠配方</button>
-  <button onclick="clearUpperInputs()">清除</button>
+  <button onclick="calculateUpperGel()">
+    <span class="lang-zh">計算上膠配方</span>
+    <span class="lang-en">Calculate Recipe</span>
+  </button>
+  <button onclick="clearUpperInputs()">
+    <span class="lang-zh">清除</span>
+    <span class="lang-en">Clear</span>
+  </button>
 
   <div class="result" id="upper-results" style="display:none;">
     <p><span>Stacker A:</span><span id="upper-a"></span> mL</p>
@@ -61,17 +136,32 @@
 </div>
 
 <div class="section" id="resolving-gel">
-  <h2>下膠 (Resolving Gel)</h2>
+  <h2>
+    <span class="lang-zh">下膠 (Resolving Gel)</span>
+    <span class="lang-en">Resolving Gel</span>
+  </h2>
   <div>
-    <label for="lower-volume">下膠體積 (mL)</label>
+    <label for="lower-volume">
+      <span class="lang-zh">下膠體積 (mL)</span>
+      <span class="lang-en">Gel Volume (mL)</span>
+    </label>
     <input type="number" id="lower-volume" min="0" step="0.1" />
   </div>
   <div>
-    <label for="lower-count">所需份數</label>
+    <label for="lower-count">
+      <span class="lang-zh">所需份數</span>
+      <span class="lang-en">Number of Gels</span>
+    </label>
     <input type="number" id="lower-count" min="0" step="0.01" />
   </div>
-  <button onclick="calculateLowerGel()">計算下膠配方</button>
-  <button onclick="clearLowerInputs()">清除</button>
+  <button onclick="calculateLowerGel()">
+    <span class="lang-zh">計算下膠配方</span>
+    <span class="lang-en">Calculate Recipe</span>
+  </button>
+  <button onclick="clearLowerInputs()">
+    <span class="lang-zh">清除</span>
+    <span class="lang-en">Clear</span>
+  </button>
 
   <div class="result" id="lower-results" style="display:none;">
     <p><span>Resolver A:</span><span id="lower-a"></span> mL</p>
@@ -87,12 +177,42 @@ function toFixedNumber(num, digits) {
   return Number.parseFloat(num).toFixed(digits);
 }
 
+function switchLanguage(lang) {
+  const body = document.body;
+  const btnZh = document.getElementById('btn-zh');
+  const btnEn = document.getElementById('btn-en');
+  
+  if (lang === 'en') {
+    body.classList.add('english');
+    btnZh.classList.remove('active');
+    btnEn.classList.add('active');
+    document.documentElement.lang = 'en';
+  } else {
+    body.classList.remove('english');
+    btnZh.classList.add('active');
+    btnEn.classList.remove('active');
+    document.documentElement.lang = 'zh-Hant';
+  }
+  
+  // 不保存語言選擇，每次打開都預設中文
+}
+
+// 頁面加載時預設為中文
+window.addEventListener('load', function() {
+  switchLanguage('zh');
+});
+
 function calculateUpperGel() {
   const B = parseFloat(document.getElementById('upper-volume').value);
   const C = parseFloat(document.getElementById('upper-count').value);
 
+  const isEnglish = document.body.classList.contains('english');
+  const alertMessage = isEnglish ? 
+    'Please enter valid parameters for stacking gel (all positive numbers)' :
+    '請輸入有效的上膠參數（皆為正數）';
+
   if (isNaN(B) || isNaN(C) || B <= 0 || C <= 0) {
-    alert('請輸入有效的上膠參數（皆為正數）');
+    alert(alertMessage);
     return;
   }
 
@@ -115,8 +235,13 @@ function calculateLowerGel() {
   const b = parseFloat(document.getElementById('lower-volume').value);
   const c = parseFloat(document.getElementById('lower-count').value);
 
+  const isEnglish = document.body.classList.contains('english');
+  const alertMessage = isEnglish ? 
+    'Please enter valid parameters for resolving gel (all positive numbers)' :
+    '請輸入有效的下膠參數（皆為正數）';
+
   if (isNaN(b) || isNaN(c) || b <= 0 || c <= 0) {
-    alert('請輸入有效的下膠參數（皆為正數）');
+    alert(alertMessage);
     return;
   }
 
