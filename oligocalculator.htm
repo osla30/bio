@@ -1,0 +1,1286 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="download_date" content="2025-09-17T02:57:05.751Z"/><title>Oligonucleotide Properties Calculator</title>
+
+<meta content="Oligonucleotide  Oligo thermodynamic annealing temperature melting temperature Tm hybridization temperature calculator dsDNA ssDNA dsRNA ssRNA melting temperature oligo properties" name="KEYWORDS">
+<meta content="Oligonucleotide  Oligo thermodynamic annealing temperature melting temperature Tm hybridization temperature calculator OligoCalc OligoCalculator dsDNA ssDNA dsRNA ssRNA oligo properties" name="DESCRIPTION">
+<meta content="Warren Kibbe, Qing Cao" name="AUTHOR">
+<script language="JavaScript" type="text/javascript">
+ <!--
+// GLOBALS
+var NS4plus        = (document.layers);
+var IE4plus        = (document.all);
+// added Safari check, WAKibbe 02/09/2004
+var isSafari        = (navigator.appVersion.indexOf("Safari") != -1);
+var browserVersion = parseFloat(navigator.appVersion);
+var browserAppName=navigator.appName;
+var supportLayers  = (NS4plus || IE4plus || isSafari);   
+var isMac          = (navigator.appVersion.indexOf("Mac") != -1);
+var isNetscape     = (browserAppName == "Netscape");
+var isIE           = (navigator.appVersion.indexOf("MSIE") != -1);
+var browserVersion = (navigator.appVersion.indexOf("MSIE 5" ) != -1)?5:browserVersion;
+	supportLayers  = (supportLayers || isNetscape && browserVersion > 4);   
+var isCompatible   = supportLayers;
+
+
+
+var debug = 0;  // set to 1 for debugging output, 0 to turn it off
+var primerWin;
+var broadMatch=false;
+var theOligo=0; //holder for theOligo object
+var theComplement=0; //holder for theComplement object
+var theVersion="3.10 (last modified by WAKibbe 09/25/2006)";
+var MacStyleSheet="BODY,P,BR,TD,DIV,A {font-family: Arial,Helvetica,serif; font-size: 10pt;} \
+	 PRE {font-family: Courier New,Courier,nonproportional,fixed;} \
+	 H1 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 18pt;} \
+	 H2 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 14pt;} \
+	 H3 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 12pt;} \
+	 TH {font-family: Arial,Helvetica,sans-serif; font-size: 11pt;} \
+	 .bigger {font-size: 11pt; font-weight: bold;} \
+	 .darkerblue { color: white; background-color: #333399; } \
+	 .standardblue { color: black; background-color: #CCCCFF; } \
+	 .lighterblue { color: black; background-color: #7da7d9; }";
+var PCStyleSheet="BODY,P,BR,TD,DIV,A {font-family: Arial,Helvetica,serif; font-size: 9pt;} \
+	PRE {font-family: Courier New,Courier,nonproportional,fixed;} \
+	H1 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 14pt;} \
+	H2 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 12pt;} \
+	H3 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 10pt;} \
+	TH {font-family: Arial,Helvetica,sans-serif; font-size: 9pt;} \
+	.H1 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 14pt;} \
+	.H2 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 12pt;} \
+	.H3 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 10pt;} \
+	.bigger {font-size: 9pt; font-weight: bold;} \
+	.darkerblue { color: white; background-color: #333399; } \
+	.darksalmon { color: black; background-color: wheat; } \
+	.lightsalmon { color: b; background-color: whitesmoke; } \
+	 .standardblue { color: black; background-color: aliceblue; } \
+	.lighterblue { color: black; background-color: lavender; }";
+ 
+if (debug > 0) {
+	alert('browserVersion='+browserVersion);
+	alert('browserAppName='+browserAppName);
+	alert('supportLayers='+supportLayers);
+	alert('navigator.appVersion='+navigator.appVersion);
+}
+ /* provide blank defs for all browsers with javascript */
+	if (!supportLayers) event = null;
+	function Calculate(){}
+	function ReCalculate(){}
+	function DoNewFocus(){}
+	function GetOligoValueFromCookie(){} 
+	function RecalcMWConcAndOD(){} 
+	function Blast2(){} 
+	function SwapStrands(){}
+	function calcPrimer(){} 
+
+	if (browserVersion < 3) {
+		alert('Sorry - your browser is too old or does not support javascript 1.1! Please upgrade!');
+	} else if (browserVersion < 4) {
+		document.write('<META HTTP-EQUIV=REFRESH CONTENT="0;URL=../biotools/OligoCalc1.2.html">');
+	} else {
+		document.write("<SCRIPT LANGUAGE='JavaScript1.1' SRC='OligoCalcUtils.js'><\/SCRIPT>");
+		document.write("<SCRIPT LANGUAGE='JavaScript1.1' SRC='OligoCalc.js'><\/SCRIPT>");
+		document.write("<SCRIPT LANGUAGE='JavaScript1.1' SRC='OligoCalcBlast.js'><\/SCRIPT>");
+		document.write("<SCRIPT LANGUAGE='JavaScript1.1' SRC='OligoCalcObj.js'><\/SCRIPT>");
+		if (browserVersion >= 4)
+			document.write("<SCRIPT LANGUAGE='JavaScript1.2' SRC='OligoCalcCompare.js'><\/SCRIPT>");
+	}
+//-->
+</script><script language="JavaScript1.1">/* ** The following functions are defined on this page **-- general utilsfunction Disallow(form)-- cookie utilsfunction getCookieVal (offset) function GetCookie (name) function GetDefCookie (name, defaultval)function GetDelimitedValue(theString, offset, delimiter)-- dna utilsfunction CheckBase(theString) function IsBase(theBase) function IsIUpacBase(theBase) function CalcIUpair(base0, base, i, choice)function AreThereIUpacBases(theSequence)function MakeComplement(theSequence, isDNA)function CountChar(theChar, theSequence) function CountNeighbors(theSeekSeq, theSequence) function FormatBaseString(theString) function micrograms(MolWt,Conc)-- string utilitiesfunction stringToArray(theString)function reverseString(theString)function RemoveNonPrintingChars(theString) **  ***/function Disallow(form) {	form.oligoBox.focus();}// cookie utilitiesfunction getCookieVal (offset) {  var endstr = document.cookie.indexOf (";", offset);  if (endstr == -1) {    endstr = document.cookie.length;  }  return unescape(document.cookie.substring(offset, endstr));}//  Function to return the value of the cookie specified by "name".//    name - String object containing the cookie name.//    returns - String object containing the cookie value, or null if//      the cookie does not exist.function GetCookie (name) {  var arg = name + "=";  var alen = arg.length;  var clen = document.cookie.length;  var i = 0;  while (i < clen) {    var j = i + alen;    if (document.cookie.substring(i, j) == arg)      return getCookieVal (j);    i = document.cookie.indexOf(" ", i) + 1;    if (i == 0) break;  }  return null;}// Function to get a cookie value. if it does not exist, then pass defaultfunction GetDefCookie (name, defaultval) {	var value = GetCookie(name);	if (value == null) {		return defaultval;	}	return value;}function GetDelimitedValue(theString, offset, delimiter) {  var endstr = theString.indexOf (delimiter, offset);  if (endstr == -1)    endstr = theString.length;  if (endstr-offset<1) return "";  return theString.substring(offset, endstr);}//--------------------------------------------------------------------------//--------------------------------------------------------------------------// Checks that theString contains only basesfunction CheckBase(theString) {	var returnString = "";	var cnt = 0;	var rcnt = 0;	var cha="";	theString = theString.toUpperCase();	theString = RemoveNonPrintingChars(theString);	for ( var i = 0; i < theString.length; i++) {		cha=theString.charAt(i);		if (IsIUpacBase(cha) || IsBase(cha)) {			returnString +=cha;			cnt++;		}else if(cha!=" " && cha!="\n"){			alert("base # "+(cnt+1)+" :"+cha+" is not a valid base!");			return -1;		}	}	return returnString;}// allowed basesfunction IsBase(theBase) {	if ((theBase == "A") ||		(theBase == "G") ||		(theBase == "C") ||		(theBase == "U") ||		(theBase == "T")) {			return 1;	}	return 0;}// check if base is a IUPAC basefunction IsIUpacBase(theBase) {	if ((theBase == "M") ||		(theBase == "R") ||		(theBase == "W") ||		(theBase == "S") ||		(theBase == "Y") ||		(theBase == "K") ||		(theBase == "V") ||		(theBase == "H") ||		(theBase == "D") ||		(theBase == "B") ||		(theBase == "N")) 	{			return 1;	}	return 0;}function CalcIUpair(base0, base, i, theSequence, choice){	var IUpacBase="";	var pair1="";	var pair2="";	var temp1=new Array(0,0,0);	var temp2=new Array(0,0,0);	var reValue=new Array(0,0,0);	var base2=theSequence.charAt(i+1);	if(IsIUpacBase(base0))	//if previous base is IUpacBase, do nothing	{	return reValue;	}		if(IsIUpacBase(base) )	{		if (debug) alert("base0 "+base0+"base"+base+" base2 "+base2);		if(base=="M"){IUpacBase="AC";}		else if(base=="R"){IUpacBase="AG";}		else if(base=="W"){IUpacBase="AT";}		else if(base=="S"){IUpacBase="CG";}		else if(base=="Y"){IUpacBase="CT";}		else if(base=="K"){IUpacBase="GT";}		else if(base=="V"){IUpacBase="ACG";}		else if(base=="H"){IUpacBase="ACT";}		else if(base=="D"){IUpacBase="AGT";}		else if(base=="B"){IUpacBase="CGT";}		else if(base=="N"){IUpacBase="ACGT";}				var j=0;		while(IUpacBase.charAt(j)!="")		{			base=IUpacBase.charAt(j);			//alert("base choose "+base);			pair1=base0+base;		//	alert("pair1 "+pair1);			if(pair1=="AA"){temp1[0]= 1.2 ;temp1[1]=8.0; temp1[2]=21.9 ;}			else if(pair1=="AT"){temp1[0]= 0.9 ;temp1[1]=5.6; temp1[2]=15.2  ;}			else if(pair1=="TA"){temp1[0]=0.9  ;temp1[1]=6.6; temp1[2]= 18.4 ;}			else if(pair1=="CA"){temp1[0]=1.7  ;temp1[1]=8.2; temp1[2]=21.0  ;}			else if(pair1=="GT"){temp1[0]= 1.5 ;temp1[1]=9.4; temp1[2]=25.5  ;}			else if(pair1=="CT"){temp1[0]= 1.5 ;temp1[1]=6.6; temp1[2]=16.4  ;}			else if(pair1=="GA"){temp1[0]=1.5  ;temp1[1]=8.8; temp1[2]=23.5  ;}			else if(pair1=="CG"){temp1[0]= 2.8 ;temp1[1]=11.8; temp1[2]=29.0  ;}			else if(pair1=="GC"){temp1[0]=2.3  ;temp1[1]=10.5; temp1[2]=26.4  ;}			else if(pair1=="GG"){temp1[0]=2.1  ;temp1[1]=10.9; temp1[2]=28.4  ;}						if(base2==""){				for(k=0; k<2; k++)				{	temp2[k]=0.0;	}						}else if(!IsIUpacBase(base2)){				pair2=base+base2;				//alert("pair2 "+pair2);				if(pair2=="AA"){temp2[0]= 1.2 ;temp2[1]=8.0; temp2[2]=21.9 ;}				else if(pair2=="AT"){temp2[0]= 0.9 ;temp2[1]=5.6; temp2[2]=15.2  ;}				else if(pair2=="TA"){temp2[0]=0.9  ;temp2[1]=6.6; temp2[2]= 18.4 ;}				else if(pair2=="CA"){temp2[0]=1.7  ;temp2[1]=8.2; temp2[2]=21.0  ;}				else if(pair2=="GT"){temp2[0]= 1.5 ;temp2[1]=9.4; temp2[2]=25.5  ;}				else if(pair2=="CT"){temp2[0]= 1.5 ;temp2[1]=6.6; temp2[2]=16.4  ;}				else if(pair2=="GA"){temp2[0]=1.5  ;temp2[1]=8.8; temp2[2]=23.5  ;}				else if(pair2=="CG"){temp2[0]= 2.8 ;temp2[1]=11.8; temp2[2]=29.0  ;}				else if(pair2=="GC"){temp2[0]=2.3  ;temp2[1]=10.5; temp2[2]=26.4  ;}				else if(pair2=="GG"){temp2[0]=2.1  ;temp2[1]=10.9; temp2[2]=28.4  ;}			}else if(IsIUpacBase(base2)){				base0=base; base=base2; i++; 				temp2=CalcIUpair(base0,base,i,theSequence,choice);				i--;			}						for(k=0;k<3;k++)			{				if(j==0){					reValue[k]=temp1[k]+temp2[k];				}else{					if ((choice=="max")&&(reValue[k]<temp1[k]+temp2[k]))					{	reValue[k]=temp1[k]+temp2[k];						}else if((choice=="min")&&(reValue[k]>temp1[k]+temp2[k]))					{	reValue[k]=temp1[k]+temp2[k]; 						}				}			}			j++;		}	}	return reValue;}function AreThereIUpacBases(theSequence){	for(var i=0; i<theSequence.length; i++)	{		if(IsIUpacBase(theSequence.charAt(i)))		{	return 1;	}	}	return 0;}function MakeComplement(theSequence, isDNA) {	var returnString="";	var i;	var temp;	for( i=theSequence.length-1; i>=0; i--) {		temp=theSequence.charAt(i);		switch (temp) {			case "A" :				if (isDNA) {					temp="T";				} else {					temp="U";				}				break;			case "T" :				temp="A";				break;			case "U" :				temp="A";				break;			case "G" :				temp="C";				break;			case "C" :				temp="G";				break;			case "M" :				temp="K";				break;			case "K" :				temp="M";				break;			case "R" :				temp="Y";				break;			case "Y" :				temp="R";				break;			case "W" :				temp="W";				break;			case "S" :				temp="S";				break;			case "V" :				temp="B";				break;			case "B" :				temp="V";				break;			case "H" :				temp="D";				break;			case "D" :				temp="H";				break;			default : break;		}		returnString=returnString+temp;	}	return returnString;}function CountChar(theChar, theSequence) {	var returnValue = 0	for ( var i = 0; i < theSequence.length; i++) {		if (theSequence.charAt(i) == theChar) {			returnValue ++;		}	}	return returnValue;}function CountNeighbors(theSeekSeq, theSequence) {	var returnValue = 0;	var i = 0;	while (i>=0 && i<theSequence.length) {		i=theSequence.indexOf(theSeekSeq,i);		if (i>=0) {			returnValue++;			i++;		}	}	return returnValue}function FormatBaseString(theString) {	var returnString = "";	var cnt = 0;	var rcnt = 0;	for ( var i = 0; i < theString.length; i++) {		if (cnt>2) {			returnString += " ";			cnt=0;		}		cnt++;		returnString += theString.charAt(i);	}	return returnString}function micrograms(MolWt,Conc){/* MolWt is gms/mol; Conc is micromoles/L; assume volume is 1 milliliter */	if (MolWt> 0 && Conc> 0) {		return (Math.round(MolWt*Conc/100)/10);	}	return "";}function stringToArray(theString){		theArray=new Array(theString.length);	for( var i=0; i<theString.length; i++) 		theArray[i]=theString.charAt(i); 	return theArray;}function reverseString(theString){		var reversedString="";	for( var i=theString.length-1; i>=0; i--) 		reversedString+=theString.charAt(i);	return reversedString;}function RemoveNonPrintingChars(theString) {	var returnString = ""	for ( var i = 0; i < theString.length; i++) {		if ( theString.charAt(i) > " ") {			returnString += theString.charAt(i);		}	}	return returnString}function GetFivePrimeMod_MW(theModName) {	var mod_mw=0;	switch (theModName) {		case "Amino dT (C2)":			mod_mw+=402;			break;		case "Amino dT (C6)":			mod_mw+=458;			break;		case "BHQ-1":			mod_mw+=554;			break;		case "Bromo-dC":			mod_mw+=368;			break;		case "Bromo-dU":			mod_mw+=369;			break;		case "C12-Aminolink":			mod_mw+=263;			break;		case "C6-Aminolink":			mod_mw+=179;			break;		case "Chol":			mod_mw+=756;			break;		case "CY 3.5":			mod_mw+=607;			break;		case "CY 5.5":			mod_mw+=634;			break;		case "Cy3":			mod_mw+=508;			break;		case "CY3 NHS Ester":			mod_mw+=766;			break;		case "Cy5":			mod_mw+=534;			break;		case "Cy5 Ester":			mod_mw+=820;			break;		case "Dig":			mod_mw+=724;			break;		case "dspacer":			mod_mw+=180;			break;		case "dU":			mod_mw+=290;			break;		case "Fam":			mod_mw+=538;			break;		case "Fluo":			mod_mw+=538;			break;		case "Hex":			mod_mw+=744.1;			break;		case "Hyd-1":			mod_mw+=210;			break;		case "Hyd-2":			mod_mw+=288;			break;		case "Iodo-dC":			mod_mw+=415;			break;		case "Iodo-dU":			mod_mw+=416;			break;		case "IRD700":			mod_mw+=753;			break;		case "IRD800":			mod_mw+=861;			break;		case "Joe":			mod_mw+=667;			break;		case "LCRed-610":			mod_mw+=825;			break;		case "LCRed-640":			mod_mw+=904;			break;		case "LCRed-670":			mod_mw+=534;			break;		case "LCRed-705":			mod_mw+=634;			break;		case "Methylcytosin":			mod_mw+=303.21;			break;		case "Oregon Green 488 (HPLC)":			mod_mw+=574;			break;		case "P32":			mod_mw+=81;			break;		case "P33":			mod_mw+=82;			break;		case "Pho":			mod_mw+=80;			break;		case "Psoralen":			mod_mw+=420;			break;		case "Psoralen":			mod_mw+=453;			break;		case "Rho":			mod_mw+=727;			break;		case "Rho-Green":			mod_mw+=536;			break;		case "Rox":			mod_mw+=698;			break;		case "Spacer-C12":			mod_mw+=264;			break;		case "Spacer-C3":			mod_mw+=138;			break;		case "Spacer-C6":			mod_mw+=180;			break;		case "Tamra":			mod_mw+=576;			break;		case "Tet":			mod_mw+=675;			break;		case "Texas Red":			mod_mw+=882;			break;		case "Thiol":			mod_mw+=328;			break;		case "Uni-Link":			mod_mw+=154;			break;		default:		;	}	return mod_mw;}function GetThreePrimeMod_MW(theModName) {	var mod_mw=0;	switch (theModName) {		case "BHQ-1":			mod_mw+=554;			break;		case "Pho":			mod_mw+=80;			break;		case "BHQ-2":			mod_mw+=554;			break;		case "Biotin":			mod_mw+=380;			break;		case "Biotin TEG":			mod_mw+=570;			break;		case "C7-Aminolink":			mod_mw+=209;			break;		case "CarboxydT":			mod_mw+=440;			break;		case "Chol":			mod_mw+=855;			break;		case "Cy3":			mod_mw+=587;			break;		case "Cy5":			mod_mw+=613;			break;		case "Dabcyl":			mod_mw+=756;			break;		case "ddA":			mod_mw+=297;			break;		case "ddC":			mod_mw+=273;			break;		case "ddT":			mod_mw+=288;			break;		case "Dig with C7 Spacer":			mod_mw+=754;			break;		case "Fam":			mod_mw+=598;			break;		case "Fluo":			mod_mw+=598;			break;		case "Hex":			mod_mw+=1216;			break;		case "Inosin":			mod_mw+=314;			break;		case "Joe":			mod_mw+=697;			break;		case "LCRed-640":			mod_mw+=934;			break;		case "Rho ":			mod_mw+=757;			break;		case "Rox":			mod_mw+=1104;			break;		case "Rox ":			mod_mw+=715;			break;		case "Tamra":			mod_mw+=999;			break;		case "Tet":			mod_mw+=1147;			break;		case "Thiol (C3)":			mod_mw+=243;			break;		default:			;	}	return mod_mw;}
+</script><script language="JavaScript1.1">/*one bug for nearest Neighbor was fixed on 08/02/99 ---"zero the initial values" 
+ *see lines 161-166 */
+/*add primer self-annealing test*/
+/* all object-driven functions moved to OligoCalcObj.js on 12/15/00 WAKibbe */
+
+var blastwindow;	// for blast search
+var primerWin;	// for blast search primer complementarity info
+var minAlignLen; //for 3' complementarity
+var minHairpinLen; //for hairpin
+var maxMismatchNum=1; //for maxi number of mismatches in an alignment
+
+
+function GetOligoValueFromCookie(form) {
+	var temp = form.oligoBox.value;
+	var tseq = GetDefCookie ("oligoSeq", temp);
+	tseq = GetDelimitedValue (tseq,0,";");
+	if (temp != tseq) {
+		form.oligoBox.value = GetDelimitedValue (tseq,0,";");
+		return 1;
+	}
+	return 0;
+}
+
+function DoNewFocus(form) 
+{
+	if (!theOligo){
+		GetOligoValueFromCookie(form);
+		Calculate(form);
+	} else if (GetOligoValueFromCookie(form)) {
+		Calculate(form);
+	}
+}
+
+function Calculate(form) 
+{
+	var temp;
+	var CompString;
+	if (!theOligo){
+		form.oligoBox.focus();
+		theOligo      = new Oligo(); // instantiate Oligo object!
+		theComplement = new Oligo();
+	}
+	ReCalculate(form);
+	return false;
+}
+
+function ReCalculate(form) 
+{
+	var temp;
+	var CompString;
+	if (!theOligo){
+		Calculate(form);
+		return false;
+	}
+	temp=CheckBase(form.oligoBox.value);
+	if (temp==-1){
+		if (form.oligoBox.value.length == 0) form.complementBox.value="";
+		return false;
+	}
+	form.oligoBox.value=temp;
+	theOligo.DoOligoCalc(form, temp);
+	theOligo.GetOligoMods(form);
+	CompString = MakeComplement(form.oligoBox.value, theOligo.isDeoxy);
+	theComplement.DoOligoCalc(form, CompString);
+	if (!theOligo.isSingleStranded) {
+		// calculate the ds MW now that the complement has been made
+		theOligo.DoOligoCalc(form, temp);
+	}
+	theOligo.DoOligoOutput(form, form.oligoBox);
+	form.complementBox.value = FormatBaseString(theComplement.Sequence);
+	return false;
+}
+
+function RecalcMWConcAndOD (form) {
+	theOligo.DoChangeInMWConcAndODs(form);
+	theComplement.DoChangeInMWConcAndODs(form);
+	theOligo.DoChangeInMWConcAndODOutput(form);
+}
+
+function SwapStrands(form) {
+	if (form.complementBox.value!="") {
+		var temp = theOligo;
+		theOligo = theComplement;
+		theComplement = temp;
+	}
+	theOligo.SetOligoMods(form);
+/*	
+	form.fam.value=theOligo.famCount ;
+	form.hex.value=theOligo.hexCount ;
+	form.tet.value=theOligo.tetCount ;
+	form.tamra.value=theOligo.tamraCount ;
+*/
+	form.ODs.value=theOligo.ODs;
+	theOligo.DoOligoOutput(form, form.oligoBox);
+	form.complementBox.value =FormatBaseString(theComplement.Sequence);
+	return false;
+}
+
+
+</script><script language="JavaScript1.1">function Blast2(){	if (document.OligoCalc.oligoBox.value.length < 8) {		alert("Please enter at least 8 bases before trying a BLAST search!");		return false;	}	blastwindow=window.open("","BLAST2","toolbar=no,directories=no,status=yes,location=yes,scrollbars=yes,resizable=1");	blastwindow.document.writeln("\<HTML\>");	blastwindow.document.writeln("\<BODY\>");	blastwindow.document.writeln('\<FORM NAME="blastme" ACTION="http://www.ncbi.nlm.nih.gov/blast/Blast.cgi" METHOD="POST"\>');	blastwindow.document.writeln('\<input type="hidden" name = "QUERY" value="'+document.OligoCalc.oligoBox.value+'"\>');	blastwindow.document.writeln('\<input type="hidden" name = "QUERY_FROM" value=" "\>');	blastwindow.document.writeln('\<input type="hidden" name = "QUERY_TO" value=" "\>');	blastwindow.document.writeln('\<input type="hidden" name = "ENTREZ_QUERY" value="All organisms"\>');	blastwindow.document.writeln('\<input type="hidden" name = "DATABASE" value="nr"\>');	blastwindow.document.writeln('\<input type="hidden" name = "EXPECT" value="100"\>');	blastwindow.document.writeln('\<input type="hidden" name = "WORD_SIZE" value="11"\>');		blastwindow.document.writeln('\<input type="hidden" name = "OTHER_ADVANCED" value=" "\>');	blastwindow.document.writeln('\<input type="hidden" name = "SHOW_OVERVIEW" value="1"\>');	blastwindow.document.writeln('\<input type="hidden" name = "SHOW_LINKOUT" value="1"\>');	blastwindow.document.writeln('\<input type="hidden" name = "NCBI_GI" value="1"\>');	blastwindow.document.writeln('\<input type="hidden" name = "FORMAT_OBJECT" value="Alignment"\>');	blastwindow.document.writeln('\<input type="hidden" name = "FORMAT_TYPE" value="HTML"\>');	blastwindow.document.writeln('\<input type="hidden" name = "DESCRIPTIONS" value="100"\>');	blastwindow.document.writeln('\<input type="hidden" name = "ALIGNMENTS" value="50"\>');	blastwindow.document.writeln('\<input type="hidden" name = "ALIGNMENT_VIEW" value="Pairwise"\>');	blastwindow.document.writeln('\<input type="hidden" name = "FORMAT_ENTREZ_QUERY" value="All organisms"\>');	blastwindow.document.writeln('\<input type="hidden" name = "EXPECT_LOW" value=" "\>');	blastwindow.document.writeln('\<input type="hidden" name = "EXPECT_HIGH" value=" "\>');	blastwindow.document.writeln('\<input type="hidden" name = "LAYOUT" value="TwoWindows"\>');	blastwindow.document.writeln('\<input type="hidden" name = "FORMAT_BLOCK_ON_RESPAGE" value="None"\>');	blastwindow.document.writeln('\<input type="hidden" name = "AUTO_FORMAT" value="Semiauto"\>');	blastwindow.document.writeln('\<input type="hidden" name = "PROGRAM" value="blastn"\>');	blastwindow.document.writeln('\<input type="hidden" name = "SET_DEFAULTS" value="Yes"\>');	blastwindow.document.writeln('\<input type="hidden" name = "CLIENT" value="web"\>');	blastwindow.document.writeln('\<input type="hidden" name = "SERVICE" value="plain"\>');	blastwindow.document.writeln('\<input type="hidden" name = "PAGE" value="Nucleotides"\>');	blastwindow.document.writeln('\<input type="hidden" name = "CMD" value="Put"\>');		if (debug) {		blastwindow.document.writeln('FORM NAME="blastme" ACTION="http://www.ncbi.nlm.nih.gov/blast/Blast.cgi" enctype="application/x-www-form-urlencoded" METHOD="POST"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "QUERY" value="'+document.OligoCalc.oligoBox.value+'"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "QUERY_FROM" value=" "\<br\>');		blastwindow.document.writeln('input type="hidden" name = "QUERY_TO" value=" "\<br\>');		blastwindow.document.writeln('input type="hidden" name = "ENTREZ_QUERY" value="All organisms"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "DATABASE" value="nr"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "EXPECT" value="100"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "WORD_SIZE" value="11"\<br\>');				blastwindow.document.writeln('input type="hidden" name = "OTHER_ADVANCED" value=" "\<br\>');		blastwindow.document.writeln('input type="hidden" name = "SHOW_OVERVIEW" value="1"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "SHOW_LINKOUT" value="1"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "NCBI_GI" value="1"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "FORMAT_OBJECT" value="Alignment"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "FORMAT_TYPE" value="HTML"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "DESCRIPTIONS" value="100"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "ALIGNMENTS" value="50"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "ALIGNMENT_VIEW" value="Pairwise"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "FORMAT_ENTREZ_QUERY" value="All organisms"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "EXPECT_LOW" value=" "\<br\>');		blastwindow.document.writeln('input type="hidden" name = "EXPECT_HIGH" value=" "\<br\>');		blastwindow.document.writeln('input type="hidden" name = "LAYOUT" value="TwoWindows"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "FORMAT_BLOCK_ON_RESPAGE" value="None"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "AUTO_FORMAT" value="Semiauto"\<br\>');			blastwindow.document.writeln('input type="hidden" name = "PROGRAM" value="blastn"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "SET_DEFAULTS" value="Yes"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "CLIENT" value="web"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "SERVICE" value="plain"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "PAGE" value="Nucleotides"\<br\>');		blastwindow.document.writeln('input type="hidden" name = "CMD" value="Put"\<br\>');		blastwindow.document.writeln('\<input type="submit" name = "Submit" value="DoIt"\>');		}	blastwindow.document.writeln('\</FORM\>');	blastwindow.document.writeln("\</BODY\>");	blastwindow.document.writeln("\</HTML\>");	blastwindow.document.close();	// without this you never get anywhere!	if (!debug) {		blastwindow.document.forms[0].submit();	}	return false;}
+</script><script language="JavaScript1.1">/* This file has the object container definitions *//* Defs  **function Oligo()  // call new Oligo() to initialize this objectfunction DoOligoCalc(form, theSequence) // direct interface with FORMfunction GetOligoMods(form) // direct interface with FORMfunction SetOligoMods(form) // direct interface with FORMfunction DoChangeInMWConcAndODOutput(form) // direct interface with FORMfunction DoOligoOutput(form, theSequenceObj) // direct interface with FORMfunction OligoCalcMWConcAndODs() // split out to make changes in famra, OD, etc easier to calcfunction DoChangeInMWConcAndODs(form) // direct interface with FORMfunction OligoCalculate()function OligoCount()function A260(choice)function MW(choice)function GC(choice)function Tm(choice)function WAKTm(choice)function DeltaG(choice)function DeltaH(choice) function DeltaS(choice) function NeighborTM( choice)*** */function Oligo(){	 // initialize	this.aCount = 0;	this.cCount = 0;	this.gCount = 0;	this.tCount = 0;	this.uCount = 0;	this.iCount = 0;	this.mCount = 0;	this.rCount = 0;	this.wCount = 0;	this.sCount = 0;	this.yCount = 0;	this.kCount = 0;	this.vCount = 0;	this.hCount = 0;	this.dCount = 0;	this.bCount = 0;	this.nCount = 0;		this.gcValmin = 0;	this.gcValmax = 0;	this.mwValmin = 0;	this.mwValmax = 0;	this.concValmin = 0;	this.concValmax = 0;	this.microgramValmin = 0;	this.microgramValmax = 0;		this.deltaHValmin = 0;	this.deltaGValmin = 0;	this.deltaSValmin = 0;	this.deltaHValmax = 0;	this.deltaGValmax = 0;	this.deltaSValmax = 0;		this.RlogK = 0;		this.basicTmValmin = 0;	this.adjustedTmValmin = 0;	this.nearestNeighborTmValmin = 0;	this.basicTmValmax = 0;	this.adjustedTmValmax = 0;	this.nearestNeighborTmValmax = 0;			this.eA_A260min=0;	this.eC_A260min=0;	this.eG_A260min=0;	this.eT_A260min=0;	this.eU_A260min=0;		this.eA_A260max=0;	this.eC_A260max=0;	this.eG_A260max=0;	this.eT_A260max=0;				this.eU_A260max=0;					//effective counts for MW()	this.eA_MWmin=0;	this.eC_MWmin=0;	this.eG_MWmin=0;	this.eT_MWmin=0;	this.eU_MWmin=0;	this.eI_MWmin=0;		this.eA_MWmax=0;	this.eC_MWmax=0;	this.eG_MWmax=0;	this.eT_MWmax=0;														  	this.eU_MWmax=0;														  	this.eI_MWmax=0;														  	this.eGC_min=0;	this.eGC_max=0;										this.aaCount = 0;	this.atCount = 0;	this.taCount = 0;	this.caCount = 0;	this.gtCount = 0;	this.ctCount = 0;	this.gaCount = 0;	this.cgCount = 0;	this.gcCount = 0;	this.ggCount = 0;	this.IUpairVals_min=new Array(0,0,0);	this.IUpairVals_max=new Array(0,0,0);	this.hasIUpacBase=0;	this.isDeoxy=1;	this.isSingleStranded=1;		// arrays	this.seqArray;	this.revSeqArray;		// function associations	this.Tm = Tm;	this.WAKTm = WAKTm;	this.GC = GC;	this.MW = MW;	this.A260 = A260;	this.DeltaH = DeltaH;	this.DeltaG = DeltaG;	this.DeltaS = DeltaS;	this.NeighborTM = NeighborTM;	this.OligoCount = OligoCount;	this.OligoCalculate = OligoCalculate;	this.OligoCalcMWConcAndODs=OligoCalcMWConcAndODs;	this.DoChangeInMWConcAndODs = DoChangeInMWConcAndODs; //public interface	this.DoChangeInMWConcAndODOutput = DoChangeInMWConcAndODOutput; //public interface	this.DoOligoCalc = DoOligoCalc;  //public interface	this.GetOligoMods = GetOligoMods;  //public interface	this.SetOligoMods = SetOligoMods;  //public interface	this.DoOligoOutput = DoOligoOutput;  //public interface		// publically set values	this.Sequence="";	this.revSequence="";	this.ODs = 1;	this.FivePrimeModification = "";	this.FivePrimeMW = 0;	this.ThreePrimeModification = "";	this.ThreePrimeMW = 0;	this.famCount = 0;	this.tetCount = 0;	this.hexCount = 0;	this.tamraCount = 0;	this.saltConcentration = 50;	this.primerConcentration = 50;}// direct interface with FORMfunction GetOligoMods(form)  {	this.FivePrimeModification = form.FivePrime.options[form.FivePrime.selectedIndex].text;	this.FivePrimeMW = parseInt( form.FivePrime.options[form.FivePrime.selectedIndex].value);	this.ThreePrimeModification = form.ThreePrime.options[form.ThreePrime.selectedIndex].text;	this.ThreePrimeMW = parseInt(form.ThreePrime.options[form.ThreePrime.selectedIndex].value);/*	this.famCount   = form.fam.value;	this.hexCount   = form.hex.value;	this.tetCount   = form.tet.value;	this.tamraCount = form.tamra.value;*/}// direct interface with FORMfunction SetOligoMods(form)  {	form.FivePrime.options.selectedIndex=0;	for (var i = 0; i < form.FivePrime.options.length; i++) {		if (this.FivePrimeModification.length > 0) {			if (form.FivePrime.options[i].text.indexOf(this.FivePrimeModification) >= 0) {				form.FivePrime.options[i].selected=true;				form.FivePrime.options.selectedIndex=i;			} else {				form.FivePrime.options[i].selected=false;			}		}	}	form.ThreePrime.options.selectedIndex=0;	for (var i = 0; i < form.ThreePrime.options.length; i++) {		if (this.ThreePrimeModification.length > 0) {			if (form.ThreePrime.options[i].text.indexOf(this.ThreePrimeModification) >= 0) {				form.ThreePrime.options[i].selected=true;				form.ThreePrime.options.selectedIndex=i;			} else {				form.ThreePrime.options[i].selected=false;			}		}	}}// direct interface with FORMfunction DoOligoCalc(form, theSequence)  {	temp=CheckBase(theSequence); // external call	if (temp==-1) {return;} // do not continue if the sequence is not valid!	this.Sequence=temp;	this.ODs        = form.ODs.value;	this.saltConcentration = parseFloat(form.saltConcBox.value); // parseInt(form.saltConcBox.value);	this.primerConcentration = parseFloat(form.primerConcBox.value);  // parseInt(form.primerConcBox.value);	this.hasIUpacBase=AreThereIUpacBases(this.Sequence);	if (debug) alert("Sequence length="+this.Sequence.length+"; Sequence="+this.Sequence);	temp = form.deoxy.options[form.deoxy.selectedIndex].value;	if (temp.indexOf("DNA") >= 0) {		this.isDeoxy	= 1;	} else {		this.isDeoxy	= 0;	}	if (temp.indexOf("ds") >= 0) {		this.isSingleStranded	= 0;	} else {		this.isSingleStranded	= 1;	}	this.OligoCalculate();}// direct interface with FORMfunction DoChangeInMWConcAndODOutput(form)  {	if (debug) alert('MW='+this.mwValmin);	if(!this.hasIUpacBase)	{		if (this.isSingleStranded) {			form.mwBox.value = this.mwValmin;		} else {			form.mwBox.value=theOligo.mwValmin+theComplement.mwValmin;		}				form.micromolarConc.value = this.concValmin;		form.micrograms.value = this.microgramValmin;	}else{		if (this.isSingleStranded) {			form.mwBox.value = this.mwValmin+" to "+this.mwValmax;		} else {			var tempMIn=theOligo.mwValmin+theComplement.mwValmin;			var tempMax=theOligo.mwValmax+theComplement.mwValmax;			form.mwBox.value = tempMIn+" to "+tempMax;		}				form.micromolarConc.value=this.concValmin+" to "+this.concValmax;		form.micrograms.value = this.microgramValmin+" to "+this.microgramValmax;	}}// direct interface with FORMfunction DoOligoOutput(form, theSequenceObj)  {	this.DoChangeInMWConcAndODOutput(form);	if(!this.hasIUpacBase){		form.gcBox.value    = this.gcValmin;		form.tmBox.value    = this.basicTmValmin;		form.WAKtmBox.value = this.adjustedTmValmin;		form.nTmBox.value   = this.nearestNeighborTmValmin;	}else{		form.gcBox.value    = this.gcValmin+" to "+this.gcValmax;		form.tmBox.value    = this.basicTmValmin+" to "+this.basicTmValmax;		form.WAKtmBox.value = this.adjustedTmValmin+" to "+this.adjustedTmValmax;		form.nTmBox.value   = this.nearestNeighborTmValmin+" to "+this.nearestNeighborTmValmax;	}	form.RlogKBox.value =this.RlogK;	if(!this.hasIUpacBase)	{			form.deltaHBox.value = this.deltaHValmin;		form.deltaGBox.value = this.deltaGValmin;		form.deltaSBox.value = this.deltaSValmin;	}else{		form.deltaHBox.value = this.deltaHValmin+" to "+this.deltaHValmax;		form.deltaGBox.value = this.deltaGValmin+" to "+this.deltaGValmax;		form.deltaSBox.value = this.deltaSValmin+" to "+this.deltaSValmax;	}	form.lBox.value = this.Sequence.length;	theSequenceObj.value =FormatBaseString(this.Sequence);}// split out to make changes in famra, OD, etc easier to calcfunction OligoCalcMWConcAndODs()  {	/*** Now do MW calculation ***/	if(!this.hasIUpacBase) {		this.mwValmin = this.MW("min");		this.mwValmax = this.mwValmin;	} else {		this.mwValmin = this.MW("min");		this.mwValmax = this.MW("max");	}	if (debug) alert("oligoCalc mw val="+this.mwValmin);	/*** Now do A260 concentration calculation ***/	this.concValmin = this.A260("min");	this.concValmax = this.A260("max");	this.microgramValmin = micrograms(this.mwValmin, this.concValmin); // external call	this.microgramValmax = micrograms(this.mwValmax, this.concValmax);}// direct interface with FORMfunction DoChangeInMWConcAndODs(form)  {	this.FivePrimeModification = form.FivePrime.options[form.FivePrime.selectedIndex].text;	this.FivePrimeMW = parseInt(form.FivePrime.options[form.FivePrime.selectedIndex].value);	this.ThreePrimeModification = form.ThreePrime.options[form.ThreePrime.selectedIndex].text;	this.ThreePrimeMW = parseInt(form.ThreePrime.options[form.ThreePrime.selectedIndex].value);/*	this.famCount   = form.fam.value;	this.hexCount   = form.hex.value;	this.tetCount   = form.tet.value;	this.tamraCount = form.tamra.value;*/	this.ODs        = form.ODs.value;	temp = form.deoxy.options[form.deoxy.selectedIndex].value;	if (temp.indexOf("DNA") >= 0) {		this.isDeoxy	= 1;	} else {		this.isDeoxy	= 0;	}	if (temp.indexOf("ds") >= 0) {		this.isSingleStranded	= 0;	} else {		this.isSingleStranded	= 1;	}	this.OligoCalculate();}function OligoCalculate() {	this.OligoCount();	/*** Do GC calculation ***/	if(!this.hasIUpacBase) {		this.gcValmin = this.GC("min");		this.gcValmax = this.gcValmin;	} else {		this.gcValmin = this.GC("min");		this.gcValmax = this.GC("max");	}	this.OligoCalcMWConcAndODs()			/** Calculate numbers for Thermodynamic TM calculation **/	if(!this.hasIUpacBase)	{			this.deltaHValmin = this.DeltaH("min");		this.deltaGValmin = this.DeltaG("min");		this.deltaSValmin = this.DeltaS("min");		this.deltaHValmax = this.deltaHValmin;		this.deltaGValmax = this.deltaGValmin;		this.deltaSValmax = this.deltaSValmin;	} else {		this.deltaHValmin = this.DeltaH("min");		this.deltaGValmin = this.DeltaG("min");		this.deltaSValmin = this.DeltaS("min");		this.deltaHValmax = this.DeltaH("max");		this.deltaGValmax = this.DeltaG("max");		this.deltaSValmax = this.DeltaS("max");	}	if(!this.hasIUpacBase){		this.basicTmValmin           = this.Tm("min");		this.adjustedTmValmin        = this.WAKTm("min");		this.nearestNeighborTmValmin = this.NeighborTM("min");		this.basicTmValmax           = this.basicTmValmin;		this.adjustedTmValmax        = this.adjustedTmValmin;		this.nearestNeighborTmValmax = this.adjustedTmValmin;	}else{		this.basicTmValmin           = this.Tm("min");		this.adjustedTmValmin        = this.WAKTm("min");		this.nearestNeighborTmValmin = this.NeighborTM("min");		this.basicTmValmax           = this.Tm("max");		this.adjustedTmValmax        = this.WAKTm("max");		this.nearestNeighborTmValmax = this.NeighborTM("max");	}}function OligoCount(){		this.aCount = CountChar("A",this.Sequence);	this.cCount = CountChar("C",this.Sequence);	this.gCount = CountChar("G",this.Sequence);	this.tCount = CountChar("T",this.Sequence);	this.uCount = CountChar("U",this.Sequence);	this.iCount = CountChar("I",this.Sequence);	this.mCount = CountChar("M",this.Sequence);	this.rCount = CountChar("R",this.Sequence);	this.wCount = CountChar("W",this.Sequence);	this.sCount = CountChar("S",this.Sequence);	this.yCount = CountChar("Y",this.Sequence);	this.kCount = CountChar("K",this.Sequence);	this.vCount = CountChar("V",this.Sequence);	this.hCount = CountChar("H",this.Sequence);	this.dCount = CountChar("D",this.Sequence);	this.bCount = CountChar("B",this.Sequence);	this.nCount = CountChar("N",this.Sequence);	//Effective a,c,g,t count for different calculations	//effective counts for A260min()	this.eA_A260min=this.aCount;	this.eU_A260min=this.uCount;	this.eI_A260min=this.iCount;	this.eC_A260min=this.cCount+this.mCount+this.sCount+this.yCount+this.vCount						+this.hCount+this.bCount+this.nCount;	this.eG_A260min=this.gCount+this.rCount;	this.eT_A260min=this.tCount+this.wCount+this.kCount+this.dCount;		this.eA_A260max=this.aCount+this.mCount+this.rCount+this.wCount+this.vCount					+this.hCount+this.bCount+this.nCount;	this.eC_A260max=this.cCount;	this.eG_A260max=this.gCount+this.sCount+this.kCount+this.dCount;	this.eT_A260max=this.tCount+this.yCount;					//effective counts for MW()	this.eA_MWmin=this.aCount+this.rCount;	this.eC_MWmin=this.eC_A260min;	this.eU_MWmin=this.eU_A260min;	this.eI_MWmin=this.eI_A260min;	this.eG_MWmin=this.gCount;	this.eT_MWmin=this.eT_A260min;		this.eA_MWmax=this.aCount+this.mCount+this.wCount+this.hCount;	this.eC_MWmax=this.cCount;	this.eG_MWmax=this.gCount+this.rCount+this.sCount+this.kCount+this.vCount+					this.dCount+this.bCount+this.nCount;	this.eT_MWmax=this.tCount+this.yCount;						this.eGC_min=this.gCount + this.cCount +this.sCount;	this.eGC_max=(this.Sequence.length)-this.aCount-this.tCount-this.wCount-this.uCount;																							  																							  	// count Nearest Neighbors	this.aaCount = CountNeighbors("AA",this.Sequence)+CountNeighbors("TT",this.Sequence)+CountNeighbors("UU",this.Sequence);	this.atCount = CountNeighbors("AT",this.Sequence)+CountNeighbors("AU",this.Sequence);	this.taCount = CountNeighbors("TA",this.Sequence)+CountNeighbors("UA",this.Sequence);	this.caCount = CountNeighbors("CA",this.Sequence)+CountNeighbors("TG",this.Sequence)+CountNeighbors("UG",this.Sequence);	this.gtCount = CountNeighbors("GT",this.Sequence)+CountNeighbors("AC",this.Sequence)+CountNeighbors("GU",this.Sequence);	this.ctCount = CountNeighbors("CT",this.Sequence)+CountNeighbors("AG",this.Sequence)+CountNeighbors("CU",this.Sequence);	this.gaCount = CountNeighbors("GA",this.Sequence)+CountNeighbors("TC",this.Sequence)+CountNeighbors("UC",this.Sequence);	this.cgCount = CountNeighbors("CG",this.Sequence);	this.gcCount = CountNeighbors("GC",this.Sequence);	this.ggCount = CountNeighbors("GG",this.Sequence)+CountNeighbors("CC",this.Sequence);	//Calculate IUpac pairs	/*----08/02/99 fix one bug for nearest Neighbor Calc, */	for(var j=0; j<3; j++)	{			this.IUpairVals_min[j]=0;		this.IUpairVals_max[j]=0;	}	/*******************************************************/	for(var i=1; i<this.Sequence.length;i++) {	//first base can not be IUpacbase		var base0=this.Sequence.charAt((i-1));		var base=this.Sequence.charAt(i);		var temp=new Array(0,0,0);			temp=CalcIUpair(base0, base, i, this.Sequence, "min");		if (debug) alert("temp "+temp[0]+" "+temp[1]+" "+temp[2]);		for(var j=0; j<3; j++) {				this.IUpairVals_min[j]+=temp[j];		}		if (debug) alert("mim"+this.IUpairVals_min[0]+" "+this.IUpairVals_min[1]+" "+this.IUpairVals_min[2]);		temp=CalcIUpair(base0, base, i, this.Sequence, "max");		if (debug) alert("temp "+temp[0]+" "+temp[1]+" "+temp[2]);		for( j=0; j<3; j++) {			this.IUpairVals_max[j]+=temp[j];		}		if (debug) alert("max"+this.IUpairVals_max[0]+" "+this.IUpairVals_max[1]+" "+this.IUpairVals_max[2]);	}}/* Molar AbsorptivityValues from ABI, units M-1 cm-1A	15200	G	12010	C	7050	T	8400	6' FAM	20960	TET	16255HEX	31580	TAMRA	31980Need ribonucleotide molar absorptivitiesU 20800Assume 1 OD of a standard 1ml solution (1 cm pathlength)-----  */function A260(choice) {	var div;  if (this.Sequence.length > 0) {  	if (this.isSingleStranded) {		if (this.isDeoxy) {			if(choice=="min"){	//calculates the minimum value, use the e_A260max since it is the divident				div=(this.eA_A260max * 15200 +					this.eG_A260max * 12010 +					this.eC_A260max *  7050 +					this.eT_A260max *  8400 +					this.eU_A260max * 9800 +					this.famCount *  20960 +					this.tetCount *  16255 +					this.hexCount *  31580 +					this.tamraCount *  31980);			}else{ //choice=="max"				div=(this.eA_A260min * 15200 +					this.eG_A260min * 12010 +					this.eC_A260min *  7050 +					this.eT_A260min *  8400 +					this.eU_A260min * 9800 +					this.famCount *  20960 +					this.tetCount *  16255 +					this.hexCount *  31580 +					this.tamraCount *  31980);			}		} else {			if(choice=="min"){	//calculates the minimum value, use the e_A260max since it is the divident				div=(this.eA_A260max * 15400 +					this.eG_A260max * 13700 +					this.eC_A260max *  9000 +					this.eT_A260max *  9400 +					this.eU_A260max * 10000 +					this.famCount *  20960 +					this.tetCount *  16255 +					this.hexCount *  31580 +					this.tamraCount *  31980);			}else{ //choice=="max"				div=(this.eA_A260min * 15400 +					this.eG_A260min * 13700 +					this.eC_A260min *  9000 +					this.eT_A260min *  9400 +					this.eU_A260min * 10000 +					this.famCount *  20960 +					this.tetCount *  16255 +					this.hexCount *  31580 +					this.tamraCount *  31980);			}		}	} else {		if (this.isDeoxy) {			div=this.Sequence.length * 2 * 6400;		} else {			div=this.Sequence.length * 2 * 8000;		}	}	// units are in microMoles/liter	return (Math.round( this.ODs * 	1000000000/div)/1000);		  }	return "";}function GetMod_A260() {	return 0;}function MW(choice) {	var mw;	if (this.Sequence.length > 0) {		if (this.isDeoxy) {			if(choice=="min"){				mw=     313.21 * this.eA_MWmin + 						329.21 * this.eG_MWmin + 						289.18 * this.eC_MWmin + 						304.2  * this.eT_MWmin + 						290.169 * this.eU_MWmin + 						314. * this.eI_MWmin 						- 61.96;			}else{				mw=     313.21 * this.eA_MWmax + 						329.21 * this.eG_MWmax + 						289.18 * this.eC_MWmax + 						304.2 * this.eT_MWmax + 						290.169 * this.eU_MWmax +						314. * this.eI_MWmax						- 61.96;			}		} else { // is riboNucleotide			if(choice=="min"){				mw=     329.21 * this.eA_MWmin + 						345.21 * this.eG_MWmin + 						305.18 * this.eC_MWmin + 						320.2  * this.eT_MWmin + 						306.169 * this.eU_MWmin +						330  * this.eI_MWmin						+159;								}else{				mw=     329.21 * this.eA_MWmax + 						345.21 * this.eG_MWmax + 						305.18 * this.eC_MWmax + 						320.2 * this.eT_MWmax + 						306.169 * this.eU_MWmax +						330  * this.eI_MWmax						+159; 			}		}		var new_mw = mw+this.FivePrimeMW;		new_mw += this.ThreePrimeMW;		new_mw= Math.round( 10 * new_mw)/10;		return new_mw;	}	return "";}function GC(choice){	if (this.Sequence.length > 0) {		if(choice=="min"){			return Math.round( 100 * this.eGC_min /this.Sequence.length )		}else{			return Math.round(100*this.eGC_max/this.Sequence.length);		}	}	return "";}function Tm(choice){	if (this.Sequence.length > 0) {		if (this.Sequence.length < 14) {			if(choice=="min"){				return  Math.round(2 * (this.Sequence.length-this.eGC_min) + 4 * (this.eGC_min));			}else{				return  Math.round(2 * (this.Sequence.length-this.eGC_max) + 4 * (this.eGC_max));			}		}		else {			if(choice=="min"){				return Math.round(64.9 +  41*((this.eGC_min - 16.4) / this.Sequence.length));			}else{				return Math.round(64.9 + 41*((this.eGC_max - 16.4) / this.Sequence.length));			}		}	}	return "";}function WAKTm(choice){	if (this.Sequence.length > 0) {		if (this.isDeoxy) {			if (this.Sequence.length < 14) {				if(choice=="min"){					return  Math.round(2 * (this.Sequence.length-this.eGC_min) + 4 * (this.eGC_min)+ 						21.6+(7.21*Math.log(this.saltConcentration/1000)));				} else{					return  Math.round(2 * (this.Sequence.length-this.eGC_max) + 4 * (this.eGC_max)+ 						21.6+(7.21*Math.log(this.saltConcentration/1000)));				}			}			else {				if (choice=="min"){				return Math.round(100.5 + (0.41*this.gcValmin) - (820 / this.Sequence.length)+					(7.21*Math.log(this.saltConcentration/1000)));			} else {				return Math.round(100.5 + (0.41*this.gcValmax) - (820 / this.Sequence.length)+ 					(7.21*Math.log(this.saltConcentration/1000)));				}			}		} else {			if (this.Sequence.length > 20) {				if (choice=="min"){					return Math.round(79.8 + (0.584*this.gcValmin) + (11.8*(this.gcValmin/100)*(this.gcValmin/100)) - (820 / this.Sequence.length)+						(8.03*Math.log(this.saltConcentration/1000)));				} else {					return Math.round(79.8 + (0.584*this.gcValmax) - (820 / this.Sequence.length)+ 						(8.03*Math.log(this.saltConcentration/1000)));				}			} else {				return "too short";			}		}	}	return "";}/* ******	deltaH=deltaG + TdeltaS	delta G =  RT ln ([DNA-primer complex]/([DNA][primer]))	T = deltaH/(deltaS + R ln([DNA-primer complex]/([DNA][primer])))  + 7.21* ln [Na concentration])	Assume [DNA-primer complex] = [DNA]	NOTE: Javascript Math.log() calls a NATURAL LOG, not Log base 10!*/function DeltaG(choice){	if (this.Sequence.length > 7) {		var val= -5.0;		// Helix initiation Free Energy of 5 kcal.		// symmetry function: if symmetrical, subtract another 0.4		val+=1.2*this.aaCount;		val+=0.9*this.atCount;		val+=0.9*this.taCount;		val+=1.7*this.caCount;		val+=1.5*this.gtCount;		val+=1.5*this.ctCount;		val+=1.5*this.gaCount;		val+=2.8*this.cgCount;		val+=2.3*this.gcCount;		val+=2.1*this.ggCount;		if(choice=="min"){ 			val+=this.IUpairVals_min[0];		}else{							val+=this.IUpairVals_max[0];		}		return Math.round((1000*val))/1000;	}	return "";}function DeltaH(choice) {	if (this.Sequence.length > 7) {		var val= 0.0;		if (this.isDeoxy) {			val+=8.0*this.aaCount;			val+=5.6*this.atCount;			val+=6.6*this.taCount;			val+=8.2*this.caCount;			val+=9.4*this.gtCount;			val+=6.6*this.ctCount;			val+=8.8*this.gaCount;			val+=11.8*this.cgCount;			val+=10.5*this.gcCount;			val+=10.9*this.ggCount;		} else { 			val+=6.8*this.aaCount;			val+=9.38*this.atCount;			val+=7.69*this.taCount;			val+=10.44*this.caCount;			val+=11.4*this.gtCount;			val+=10.48*this.ctCount;			val+=12.44*this.gaCount;			val+=10.64*this.cgCount;			val+=14.88*this.gcCount;			val+=13.39*this.ggCount;		}		if(choice=="min"){			val+=this.IUpairVals_min[1];		}else{			val+=this.IUpairVals_max[1];		}		return Math.round((1000*val))/1000;	}	return "";}/*All the info I have is included in the distribution of MELTINGXia T., SantaLucia J., Burkard M.E., Kierzek R., Schroeder S.J., Jiao X.,Cox C., Turner D.H. (1998). Thermodynamics parameters for an expandednearest-neighbor model for formation of RNA duplexes with Watson-Crickbase pairs. Biochemistry 37: 14719-14735    DeltaH   DeltaS    J.mol-1  J.mol-1.K-1AA  -6820.0  -19.0AC -10200.0  -26.2AG  -7600.0  -19.2AU  -9380.0  -26.7CA -10440.0  -26.9CC -12200.0  -29.7CG -10640.0  -26.7CU -10480.0  -27.1GA -12440.0  -32.5GC -14880.0  -36.9GG -13390.0  -32.7GU -11400.0  -29.5UA  -7690.0  -20.5UC -13300.0  -35.5UG -10500.0  -27.8UU  -6600.0  -18.4IA   3720.0  -10.5IG   3610.0    1.5*/function DeltaS(choice) {	if (this.Sequence.length > 7) {		var val=0;		if (this.isDeoxy) {			val+=21.9*this.aaCount;			val+=15.2*this.atCount;			val+=18.4*this.taCount;			val+=21.0*this.caCount;			val+=25.5*this.gtCount;			val+=16.4*this.ctCount;			val+=23.5*this.gaCount;			val+=29.0*this.cgCount;			val+=26.4*this.gcCount;			val+=28.4*this.ggCount;		} else {			val+=19.0*this.aaCount;			val+=26.7*this.atCount;			val+=20.5*this.taCount;			val+=26.9*this.caCount;			val+=29.5*this.gtCount;			val+=27.1*this.ctCount;			val+=32.5*this.gaCount;			val+=26.7*this.cgCount;			val+=36.9*this.gcCount;			val+=32.7*this.ggCount;		}		if(choice=="min"){			val+=this.IUpairVals_min[2];		}else{			val+=this.IUpairVals_max[2];		}		return Math.round((1000*val))/1000;	}	return "";}function NeighborTM( choice){	var theReturn = "";	if (this.Sequence.length > 7) {		//		var K = 1/(this.primerConcentration*1E-9);  // Convert from nanomoles to moles		var R = 1.987;  //cal/(mole*K);		var RlnK = R*Math.log(K);		this.RlogK =Math.round(1000* RlnK)/1000;		// Helix initiation Free Energy of 3.4 kcal (Sugimoto et al, 1996)		// symmetry function: if symmetrical, subtract another 0.4		if (choice =="min") {			theReturn = 1000*((this.deltaHValmin-3.4)/(this.deltaSValmin+RlnK));			theReturn += -272.9;  // Kelvin to Centigrade			theReturn += 7.21*Math.log (this.saltConcentration/1000);			theReturn = Math.round(theReturn);		} else {			theReturn = 1000*((this.deltaHValmax-3.4)/(this.deltaSValmax+RlnK));			theReturn += -272.9; // Kelvin to Centigrade			theReturn += 7.21*Math.log (this.saltConcentration/1000);			theReturn = Math.round(theReturn);		}	} else {		this.RlogK ="";	}	return theReturn;}
+</script><script language="JavaScript1.2">// Primer calculations ---  Find self-dimerization and hairpin/* ** The self dimerization and complementarity functions **function calcPrimer(form)function calcDegeneratePrimers(doc)function calculateMatrices()function calcHairpin(seqArray, pivit)function fillMatchMatrix(cols, rows, mat)function makeAlignedArray(mat, minLen, maxMisMatch)function sortAlignedArray()function isBaseEqual(c1, c2)function getIndexOf(seq, subSeq, startAt)function displayHairpin()function display3EndDimer()function displayAllDimers() //all possible dimerization sites**  ***//* GLOBALS */var debugHairpin=0;var debugDimers=0;var doTiming=0;var theAlignedArray=0;var theHairpinArray=0;var	minAlignLen;var	minHairpinLen;var bubbleSize=3; // hairpins must have this many bases between self-annealed sequencesfunction calcPrimer(form){	var theStart;	var theEnd;	var	calcStart=new Date();	if (document.OligoCalc.oligoBox.value.length < 8) {		alert("Please enter at least 8 bases before checking for self-complementarity!");		return false;	}	Calculate(form);	if (theOligo.seqArray) delete theOligo.seqArray;	if (theOligo.revSeqArray) delete theOligo.revSeqArray;	if (theComplement.seqArray) delete theComplement.seqArray;	if (theComplement.revSeqArray) delete theComplement.revSeqArray;		theOligo.revSequence=reverseString(theOligo.Sequence);	theComplement.revSequence=reverseString(theComplement.Sequence);	theOligo.seqArray=stringToArray(theOligo.Sequence);	theOligo.revSeqArray=stringToArray(theOligo.revSequence);	theComplement.seqArray=stringToArray(theComplement.Sequence);	theComplement.revSeqArray=stringToArray(theComplement.revSequence);	minAlignLen=parseInt(form.selfComp.options[form.selfComp.selectedIndex].value); //for 3' complementarity	minHairpinLen=parseInt(form.hairpin.options[form.hairpin.selectedIndex].value);  //for hairpin	broadMatch=false; //true: do all degenerate comparisons	// now create window	primerWin=window.open( "", 'primer','width=700,toolbar=0,location=0,directories=0,status=1,menuBar=1,scrollBars=1,resizable=1' );	primerWin.document.open("text/html");	primerWin.document.writeln("<HTML><HEAD><TITLE>Oligo Self Complementarity Check</TITLE></HEAD>");	primerWin.document.write('<STYLE type="text/css">');	primerWin.document.write('<!--');	if (isMac && browserVersion < 5.0) {		primerWin.document.write(MacStyleSheet);	} else {		primerWin.document.write(PCStyleSheet);	}	primerWin.document.write('-->');	primerWin.document.write('</STYLE>');	primerWin.document.writeln("<BODY BGCOLOR=white>");	theEnd=new Date();	if (doTiming) primerWin.document.write("calcPrimer - initialize window took "+(theEnd-calcStart)+" ms<br>");	calculateMatrices(); // do this after the window is in place so we can print diagnostics if necessary	anchorString="";	primerWin.document.writeln(anchorString.anchor("strictMatches"));	if(theOligo.hasIUpacBase)	{		primerWin.document.writeln("Your oligo contains degenerate bases.<BR>");		primerWin.document.writeln("The strictMatch section displays only <font COLOR='RED'>perfect matches </FONT>in the case of degenerate bases.<BR>");		primerWin.document.writeln("For Example:<BR> <PRE>   'N' matches only with 'N';<BR>   'R' matches only with 'S';<BR>   'W' matches only with 'W'; etc.</PRE><P>");		hrefString="view all matches."		primerWin.document.writeln("Scroll down to view <font COLOR='GREEN'><a href='#allMatches'>all Matches</a></FONT>");	}	if(!isCompatible)	{	primerWin.document.writeln("<p><b>Sorry, the hairpin loop calculation is only available if you are using Netscape or IE 4.0 or higher!\n</B><br>");	}else{		theStart=new Date();		primerWin.document.writeln(displayHairpin(theHairpinArray,theOligo.Sequence));		theEnd=new Date();		if (doTiming) primerWin.document.write("calcPrimer - displayHairpin took "+(theEnd-theStart)+" ms<br>");	}	theStart=new Date();	primerWin.document.writeln(display3EndDimer(theAlignedArray));	theEnd=new Date();	if (doTiming) primerWin.document.write("calcPrimer - display3EndDimer took "+(theEnd-theStart)+" ms<br>");	theStart=new Date();	primerWin.document.writeln(displayAllDimers(theAlignedArray,theOligo.Sequence,theOligo.revSequence));	theEnd=new Date();	if (doTiming) primerWin.document.write("calcPrimer - displayAllDimers took "+(theEnd-theStart)+" ms<br>");	theStart=new Date();	if(theOligo.hasIUpacBase)	{		calcDegeneratePrimers(primerWin.document);	} 	theEnd=new Date();	if (doTiming) primerWin.document.write("calcPrimer - all calls to close took "+(theEnd-calcStart)+" ms<br>");	primerWin.document.writeln("</BODY></HTML>"); 	primerWin.document.close();	primerWin.focus();	return false; }function calcDegeneratePrimers(doc){	if(!theOligo.hasIUpacBase){ return;}	broadMatch=true; //true: do all degenerate comparisons	calculateMatrices();	anchorString="<font COLOR='green'>-----------------------------<BR>-----------------------------<BR></FONT>";	doc.write(anchorString.anchor("allMatches"));		doc.write("Your oligo contains degenerated bases.<BR>");	doc.write("This section displays <font COLOR='RED'>all potential matches </FONT>in the case of degenerated bases.<BR>");	doc.write("For Example:<BR> <PRE>   'N' matches 'A','T','G','C', or 'N';<BR>   'R' matches 'T','C','S','N';<BR>   'W' matches 'A','T','W','N'; etc.</PRE><P>");	hrefString="view strict matches only";	doc.writeln("Scroll up to view <FONT COLOR='green'> <a href='#strictMatches'>strict Matches</a> </FONT>");		if(!isCompatible)	{	doc.write("<p><b>Sorry, the hairpin loop calculation is only available if you are using IE or Netscape 4.x or higher!!\n</B><br>");	}else{		doc.writeln(displayHairpin(theHairpinArray,theOligo.Sequence));	}	doc.write(display3EndDimer(theAlignedArray));	doc.write(displayAllDimers(theAlignedArray,theOligo.Sequence,theOligo.revSequence));}function calculateMatrices(){	var theStart=new Date();	if(theOligo.Sequence.length!=theComplement.Sequence.length) {		primerWin.document.write("Error! Primer and its complement are different lengths!<br>");		return;	}	//setup d*d matrix	var matrix= makeMatrix(theOligo.Sequence.length);	var theEnd=new Date();	if (doTiming) primerWin.document.write("calculateMatrices - makeMatrix took "+(theEnd-theStart)+" ms<br>");	theStart=new Date();		//populates the matrix	fillMatchMatrix(theOligo.seqArray, theComplement.seqArray, matrix);	theEnd=new Date();	if (doTiming) primerWin.document.write("calculateMatrices - fillMatchMatrix took "+(theEnd-theStart)+" ms<br>");	theStart=new Date();	if (isIE)		if (theAlignedArray) delete theAlignedArray;	theEnd=new Date();	if (doTiming) primerWin.document.write("calculateMatrices - delete theAlignedArray took "+(theEnd-theStart)+" ms<br>");	theStart=new Date();	//exam the matrix for 3 prime complementary	theAlignedArray = makeAlignedArray(matrix, minAlignLen, maxMismatchNum);	theEnd=new Date();	if (doTiming) primerWin.document.write("calculateMatrices - makeAlignedArray took "+(theEnd-theStart)+" ms<br>");	theStart=new Date();	delete matrix;	theEnd=new Date();	if (doTiming) primerWin.document.write("calculateMatrices - delete matrix took "+(theEnd-theStart)+" ms<br>");	theStart=new Date();	theAlignedArray=sortAlignedArray(theAlignedArray);	theEnd=new Date();	if (doTiming) primerWin.document.write("calculateMatrices - sortAlignedArray took "+(theEnd-theStart)+" ms<br>");	theStart=new Date();	//exam the sequence for potential hairpins	if(isCompatible) {		if (isIE)			if (theHairpinArray) delete theHairpinArray;		theHairpinArray=calcHairpin(theOligo.Sequence, minHairpinLen);	}	theEnd=new Date();	if (doTiming) primerWin.document.write("calculateMatrices - calcHairpin took "+(theEnd-theStart)+" ms<br>");}function calcHairpin(theFullSequence, minHairpinLength){/*  compare theCompSeq with theFullSeq starting at theFullSeq[startPos]. Successful matches must be at least minMatch long *//* The resulting array is an array of arrays. each result should be an array of 4 integers	result[0]: position of start of match in sequence	result[1]: position of end of match	result[2]: position of the start of the complement (really the end since it would be 3'-5')	result[3]: position of the end of the complement (really the start since it would be 3'-5')*/	var theFullComplement=MakeComplement(theFullSequence, 1);	var theResults = new Array();	if (debugHairpin) primerWin.document.write("<PRE>");	if (debugHairpin) primerWin.document.write("calcHairpin: theFullSequence  ="+theFullSequence+"; theFullSequence.length="+theFullSequence.length+"; minHairpinLen"+minHairpinLen+";<br>");	if (debugHairpin) primerWin.document.write("calcHairpin: theFullComplement="+theFullComplement+"; theFullComplement.length="+theFullComplement.length+";<br>");		var theResult;	var count;	var compPos;	var seqPos;	var maxSeqLength=Math.abs(theFullSequence.length/2)-bubbleSize; // makes sure that we do not anneal the full length of the primer - that should come out in the dimerization report	var maxMatch=0;	for (compPos=0; compPos<theFullComplement.length-2*minHairpinLength; compPos++) {		maxMatch=0;		for (seqPos=0; seqPos<theFullSequence.length-maxSeqLength; seqPos++) {			if (debugHairpin) primerWin.document.write("calcHairpin: compPos="+compPos+"; seqPos="+seqPos+";<br>");			theResult=getIndexOf(theFullSequence.substring(0,seqPos+maxSeqLength),theFullComplement.substring(compPos,theFullComplement.length), seqPos, minHairpinLength);			if (theResult[0] > -1) {				// theResult[0] is the index of the first match of theFullComplement that is of at least length minHairpinLength in theFullSequence				// theResult[1] is the length of the match								theResults=DoHairpinArrayInsert(theResult[0],theResult[0]+theResult[1]-1,theFullSequence.length-compPos-theResult[1],theFullSequence.length-compPos-1,theResults);				if (theResult[1] > maxMatch) maxMatch=theResult[1];				seqPos=theResult[0]+theResult[1]-minHairpinLength;  // move forward to guarantee nothing else is found that is a reasonable match				if (seqPos+minHairpinLength>=maxSeqLength) {					compPos+=maxMatch-minHairpinLength; // move compPos forward to stop identical checks if long match was found!					break; // we have moved far enough on the primer to guarentee we have everything  -further would give us the reverse match				}			} else {				if (maxMatch > minHairpinLength) compPos+=maxMatch-minHairpinLength; // move compPos forward to stop identical checks if long match was found!				break;  //not found in the rest of the sequence!			}		}	}	if (debugHairpin) primerWin.document.write("</PRE>");	return theResults;}function DoHairpinArrayInsert(a,b,c,d,results){	var arrayCount=results.length;	if (a >= c || a >= b || c >= d || b>=c) {		if (debugHairpin) primerWin.document.write("DoHairpinArrayInsert: ERROR IN VALUES PASSED! [0]="+a+"; [1]="+b+"[2]="+c+"; [3]="+d+";<br>\n");		return results;	}	for (var i=0;i<arrayCount;i++) {		if (results[i][0]<=a && results[i][1]>=b && results[i][2]<=c && results[i][3]>=d)			return results;		if (results[i][0]>=a && results[i][1]<=b && results[i][2]>=c && results[i][3]<=d) {			results[i][0]=a;			results[i][1]=b;			results[i][2]=c;			results[i][3]=d;			if (debugHairpin) primerWin.document.write("DoHairpinArrayInsert: position "+i+" in results replaced with [0]="+a+"; [1]="+b+"[2]="+c+"; [3]="+d+";<br>");			return results;		}	}	results[arrayCount]=new Array(4);	results[arrayCount][0]=a;	results[arrayCount][1]=b;	results[arrayCount][2]=c;	results[arrayCount][3]=d;	if (debugHairpin) primerWin.document.write("DoHairpinArrayInsert: arrayCount="+arrayCount+"; [0]="+a+"; [1]="+b+"[2]="+c+"; [3]="+d+";<br>");	return results;}function getIndexOf(seq, subSeq, startIndex, minMatch){// look for subSeq in seq/* returns an array where	theResult[0] is the index of the first match of subseq that is of at least length minMatch in seq	theResult[1] is the length of the match*/	var theResult= new Array(2);	theResult[0]=-1;	theResult[1]=-1;	if (!broadMatch) {		for(var k=minMatch; k<=subSeq.length; k++) {			// can replace this with seq.search for GREP capabilities			theMatch=seq.indexOf(subSeq.substring(0,k),startIndex);			if (theMatch < 0) {				break;			} else {				theResult[0]= theMatch;				theResult[1] = k;				if (debugHairpin) primerWin.document.write("("+theMatch+","+k+") ");			}		}	} else {		for(var i=startIndex; i<seq.length; i++) {			if(isBaseEqual(seq.charAt(i),subSeq.charAt(0))) {		 		for(j=0; j<subSeq.length; j++) {					if(!isBaseEqual(seq.charAt(i+j),subSeq.charAt(j))) {						break;					} else if (j >= minMatch-1) {						theResult[0]= theMatch;						theResult[1] = k;					}				}					if (j==subSeq.length) {						theResult[0]= theMatch;						theResult[1] = k;				}			}		}	}	if (debugHairpin) primerWin.document.write("TheResult[0]="+theResult[0]+" (first match); TheResult[1]="+theResult[1]+";<br>");	return theResult;}function makeMatrix(matLength) {	var theMatrix = new Array(matLength);	for(var i=0; i<matLength; i++) {		// increment column		theMatrix[i]=new Array(matLength);	}	return theMatrix;}function fillMatchMatrix(cols, rows, mat){	var d=cols.length;	if (d<4) return;	if (broadMatch) {		// Do the degenerate thing!		for(i=0; i<d; i++) {			// increment column			for(var j=0; j<d; j++) {				// increment row				if(isBaseEqual( cols[i], rows[j]) ) {					mat[i][j]=1;					if(i>0 && j>0)					{						mat[i][j]+=mat[i-1][j-1]; //(increment diagonal values)					}				} else {						mat[i][j]=0;					if(i>1 && j>1 ) {						if(mat[i-1][j-1]>mat[i-2][j-2] &&mat[i-1][j-1]>1 && i<d-1 && j<d-1) {						// allow one base mismatch only if there are at least 2 matched base on 5' and at least 1 matched base on 3'							mat[i][j]=mat[i-1][j-1]; 						} else if(i<d-1 && j<d-1) {							mat[i-1][j-1]=0;						}					}				}			}		}	} else {		for (i=0; i<=1; i++) {			// increment column			for (var j=0; j<2; j++) {				// increment row				if (cols[i] == rows[j]) {					mat[i][j]=1;					if (i && j)						mat[i][j]+=mat[i-1][j-1]; //(increment diagonal values)				} else {						mat[i][j]=0;				}			}		}		for (i=2; i<d-1; i++) {			// increment column			for (var j=2; j<d-1; j++) {				// increment row				if (cols[i] == rows[j]) {					mat[i][j]=mat[i-1][j-1]+1; //(increment diagonal values)				} else {						mat[i][j]=0;					if (mat[i-1][j-1]>1 && cols[i+1] == rows[j+1]) {					// allow one base mismatch only if there are at least 2 matched base on 5' and at least 1 matched base on 3'						mat[i][j]=mat[i-1][j-1]; 					}				}			}		}		i=d-1;		j=i;		// increment column		// increment row		if (cols[i] == rows[j]) {			mat[i][j]=1;			mat[i][j]+=mat[i-1][j-1]; //(increment diagonal values)		} else {				mat[i][j]=0;		}	}}function makeAlignedArray(mat, minLen, maxMisMatch){// assumes an orthogonal matrix/* theAlignedArray is a bit strange in the second dimension. Assume it is a length 5 array called 'theResults'	theResults[0] == start index	theResults[1] == start matching index in reverse complement seq	theResults[2] == end index of aligned bases (inclusive)	theResults[3] == end matching index in reverse complement Seq	theResults[4] == number of mismatches*/	var matLength=mat.length;	var count=0;	var theResults = new Array();	var i;	var	j;	var	k;	var mismatches;	for(i=0; i<matLength; i++) {		for(j=0; j<matLength; j++) {			if(mat[i][j]==1)  { //potential start of an alignment				mismatches=0;				hasMatch=1;				lastMatch=1;				maxInc = matLength-(i<=j ? j : i);				for (k=1; k<maxInc; k++) {					hasMatch=mat[i+k][j+k];					if(!hasMatch) break;					if(hasMatch<=lastMatch) {						if(mismatches>=maxMisMatch)							break;						mismatches++;					}					lastMatch=hasMatch;				}				if(k-mismatches>=minLen) {					theResults[count]=new Array(5);					theResults[count][0]=i;	//start index					theResults[count][1]=j;	//start matching index in reverse complement seq					theResults[count][2]=i+k-1; //end index of aligned bases (inclusive)					theResults[count][3]=j+k-1; //end matching index in reverse complement Seq					theResults[count][4]=mismatches;  //mismatch counts					count++;				}			}		}	}	return theResults;}function sortAlignedArray(alignedArray){// assumes an orthogonal matrix/* theAlignedArray is a bit strange in the second dimension. Assume it is a length 5 array called 'theResults'	theResults[0] == start index	theResults[1] == start matching index in reverse complement seq	theResults[2] == end index of aligned bases (inclusive)	theResults[3] == end matching index in reverse complement Seq	theResults[4] == number of mismatches*/	if(alignedArray.length>2) {		if (1==2) {			var tempArray=new Array(5);			var swapped=0;			//bubble sort			do {				swapped=0;				for (var n=0; n<alignedArray.length-2; n++) {					if (alignedArray[n][2]-alignedArray[n][0]<alignedArray[n+1][2]-alignedArray[n+1][0]) {						for (var i=0; i<5; i++) {							tempArray[i]=alignedArray[n][i];							alignedArray[n][i]=alignedArray[n+1][i];							alignedArray[n+1][i]=tempArray[i];						}						swapped=1;					}				}			} while (swapped==1);		} else {			alignedArray=alignedArray.sort(arrayOrder);		}	}	return alignedArray;}function arrayOrder(a,b) { return ( ((a[2]-a[0]) < (b[2]-b[0]))? 1 :( ((a[2]-a[0]) > (b[2]-b[0]))? -1 : (a[0]-a[1]) - (b[0]-b[1]) )); } //size plus positionfunction isBaseEqual( c1, c2){	if(c1==c2 ){ return true;}	if(broadMatch){		if(c1=='N' || c2=='N'){return true;}		var equA="ARWVHD";		var equT="TWYKHDB";		var equG="GRSKVDB";		var equC="CSYVHB";			if(c1 == 'A' ) { if(equA.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'T' ) { if(equT.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'G' ) { if(equG.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'C' ) { if(equC.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'R' ) { if(equA.indexOf(c2)>=0 || equG.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'W' ) { if(equA.indexOf(c2)>=0 || equT.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'S' ) { if(equG.indexOf(c2)>=0 || equC.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'Y' ) { if(equT.indexOf(c2)>=0 || equC.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'K' ) { if(equT.indexOf(c2)>=0 || equG.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'V' ) { if(equA.indexOf(c2)>=0 || equG.indexOf(c2)>0 || equC.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'H' ) { if(equA.indexOf(c2)>=0 || equT.indexOf(c2)>0 || equC.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'D' ) { if(equA.indexOf(c2)>=0 || equT.indexOf(c2)>0 || equG.indexOf(c2)>=0) {return true;} return false;}		if(c1 == 'B' ) { if(equT.indexOf(c2)>=0 || equG.indexOf(c2)>0 || equC.indexOf(c2)>=0) {return true;} return false;}	}	return false;}	//return string containing all hairpins		function displayHairpin(theHairpinArray,theSequence){	var returnString="";	var s1="";	var d=theSequence.length;	var i,j;	var theHairpinArrayLength=theHairpinArray.length;	returnString=returnString+"<h2><B>Potential hairpin formation :</B></h2><PRE>"	if(theHairpinArrayLength>0)	{		if(theHairpinArrayLength>1){			if(theHairpinArray[theHairpinArrayLength-1][1]==theHairpinArray[theHairpinArrayLength-2][1] && (theHairpinArray[theHairpinArrayLength-1][2]==theHairpinArray[theHairpinArrayLength-2][2]))			{				theHairpinArrayLength--; //get rid of the last one			}		}		for(i=0;i<theHairpinArrayLength; i++) {					//add a bar between 2 legs of the hairpin if bases in the 2nd leg is contiguous to the 1st leg					// substring wants a value from the start location to 1+the end location			s1=theSequence.substring(0,theHairpinArray[i][0])+				theSequence.substring(theHairpinArray[i][0],theHairpinArray[i][1]+1).fontcolor("red")+				((theHairpinArray[i][1]+1>=theHairpinArray[i][2])?"-":"")+				theSequence.substring(theHairpinArray[i][1]+1,theHairpinArray[i][2])+				theSequence.substring(theHairpinArray[i][2],theHairpinArray[i][3]+1).fontcolor("red")+				theSequence.substring(theHairpinArray[i][3]+1,d)			returnString=returnString+"5' "+s1+" 3'<BR>";		}		returnString=returnString+"</PRE>";	}else{		returnString+=" None !<BR>";	}		return returnString+="\n";}function display3EndDimer(theAlignedArray){	var d=theOligo.Sequence.length;	var returnString="";	var s1="";	var s2="";	//3' complementarity	returnString+="<BR><B>3' Complementarity: </B><BR>"	var is3End=false;	for(var n=0; n<theAlignedArray.length-1; n++) //the last element in array is junck	{		s1="";		s2="";		if(theAlignedArray[n][2]==d-1)		//end position of match in original seq		{			returnString+="<pre><BR>5' ";			for(i=0; i<d; i++)			{				if(i>=theAlignedArray[n][0]&&i<=theAlignedArray[n][2])				{					s1+="<FONT COLOR='red'>"+theOligo.seqArray[i]+"</FONT>";									}else{					s1+=theOligo.seqArray[i];				}			}			for(i=d; i<2*d; i++)	//fill up the rest of the strings with space			{				s1+=" ";			}			returnString=returnString+s1+" 3' <BR>";						//the reverse stand			returnString+="3' ";			j=0;			if(theAlignedArray[n][0]>theAlignedArray[n][1])			{				for(j=0; j<theAlignedArray[n][0]-theAlignedArray[n][1]; j++) //fill up the difference with space, to align the matched bases in sequences				{					s2+=" ";				}			}			for(k=0; k<d; k++)			{				if(k>=theAlignedArray[n][1]&&k<=theAlignedArray[n][3])				{					s2+="<FONT COLOR='red'>"+theOligo.revSeqArray[k]+"</FONT>";									}else{					s2+=theOligo.revSeqArray[k];				}			}			for(j=j+k; j<2*d; j++)			{				s2+=" ";			}			returnString=returnString+s2+" 5'<BR></pre>";			is3End=true;		}	}	if(!is3End)	{		returnString+=" None !<BR> "	}	return returnString+="\n";}function displayAllDimers(theAlignedArray,theSequence,reversedSeq) //all possible dimerization sites{/* theAlignedArray is a bit strange in the second dimension. Assume it is a length 5 array called 'theResults'	theResults[0] == start index	theResults[1] == start matching index in reverse complement seq	theResults[2] == end index of aligned bases (inclusive)	theResults[3] == end matching index in reverse complement Seq	theResults[4] == number of mismatches*/	var d=theSequence.length;	var returnString="";	var s1="";	var s2="";	var maxoffset=0;	var offset,j,n;	var	offsetStr,maxoffsetStr;	// all other possible alignment sites	returnString+="<BR><B>All potential self-annealing sites are marked in red (allowing 1 mis-match): </B><BR><PRE>";	if(theAlignedArray.length>1)	{		for(n=0; n<theAlignedArray.length; n++) {			offset=Math.abs(theAlignedArray[n][0]-theAlignedArray[n][1]);			if (offset > maxoffset) maxoffset=offset;		}		for(n=0; n<theAlignedArray.length; n++)		{			s1="";			s2="";			offsetStr="";			maxoffsetStr="";			// pad the string with blanks as necessary			offset=theAlignedArray[n][0]-theAlignedArray[n][1]; 			for(j=0; j<Math.abs(offset); j++)				offsetStr+=" ";			for(j=Math.abs(offset); j<maxoffset; j++)				maxoffsetStr+=" ";			if(offset>0)				s2+=offsetStr;			if(offset<0) 				s1+=offsetStr;			if(debugDimers)  returnString+="offset="+offset+"; maxoffset="+maxoffset+"; [0]="+theAlignedArray[n][0]+"; [1]="+theAlignedArray[n][1]+";<br>";				// substring wants a value from the start location to 1+the end location			s1+=theSequence.substring(0,theAlignedArray[n][0])+				theSequence.substring(theAlignedArray[n][0],theAlignedArray[n][2]+1).fontcolor("red")+				theSequence.substring(theAlignedArray[n][2]+1,d);			returnString+="5' "+s1+((offset>0)?offsetStr+maxoffsetStr:maxoffsetStr)+" 3'<BR>";			s2+=reversedSeq.substring(0,theAlignedArray[n][1])+				reversedSeq.substring(theAlignedArray[n][1],theAlignedArray[n][3]+1).fontcolor("red")+				reversedSeq.substring(theAlignedArray[n][3]+1,d);			returnString+="3' "+s2+((offset<0)?offsetStr+maxoffsetStr:maxoffsetStr)+" 5'<BR>&nbsp;<BR>";		}	}else{		returnString+=" None !<BR>";	}		returnString+="</PRE>\n";	return returnString;	}
+</script>
+
+<script language="JavaScript" type="text/javascript">
+<!--
+	document.write('<STYLE type="text/css">');
+	document.write('<!--');
+	if (isMac && browserVersion < 5.0) {
+		document.write(MacStyleSheet);
+	} else {
+		document.write(PCStyleSheet);
+	}
+	document.write('-->');
+	document.write('</STYLE>');
+//-->
+</script><style type="text/css"><!--BODY,P,BR,TD,DIV,A {font-family: Arial,Helvetica,serif; font-size: 9pt;} 	PRE {font-family: Courier New,Courier,nonproportional,fixed;} 	H1 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 14pt;} 	H2 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 12pt;} 	H3 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 10pt;} 	TH {font-family: Arial,Helvetica,sans-serif; font-size: 9pt;} 	.H1 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 14pt;} 	.H2 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 12pt;} 	.H3 {font-family: Comic Sans MS,Arial,Helvetica,sans-serif; font-size: 10pt;} 	.bigger {font-size: 9pt; font-weight: bold;} 	.darkerblue { color: white; background-color: #333399; } 	.darksalmon { color: black; background-color: wheat; } 	.lightsalmon { color: b; background-color: whitesmoke; } 	 .standardblue { color: black; background-color: aliceblue; } 	.lighterblue { color: black; background-color: lavender; }--></style>
+
+<meta content="MSHTML 6.00.2900.2180" name="GENERATOR"><style data-id="immersive-translate-input-injected-css">.immersive-translate-input {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 2147483647;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.immersive-translate-attach-loading::after {
+  content: " ";
+
+  --loading-color: #f78fb6;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: block;
+  margin: 12px auto;
+  position: relative;
+  color: white;
+  left: -100px;
+  box-sizing: border-box;
+  animation: immersiveTranslateShadowRolling 1.5s linear infinite;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-2000%, -50%);
+  z-index: 100;
+}
+
+.immersive-translate-loading-spinner {
+  vertical-align: middle !important;
+  width: 10px !important;
+  height: 10px !important;
+  display: inline-block !important;
+  margin: 0 4px !important;
+  border: 2px rgba(221, 244, 255, 0.6) solid !important;
+  border-top: 2px rgba(0, 0, 0, 0.375) solid !important;
+  border-left: 2px rgba(0, 0, 0, 0.375) solid !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  -webkit-animation: immersive-translate-loading-animation 0.6s infinite linear !important;
+  animation: immersive-translate-loading-animation 0.6s infinite linear !important;
+}
+
+@-webkit-keyframes immersive-translate-loading-animation {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+
+  to {
+    -webkit-transform: rotate(359deg);
+  }
+}
+
+@keyframes immersive-translate-loading-animation {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(359deg);
+  }
+}
+
+.immersive-translate-input-loading {
+  --loading-color: #f78fb6;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: block;
+  margin: 12px auto;
+  position: relative;
+  color: white;
+  left: -100px;
+  box-sizing: border-box;
+  animation: immersiveTranslateShadowRolling 1.5s linear infinite;
+}
+
+@keyframes immersiveTranslateShadowRolling {
+  0% {
+    box-shadow: 0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0),
+      0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+  }
+
+  12% {
+    box-shadow: 100px 0 var(--loading-color), 0px 0 rgba(255, 255, 255, 0),
+      0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+  }
+
+  25% {
+    box-shadow: 110px 0 var(--loading-color), 100px 0 var(--loading-color),
+      0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0);
+  }
+
+  36% {
+    box-shadow: 120px 0 var(--loading-color), 110px 0 var(--loading-color),
+      100px 0 var(--loading-color), 0px 0 rgba(255, 255, 255, 0);
+  }
+
+  50% {
+    box-shadow: 130px 0 var(--loading-color), 120px 0 var(--loading-color),
+      110px 0 var(--loading-color), 100px 0 var(--loading-color);
+  }
+
+  62% {
+    box-shadow: 200px 0 rgba(255, 255, 255, 0), 130px 0 var(--loading-color),
+      120px 0 var(--loading-color), 110px 0 var(--loading-color);
+  }
+
+  75% {
+    box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+      130px 0 var(--loading-color), 120px 0 var(--loading-color);
+  }
+
+  87% {
+    box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+      200px 0 rgba(255, 255, 255, 0), 130px 0 var(--loading-color);
+  }
+
+  100% {
+    box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+      200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0);
+  }
+}
+
+.immersive-translate-toast {
+  display: flex;
+  position: fixed;
+  z-index: 2147483647;
+  left: 0;
+  right: 0;
+  top: 1%;
+  width: fit-content;
+  padding: 12px 20px;
+  margin: auto;
+  overflow: auto;
+  background: #fef6f9;
+  box-shadow: 0px 4px 10px 0px rgba(0, 10, 30, 0.06);
+  font-size: 15px;
+  border-radius: 8px;
+  color: #333;
+}
+
+.immersive-translate-toast-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.immersive-translate-toast-hidden {
+  margin: 0 20px 0 72px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.immersive-translate-toast-close {
+  color: #666666;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 768px) {
+  .immersive-translate-toast {
+    top: 0;
+    padding: 12px 0px 0 10px;
+  }
+  .immersive-translate-toast-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .immersive-translate-toast-hidden {
+    margin: 10px auto;
+  }
+}
+
+.immersive-translate-dialog {
+  position: fixed;
+  z-index: 2147483647;
+  left: 0;
+  top: 0;
+  display: flex;
+  width: 300px;
+  flex-direction: column;
+  align-items: center;
+  font-size: 15px;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  height: fit-content;
+  border-radius: 20px;
+  background-color: #fff;
+}
+
+.immersive-translate-modal {
+  display: none;
+  position: fixed;
+  z-index: 2147483647;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0, 0, 0);
+  background-color: rgba(0, 0, 0, 0.4);
+  font-size: 15px;
+}
+
+.immersive-translate-modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 40px 24px 24px;
+  border-radius: 12px;
+  width: 350px;
+  font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu",
+    "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  position: relative;
+}
+
+@media screen and (max-width: 768px) {
+  .immersive-translate-modal-content {
+    margin: 25% auto !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .immersive-translate-modal-content {
+    width: 80vw !important;
+    margin: 20vh auto !important;
+    padding: 20px 12px 12px !important;
+  }
+
+  .immersive-translate-modal-title {
+    font-size: 14px !important;
+  }
+
+  .immersive-translate-modal-body {
+    font-size: 13px !important;
+    max-height: 60vh !important;
+  }
+
+  .immersive-translate-btn {
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    margin: 0 4px !important;
+  }
+
+  .immersive-translate-modal-footer {
+    gap: 6px !important;
+    margin-top: 16px !important;
+  }
+}
+
+.immersive-translate-modal .immersive-translate-modal-content-in-input {
+  max-width: 500px;
+}
+.immersive-translate-modal-content-in-input .immersive-translate-modal-body {
+  text-align: left;
+  max-height: unset;
+}
+
+.immersive-translate-modal-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333333;
+}
+
+.immersive-translate-modal-body {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333333;
+  margin-top: 24px;
+  word-break: break-all;
+}
+
+@media screen and (max-width: 768px) {
+  .immersive-translate-modal-body {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+}
+
+.immersive-translate-close {
+  color: #666666;
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.immersive-translate-close:hover,
+.immersive-translate-close:focus {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.immersive-translate-modal-footer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.immersive-translate-btn {
+  width: fit-content;
+  color: #fff;
+  background-color: #ea4c89;
+  border: none;
+  font-size: 14px;
+  margin: 0 8px;
+  padding: 9px 30px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.immersive-translate-btn-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.immersive-translate-btn:hover {
+  background-color: #f082ac;
+}
+.immersive-translate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.immersive-translate-btn:disabled:hover {
+  background-color: #ea4c89;
+}
+
+.immersive-translate-link-btn {
+  background-color: transparent;
+  color: #ea4c89;
+  border: none;
+  cursor: pointer;
+  height: 30px;
+  line-height: 30px;
+}
+
+.immersive-translate-cancel-btn {
+  /* gray color */
+  background-color: rgb(89, 107, 120);
+}
+
+.immersive-translate-cancel-btn:hover {
+  background-color: hsl(205, 20%, 32%);
+}
+
+.immersive-translate-action-btn {
+  background-color: transparent;
+  color: #ea4c89;
+  border: 1px solid #ea4c89;
+}
+
+.immersive-translate-btn svg {
+  margin-right: 5px;
+}
+
+.immersive-translate-link {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-drag: none;
+  text-decoration: none;
+  color: #ea4c89;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+.immersive-translate-primary-link {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-drag: none;
+  text-decoration: none;
+  color: #ea4c89;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+.immersive-translate-modal input[type="radio"] {
+  margin: 0 6px;
+  cursor: pointer;
+}
+
+.immersive-translate-modal label {
+  cursor: pointer;
+}
+
+.immersive-translate-close-action {
+  position: absolute;
+  top: 2px;
+  right: 0px;
+  cursor: pointer;
+}
+
+.imt-image-status {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 16px !important;
+}
+.imt-image-status img,
+.imt-image-status svg,
+.imt-img-loading {
+  width: 28px !important;
+  height: 28px !important;
+  margin: 0 0 8px 0 !important;
+  min-height: 28px !important;
+  min-width: 28px !important;
+  position: relative !important;
+}
+.imt-img-loading {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAtFBMVEUAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////oK74hAAAAPHRSTlMABBMIDyQXHwyBfFdDMSw+OjXCb+5RG51IvV/k0rOqlGRM6KKMhdvNyZBz9MaupmxpWyj437iYd/yJVNZeuUC7AAACt0lEQVRIx53T2XKiUBCA4QYOiyCbiAsuuGBcYtxiYtT3f6/pbqoYHVFO5r+iivpo6DpAWYpqeoFfr9f90DsYAuRSWkFnPO50OgR9PwiCUFcl2GEcx+N/YBh6pvKaefHlUgZd1zVe0NbYcQjGBfzrPE8Xz8aF+71D8gG6DHFPpc4a7xFiCDuhaWgKgGIJQ3d5IMGDrpS4S5KgpIm+en9f6PlAhKby4JwEIxlYJV9h5k5nee9GoxHJ2IDSNB0dwdad1NAxDJ/uXDHYmebdk4PdbkS58CIVHdYSUHTYYRWOJblWSyu2lmy3KNFVJNBhxcuGW4YBVCbYGRZwIooipHsNqjM4FbgOQqQqSKQQU9V8xmi1QlgHqQQ6DDBvRUVCDirs+EzGDGOQTCATgtYTnbCVLgsVgRE0T1QE0qHCFAht2z6dLvJQs3Lo2FQoDxWNUiBhaP4eRgwNkI+dAjVOA/kUrIDwf3CG8NfNOE0eiFotSuo+rBiq8tD9oY4Qzc6YJw99hl1wzpQvD7ef2M8QgnOGJfJw+EltQc+oX2yn907QB22WZcvlUpd143dqQu+8pCJZuGE4xCuPXJqqcs5sNpsI93Rmzym1k4Npk+oD1SH3/a3LOK/JpUBpWfqNySxWzCfNCUITuDG5dtuphrUJ1myeIE9bIsPiKrfqTai5WZxbhtNphYx6GEIHihyGFTI69lje/rxajdh0s0msZ0zYxyPLhYCb1CyHm9Qsd2H37Y3lugVwL9kNh8Ot8cha6fUNQ8nuXi5z9/ExsAO4zQrb/ev1yrCB7lGyQzgYDGuxq1toDN/JGvN+HyWNHKB7zEoK+PX11e12G431erGYzwmytAWU56fkMHY5JJnDRR2eZji3AwtIcrEV8Cojat/BdQ7XOwGV1e1hDjGGjXbdArm8uJZtCH5MbcctVX8A1WpqumJHwckAAAAASUVORK5CYII=");
+  background-size: 28px 28px;
+  animation: image-loading-rotate 1s linear infinite !important;
+}
+
+.imt-image-status span {
+  color: var(--bg-2, #fff) !important;
+  font-size: 14px !important;
+  line-height: 14px !important;
+  font-weight: 500 !important;
+  font-family: "PingFang SC", Arial, sans-serif !important;
+}
+
+.imt-primary-button {
+  display: flex;
+  padding: 12px 80px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  background: #ea4c89;
+  color: #fff;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 24px;
+  border: none;
+  cursor: pointer;
+}
+
+.imt-retry-text {
+  color: #999;
+  text-align: center;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 21px;
+  cursor: pointer;
+}
+
+.imt-action-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.imt-modal-content-text {
+  text-align: left;
+  color: #333;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+@keyframes image-loading-rotate {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.imt-linear-gradient-text {
+  background: linear-gradient(90deg, #00a6ff 0%, #c369ff 52.4%, #ff4590 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.imt-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imt-linear-black-btn {
+  border-radius: 50px;
+  background: linear-gradient(66deg, #222 19%, #696969 94.25%);
+  height: 48px;
+  width: 100%;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  justify-content: center;
+}
+</style><base href="https://www.biosyn.com/gizmo/tools/oligo/oligonucleotide%20properties%20calculator.htm"></head>
+<body onfocus="DoNewFocus(document.OligoCalc);" bgcolor="white">
+<center>
+<h1>Oligonucleotide Properties Calculator</h1>
+<form name="OligoCalc">
+<table class="darkerblue" cellspacing="1" cellpadding="1" align="center" border="0">
+  <tbody>
+  <tr>
+    <td>
+      <table class="standardblue" cellspacing="0" cellpadding="2" align="center" border="0">
+        <tbody>
+        <tr class="darkerblue">
+          <td class="darkerblue" align="middle" colspan="2">
+            <div class="bigger">Enter Oligonucleotide Sequence Below</div><i>OD 
+            and Molecular Weight calculations are for single-stranded DNA or 
+            RNA</i></td></tr>
+        <tr>
+          <td colspan="2">
+            <a href="http://www.basic.northwestern.edu/biotools/oligocalc.html#helpIUPAC">Nucleotide 
+              base codes</a><table cellspacing="0" cellpadding="0" align="center" border="0">
+              <tbody>
+              <tr>
+                <td colspan="2"><textarea name="oligoBox" rows="5" wrap="virtual" cols="80" onchange="ReCalculate(this.form)" align="left"></textarea><br></td></tr> 
+              <tr>
+                <td bgcolor="pink" colspan="2"><font color="maroon">Reverse 
+                  Complement Strand(5' to 3') is:<br><textarea onfocus="Disallow(this.form)" name="complementBox" wrap="virtual" cols="80" align="left"></textarea><br></font></td></tr>
+              <tr>
+                <td>
+                  <table cellspacing="0" cellpadding="2">
+                    <tbody>
+                    <tr>
+                      <td>5' modification (if any)</td>
+                      <td>3' modification (if any)</td>
+                      <td>select ss/ds and DNA or RNA</td></tr>
+                    <tr>
+                      <td><select onchange="RecalcMWConcAndOD(this.form)" name="FivePrime"> <option value="0" selected=""></option><option value="402" display="Amino dT (C2)">Amino dT 
+                          (C2)</option> <option value="458" display="Amino dT (C6)">Amino dT (C6)</option> <option value="554" display="BHQ-1">BHQ-1</option> <option value="368" display="Bromo-dC">Bromo-dC</option> <option value="369" display="Bromo-dU">Bromo-dU</option> <option value="263" display="C12-Aminolink">C12-Aminolink</option> <option value="179" display="C6-Aminolink">C6-Aminolink</option> 
+                          <option value="756" display="Chol">Chol</option> <option value="607" display="CY 3.5">CY 3.5</option> <option value="634" display="CY 5.5">CY 5.5</option> <option value="508" display="Cy3">Cy3</option> <option value="766" display="CY3 NHS Ester">CY3 NHS Ester</option> <option value="534" display="Cy5">Cy5</option> <option value="820" display="Cy5 Ester">Cy5 Ester</option> <option value="724" display="Dig">Dig</option> <option value="180" display="dspacer">dspacer</option> <option value="290" display="dU">dU</option> <option value="538" display="Fam">Fam</option> <option value="538" display="Fluo">Fluo</option> <option value="744.1" display="Hex">Hex</option> <option value="210" display="Hyd-1">Hyd-1</option> <option value="288" display="Hyd-2">Hyd-2</option> <option value="415" display="Iodo-dC">Iodo-dC</option> <option value="416" display="Iodo-dU">Iodo-dU</option> <option value="753" display="IRD700">IRD700</option> <option value="861" display="IRD800">IRD800</option> <option value="667" display="Joe">Joe</option> <option value="825" display="LCRed-610">LCRed-610</option> <option value="904" display="LCRed-640">LCRed-640</option> 
+                          <option value="534" display="LCRed-670">LCRed-670</option> <option value="634" display="LCRed-705">LCRed-705</option> 
+                          <option value="303.21" display="Methylcytosin">Methylcytosin</option> <option value="574" display="Oregon Green 488 (HPLC)">Oregon 
+                          Green 488 (HPLC)</option> <option value="81" display="P32">P32</option> <option value="82" display="P33">P33</option> <option value="80" display="Pho">Pho</option> <option value="420" display="Psoralen">Psoralen</option> <option value="453" display="Psoralen">Psoralen</option> <option value="727" display="Rho">Rho</option> <option value="536" display="Rho-Green">Rho-Green</option> <option value="698" display="Rox">Rox</option> <option value="264" display="Spacer-C12">Spacer-C12</option> <option value="138" display="Spacer-C3">Spacer-C3</option> 
+                          <option value="180" display="Spacer-C6">Spacer-C6</option> <option value="576" display="Tamra">Tamra</option> <option value="675" display="Tet">Tet</option> <option value="882" display="Texas Red">Texas Red</option> <option value="328" display="Thiol">Thiol</option> <option value="154" display="Uni-Link">Uni-Link</option></select> 
+                      </td>
+                      <td><select onchange="RecalcMWConcAndOD(this.form)" name="ThreePrime"> <option value="0" selected=""></option><option value="554" display="BHQ-1">BHQ-1</option> <option value="80" display="Pho">Pho</option> <option value="554" display="BHQ-2">BHQ-2</option> <option value="380" display="Biotin">Biotin</option> <option value="570" display="Biotin TEG">Biotin TEG</option> <option value="209" display="C7-Aminolink">C7-Aminolink</option> 
+                          <option value="440" display="CarboxydT">CarboxydT</option> <option value="855" display="Chol">Chol</option> <option value="587" display="Cy3">Cy3</option> <option value="613" display="Cy5">Cy5</option> <option value="756" display="Dabcyl">Dabcyl</option> <option value="297" display="ddA">ddA</option> <option value="273" display="ddC">ddC</option> <option value="288" display="ddT">ddT</option> <option value="754" display="Dig with C7 Spacer">Dig with C7 
+                          Spacer</option> <option value="598" display="Fam">Fam</option> <option value="598" display="Fluo">Fluo</option> <option value="1216" display="Hex">Hex</option> <option value="314" display="Inosin">Inosin</option> <option value="697" display="Joe">Joe</option> <option value="934" display="LCRed-640">LCRed-640</option> <option value="757" display="Rho ">Rho</option> <option value="1104" display="Rox">Rox</option> <option value="715" display="Rox ">Rox</option> <option value="999" display="Tamra">Tamra</option> <option value="1147" display="Tet">Tet</option> <option value="243" display="Thiol (C3)">Thiol 
+                        (C3)</option></select> </td>
+                      <td><select onchange="RecalcMWConcAndOD(this.form)" name="deoxy"> <option value="ssDNA" selected="">ssDNA</option><option value="ssRNA">ssRNA</option><option value="dsDNA">dsDNA</option><option value="dsRNA">dsRNA</option></select> </td></tr>
+                    <tr>
+                      <td colspan="5">&nbsp; &nbsp; &nbsp; &nbsp; <select name="selfComp"> <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected="">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select> (Minimum 
+                        base pairs required for single primer self-dimerization) 
+                      </td></tr>
+                    <tr>
+                      <td colspan="5">&nbsp; &nbsp; &nbsp; &nbsp; <select name="hairpin"> <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected="">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select> (Minimum 
+                        base pairs required for a hairpin) </td></tr>
+                    <tr>
+                      <td colspan="5">&nbsp; &nbsp; &nbsp; &nbsp; <input onchange="ReCalculate(this.form)" size="7" value="50" name="primerConcBox"> n<u>M</u> Primer </td></tr>
+                    <tr>
+                      <td colspan="5">&nbsp; &nbsp; &nbsp; &nbsp; <input onchange="ReCalculate(this.form)" size="7" value="50" name="saltConcBox"> m<u>M</u> Salt (Na<sup>+</sup>) 
+                    </td></tr></tbody></table></td></tr>
+              <tr>
+                <td align="middle">
+                  <table border="0">
+                    <tbody>
+                    <tr>
+                      <td><input onclick="return ReCalculate(this.form)" type="image" src="Oligonucleotide Properties Calculator_files/Calculate.gif" value="Calculate" name="Calbutton"> </td>
+                      <td><input onclick="return SwapStrands(this.form)" type="image" src="Oligonucleotide Properties Calculator_files/SwapStrands.gif" value="SWAP STRANDS" name="Swap"> </td>
+                      <td><input onclick="return Blast2()" type="image" src="Oligonucleotide Properties Calculator_files/BLAST.gif" value="BLAST2" name="BlastMe"> </td>
+                      <td><input onclick="return calcPrimer(this.form)" type="image" src="Oligonucleotide Properties Calculator_files/selfcomplementarity.gif" value="Check Self-Complementarity" name="Complement"> 
+                    </td></tr></tbody></table></td></tr></tbody></table></td></tr>
+        <tr>
+          <th class="darkerblue">
+            <div class="H2">Physical Constants</div></th>
+          <th class="darksalmon">
+            <div class="h3">Melting Temperature (T<font size="-1"><sub>M</sub></font>) Calculations</div></th></tr>
+        <tr>
+          <td class="lighterblue">Length: <input onfocus="Disallow(this.form)" size="6" name="lBox"> bases<br>GC content: <input onfocus="Disallow(this.form)" size="12" name="gcBox">%<br>Molecular 
+            Weight: <input onfocus="Disallow(this.form)" size="25" name="mwBox"><a href="http://www.basic.northwestern.edu/biotools/oligocalc.html#helpMW"><sup><font size="-1"><b>4</b></font></sup></a><br>1 ml of a sol'n with an 
+            Absorbance of <input onchange="RecalcMWConcAndOD(this.form)" size="3" value="1" name="ODs"> at 260 nm<br>is <input onfocus="Disallow(this.form)" size="12" name="micromolarConc"> microMolar <a href="http://www.basic.northwestern.edu/biotools/oligocalc.html#helpOD"><sup><font size="-1"><b>5</b></font></sup></a> and contains <input onfocus="Disallow(this.form)" size="15" name="micrograms"> 
+          micrograms.<br></td>
+          <td class="lightsalmon"><a href="http://www.basic.northwestern.edu/biotools/oligocalc.html#helpbasic"><b>1</b></a> 
+            <input onfocus="Disallow(this.form)" size="10" name="tmBox"> °C 
+            (Basic)<br><a href="http://www.basic.northwestern.edu/biotools/oligocalc.html#helpadjusted"><b>2</b></a> 
+            <input onfocus="Disallow(this.form)" size="10" name="WAKtmBox"> °C (Salt 
+            Adjusted)<br><a href="http://www.basic.northwestern.edu/biotools/oligocalc.html#helpthermo"><b>3</b></a> 
+            <input onfocus="Disallow(this.form)" size="10" name="nTmBox"> °C (Nearest 
+            Neighbor)<br></td></tr>
+        <tr>
+          <th class="darkerblue" colspan="2"><a class="darkerblue" href="http://www.basic.northwestern.edu/biotools/oligocalc.html#helpthermo">
+            <div class="h2">Thermodynamic Constants</div></a>Conditions: 1 
+            <u>M</u> NaCl at 25°C at pH 7.</th></tr>
+        <tr class="lighterblue">
+          <td>RlnK <input onfocus="Disallow(this.form)" size="12" name="RlogKBox"> 
+            cal/(°K*mol)</td>
+          <td>deltaH <input onfocus="Disallow(this.form)" size="12" name="deltaHBox"> Kcal/mol</td></tr>
+        <tr class="lighterblue">
+          <td>deltaG <input onfocus="Disallow(this.form)" size="12" name="deltaGBox"> Kcal/mol</td>
+          <td>deltaS <input onfocus="Disallow(this.form)" size="12" name="deltaSBox"> 
+cal/(°K*mol)</td></tr></tbody></table></td></tr></tbody></table></form>To use 
+this calculator, you must be using Netscape 3.0 or later<br>or Internet Explorer 
+version 3.0 or later, or another Javascript-capable 
+browser<br>Self-Complementarity requires a 4.x browser. IE 5.0, Safari, and 
+Mozilla supported. <br>This page was written in Javascript.<br>Extensively 
+rewritten from 12/15/2000-12/19/2000 to isolate javascript Oligo object 
+behaviors for teaching purposes.<br>This page may be freely distributed for any 
+educational or non-commercial use.<br>Copyright Northwestern University, 
+1997-2006.<br><a href="http://www.basic.northwestern.edu/biotools/OligoCalcHistory.html" target="history">Version history</a>
+<p></p></center>
+<p>
+</p><hr size="4">
+
+<h2>About the Calculations</h2><a name="helpthermo"></a>
+<h3>Thermodynamic Calculations</h3>The nearest neighbor and thermodynamic 
+calculations are done essentially as described by Breslauer <i>et al.</i>, 
+(1986) <i>Proc. Nat. Acad. Sci.</i> <b>83</b>:3746-50 (<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&amp;cmd=Retrieve&amp;list_uids=86233311&amp;dopt=Citation">Abstract</a>) 
+but using the values published by Sugimoto <i>et al.</i>, (1996) <i>Nucl. Acids 
+Res.</i> <b>24</b>:4501-4505 (<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&amp;cmd=Retrieve&amp;list_uids=8948641&amp;dopt=Abstract">Abstract</a>). 
+RNA thermodynamic properties were taken from Xia T., SantaLucia J., Burkard 
+M.E., Kierzek R., Schroeder S.J., Jiao X., Cox C., Turner D.H. (1998) 
+<i>Biochemistry</i> <b>37</b>:14719-14735 (<a href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed&amp;cmd=Retrieve&amp;list_uids=9778347&amp;dopt=Abstract">Abstract</a>). 
+This program assumes that the sequences are not symmetric and contain at least 
+one G or C. The minimum length for the query sequence is 8.
+<p>The melting temperature calculations are based on the simple thermodynamic 
+relationship between entropy, enthalpy, free energy and temperature, where
+</p><p>
+</p><center><img height="21" hspace="12" src="data:image/gif;base64,R0lGODlhjwAVAPAAAP///wAAACH5BAEAAAAALAAAAACPABUAAAL/hI+py+0Po5y02ouz3jUE54XfIXqZOZXG2JUui4IiwDaxXSP3tTPzGrLchrCcIhZ8JHE+Y8uZ6PUiuaFuCoxCSbRt17nkdWVQr+1ag42bUcgIuz6a3Vm2jwN/l6tKPXMBR+UHGGjntlcnN6dzRQhWqNQox7MYxkiyt7giqWWIkWZkKQEZd8SpRboj9fKD9jJ5WkqRihiLCRma6wnEatpp+/XDmlcG69hHiHb8+Xgr4+rS1GysCOKJNTXMl8z7zO3tS41qbYj92HvJLYr5B95mp7srub4+uoV0n983rS6ezmZOgxkU9YghA7Qvnr9OAZkd/IJKkzxZiojg0IaOV72EGBgjkuJYBeOMaBxKmjyJMqXKlSxbMiCAAgA7" width="143" align="middle" vspace="12" border="0">
+<p></p></center>The change in entropy (order or a measure of the randomness of the 
+oligonucleotide) and enthalpy (heat released or absorbed by the oligonucleotide) 
+are directly calculated by summing the values for nucleotide pairs obtained by 
+Breslauer <i>et al.</i>, <i>Proc. Nat. Acad. Sci.</i> <b>83</b>, 3746-50, 1986. 
+The relationship between the free energy and the concentration of reactants and 
+products at equilibrium is given by
+<p>
+</p><center><img hspace="12" src="data:image/gif;base64,R0lGODlhEAFBAPAAAP///wAAACH5BAEAAAAALAAAAAAQAUEAAAL/hI+py+0Po5y02ouz3rz7fwQBSJZmKZ7qiqXsC8fhKNewa+c6h+/+1vsJh40g8VikIZdII5PpfEpr0amwChFpt8qZVrFlfK23LnmINXDB3XBi/DZ75av0Z508H+2AqhGu5kTXN8J3N6iSZqhXh4gQBTjzRggmFsiooeiI+cIHOQiXEiRIs8gZ92B6CuIJ6qokaiYouVqhWWtjSPoaQqu2gDMaSQjbMxaMXPz4Z+zSnLWJyxp9yZbXW/2L6ks87Ox2Cfi8xlVc2HaODi0do0vnpxwIa81dbh0vT1mfvJzdfN4vFTV2PAaSEoMsoLBt8iKB00cMGDp1/RJ6QbiOIAt3/2xcPYoDcFm5iQ7lWKSXTdtHfQsxCtS40aBJXinDMeTWDaW/XRdxxvIGLyPMExxvBqxJSZZECSVx7jMa65pLB6qGUijaE+RKkBSNSk356WjNqFux2KlqlalMrxCxdXSKdGrbsD5llaJ46yXVgQ1LtRgpceRDW2vFRmQ712OEb3ZdhqybE2LevXoFJuO7NN9TnxOwCt41q5vdwYEPIrwLlfEzypVPC4V7tWufm43V2maElshZR48DW8ogbF7W2cNbs9aTG000s3GbE/+rNfNX49OtJL+yHNE31yZaSpdLHfyU69hfT4JLvvqnTX80t907rAlpMniOV3Iav8O/6jqTuv9JnxYndEHW2Wel5QebWOBsF2CD4qlEIFfHGEjPbuatBqCDZ5jGEILvFZige9NhqN1nJp6IYooqrshiiy6a+J1bHZpFkj208UaNdyxhpiEuoWWGYHCA3WjfiHjx2OMqzEgV1AXBcWcciUkm2R5r+eW2ZIxGKoTklJjoKF1JWM70TmGbZeglFKOhKGGXczz5Jo5hkDNkmgGiqSGedurm5p5jCtYRM+vteRuhhFmWZUNv9TfHm46SoCd8AxoKYpGGHVYchBXNFCIQfQKnGKWV8oepYb1pik2ikZanpaiWIjZoOLVto+qnUkzqaniXNhfKqT/W2iCuuZKKXqzPGRMmp7z/8tMTs5juF51mYHY6rHNxNakSskTOeE19/sn2U7j8jDOttdWayyFKziqL1En37NMbtKUymJivoZ774K7GSmkqu+t1FZ+875FVL6mrpjVZpmBpJaS3O4nnroJKnUevtcLiu+ul+3I6K374pKZwr7J9K+irH2Kccbv3LjmxVxGLKNnKHftH7LW22kljtCJtJdLIKhe7rU5gEpwte2WibPJYR5+36MkfvpxYxqsRyO+rB9+JY2rsBu3yx7Q0BeTAjf3ndatXY80khRIC01ebR4G2tG9iR+ethYghneDZoHrMTqJ456s3dD9LU+7fUt/cXdmBJzKz4Yw6zercffvsOKMOGe9QH50e3rog4rkuXnnNoac8OuOln44LASgAOw==" align="middle" vspace="12" border="0">
+<p></p></center>Substituting the two equations gives us
+<p>
+</p><center><img hspace="12" src="data:image/gif;base64,R0lGODlhSAFBAPAAAP///wAAACH5BAEAAAAALAAAAABIAUEAAAL/hI+py+0Po5y02ouz3rz7D4ZiGATjiaZWqbbuS5rwTMf1jeNszvfR7gsKNcCh0Vc8KpeHJPP5ckKnOSn1CrJityktpAQOyxBiRZgB5o686naHXTaPAedEWo6+R+fdet4NKMJGx2dXqGeA2PQ3mFWoAvcYOLkiSWapmMhn4iQp0zgZSTmaMahlpceSJLUDGihKGkthiukJpLr5OOYKCCv769CIOrzbNKe7m9t5W3THnJx8edjcemxpDJy9IGzb0Iy9aHgpnVmNiGs9XiYGTahO/XWtTcr9Z++uWSwOnl/OyU+IUzpj7cAxk4ZPU7x5DBMG67btoMFc+/qtOlewYsBx/+8AZlL4gFdDLvXkQExkSGBKduQu4gH5EiZKOyBd3vMmb2SvnA4BIpSpkKLGgNMqfkwF752/Wgt1Ais51GPRTRElKJIYs6fLU9doOX3KcxmyYxGTRr3pcBhHn7hoAj0L9+vOH0WzzjTpM+9NsxptTuToC+fDh36IijTMDivONDzLxlmZ+LBeu1qX7T0Z8pPffSrXBnUWbXBm0aTjljbr6+OEZ575Nn5blWBix7osQs752HNKoBc1YxwNPI88tSv6/ow92erAuzKX032ORXIQr2h67sZbnCCZRVzdYugdLt928avDvkZy3gj1bbDbS4+rGW36oaq98IJK5X2P9ZyZIv8nAhExTQXXnnW6ESjYFfrth5snB26EHYAOTqZacnkJmOB4v8VT4XSF5ffhf+PBRtwGpzxIVGmX+ZfhZ0jJJQsrQrU0220hUjjjSi0KdyOKUmG1IIxDsEJZibKxhFZ4yV0VWYANIojafEIuYVlWRwV5pYjHIXajYmVBuRwxTY5JZplmnolmmmqu2aSWmBl5ZG4oYnYdZX119WRroU0ZyiEZwmmRnBQmWJedeqooYpR8UrJZf2NxkKU9hZoG3pdgrhXkojysMhqgF6CSWZWGvuWpXYpqOpeF7pRagYyh8tXqNMhAJ5WqqD5BzZo0liJnmoh912uuFbK0TrG3upHpsTT/JKssDMw264J0Y5okli1SMvQstJDgGWk/Ec6JFEYdVuJsjwZqSyWeiDJZW1WinmvitQDuiC4T9tUy63adVGcdrH3SW68S9wIM4ao5/nVnjCwGbK+6SZJn8Fl71hpLdwzj6vC3x02cb7/OaQcxhOZsbI0y1/lr68VVZAwfWc1ZOSlxuaHDlkCMxXGzOBtqqbIQA/MME2vMNRdzNxy3xZvQn9XcWYHZ9uzBz4a+iHDNMDuG6bsFV+ZlfQtD7TPLIFu5W29IHlrkxFaPyF18LRMM9sqInku1OlG962rWsm5p9pVf+xi3Dn/T/fGq3h3oL5N6NWr23DgGfoTFW45NB9aLhxdtauGV0XcV4KxCfoPkl5sh3OMJn07iwVuFORydoG/6d6Xgzo76RAfXlLTO1QBO+OtDvtkmte0GW1jiXVq7tnbBIlig7zV8DrtuT+8BtPOhdxz5x9NHO6n1DFb/ffJqaO199KaZT/Qrt5ePvm0eiltjdMXLy/4J23t/f/286h81/fz/DwgCoAA7" align="middle" vspace="12" border="0">
+<p></p></center>and solving for temperature T gives
+<p>
+</p><center><img hspace="12" src="data:image/gif;base64,R0lGODlhHQFdAPAAAP///wAAACH5BAEAAAAALAAAAAAdAV0AAAL/hI+py+0Po5y02ouz3rz7D3pB4IwmeZxjyLbuC8fv+tCKLef6zvedWUPdhL6i8YiMkXBDYoqZjEqnVAYK+rQ6q9yud0fDGsTir/mMxhCxwGb6DY9D1lsAuS7P679MqOqPtyc4iLTlh1dGqLioVIfTlgDJOEnpgkinVam5+RFoc8cZKlpRFsaWOJo6Gji2dKkqA/gHC8Zq55pJa4mZpRsrC/yo4hvi9EiMnDyGIGmr/CyKCj2dKk19rSmJvR3tzP1NWAoMTo4mLlue3qVtEez+Dh8vP09fb3+Pn69/n6uFrg5QSqJgAQseYQfQmsEf3pg13KZwIUMKEa9VlMjB2qyA/xcxZny4sKPHjyNLgHT4D+WhOyeztVSHatgQlW5mLjhRqxbCXiUj2RpoqA+bTCLVvNwAtKfPOZ5ORbp1w0qraj+PfpMmzl8WoTevWIUT8ytEZ1m7ClnBNerUVVWV8mzAUuuytXOX0m218gkdr3hRvtUG2JTDIG6hMu1ns+4xu3c3Dr7VzNVZY5LRygTCNfJhpRpf9fv0KbFhvOzQ/rX8FrLewaB94krd1W1nxH4b8318GidNnqUp89I72TXt2Jy9nfJct69QQCrT4naKO/kywYxFD8c42/rqu1MpW9cdfXTvveGZ1yRuUrZxR8hHb32qXS5v9tXdQ2aVlHDxCHnP2/8x+1t4cHkHm33OkQYfd/WhV1J2Atr3n1kFQoiYMAwa6J2FCi4Ynw5hYWaUY0it990hFbaXnmoPhsFdZtRt+CCHHuI32VegOUIRicCJuONNpPm2U3MXboehcDJNiGSSjaBYlG0dXvfkOmIdRNaUalBooAbL1SaBg2k0mQRWVl5wW302+iYjlGlKKYiYRbzIZYpyKliRl2eAGWaVb67o5px0GtKXkj/eCd4bRw64Z4GFDlkdQi5CgmdhZI6ZI4eLrnlfkMK0BqOkM1A6QVDy7XhoL/mdJqinIERKCn0SNleqeDQ2GhyA+9yKa666wsMoDCgSGaWGFwrLqqpdgsofoqL/quleWah2amwxyOoX27K9Ysjkb8VGS20OVVn7pInDajstt1FKG4Sw7QTl6rNYmttJuf68k+lRPEaG0zCzbAvvtQbx2y+mHNk7ThMrXSLvHgAjA5Sje7HXrmte4QvwwvM2pZ6fC47nY7UEQqtlwmpa7Mup/sH2GjNSFZkqWBjvhyiUmh1o6sfv6uFsg7PKbCHNitlM8psv92RynHHWKh1dBx4HbBs3Ermpf04HKHBCO4drzF+iLe3ZoZYF+HXYT/esbtUwXZ0msaHRyna1uTVLXqBrcaoc1TGGhHaMmtVsJtAQkxvx3lshrSLWGccs3LBGAllq2X9OWDaghvmMZNC0shQNo+DvCcj1uMBCHXll7CJ+bkE5Q25zdwmWZ3dgqLO+1OkyWq6L7A5nbTCfbcP+emouJog5yP8OrSiOr2LZ+e7IU52WhmExizfpLUK3dbacTzz7FSwP/uLz/koECqmXDqpW40c6Huu7U/c9seOWikxM+Gz6Dv+n32MXcRWhtwmupNRzsT+F9c9/A5yCumjnq9SpajkIPBbFeGSOQjXwGRMEX/2oUUHTXTBgHOygBy1AABQAOw==" align="middle" vspace="12" border="0">
+<p></p></center>We can assume that the concentration of DNA and the concentration of 
+the DNA-primer complex are equal, so this simplifies the equation considerably. 
+It has been determined empirically that there is a 5 (3.4 by Sugimoto et al.) 
+kcal free energy change during the transition from single stranded to B-form 
+DNA. This is presumably a helix initiation energy. Finally, adding an adjustment 
+for salt gives the equation that the Oligo Calculator uses: 
+<center><img hspace="12" src="data:image/gif;base64,R0lGODlhgwF4APAAAP///wAAACH5BAEAAAAALAAAAACDAXgAAAL/hI+py+0Po5y02ouz3rz7D4biKAZmeZLqyrbuC8dfGtLyjef6zsv2HOgJh8SisffzJI/MpvMJXSw506j1is2uqhqu9gsOixUp088clJ7K6bH7Dc/SbGbDmZ32xvf8PoyNQNcGIHig54eYqJhRJziYcGd3uEhZaRmIBvmIqWm4eQkaark2WMcQKSmqurpI2laVNPfJSlurZSrb4Og5a+v7y1RI+AhoN+xpDKyMyIXmaHrzjCs7TXjcu5wdpjc1SeaMrUucl6n5mqudDgd9OuuN6awuP38R1LzEPhFOz98PmdouoIV3/gpqK6ZGYIV9BhumK/UpnySG5iQ6vJgNYsKN/xjiYfyoDBU8cBYXEgSJktm3lRwnkuxVMqXMVhEh1hz3Ehu1nDx7+vwJ9ORMh+40ttwgdKjSW+KQHe1CcanUWzDJ3ZwxNSufcKQUmuykNewYL12fSoCWVKxaJEHLuRTqca3cuXTr8pMI7m1UKmnt+kVqrybLGH3/Gv4KkJNiH3sPO653DqxTxo8rk0A3uTBUy5xrBGapeXPn0R3wlj2Ledgmt4nhqQ3N125cfYEbxa02eeKxsLABy65t8pxRdqlTS+0du13PiwgjEB+nGizayFq5sXapRHBu5JemRT1DpjVAYdwp7LsuDh8Om7HwfedFR4pka0SNQnjeKR9u1eXN6//0FlN/DwijRkTmDbZbIK4ZwpxNzkHHSXuZNTZCgHvdQ2Fy4ikYC2r45WZWQ/oxJFIqd1gFYoZdJDjffeepuOJi+UF4FoL0NYVSe1zROB6NZbDY3z0heoUjYS0iU+J9Nv4HY0hXFSneGrvhhyKLIAhp44Ak3sTlZ6gdmQyQylnZIixN/pIXf+hFiRN8Lc3mmQMSrhmhhebo5lRMRHaz3TdV7llVeiSRJgSWC0Y3Jp5l2kfglzJO+Mp8ZPEIpl50EtoCT1km+ah7j05pn6MgttYcp4smykhbqq7KaquuvgprrINaatqmRdn6aamNmdqmcdZViuGsmOpg6KjdrIZsruT/fKrlkXN2+iKwTAo77Hr/4fqUhMZSdxKnz274K7N6PnSmFd1e6+yt6SoLX4beFkidonJSuiE9Ah5BULHboVtvicb9w8upAPuZGZlHeVrQvcGUKy4eMnp3sMP1JhapgtB65ZGU8w7cLsOVKNxEaGlWZKt716FHbcU3ksqegYeOC6THtYDsBM1D1OaWyjzajCDPNLHi8w7a3agyg6O6EF+OMjNC7NIhc6RzeEdnWkpKQQ9J9cerWUz0YFdT7LQqX9/ZNCUvvXzsW0iXM3YfbRvztsFuwzlQ2JDJFPfEL+RdbXd2I5YD332b/TfggRc+uC+C5y144swgThsPjTs+d6GQ/7tI+XGXPyj55pmHsrjnUH5utegbC2066YRb3rnqbGnZSEfUitY66q7XrhDMpyPKMeaoX5r17U2rO7WoZL4zOe7C+yA3eKmSLa/viqe+fDIIGy079HpjDTr1yzcXsPSja2v8zN4LH2r4uxN5PDHRJ2979UYeDbzc+w59DWvwly3/3vTytz542Qk7LAPG/qqVrAL5aXY9Wl+jDmit/q0tRCM6m2SK9cCiyGqDHLQIBAlFPO1VqoAYC9UHKSNBFgQqgVhrlKRMeD58xfBzZlqZ3mp4qBc+bIZFOGFndsTCLG2rhDs0IA8dNykX+odgPYOhEVOogqCoSUUjk9dy0uTDP/8cEYpy2CLruOiPLPoPjGGcltN4RrfikXEZ+gICCrm3RjTx6w04jKM82iiGOtqRXAEcS6D2qA48TsdBCRrk/US4H/uJEZARHF2e9AecfalpirqJxIfgyMhV4PEah8ygcOqUotMo0ouZ7OEc3QSpN7kwZ20a0iJLqcU+tm9qqwwP+EbpSFiaT5Yi8SA1oJXGAWJSl6DQ4/vipUNgnlJaxGTjHy9Gy/SdyH1qTFszn8i+DBLxYgSaFPuuCbRnPvJ/U7KSJXXVrGGCU2vZXJOZlgXMSTKrYevE5pJIaTg11rN7EdtGEPe5y3v6U4gA1WQQXynQgtqTVgidDUIVGjx2QtQMmRKdqEUvilFCEQAFADs=" align="middle" vspace="12" border="0">
+<p></p></center>No adjustment constant for salt concentration is needed, since the 
+various parameters were determined at 1 Molar NaCl, and the log of 1 is zero.
+<p>
+<table cellspacing="4" cellpadding="4" width="100%" bgcolor="#ffcece" border="0">
+  <tbody>
+  <tr>
+    <td><b>ASSUMPTIONS:</b><br>The thermodynamic calculations assume that the 
+      annealing occurs at pH 7.0. The melting temperature (Tm) calculations 
+      assume the sequences are not symmetric and contain at least one G or C. 
+      The oligonucleotide sequence should be at least 8 bases long to give 
+      reasonable Tms.<br></td></tr></tbody></table>
+</p><hr size="4">
+<a name="helpbasic"></a>
+<h3>Basic Melting Temperature (Tm) Calculations</h3>The two standard 
+approximation calculations are used. For sequences less than 14 nucleotides the 
+formula is
+<p>
+</p><ul><dfn><b>Tm= (wA+xT) * 2 + (yG+zC) * 4</b></dfn>
+  <p>where w,x,y,z are the number of the bases A,T,G,C in the sequence, 
+  respectively.<br></p></ul>For sequences longer than 13 nucleotides, the equation 
+used is
+<p>
+</p><ul><dfn><b>Tm= 64.9 +41*(yG+zC-16.4)/(wA+xT+yG+zC)</b></dfn><br></ul>
+<table cellspacing="4" cellpadding="4" width="100%" bgcolor="#ffcece" border="0">
+  <tbody>
+  <tr>
+    <td><b>ASSUMPTIONS:</b><br><i>Both</i> equations assume that the annealing 
+      occurs under the standard conditions of 50 n<u>M</u> primer, 50 m<u>M</u> 
+      Na<sup>+</sup>, and pH 7.0.<br></td></tr></tbody></table>
+<hr size="4">
+<a name="helpadjusted"></a>
+<h3>Salt Adjusted Melting Temperature (Tm) Calculations</h3>A variation on two 
+standard approximation calculations are used. For sequences less than 14 
+nucleotides the same formula as the basic calculation is use, with a salt 
+concentration adjustment
+<p>
+</p><ul><dfn><b>Tm= (wA+xT)*2 + (yG+zC)*4 - 16.6*log<sub>10</sub>(0.050) + 
+  16.6*log<sub>10</sub>([Na<sup>+</sup>])</b></dfn>
+  <p>where w,x,y,z are the number of the bases A,T,G,C in the sequence, 
+  respectively.<br></p></ul>The term 
+<dfn><b>16.6*log<sub>10</sub>([Na<sup>+</sup>])</b></dfn> adjusts the Tm for 
+changes in the salt concentration, and the term 
+<dfn><b>log<sub>10</sub>(0.050)</b></dfn> adjusts for the salt adjustment at 50 
+m<u>M</u> Na<sup>+</sup>. Other monovalent and divalent salts will have an 
+effect on the Tm of the oligonucleotide, but sodium ions are much more effective 
+at forming salt bridges between DNA strands and therefore have the greatest 
+effect in stabilizing double-stranded DNA.<br>
+<ul></ul>For sequences longer than 13 nucleotides, the equation used is
+<p>
+</p><ul><dfn><b>Tm= 100.5 + (41 * (yG+zC)/(wA+xT+yG+zC)) - (820/(wA+xT+yG+zC)) + 
+  16.6*log<sub>10</sub>([Na<sup>+</sup>])</b></dfn><br></ul>This equation is very 
+accurate for sequences in the 18-25mer range. OligoCalc uses the above equation 
+for all sequences longer than 13 nucleotides.
+<p>The following equation is provided <i>only</i> for your reference. It is not 
+actually used by OligoCalc. It is reportedly more accurate for longer sequences.
+</p><p>
+</p><ul><dfn><b>Tm= 81.5 + (41 * (yG+zC)/(wA+xT+yG+zC)) - (500/(wA+xT+yG+zC)) + 
+  16.6*log<sub>10</sub>([Na<sup>+</sup>]) - 0.62F</b></dfn><br></ul>This equation 
+is most accurate for sequences longer than 50 nucleotides. It is valid for 
+oligos longer than 50 nucleotides from pH 5 to 9. Symbols and salt adjustment 
+term as above, with the term <dfn><b>(41 * (yG + zC-16.4)/(wA + xT + yG + 
+zC))</b></dfn> adjusting for G/C content and the term <dfn><b>(500/(wA + xT + yG 
++ zC))</b></dfn> adjusting for the length of the sequence, and F is the percent 
+concentration of formamide.
+<p>For more information please see the reference:<br>Howley, P.M; Israel, M.F.; 
+Law, M-F.; and M.A. Martin "A rapid method for detecting and mapping homology 
+between heterologous DNAs. Evaluation of polyomavirus genomes." <i>J. Biol. 
+Chem.</i> <b>254</b>, 4876-4883, 1979.
+</p><p>RNA melting temperatures<br>
+</p><ul><dfn><b>Tm= 79.8 + 18.5*log<sub>10</sub>([Na<sup>+</sup>]) + (58.4 * 
+  (yG+zC)/(wA+xT+yG+zC)) + (11.8 * ((yG+zC)/(wA+xT+yG+zC))<sup>2</sup>) - 
+  (820/(wA+xT+yG+zC)) </b></dfn><br></ul>Where yG+zC are the mole fractions of G 
+and C in the oligo, L is the length of the shortest strand in the duplex.<br>
+<table cellspacing="4" cellpadding="4" width="100%" bgcolor="#ffcece" border="0">
+  <tbody>
+  <tr>
+    <td><b>ASSUMPTIONS:</b><br>These equations assume that the annealing 
+      occurs under the standard conditions of 50 n<u>M</u> primer and pH 
+    7.0.<br></td></tr></tbody></table>
+<p>
+</p><hr size="4">
+<a name="helpMW">
+</a><p><a name="helpMW"></a>
+</p><h3>Molecular Weight Calculations</h3>
+<p>DNA Molecular Weight (for instance synthesized Oligonucleotides)
+</p><p>Anhydrous Molecular Weight = (A<sub>n</sub> x 313.21) + (T<sub>n</sub> x 
+304.2) + (C<sub>n</sub> x 289.18) + (G<sub>n</sub> x 329.21) - 61.96
+</p><p>A<sub>n</sub>, T<sub>n</sub>, C<sub>n</sub>, and G<sub>n</sub> are the number 
+of each respective nucleotide within the polynucleotide. The subtraction of 
+61.96 gm/mole from the oligonucleotide molecular weight takes into account the 
+removal of HPO<sub>2</sub> (63.98) and the addition of two hydrogens (2.02).
+</p><p>Please note: this calculation works well for synthesized oligonucleotides. If 
+you would like an accurate MW for restriction enzyme cut DNA, please use:
+</p><p>Molecular Weight = (A<sub>n</sub> x 313.21) + (T<sub>n</sub> x 304.2) + 
+(C<sub>n</sub> x 289.18) + (G<sub>n</sub> x 329.21) + 79.0
+</p><p>The addition of 79.0 gm/mole to the oligonucleotide molecular weight takes 
+into account the 5' monophosphate left by most restriction enzymes. No phosphate 
+is present at the 5' end of strands made by primer extension, so no adjustment 
+should be necessary. Also, if you are making these calculations for dsDNA, the 
+correct amount to add it 158.0 gm/mole, adding a monophosphate to each strand. 
+</p><p>RNA Molecular Weight (for instance from an RNA transcript)<br>Molecular 
+Weight = (A<sub>n</sub> x 329.21) + (U<sub>n</sub> x 306.17) + (C<sub>n</sub> x 
+305.18) + (G<sub>n</sub> x 345.21) + 159.0<br>A<sub>n</sub>, U<sub>n</sub>, 
+C<sub>n</sub>, and G<sub>n</sub> are the number of each respective nucleotide 
+within the polynucleotide. Addition of 159.0 gm/mole to the molecular weight 
+takes into account the 5' triphosphate. 
+</p><p>
+</p><hr size="4">
+<a name="helpOD">
+</a><p><a name="helpOD"></a>
+</p><h3>OD Calculations</h3>Molar Absorptivity values in 1/(Moles cm)
+<p>
+<table cellspacing="0" cellpadding="4" bgcolor="lightblue">
+  <tbody>
+  <tr>
+    <th>Residue</th>
+    <th>Moles<font size="-1"><sup>-1</sup></font> cm<font size="-1"><sup>-1</sup></font></th>
+    <th>A<sub>max</sub>(nm)</th>
+    <th>Molecular Weight<br>(after protecting groups are removed)</th></tr>
+  <tr>
+    <td><a href="http://www.basic.northwestern.edu/biotools/images/dAMP.gif" target="monomer">Adenine</a> (dAMP, Na salt)</td>
+    <td>15200</td>
+    <td>259</td>
+    <td>313.21</td></tr>
+  <tr>
+    <td><a href="http://www.basic.northwestern.edu/biotools/images/dGMP.gif" target="monomer">Guanine</a> (dGMP, Na salt)</td>
+    <td>12010</td>
+    <td>253</td>
+    <td>329.21</td></tr>
+  <tr>
+    <td><a href="http://www.basic.northwestern.edu/biotools/images/dCMP.gif" target="monomer">Cytosine</a> (dCMP, Na salt)</td>
+    <td>7050</td>
+    <td>271</td>
+    <td>289.18</td></tr>
+  <tr>
+    <td><a href="http://www.basic.northwestern.edu/biotools/images/dTMP.gif" target="monomer">Thymidine</a> (dTMP, Na salt)</td>
+    <td>8400</td>
+    <td>267</td>
+    <td>304.2</td></tr>
+  <tr>
+    <td>dUradine (dUMP, Na salt)</td>
+    <td>9800</td>
+    <td>-</td>
+    <td>290.169</td></tr>
+  <tr>
+    <td>dInosine (dUMP, Na salt)</td>
+    <td>-</td>
+    <td>-</td>
+    <td>314</td></tr>
+  <tr>
+    <th colspan="3">RNA nucleotides</th></tr>
+  <tr>
+    <td>Adenine (AMP, Na salt)</td>
+    <td>15400</td>
+    <td>259</td>
+    <td>329.21</td></tr>
+  <tr>
+    <td>Guanine (GMP, Na salt)</td>
+    <td>13700</td>
+    <td>253</td>
+    <td>345.21</td></tr>
+  <tr>
+    <td>Cytosine (CMP, Na salt)</td>
+    <td>9000</td>
+    <td>271</td>
+    <td>305.18</td></tr>
+  <tr>
+    <td>Uradine (UMP, Na salt)</td>
+    <td>10000</td>
+    <td>262</td>
+    <td>306.2</td></tr>
+  <tr>
+    <th colspan="3">Other nucleotides</th></tr>
+  <tr>
+    <td><a href="http://www.basic.northwestern.edu/biotools/images/FAM.gif" target="monomer">6' FAM</a></td>
+    <td>20960</td>
+    <td></td>
+    <td>537.46</td></tr>
+  <tr>
+    <td><a href="http://www.basic.northwestern.edu/biotools/images/TET.gif" target="monomer">TET</a></td>
+    <td>16255</td>
+    <td></td>
+    <td>675.24</td></tr>
+  <tr>
+    <td><a href="http://www.basic.northwestern.edu/biotools/images/HEX.gif" target="monomer">HEX</a></td>
+    <td>31580</td>
+    <td></td>
+    <td>744.13</td></tr>
+  <tr>
+    <td>TAMRA</td>
+    <td>31980</td>
+    <td></td>
+    <td></td></tr></tbody></table>
+</p><p>Assume 1 OD of a standard 1ml solution, measured in a cuvette with a 1 cm 
+pathlength.
+</p><p>
+</p><p><a name="FAM">
+</a></p><p>
+</p><hr size="4">
+
+<h3><a href="http://www.basic.northwestern.edu/biotools/images/FAM.gif" target="monomer">6-FAM:</a></h3>
+<table cellspacing="0" cellpadding="4" bgcolor="lightblue" border="0">
+  <tbody>
+  <tr>
+    <td>Chemical name:</td>
+    <td><b>6-carboxyfluorescein</b></td></tr>
+  <tr>
+    <td>Absorption wavelength maximum:</td>
+    <td><b>495 nm</b></td></tr>
+  <tr>
+    <td>Emission wavelength maximum:</td>
+    <td><b>521 nm</b></td></tr>
+  <tr>
+    <td>Molar Absorptivity at 260nm:</td>
+    <td><b>20960</b> Moles<font size="-1"><sup>-1</sup></font> cm<font size="-1"><sup>-1</sup></font></td></tr></tbody></table>
+<p><a name="TET">
+</a></p><p>
+</p><hr size="4">
+
+<h3><a href="http://www.basic.northwestern.edu/biotools/images/TET.gif" target="monomer">TET:</a></h3>
+<table cellspacing="0" cellpadding="4" bgcolor="lightblue" border="0">
+  <tbody>
+  <tr>
+    <td>Chemical name:</td>
+    <td><b>4, 7, 2', 7'-Tetrachloro-6-carboxyfluorescein</b></td></tr>
+  <tr>
+    <td>Absorption wavelength maximum:</td>
+    <td><b>519 nm</b></td></tr>
+  <tr>
+    <td>Emission wavelength maximum:</td>
+    <td><b>539 nm</b></td></tr>
+  <tr>
+    <td>Molar Absorptivity at 260nm:</td>
+    <td><b>16255</b> Moles<font size="-1"><sup>-1</sup></font> cm<font size="-1"><sup>-1</sup></font></td></tr></tbody></table>
+<p><a name="HEX">
+</a></p><p>
+</p><hr size="4">
+
+<h3><a href="http://www.basic.northwestern.edu/biotools/images/HEX.gif" target="monomer">HEX:</a></h3>
+<table cellspacing="0" cellpadding="4" bgcolor="lightblue" border="0">
+  <tbody>
+  <tr>
+    <td>Chemical name:</td>
+    <td><b>4, 7, 2', 4', 5', 7'-Hexachloro-6-carboxyfluorescein</b></td></tr>
+  <tr>
+    <td>Absorption wavelength maximum:</td>
+    <td><b>537 nm</b></td></tr>
+  <tr>
+    <td>Emission wavelength maximum:</td>
+    <td><b>556 nm</b></td></tr>
+  <tr>
+    <td>Molar Absorptivity at 260nm:</td>
+    <td><b>31580</b> Moles<font size="-1"><sup>-1</sup></font> cm<font size="-1"><sup>-1</sup></font></td></tr></tbody></table>
+<p><a name="TAMRA">
+</a></p><p>
+</p><hr size="4">
+
+<h3>TAMRA:</h3>
+<table cellspacing="0" cellpadding="4" bgcolor="lightblue" border="0">
+  <tbody>
+  <tr>
+    <td>Chemical name:</td>
+    <td><b>N, N, N', N'-tetramethyl-6-carboxyrhodamine</b></td></tr>
+  <tr>
+    <td>Absorption wavelength maximum:</td>
+    <td><b>555 nm</b></td></tr>
+  <tr>
+    <td>Emission wavelength maximum:</td>
+    <td><b>580 nm</b></td></tr>
+  <tr>
+    <td>Molar Absorptivity at 260nm:</td>
+    <td><b>31980</b> Moles<font size="-1"><sup>-1</sup></font> cm<font size="-1"><sup>-1</sup></font></td></tr></tbody></table>
+<p><a name="helpIUPAC">
+</a></p><p>
+</p><hr size="4">
+
+<h3>Nucleotide base codes (IUPAC)
+</h3><h3>
+<table cellspacing="0" cellpadding="4" bgcolor="lightblue" border="0">
+  <tbody>
+  <tr>
+    <th colspan="3">Symbol: nucleotide(s)</th></tr>
+  <tr>
+    <td valign="top">
+      <ul>
+        <table>
+          <tbody>
+          <tr valign="top">
+            <th><b>A</b></th>
+            <td>adenine </td></tr>
+          <tr valign="top">
+            <th><b>C</b></th>
+            <td>cytosine</td></tr>
+          <tr valign="top">
+            <th><b>G</b></th>
+            <td>guanine</td></tr>
+          <tr valign="top">
+            <th><b>T</b></th>
+            <td>thymine in DNA;<br>uracil in RNA</td></tr>
+          <tr valign="top">
+            <th><b>U</b></th>
+            <td>deoxy-Uracil in DNA;<br>uracil in RNA</td></tr>
+          <tr valign="top">
+            <th><b>I</b></th>
+            <td>inosine</td></tr>
+          <tr valign="top">
+            <th><b>N</b></th>
+            <td>A or C or G or T</td></tr></tbody></table></ul></td>
+    <td valign="top">
+      <table>
+        <tbody>
+        <tr valign="top">
+          <th><b>M</b></th>
+          <td>A or C</td></tr>
+        <tr valign="top">
+          <th><b>R</b></th>
+          <td>A or G</td></tr>
+        <tr valign="top">
+          <th><b>W</b></th>
+          <td>A or T</td></tr>
+        <tr valign="top">
+          <th><b>S</b></th>
+          <td>C or G</td></tr>
+        <tr valign="top">
+          <th><b>Y</b></th>
+          <td>C or T</td></tr></tbody></table></td>
+    <td valign="top">
+      <table>
+        <tbody>
+        <tr valign="top">
+          <th><b>K</b></th>
+          <td>G or T</td></tr>
+        <tr valign="top">
+          <th><b>V</b></th>
+          <td>A or C or G; not T</td></tr>
+        <tr valign="top">
+          <th><b>H</b></th>
+          <td>A or C or T; not G</td></tr>
+        <tr valign="top">
+          <th><b>D</b></th>
+          <td>A or G or T; not C</td></tr>
+        <tr valign="top">
+          <th><b>B</b></th>
+          <td>C or G or T; not A</td></tr></tbody></table></td></tr></tbody></table>
+<hr size="4">
+
+<p>Most recent version is available at URL: <a href="http://www.basic.northwestern.edu/biotools/oligocalc.html">http://www.basic.northwestern.edu/biotools/oligocalc.html</a></p>
+<hr size="4">
+
+<p>The current version is the result of efforts by the following people:</p>
+<p>Qing Cao, M.S. <br>Research Computing<br>Northwestern University Medical 
+School<br>Chicago, IL 60611</p>
+<p>Warren A. Kibbe, Ph.D.
+<script>
+document.writeln('<A HREF="mailto:wakibbe'+'@'+'northwestern.edu">e-mail</a>');
+</script><a href="mailto:wakibbe@northwestern.edu">e-mail</a>
+
+ and <a href="http://directory.northwestern.edu/index.cgi?query=Warren+Kibbe" target="_blank">PH entry</a>.<br>Research Computing<br>Northwestern University 
+Medical School<br>Chicago, IL 60611</p>
+<p>Original code by Eugen Buehler<br>Research Support 
+Facilities<br>Department of Molecular Genetics and Biochemistry<br>University of 
+Pittsburgh School of Medicine</p>
+<p>Monomer structures and molecular weights provided by Bob Somers, Ph.D.
+<script>
+document.writeln('<A HREF="mailto:bob'+'@'+'glenres.com">e-mail</a>');
+</script><a href="mailto:bob@glenres.com">e-mail</a>
+
+ at <a href="http://www.glenres.com/">Glen Research Corporation</a></p>
+<p>Uppercase/lowercase strand complementation problem described by Alexey Merz
+<script>
+document.writeln('<A HREF="mailto:alexey'+'@'+'dartmouth.edu">e-mail</a>');
+</script><a href="mailto:alexey@dartmouth.edu">e-mail</a>
+
+ </p>
+<p>The RNA calculations and functions were requested by Suzanne Kennedy, Ph.D.
+<script>
+document.writeln('<A HREF="mailto:Suzanne.Kennedy'+'@'+'qiagen.com">e-mail</a>');
+</script><a href="mailto:Suzanne.Kennedy@qiagen.com">e-mail</a>
+
+ at <a href="http://www.qiagen.com/">Qiagen</a> </p>
+<p>The flourescent tags and tagging options were requested by and the data 
+provided by Florian Preitauer
+<script>
+document.writeln('<A HREF="mailto:f.preitauer'+'@'+'metabion.com">e-mail</a>');
+</script><a href="mailto:f.preitauer@metabion.com">e-mail</a>
+
+ and Regina Bichlmaier, Ph.D.
+<script>
+document.writeln('<A HREF="mailto:regina'+'@'+'metabion.com">e-mail</a>');
+</script><a href="mailto:regina@metabion.com">e-mail</a>
+
+ at <a href="http://www.metabion.com/">metabion GmbH</a> </p>
+<p>The dsDNA and dsRNA molecular weight calculation problems in version 3.xx and 
+fixed in 3.10 was reported by Borries Demeler, Ph.D.
+<script>
+document.writeln('<A HREF="mailto:demeler'+'@'+'biochem.uthscsa.edu">e-mail</a>');
+</script><a href="mailto:demeler@biochem.uthscsa.edu">e-mail</a>
+
+ and Regina Bichlmaier, Ph.D.
+<script>
+document.writeln('<A HREF="mailto:regina'+'@'+'metabion.com">e-mail</a>');
+</script><a href="mailto:regina@metabion.com">e-mail</a>
+
+ at <a href="http://www.metabion.com/">metabion GmbH</a> </p>
+<p>
+<script language="JavaScript">
+<!-- begin script
+	GetOligoValueFromCookie(document.OligoCalc);
+	Calculate(document.OligoCalc);
+	document.writeln(" <FONT COLOR='indigo'>Oligo Calculator version " + theVersion + "</font><p>");
+// end script -->
+</script> <font color="indigo">Oligo Calculator version 3.10 (last modified by WAKibbe 09/25/2006)</font></p><p>
+
+</p></h3>
+<div id="immersive-translate-browser-popup" style="all: initial"></div></body>
