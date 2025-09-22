@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>科科計算工具箱</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-white p-6">
+  <div class="max-w-6xl mx-auto">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
+      <div>
+        <h1 class="text-3xl font-extrabold">科科計算工具箱</h1>
+        <p class="text-sm text-slate-500">小編自製網頁工具</p>
+      </div>
+    </header>
+
+    <section class="mb-4">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <input id="search" oninput="filterTools()" placeholder="搜尋標題或說明..." class="w-full bg-white border rounded-lg px-4 py-3 shadow-sm" />
+        </div>
+        <div class="flex gap-2 items-center">
+          <button onclick="resetFilter()" class="px-3 py-2 border rounded-lg hover:bg-sky-600 hover:text-white transition">重置</button>
+          <div id="count" class="text-sm text-slate-500"></div>
+        </div>
+      </div>
+    </section>
+
+    <main>
+      <div id="toolGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <div id="noResult" class="hidden mt-8 text-center text-slate-500">找不到符合條件的工具。</div>
+    </main>
+
+    <footer class="mt-8 text-sm text-slate-400">若喜歡，可自由Donate支持：https://pse.is/4524sw</footer>
+  </div>
+
+  <script>
+    const TOOLS = [
+      { title: "科科計算器", url: "https://osla30.github.io/bio/biocalculate", description: "各類科學計算：莫耳濃度、稀釋、酸鹼、動物投藥、細胞計數等" },
+      { title: "TGOne鑄膠計算器", url: "https://osla30.github.io/bio/tgonecalculate", description: "TGOne Buffer 鑄膠計算 (SDS-PAGE用)<br><br>仿 Bio-Rad TGX 快速凝膠試劑" },
+      { title: "TGOne抄寫紙本", url: "https://drive.google.com/file/d/1ImMVqoS0MFTVE7sP_CGpgBiLzuiv7_ox/view", description: "TGOne 計算後抄寫小紙條 (SDS-PAGE用)" },
+      { title: "Bio-Rad TGX鑄膠計算器", url: "https://osla30.github.io/bio/tgxcalculate", description: "Bio-Rad TGX 鑄膠計算 (SDS-PAGE用)<br><br>正茂介紹 (TGX 快速凝膠試劑組)：https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" },
+      { title: "經典SDS-PAGE鑄膠計算器", url: "https://osla30.github.io/bio/classicpagecalculate", description: "傳統經典 鑄膠計算器 (SDS-PAGE用)<br><br>4X 上膠 Buffer (0.5M Tris pH6.8)<br>4X 下膠 Buffer (1.5M Tris pH8.8)" },
+    ];
+
+    const toolGrid = document.getElementById("toolGrid");
+    const countEl = document.getElementById("count");
+    const noResult = document.getElementById("noResult");
+
+    function renderTools(list) {
+      toolGrid.innerHTML = "";
+      list.forEach(tool => {
+        const card = document.createElement("article");
+        card.className = "bg-white p-4 rounded-2xl shadow-md hover:-translate-y-1 transition";
+        card.innerHTML = `
+          <div>
+            <h2 class="font-semibold text-lg">${tool.title}</h2>
+            <p class="text-sm text-slate-500 mt-1">${tool.description}</p>
+            <div class="flex flex-wrap gap-2 justify-center mt-3">
+              <a href="${tool.url}" target="_blank" class="px-3 py-1 border rounded-lg hover:bg-sky-600 hover:text-white transition">開啟工具</a>
+              <button onclick="copyToClipboard('${tool.url}')" class="px-3 py-1 border rounded-lg hover:bg-sky-600 hover:text-white transition">複製連結</button>
+            </div>
+          </div>`;
+        toolGrid.appendChild(card);
+      });
+      countEl.textContent = `共 ${list.length} 個`;
+      noResult.classList.toggle("hidden", list.length > 0);
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert("已複製到剪貼簿：" + text);
+      });
+    }
+
+    function filterTools() {
+      const q = document.getElementById("search").value.trim().toLowerCase();
+      const filtered = TOOLS.filter(t => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q));
+      renderTools(filtered);
+    }
+
+    function resetFilter() {
+      document.getElementById("search").value = "";
+      renderTools(TOOLS);
+    }
+
+    // 初始化
+    renderTools(TOOLS);
+  </script>
+</body>
+</html>
