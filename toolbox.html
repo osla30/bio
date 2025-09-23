@@ -6,33 +6,40 @@
   <title>科科計算工具箱</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-50 to-white p-6">
+<body class="min-h-screen bg-gradient-to-br from-pink-100 via-sky-100 to-violet-200 p-6">
   <div class="max-w-6xl mx-auto">
+    <!-- Header -->
     <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
       <div>
-        <h1 class="text-3xl font-extrabold">科科計算工具箱</h1>
-        <p class="text-sm text-slate-500">小編自製網頁工具</p>
+        <h1 class="text-4xl font-extrabold text-violet-700 drop-shadow">科科計算工具箱</h1>
+        <p class="text-sm text-slate-600">小編自製網頁工具</p>
       </div>
     </header>
 
+    <!-- 搜尋區 -->
     <section class="mb-4">
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
-          <input id="search" oninput="filterTools()" placeholder="搜尋標題或說明..." class="w-full bg-white border rounded-lg px-4 py-3 shadow-sm" />
+          <input id="search" oninput="filterTools()" placeholder="🔍 搜尋標題或說明..."
+            class="w-full bg-white border-2 border-sky-300 rounded-xl px-4 py-3 shadow-md focus:outline-none focus:ring-2 focus:ring-sky-400" />
         </div>
         <div class="flex gap-2 items-center">
-          <button onclick="resetFilter()" class="px-3 py-2 border rounded-lg hover:bg-sky-600 hover:text-white transition">重置</button>
-          <div id="count" class="text-sm text-slate-500"></div>
+          <button onclick="resetFilter()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-400 to-sky-600 text-white shadow hover:opacity-90 transition">重置</button>
+          <div id="count" class="text-sm text-slate-700 font-medium"></div>
         </div>
       </div>
     </section>
 
+    <!-- 工具卡片 -->
     <main>
-      <div id="toolGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-      <div id="noResult" class="hidden mt-8 text-center text-slate-500">找不到符合條件的工具。</div>
+      <div id="toolGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      <div id="noResult" class="hidden mt-8 text-center text-slate-500">❌ 找不到符合條件的工具。</div>
     </main>
 
-    <footer class="mt-8 text-sm text-slate-400">若喜歡，可自由Donate支持：https://pse.is/4524sw</footer>
+    <footer class="mt-10 text-sm text-slate-600 text-center">
+      若喜歡，可自由 <span class="text-pink-600 font-semibold">Donate</span> 支持：
+      <a href="https://pse.is/4524sw" target="_blank" class="text-sky-600 underline hover:text-violet-600">https://pse.is/4524sw</a>
+    </footer>
   </div>
 
   <script>
@@ -48,23 +55,32 @@
     const countEl = document.getElementById("count");
     const noResult = document.getElementById("noResult");
 
+    const COLORS = [
+      "from-pink-200 to-pink-400",
+      "from-sky-200 to-sky-400",
+      "from-violet-200 to-violet-400",
+      "from-emerald-200 to-emerald-400",
+      "from-amber-200 to-amber-400"
+    ];
+
     function renderTools(list) {
       toolGrid.innerHTML = "";
-      list.forEach(tool => {
+      list.forEach((tool, i) => {
         const card = document.createElement("article");
-        card.className = "bg-white p-4 rounded-2xl shadow-md hover:-translate-y-1 transition";
+        const color = COLORS[i % COLORS.length];
+        card.className = `bg-gradient-to-br ${color} p-5 rounded-2xl shadow-lg hover:-translate-y-1 hover:shadow-xl transition`;
         card.innerHTML = `
           <div>
-            <h2 class="font-semibold text-lg">${tool.title}</h2>
-            <p class="text-sm text-slate-500 mt-1">${tool.description}</p>
-            <div class="flex flex-wrap gap-2 justify-center mt-3">
-              <a href="${tool.url}" target="_blank" class="px-3 py-1 border rounded-lg hover:bg-sky-600 hover:text-white transition">開啟工具</a>
-              <button onclick="copyToClipboard('${tool.url}')" class="px-3 py-1 border rounded-lg hover:bg-sky-600 hover:text-white transition">複製連結</button>
+            <h2 class="font-bold text-xl text-slate-800 drop-shadow">${tool.title}</h2>
+            <p class="text-sm text-slate-700 mt-2">${tool.description}</p>
+            <div class="flex flex-wrap gap-3 justify-center mt-4">
+              <a href="${tool.url}" target="_blank" class="px-4 py-2 rounded-lg bg-white/80 text-sky-700 font-medium shadow hover:bg-white">開啟工具</a>
+              <button onclick="copyToClipboard('${tool.url}')" class="px-4 py-2 rounded-lg bg-white/80 text-pink-700 font-medium shadow hover:bg-white">複製連結</button>
             </div>
           </div>`;
         toolGrid.appendChild(card);
       });
-      countEl.textContent = `共 ${list.length} 個`;
+      countEl.textContent = `共 ${list.length} 個工具`;
       noResult.classList.toggle("hidden", list.length > 0);
     }
 
