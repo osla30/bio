@@ -68,15 +68,15 @@
       list.forEach((tool, i) => {
         const card = document.createElement("article");
         const color = COLORS[i % COLORS.length];
-        card.className = `bg-gradient-to-br ${color} p-5 rounded-2xl shadow-lg hover:-translate-y-1 hover:shadow-xl transition`;
+        card.className = `relative bg-gradient-to-br ${color} p-5 rounded-2xl shadow-lg hover:-translate-y-1 hover:shadow-xl transition flex flex-col h-full`;
         card.innerHTML = `
-          <div>
+          <div class="flex-1">
             <h2 class="font-bold text-xl text-slate-800 drop-shadow">${tool.title}</h2>
             <p class="text-sm text-slate-700 mt-2">${tool.description}</p>
-            <div class="flex flex-wrap gap-3 justify-center mt-4">
-              <a href="${tool.url}" target="_blank" class="px-4 py-2 rounded-lg bg-white/80 text-sky-700 font-medium shadow hover:bg-white">開啟工具</a>
-              <button onclick="copyToClipboard('${tool.url}')" class="px-4 py-2 rounded-lg bg-white/80 text-pink-700 font-medium shadow hover:bg-white">複製連結</button>
-            </div>
+          </div>
+          <div class="mt-4 flex justify-end gap-3 self-end">
+            <a href="${tool.url}" target="_blank" class="px-4 py-2 rounded-lg bg-white/80 text-sky-700 font-medium shadow hover:bg-white">開啟工具</a>
+            <button onclick="copyToClipboard('${tool.url}')" class="px-4 py-2 rounded-lg bg-white/80 text-pink-700 font-medium shadow hover:bg-white">複製連結</button>
           </div>`;
         toolGrid.appendChild(card);
       });
