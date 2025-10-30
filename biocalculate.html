@@ -837,6 +837,24 @@
           <button class="clear" onclick="clearWBC()" data-text="清除">清除</button>
         </div>
         <div id="wbcResult" class="result" style="display:none;"></div>
+        
+        <div id="wbcVolumeCalc" style="display:none; margin-top: 20px;">
+          <h3 style="font-size: 1.1em; margin-bottom: 10px;" data-text="計算所需體積">計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)</h3>
+          <div class="form-container">
+            <div class="form-row-inline">
+              <label data-text="目標細胞數量：">目標細胞數量：</label>
+              <div class="input-group">
+                <input type="number" id="wbcTargetBase" step="any" style="max-width: 100px;" data-placeholder="基數" placeholder="基數">
+                <span>× 10^</span>
+                <input type="number" id="wbcTargetExp" step="1" style="max-width: 80px;" data-placeholder="次方" placeholder="次方">
+              </div>
+            </div>
+          </div>
+          <div class="button-group">
+            <button onclick="calculateWBCVolume()" data-text="計算體積">計算體積</button>
+          </div>
+          <div id="wbcVolumeResult" class="result" style="display:none;"></div>
+        </div>
       </div>
       
       <div class="flex-block">
@@ -868,6 +886,24 @@
           <button class="clear" onclick="clearRBC()" data-text="清除">清除</button>
         </div>
         <div id="rbcResult" class="result" style="display:none;"></div>
+        
+        <div id="rbcVolumeCalc" style="display:none; margin-top: 20px;">
+          <h3 style="font-size: 1.1em; margin-bottom: 10px;" data-text="計算所需體積">計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)</h3>
+          <div class="form-container">
+            <div class="form-row-inline">
+              <label data-text="目標細胞數量：">目標細胞數量：</label>
+              <div class="input-group">
+                <input type="number" id="rbcTargetBase" step="any" style="max-width: 100px;" data-placeholder="基數" placeholder="基數">
+                <span>× 10^</span>
+                <input type="number" id="rbcTargetExp" step="1" style="max-width: 80px;" data-placeholder="次方" placeholder="次方">
+              </div>
+            </div>
+          </div>
+          <div class="button-group">
+            <button onclick="calculateRBCVolume()" data-text="計算體積">計算體積</button>
+          </div>
+          <div id="rbcVolumeResult" class="result" style="display:none;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1065,7 +1101,15 @@
       "計算結果：": "計算結果：",
       "科學記號表示：": "科學記號表示：",
       "cells/µL": "個/µL",
-      "cells/mL": "個/mL"
+      "cells/mL": "個/mL",
+      "計算所需體積": "計算所需體積",
+      "目標細胞數量：": "目標細胞數量：",
+      "基數": "基數",
+      "次方": "次方",
+      "計算體積": "計算體積",
+      "所需體積：": "所需體積：",
+      "請輸入目標細胞數量": "請輸入目標細胞數量",
+      "請先計算細胞濃度": "請先計算細胞濃度"
     },
     en: {
       // 主標題和下載按鈕
@@ -1196,7 +1240,15 @@
       "計算結果：": "Calculation results：",
       "科學記號表示：": "Scientific notation：",
       "cells/µL": "cells/µL",
-      "cells/mL": "cells/mL"
+      "cells/mL": "cells/mL",
+      "計算所需體積": "Calculate Required Volume → (When calculate, be sure to switch the unit to: cells/µL)",
+      "目標細胞數量：": "Target Cell Count：",
+      "基數": "Base",
+      "次方": "Exponent",
+      "計算體積": "Calculate Volume",
+      "所需體積：": "Required Volume：",
+      "請輸入目標細胞數量": "Please enter target cell count",
+      "請先計算細胞濃度": "Please calculate cell concentration first"
     }
   };
 
@@ -1581,6 +1633,8 @@
   }
 
   // 白血球計數計算
+let wbcConcentration = 0;
+
   function calculateWBC() {
     const count = parseFloat(document.getElementById('wbcCount').value);
     const squares = parseFloat(document.getElementById('wbcSquares').value);
@@ -1588,12 +1642,13 @@
     const unit = parseFloat(document.getElementById('wbcUnit').value);
 
     if (isNaN(count) || isNaN(squares) || isNaN(dilution) || squares === 0) {
-      alert(translations[currentLanguage]['請輸入所有必填欄位，且格數不可為0']);
+      alert(translations[currentLanguage]['請輸入所有必填欄位,且格數不可為0']);
       return;
     }
 
     const unitText = document.getElementById("wbcUnit").selectedOptions[0].text;
     const result = (count * dilution) / (squares * 0.1) * unit;
+    wbcConcentration = result;
     const sciNotation = result.toExponential(2);
     const sciParts = sciNotation.split('e');
     const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}</sup>`;
@@ -1601,22 +1656,47 @@
     document.getElementById("wbcResult").innerHTML =
       `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
     document.getElementById("wbcResult").style.display = 'block';
+    document.getElementById("wbcVolumeCalc").style.display = 'block';
   }
-
-  function updateWBCResult() {
-    if (document.getElementById('wbcCount').value && document.getElementById('wbcSquares').value && document.getElementById('wbcDilution').value) {
-      calculateWBC();
+  
+  function calculateWBCVolume() {
+    const base = parseFloat(document.getElementById('wbcTargetBase').value);
+    const exponent = parseFloat(document.getElementById('wbcTargetExp').value);
+    
+    if (isNaN(base) || isNaN(exponent)) {
+      alert(translations[currentLanguage]['請輸入目標細胞數量']);
+      return;
     }
+    
+    if (wbcConcentration === 0) {
+      alert(translations[currentLanguage]['請先計算細胞濃度']);
+      return;
+    }
+    
+    const targetCells = base * Math.pow(10, exponent);
+    const volumeUL = targetCells / wbcConcentration;
+    const volumeML = volumeUL / 1000;
+    
+    document.getElementById("wbcVolumeResult").innerHTML =
+      `${translations[currentLanguage]['所需體積：']}${volumeUL.toFixed(2)} µL (${volumeML.toFixed(4)} mL)`;
+    document.getElementById("wbcVolumeResult").style.display = 'block';
   }
 
-  function clearWBC() {
+    function clearWBC() {
     document.getElementById('wbcCount').value = '';
     document.getElementById('wbcSquares').value = '';
     document.getElementById('wbcDilution').value = '';
+    document.getElementById('wbcTargetBase').value = '';
+    document.getElementById('wbcTargetExp').value = '';
+    wbcConcentration = 0;
     hideResult('wbcResult');
+    hideResult('wbcVolumeResult');
+    document.getElementById("wbcVolumeCalc").style.display = 'none';
   }
 
   // 紅血球計數計算
+  let rbcConcentration = 0;
+
   function calculateRBC() {
     const count = parseFloat(document.getElementById('rbcCount').value);
     const squares = parseFloat(document.getElementById('rbcSquares').value);
@@ -1624,12 +1704,13 @@
     const unit = parseFloat(document.getElementById('rbcUnit').value);
 
     if (isNaN(count) || isNaN(squares) || isNaN(dilution) || squares === 0) {
-      alert(translations[currentLanguage]['請輸入所有必填欄位，且格數不可為0']);
+      alert(translations[currentLanguage]['請輸入所有必填欄位,且格數不可為0']);
       return;
     }
 
     const unitText = document.getElementById("rbcUnit").selectedOptions[0].text;
     const result = (count * dilution) / (squares * 0.04 * 0.1) * unit;
+    rbcConcentration = result;
     const sciNotation = result.toExponential(2);
     const sciParts = sciNotation.split('e');
     const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}</sup>`;
@@ -1637,24 +1718,42 @@
     document.getElementById("rbcResult").innerHTML =
       `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
     document.getElementById("rbcResult").style.display = 'block';
+    document.getElementById("rbcVolumeCalc").style.display = 'block';
   }
-
-  function updateRBCResult() {
-    if (document.getElementById('rbcCount').value && document.getElementById('rbcSquares').value && document.getElementById('rbcDilution').value) {
-      calculateRBC();
+  
+  function calculateRBCVolume() {
+    const base = parseFloat(document.getElementById('rbcTargetBase').value);
+    const exponent = parseFloat(document.getElementById('rbcTargetExp').value);
+    
+    if (isNaN(base) || isNaN(exponent)) {
+      alert(translations[currentLanguage]['請輸入目標細胞數量']);
+      return;
     }
+    
+    if (rbcConcentration === 0) {
+      alert(translations[currentLanguage]['請先計算細胞濃度']);
+      return;
+    }
+    
+    const targetCells = base * Math.pow(10, exponent);
+    const volumeUL = targetCells / rbcConcentration;
+    const volumeML = volumeUL / 1000;
+    
+    document.getElementById("rbcVolumeResult").innerHTML =
+      `${translations[currentLanguage]['所需體積：']}${volumeUL.toFixed(2)} µL (${volumeML.toFixed(4)} mL)`;
+    document.getElementById("rbcVolumeResult").style.display = 'block';
   }
 
   function clearRBC() {
     document.getElementById('rbcCount').value = '';
     document.getElementById('rbcSquares').value = '';
     document.getElementById('rbcDilution').value = '';
+    document.getElementById('rbcTargetBase').value = '';
+    document.getElementById('rbcTargetExp').value = '';
+    rbcConcentration = 0;
     hideResult('rbcResult');
-  }
-
-  function getSelectedText(id) {
-    const sel = document.getElementById(id);
-    return sel.options[sel.selectedIndex].text;
+    hideResult('rbcVolumeResult');
+    document.getElementById("rbcVolumeCalc").style.display = 'none';
   }
 
   // 計時器功能
