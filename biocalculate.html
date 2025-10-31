@@ -1659,6 +1659,12 @@ let wbcConcentration = 0;
     document.getElementById("wbcVolumeCalc").style.display = 'block';
   }
   
+    function updateWBCResult() {
+    if (document.getElementById('wbcCount').value && document.getElementById('wbcSquares').value && document.getElementById('wbcDilution').value) {
+      calculateWBC();
+    }
+  }
+
   function calculateWBCVolume() {
     const base = parseFloat(document.getElementById('wbcTargetBase').value);
     const exponent = parseFloat(document.getElementById('wbcTargetExp').value);
@@ -1721,6 +1727,12 @@ let wbcConcentration = 0;
     document.getElementById("rbcVolumeCalc").style.display = 'block';
   }
   
+  function updateRBCResult() {
+    if (document.getElementById('rbcCount').value && document.getElementById('rbcSquares').value && document.getElementById('rbcDilution').value) {
+      calculateRBC();
+    }
+  }
+
   function calculateRBCVolume() {
     const base = parseFloat(document.getElementById('rbcTargetBase').value);
     const exponent = parseFloat(document.getElementById('rbcTargetExp').value);
