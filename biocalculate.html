@@ -1794,6 +1794,11 @@ let wbcConcentration = 0;
     }
   }
 
+  function getSelectedText(selectId) {
+  const select = document.getElementById(selectId);
+  return select.options[select.selectedIndex].text;
+  }
+
   function startCountdown(idx) {
     if (countdowns[idx].running) return;
 
@@ -1921,6 +1926,60 @@ let wbcConcentration = 0;
     document.getElementById(`sw-display${idx+1}`).textContent =
       `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${ms}`;
   }
+
+  // 更新已顯示的結果內容
+function updateDisplayedResults() {
+  // 如果有顯示結果，重新計算它們
+  const massResult = document.getElementById('massResult');
+  if (massResult.style.display === 'block') {
+    calculateMass();
+  }
+  
+  const dilutionResult = document.getElementById('dilutionResult');
+  if (dilutionResult.style.display === 'block') {
+    calculateDilution();
+  }
+  
+  const acidBaseResult = document.getElementById('acidBaseResult');
+  if (acidBaseResult.style.display === 'block') {
+    calculateAcidBase();
+  }
+  
+  const animalResult = document.getElementById('animalResult');
+  if (animalResult.style.display === 'block') {
+    calculateAnimalDose();
+  }
+  
+  const animalResult2 = document.getElementById('animalResult2');
+  if (animalResult2.style.display === 'block') {
+    calculateAnimalDose2();
+  }
+  
+  const primerResult = document.getElementById('primerResult');
+  if (primerResult.style.display === 'block') {
+    calcPrimer();
+  }
+  
+  const diluteResult = document.getElementById('diluteResult');
+  if (diluteResult.style.display === 'block') {
+    calcDilute();
+  }
+  
+  const ligationResult = document.getElementById('ligationResult');
+  if (ligationResult.style.display === 'block') {
+    calculateLigation();
+  }
+  
+  const wbcResult = document.getElementById('wbcResult');
+  if (wbcResult.style.display === 'block') {
+    calculateWBC();
+  }
+  
+  const rbcResult = document.getElementById('rbcResult');
+  if (rbcResult.style.display === 'block') {
+    calculateRBC();
+  }
+}
 
   // 初始化計時器顯示
   for(let i=0; i<2; i++) {
