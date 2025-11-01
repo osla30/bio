@@ -1,1996 +1,2041 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>科科計算器 / BioCalculator</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 1200px;
-      margin: 10px auto;
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    
-    /* 語言切換按鈕樣式 */
-    .language-switcher {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      display: flex;
-      gap: 5px;
-      z-index: 1000;
-    }
-    
-    .lang-btn {
-      padding: 5px 10px;
-      border: 1px solid #888;
-      background: #f0f0f0;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 12px;
-      color: #222;
-      transition: all 0.2s;
-      text-decoration: none;
-    }
-    
-    .lang-btn:hover {
-      background: #e0e0e0;
-    }
-    
-    .lang-btn.active {
-      background: #2563eb;
-      color: white;
-      border-color: #2563eb;
-    }
-    
-    h1 {
-      text-align: center;
-      color: #2563eb;
-      font-size: 1.8em;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 40px;
-    }
-    
-    h2 { 
-      display: flex; 
-      align-items: center;
-      font-size: 1.2em;
-      margin-bottom: 15px;
-    }
-    
-    #download-btn {
-      font-size: 12px;
-      padding: 4px 12px;
-      border-radius: 5px;
-      border: 1px solid #888;
-      background: #f0f0f0;
-      cursor: pointer;
-      text-decoration: none;
-      color: #222;
-      transition: background 0.2s;
-      white-space: nowrap;
-    }
-    
-    #download-btn:hover {
-      background: #e0e0e0;
-    }
-    
-    .tabs {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-    
-    .tab {
-      padding: 8px 12px;
-      border-radius: 4px;
-      background: #ccc;
-      color: #000;
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
-      font-size: 13px;
-      text-align: center;
-      min-width: 80px;
-    }
-    
-    .tab.active {
-      background: #2563eb;
-      color: white;
-    }
-    
-    /* 表單布局 */
-    .form-container {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    
-    .form-row {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    
-    .form-row-inline {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    
-    label {
-      font-weight: bold;
-      color: #333;
-      min-width: 120px;
-    }
-    
-    input, select {
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      width: 100%;
-      max-width: 200px;
-    }
-    
-    .input-group {
-      display: flex;
-      gap: 5px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    
-    .input-group input {
-      flex: 1;
-      min-width: 100px;
-    }
-    
-    .input-group select {
-      min-width: 80px;
-      flex-shrink: 0;
-    }
-    
-    button {
-      padding: 10px 16px;
-      margin: 5px 5px 5px 0;
-      cursor: pointer;
-      border: none;
-      border-radius: 4px;
-      background: #2563eb;
-      color: white;
-      font-weight: bold;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
-    
-    button:hover {
-      background: #1d4ed8;
-    }
-    
-    button.clear {
-      background: #6b7280;
-    }
-    
-    button.clear:hover {
-      background: #4b5563;
-    }
-    
-    .button-group {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 15px;
-    }
-    
-    .result {
-      margin-top: 15px;
-      padding: 15px;
-      background: #fff;
-      border-radius: 6px;
-      border-left: 4px solid #2563eb;
-      font-weight: bold;
-      color: #2563eb;
-      white-space: pre-wrap;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .note {
-      font-size: 0.85em;
-      color: #dc2626;
-      margin: 10px 0;
-      padding: 10px;
-      background: #fef2f2;
-      border-radius: 4px;
-      border-left: 3px solid #dc2626;
-    }
-    
-    /* Primer和細胞計數的flex容器 */
-    .flex-container {
-      display: grid;
-      gap: 20px;
-      margin: 15px 0;
-    }
-    
-    .flex-block {
-      background: #fff;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    /* 計時器樣式 */
-    .timer-flex-container {
-      display: grid;
-      gap: 20px;
-      margin: 15px 0;
-    }
-    
-    .timer-block {
-      background: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .timer-title {
-      width: 100%;
-      margin-bottom: 10px;
-      padding: 8px;
-      font-weight: bold;
-      font-size: 1em;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    
-    .time-inputs {
-      display: flex;
-      gap: 5px;
-      margin-bottom: 10px;
-      justify-content: center;
-    }
-    
-    .time-inputs input {
-      width: 70px;
-      padding: 8px;
-      text-align: center;
-    }
-    
-    .timer-display {
-      font-size: 1.8em;
-      text-align: center;
-      margin: 15px 0;
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      color: #2563eb;
-      background: #f8fafc;
-      padding: 15px;
-      border-radius: 6px;
-      border: 2px solid #e2e8f0;
-    }
-    
-    .timer-controls {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    
-    .timer-controls button {
-      flex: 1;
-      min-width: 70px;
-    }
-    
-    .timer-section-title {
-      margin: 20px 0 15px 0;
-      font-size: 1.3em;
-      color: #2563eb;
-      text-align: center;
-      font-weight: bold;
-    }
-    
-    /* 響應式設計 */
-    @media (min-width: 640px) {
-      body {
-        padding: 20px;
-        font-size: 15px;
-      }
-      
-      h1 {
-        font-size: 2.2em;
-      }
-      
-      .form-row-inline {
-        flex-direction: row;
-        align-items: center;
-      }
-      
-      .form-row-inline label {
-        min-width: 140px;
-        margin-bottom: 0;
-      }
-      
-      input, select {
-        width: auto;
-      }
-      
-      .flex-container {
-        grid-template-columns: 1fr 1fr;
-      }
-      
-      .timer-flex-container {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    
-    @media (min-width: 768px) {
-      .tabs {
-        gap: 8px;
-      }
-      
-      .tab {
-        padding: 10px 16px;
-        font-size: 14px;
-        min-width: 100px;
-      }
-      
-      .timer-display {
-        font-size: 2.2em;
-      }
-    }
-    
-    @media (min-width: 1024px) {
-      body {
-        padding: 30px;
-      }
-      
-      .form-container {
-        max-width: 600px;
-      }
-    }
-    
-    /* 動物投藥特殊樣式 */
-    .animal-dose-group {
-      margin: 15px 0;
-      padding: 15px;
-      background: #f8fafc;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-    }
-    
-    .animal-dose-group label {
-      display: block;
-      margin-bottom: 8px;
-    }
-    
-    .indent {
-      margin-left: 20px;
-    }
-    
-    /* 手機版優化 */
-    @media (max-width: 639px) {
-      .language-switcher {
-        position: static;
-        justify-content: center;
-        margin-bottom: 15px;
-      }
-      
-      h1 {
-        margin-top: 0;
-        font-size: 1.5em;
-        flex-direction: column;
-        gap: 8px;
-      }
-      
-      .tabs {
-        justify-content: flex-start;
-        overflow-x: auto;
-        padding-bottom: 5px;
-      }
-      
-      .tab {
-        flex-shrink: 0;
-        min-width: 90px;
-        font-size: 12px;
-        padding: 6px 10px;
-      }
-      
-      .time-inputs input {
-        width: 60px;
-        padding: 6px;
-      }
-      
-      .timer-display {
-        font-size: 1.5em;
-        padding: 10px;
-      }
-      
-      .timer-controls button {
-        min-width: 60px;
-        padding: 8px 12px;
-        font-size: 13px;
-      }
-      
-      #download-btn {
-        font-size: 11px;
-        padding: 3px 8px;
-      }
-    }
-  </style>
+	<meta charset="UTF-8">
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+	<title>科科計算器 / BioCalculator</title>
+	<style>
+	   * {
+	     box-sizing: border-box;
+	   }
+	   
+	   body {
+	     font-family: Arial, sans-serif;
+	     max-width: 1200px;
+	     margin: 10px auto;
+	     background: #f9f9f9;
+	     padding: 15px;
+	     border-radius: 8px;
+	     font-size: 14px;
+	   }
+	   
+	   /* 語言切換按鈕樣式 */
+	   .language-switcher {
+	     position: absolute;
+	     top: 15px;
+	     right: 15px;
+	     display: flex;
+	     gap: 5px;
+	     z-index: 1000;
+	   }
+	   
+	   .lang-btn {
+	     padding: 5px 10px;
+	     border: 1px solid #888;
+	     background: #f0f0f0;
+	     cursor: pointer;
+	     border-radius: 4px;
+	     font-size: 12px;
+	     color: #222;
+	     transition: all 0.2s;
+	     text-decoration: none;
+	   }
+	   
+	   .lang-btn:hover {
+	     background: #e0e0e0;
+	   }
+	   
+	   .lang-btn.active {
+	     background: #2563eb;
+	     color: white;
+	     border-color: #2563eb;
+	   }
+	   
+	   h1 {
+	     text-align: center;
+	     color: #2563eb;
+	     font-size: 1.8em;
+	     margin-bottom: 15px;
+	     display: flex;
+	     align-items: center;
+	     justify-content: center;
+	     flex-wrap: wrap;
+	     gap: 10px;
+	     margin-top: 40px;
+	   }
+	   
+	   h2 { 
+	     display: flex; 
+	     align-items: center;
+	     font-size: 1.2em;
+	     margin-bottom: 15px;
+	   }
+	   
+	   #download-btn {
+	     font-size: 12px;
+	     padding: 4px 12px;
+	     border-radius: 5px;
+	     border: 1px solid #888;
+	     background: #f0f0f0;
+	     cursor: pointer;
+	     text-decoration: none;
+	     color: #222;
+	     transition: background 0.2s;
+	     white-space: nowrap;
+	   }
+	   
+	   #download-btn:hover {
+	     background: #e0e0e0;
+	   }
+	   
+	   .tabs {
+	     display: flex;
+	     justify-content: center;
+	     margin-bottom: 20px;
+	     flex-wrap: wrap;
+	     gap: 5px;
+	   }
+	   
+	   .tab {
+	     padding: 8px 12px;
+	     border-radius: 4px;
+	     background: #ccc;
+	     color: #000;
+	     cursor: pointer;
+	     user-select: none;
+	     white-space: nowrap;
+	     font-size: 13px;
+	     text-align: center;
+	     min-width: 80px;
+	   }
+	   
+	   .tab.active {
+	     background: #2563eb;
+	     color: white;
+	   }
+	   
+	   /* 表單布局 */
+	   .form-container {
+	     display: grid;
+	     gap: 12px;
+	     margin-bottom: 20px;
+	   }
+	   
+	   .form-row {
+	     display: flex;
+	     flex-direction: column;
+	     gap: 5px;
+	   }
+	   
+	   .form-row-inline {
+	     display: flex;
+	     align-items: center;
+	     gap: 10px;
+	     flex-wrap: wrap;
+	   }
+	   
+	   label {
+	     font-weight: bold;
+	     color: #333;
+	     min-width: 120px;
+	   }
+	   
+	   input, select {
+	     padding: 8px;
+	     border: 1px solid #ddd;
+	     border-radius: 4px;
+	     font-size: 14px;
+	     width: 100%;
+	     max-width: 200px;
+	   }
+	   
+	   .input-group {
+	     display: flex;
+	     gap: 5px;
+	     align-items: center;
+	     flex-wrap: wrap;
+	   }
+	   
+	   .input-group input {
+	     flex: 1;
+	     min-width: 100px;
+	   }
+	   
+	   .input-group select {
+	     min-width: 80px;
+	     flex-shrink: 0;
+	   }
+	   
+	   button {
+	     padding: 10px 16px;
+	     margin: 5px 5px 5px 0;
+	     cursor: pointer;
+	     border: none;
+	     border-radius: 4px;
+	     background: #2563eb;
+	     color: white;
+	     font-weight: bold;
+	     font-size: 14px;
+	     transition: background 0.2s;
+	   }
+	   
+	   button:hover {
+	     background: #1d4ed8;
+	   }
+	   
+	   button.clear {
+	     background: #6b7280;
+	   }
+	   
+	   button.clear:hover {
+	     background: #4b5563;
+	   }
+	   
+	   .button-group {
+	     display: flex;
+	     gap: 10px;
+	     flex-wrap: wrap;
+	     margin-top: 15px;
+	   }
+	   
+	   .result {
+	     margin-top: 15px;
+	     padding: 15px;
+	     background: #fff;
+	     border-radius: 6px;
+	     border-left: 4px solid #2563eb;
+	     font-weight: bold;
+	     color: #2563eb;
+	     white-space: pre-wrap;
+	     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+	   }
+	   
+	   .note {
+	     font-size: 0.85em;
+	     color: #dc2626;
+	     margin: 10px 0;
+	     padding: 10px;
+	     background: #fef2f2;
+	     border-radius: 4px;
+	     border-left: 3px solid #dc2626;
+	   }
+	   
+	   /* Primer和細胞計數的flex容器 */
+	   .flex-container {
+	     display: grid;
+	     gap: 20px;
+	     margin: 15px 0;
+	   }
+	   
+	   .flex-block {
+	     background: #fff;
+	     border-radius: 8px;
+	     padding: 20px;
+	     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	   }
+	   
+	   /* 計時器樣式 */
+	   .timer-flex-container {
+	     display: grid;
+	     gap: 20px;
+	     margin: 15px 0;
+	   }
+	   
+	   .timer-block {
+	     background: #fff;
+	     padding: 15px;
+	     border-radius: 8px;
+	     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	   }
+	   
+	   .timer-title {
+	     width: 100%;
+	     margin-bottom: 10px;
+	     padding: 8px;
+	     font-weight: bold;
+	     font-size: 1em;
+	     border: 1px solid #ddd;
+	     border-radius: 4px;
+	   }
+	   
+	   .time-inputs {
+	     display: flex;
+	     gap: 5px;
+	     margin-bottom: 10px;
+	     justify-content: center;
+	   }
+	   
+	   .time-inputs input {
+	     width: 70px;
+	     padding: 8px;
+	     text-align: center;
+	   }
+	   
+	   .timer-display {
+	     font-size: 1.8em;
+	     text-align: center;
+	     margin: 15px 0;
+	     font-family: 'Courier New', monospace;
+	     font-weight: bold;
+	     color: #2563eb;
+	     background: #f8fafc;
+	     padding: 15px;
+	     border-radius: 6px;
+	     border: 2px solid #e2e8f0;
+	   }
+	   
+	   .timer-controls {
+	     display: flex;
+	     gap: 8px;
+	     justify-content: center;
+	     flex-wrap: wrap;
+	   }
+	   
+	   .timer-controls button {
+	     flex: 1;
+	     min-width: 70px;
+	   }
+	   
+	   .timer-section-title {
+	     margin: 20px 0 15px 0;
+	     font-size: 1.3em;
+	     color: #2563eb;
+	     text-align: center;
+	     font-weight: bold;
+	   }
+	   
+	   /* 響應式設計 */
+	   @media (min-width: 640px) {
+	     body {
+	       padding: 20px;
+	       font-size: 15px;
+	     }
+	     
+	     h1 {
+	       font-size: 2.2em;
+	     }
+	     
+	     .form-row-inline {
+	       flex-direction: row;
+	       align-items: center;
+	     }
+	     
+	     .form-row-inline label {
+	       min-width: 140px;
+	       margin-bottom: 0;
+	     }
+	     
+	     input, select {
+	       width: auto;
+	     }
+	     
+	     .flex-container {
+	       grid-template-columns: 1fr 1fr;
+	     }
+	     
+	     .timer-flex-container {
+	       grid-template-columns: 1fr 1fr;
+	     }
+	   }
+	   
+	   @media (min-width: 768px) {
+	     .tabs {
+	       gap: 8px;
+	     }
+	     
+	     .tab {
+	       padding: 10px 16px;
+	       font-size: 14px;
+	       min-width: 100px;
+	     }
+	     
+	     .timer-display {
+	       font-size: 2.2em;
+	     }
+	   }
+	   
+	   @media (min-width: 1024px) {
+	     body {
+	       padding: 30px;
+	     }
+	     
+	     .form-container {
+	       max-width: 600px;
+	     }
+	   }
+	   
+	   /* 動物投藥特殊樣式 */
+	   .animal-dose-group {
+	     margin: 15px 0;
+	     padding: 15px;
+	     background: #f8fafc;
+	     border-radius: 6px;
+	     border: 1px solid #e2e8f0;
+	   }
+	   
+	   .animal-dose-group label {
+	     display: block;
+	     margin-bottom: 8px;
+	   }
+	   
+	   .indent {
+	     margin-left: 20px;
+	   }
+	   
+	   /* 手機版優化 */
+	   @media (max-width: 639px) {
+	     .language-switcher {
+	       position: static;
+	       justify-content: center;
+	       margin-bottom: 15px;
+	     }
+	     
+	     h1 {
+	       margin-top: 0;
+	       font-size: 1.5em;
+	       flex-direction: column;
+	       gap: 8px;
+	     }
+	     
+	     .tabs {
+	       justify-content: flex-start;
+	       overflow-x: auto;
+	       padding-bottom: 5px;
+	     }
+	     
+	     .tab {
+	       flex-shrink: 0;
+	       min-width: 90px;
+	       font-size: 12px;
+	       padding: 6px 10px;
+	     }
+	     
+	     .time-inputs input {
+	       width: 60px;
+	       padding: 6px;
+	     }
+	     
+	     .timer-display {
+	       font-size: 1.5em;
+	       padding: 10px;
+	     }
+	     
+	     .timer-controls button {
+	       min-width: 60px;
+	       padding: 8px 12px;
+	       font-size: 13px;
+	     }
+	     
+	     #download-btn {
+	       font-size: 11px;
+	       padding: 3px 8px;
+	     }
+	   }
+	</style>
 </head>
 <body>
-  <!-- 語言切換器 -->
-  <div class="language-switcher">
-    <button class="lang-btn active" onclick="switchLanguage('zh')" id="lang-zh">中文</button>
-    <button class="lang-btn" onclick="switchLanguage('en')" id="lang-en">English</button>
-  </div>
-
-  <h1 id="main-title">科科計算器
-    <a id="download-btn" href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" target="_blank" rel="noopener noreferrer">下載離線版</a>
-  </h1>
-
-  <div class="tabs">
-    <div class="tab active" id="tab-mass" onclick="switchTab('mass')">莫耳濃度</div>
-    <div class="tab" id="tab-dilution" onclick="switchTab('dilution')">稀釋計算</div>
-    <div class="tab" id="tab-acidbase" onclick="switchTab('acidbase')">酸鹼濃度</div>
-    <div class="tab" id="tab-animal" onclick="switchTab('animal')">動物投藥計算</div>
-    <div class="tab" id="tab-animal2" onclick="switchTab('animal2')">動物投藥計算2</div>
-    <div class="tab" id="tab-primer" onclick="switchTab('primer')">Primer回溶/稀釋</div>
-    <div class="tab" id="tab-ligation" onclick="switchTab('ligation')">Ligation計算</div>
-    <div class="tab" id="tab-cellcount" onclick="switchTab('cellcount')">細胞計數</div>
-    <div class="tab" id="tab-timer" onclick="switchTab('timer')">計時器</div>
-  </div>
-
-  <!-- 莫耳濃度 -->
-<div id="mass" class="tab-content">
-  <div class="form-container">
-    <div class="form-row-inline">
-      <label for="molarMass" data-text="分子量 (g/mol)：">分子量 (g/mol)：</label>
-      <input type="number" id="molarMass" step="any" />
-    </div>
-
-    <div class="form-row-inline">
-      <label for="molarity" data-text="莫耳濃度：">莫耳濃度：</label>
-      <div class="input-group">
-        <input type="number" id="molarity" step="any" />
-        <select id="molarityUnit">
-          <option value="1">M</option>
-          <option value="0.001">mM</option>
-          <option value="0.000001">μM</option>
-          <option value="0.000000001">nM</option>
-          <option value="0.000000000001">pM</option>
-          <option value="0.000000000000001">fM</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-row-inline">
-      <label for="volume" data-text="體積：">體積：</label>
-      <div class="input-group">
-        <input type="number" id="volume" step="any" />
-        <select id="volumeUnit">
-          <option value="1">L</option>
-          <option value="0.001">mL</option>
-          <option value="0.000001">μL</option>
-          <option value="0.000000001">nL</option>
-          <option value="0.000000000001">pL</option>
-          <option value="0.000000000000001">fL</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-row-inline">
-      <label for="massValue" data-text="質量：">質量：</label>
-      <div class="input-group">
-        <input type="number" id="massValue" step="any" />
-        <select id="massUnit">
-          <option value="1">g</option>
-          <option value="1000">kg</option>
-          <option value="0.001">mg</option>
-          <option value="0.000001">μg</option>
-          <option value="0.000000001">ng</option>
-          <option value="0.000000000001">pg</option>
-          <option value="0.000000000000001">fg</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <div id="massNote" class="note" data-text="請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項">請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項</div>
-
-  <div class="button-group">
-    <button onclick="calculateMass()" data-text="計算">計算</button>
-    <button class="clear" onclick="clearMass()" data-text="清除">清除</button>
-  </div>
-
-  <div id="massResult" class="result" style="display:none;"></div>
-</div>
-
-  <!-- 稀釋計算 -->
-  <div id="dilution" class="tab-content" style="display:none;">
-    <div class="form-container">
-      <div class="form-row-inline">
-        <label for="c1" data-text="原液濃度 C₁：">原液濃度 C₁：</label>
-        <div class="input-group">
-          <input type="number" id="c1" step="any" />
-          <select id="c1Unit">
-            <option value="1">M</option>
-            <option value="0.001">mM</option>
-            <option value="0.000001">μM</option>
-            <option value="0.000000001">nM</option>
-            <option value="0.000000000001">pM</option>
-            <option value="0.000000000000001">fM</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row-inline">
-        <label for="c2" data-text="目標濃度 C₂：">目標濃度 C₂：</label>
-        <div class="input-group">
-          <input type="number" id="c2" step="any" />
-          <select id="c2Unit">
-            <option value="1">M</option>
-            <option value="0.001">mM</option>
-            <option value="0.000001">μM</option>
-            <option value="0.000000001">nM</option>
-            <option value="0.000000000001">pM</option>
-            <option value="0.000000000000001">fM</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row-inline">
-        <label for="v2" data-text="目標體積 V₂：">目標體積 V₂：</label>
-        <div class="input-group">
-          <input type="number" id="v2" step="any" />
-          <select id="v2Unit">
-            <option value="1">L</option>
-            <option value="0.001">mL</option>
-            <option value="0.000001">μL</option>
-            <option value="0.000000001">nL</option>
-            <option value="0.000000000001">pL</option>
-            <option value="0.000000000000001">fL</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row-inline">
-        <label for="v1" data-text="原液體積 V₁：">原液體積 V₁：</label>
-        <div class="input-group">
-          <input type="number" id="v1" step="any" />
-          <select id="v1Unit">
-            <option value="1">L</option>
-            <option value="0.001">mL</option>
-            <option value="0.000001">μL</option>
-            <option value="0.000000001">nL</option>
-            <option value="0.000000000001">pL</option>
-            <option value="0.000000000000001">fL</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div id="dilutionNote" class="note" data-text="請輸入任意三個值，將可計算第四個值">請輸入任意三個值，將可計算第四個值</div>
-
-    <div class="button-group">
-      <button onclick="calculateDilution()" data-text="計算缺失值">計算缺失值</button>
-      <button class="clear" onclick="clearDilution()" data-text="清除">清除</button>
-    </div>
-
-    <div id="dilutionResult" class="result" style="display:none;"></div>
-  </div>
-
-  <!-- 酸鹼濃度 -->
-  <div id="acidbase" class="tab-content" style="display:none;">
-    <div class="form-container">
-      <div class="form-row-inline">
-        <label for="acidBaseMW" data-text="分子量 (g/mol)：">分子量 (g/mol)：</label>
-        <input type="number" id="acidBaseMW" step="any" />
-      </div>
-
-      <div class="form-row-inline">
-        <label for="density" data-text="密度：">密度：</label>
-        <div class="input-group">
-          <input type="number" id="density" step="any" />
-          <select id="densityUnit">
-            <option value="1">g/mL</option>
-            <option value="1">g/cm³</option>
-            <option value="1">kg/L</option>
-            <option value="0.001">g/L</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row-inline">
-        <label for="weightPercent" data-text="重量百分比 (%)：">重量百分比 (%)：</label>
-        <input type="number" id="weightPercent" step="any" />
-      </div>
-      
-      <div class="form-row-inline">
-        <label for="acidBaseMolarity" data-text="莫耳濃度：">莫耳濃度：</label>
-        <div class="input-group">
-          <input type="number" id="acidBaseMolarity" step="any" />
-          <select id="acidBaseMolarityUnit">
-            <option value="1">M</option>
-            <option value="0.001">mM</option>
-            <option value="0.000001">μM</option>
-            <option value="0.000000001">nM</option>
-            <option value="0.000000000001">pM</option>
-            <option value="0.000000000000001">fM</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div id="acidbaseNote1" class="note" data-text="硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N">硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N</div>
-    <div id="acidbaseNote2" class="note" data-text="請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項">請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項</div>
-
-    <div class="button-group">
-      <button onclick="calculateAcidBase()" data-text="計算">計算</button>
-      <button class="clear" onclick="clearAcidBase()" data-text="清除">清除</button>
-    </div>
-
-    <div id="acidBaseResult" class="result" style="display:none;"></div>
-  </div>
-
-  <!-- 動物投藥計算 -->
-  <div id="animal" class="tab-content" style="display:none;">
-    <div class="form-container">
-      <div class="form-row-inline">
-        <label for="targetDose" data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
-        <input type="number" id="targetDose" step="any" />
-      </div>
-
-      <div class="animal-dose-group">
-        <label data-text="希望的投藥法：">希望的投藥法：</label>
-        <div class="form-row-inline indent">
-          <label>(g)：</label>
-          <input type="number" id="doseB1" step="any" style="max-width: 150px;" />
-        </div>
-        <div class="form-row-inline indent">
-          <label>(mL)：</label>
-          <input type="number" id="doseB2" step="any" style="max-width: 150px;" />
-        </div>
-        <div id="animalNote" class="note" data-text="例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL">例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL</div>
-      </div>
-
-      <div class="form-row-inline">
-        <label for="animalWeight" data-text="每隻動物預估體重 (g)：">每隻動物預估體重 (g)：</label>
-        <input type="number" id="animalWeight" step="any" />
-      </div>
-
-      <div class="form-row-inline">
-        <label for="animalCount" data-text="預估動物數量 (pc)：">預估動物數量 (pc)：</label>
-        <input type="number" id="animalCount" step="any" />
-      </div>
-    </div>
-
-    <div class="button-group">
-      <button onclick="calculateAnimalDose()" data-text="計算">計算</button>
-      <button class="clear" onclick="clearAnimal()" data-text="清除">清除</button>
-    </div>
-
-    <div id="animalResult" class="result" style="display:none;"></div>
-  </div>
-
-  <!-- 動物投藥計算2 -->
-  <div id="animal2" class="tab-content" style="display:none;">
-    <div class="form-container">
-      <div class="form-row-inline">
-        <label for="targetDose2" data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
-        <input type="number" id="targetDose2" step="any" />
-      </div>
-
-      <div class="form-row-inline">
-        <label for="drugConc2" data-text="使用藥物濃度：">使用藥物濃度：</label>
-        <div class="input-group">
-          <input type="number" id="drugConc2" step="any" />
-          <select id="drugConc2Unit">
-            <option value="mgml">mg/mL</option>
-            <option value="percent">%</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row-inline">
-        <label for="animalWeight2" data-text="動物體重 (g)：">動物體重 (g)：</label>
-        <input type="number" id="animalWeight2" step="any" />
-      </div>
-    </div>
-
-    <div class="button-group">
-      <button onclick="calculateAnimalDose2()" data-text="計算">計算</button>
-      <button class="clear" onclick="clearAnimal2()" data-text="清除">清除</button>
-    </div>
-
-    <div id="animalResult2" class="result" style="display:none;"></div>
-  </div> 
-
-  <!-- Primer回溶/稀釋 -->
-  <div id="primer" class="tab-content" style="display:none;">
-    <div class="flex-container">
-      <div class="flex-block">
-        <h2 data-text="Primer回溶">Primer回溶</h2>
-        <div id="primerNote1" class="note" data-text="(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)">(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)</div>
-        <div class="form-container">
-          <div class="form-row-inline">
-            <label data-text="Primer產量 (nmole)：">Primer產量 (nmole)：</label>
-            <input type="number" id="primerAmount" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="回溶水量 (µL)：">回溶水量 (µL)：</label>
-            <input type="number" id="primerVolume" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="回溶後濃度 (µM)：">回溶後濃度 (µM)：</label>
-            <input type="number" id="primerConc" step="any">
-          </div>
-        </div>
-        <div id="primerNote2" class="note" data-text="請輸入任意兩個值，將可計算第三個值">請輸入任意兩個值，將可計算第三個值</div>
-        <div class="button-group">
-          <button onclick="calcPrimer()" data-text="計算">計算</button>
-          <button class="clear" onclick="clearPrimer()" data-text="清除">清除</button>
-        </div>
-        <div id="primerResult" class="result" style="display:none;"></div>
-      </div>
-      
-      <div class="flex-block">
-        <h2 data-text="Primer稀釋">Primer稀釋</h2>
-        <div class="form-container">
-          <div class="form-row-inline">
-            <label data-text="原液濃度 (µM)：">原液濃度 (µM)：</label>
-            <input type="number" id="stockConc" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="目標濃度 (µM)：">目標濃度 (µM)：</label>
-            <input type="number" id="targetConc" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="目標體積 (µL)：">目標體積 (µL)：</label>
-            <input type="number" id="targetVol" step="any">
-          </div>
-        </div>
-        <div class="button-group">
-          <button onclick="calcDilute()" data-text="計算">計算</button>
-          <button class="clear" onclick="clearDilute()" data-text="清除">清除</button>
-        </div>
-        <div id="diluteResult" class="result" style="display:none;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Ligation 計算 -->
-  <div id="ligation" class="tab-content" style="display:none;">
-    <div class="form-container">
-      <div class="form-row-inline">
-        <label data-text="Insert DNA 長度 (bp)：">Insert DNA 長度 (bp)：</label>
-        <input type="number" id="insertLength" step="any">
-      </div>
-      <div class="form-row-inline">
-        <label data-text="Vector DNA 長度 (bp)：">Vector DNA 長度 (bp)：</label>
-        <input type="number" id="vectorLength" step="any">
-      </div>
-      <div class="form-row-inline">
-        <label data-text="Insert : Vector 比例：">Insert : Vector 比例：</label>
-        <div class="input-group">
-          <input type="number" id="insertRatio" step="any">
-          <span>:</span>
-          <input type="number" id="vectorRatio" step="any">
-        </div>
-      </div>
-      <div class="form-row-inline">
-        <label data-text="Vector DNA 質量 (ng)：">Vector DNA 質量 (ng)：</label>
-        <input type="number" id="vectorMass" step="any">
-      </div>
-    </div>
-    <div class="button-group">
-      <button onclick="calculateLigation()" data-text="計算">計算</button>
-      <button class="clear" onclick="clearLigation()" data-text="清除">清除</button>
-    </div>
-    <div id="ligationResult" class="result" style="display:none;"></div>
-  </div>
-
-  <!-- 細胞計數 -->
-  <div id="cellcount" class="tab-content" style="display:none;">
-    <div class="flex-container">
-      <div class="flex-block">
-        <h2 data-text="白血球(細胞)計數">白血球(細胞)計數</h2>
-        <div id="wbcNote" class="note" data-text="(白血球、細胞：一般使用四個角的大正方形)">(白血球、細胞：一般使用四個角的大正方形)</div>
-        <div class="form-container">
-          <div class="form-row-inline">
-            <label data-text="細胞數：">細胞數：</label>
-            <input type="number" id="wbcCount" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="格數：">格數：</label>
-            <input type="number" id="wbcSquares" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="稀釋倍數：">稀釋倍數：</label>
-            <input type="number" id="wbcDilution" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="單位顯示：">單位顯示：</label>
-            <select id="wbcUnit" onchange="updateWBCResult()">
-              <option value="1" data-text="個/µL">個/µL</option>
-              <option value="1000" data-text="個/mL">個/mL</option>
-            </select>
-          </div>
-        </div>
-        <div class="button-group">
-          <button onclick="calculateWBC()" data-text="計算">計算</button>
-          <button class="clear" onclick="clearWBC()" data-text="清除">清除</button>
-        </div>
-        <div id="wbcResult" class="result" style="display:none;"></div>
-        
-        <div id="wbcVolumeCalc" style="display:none; margin-top: 20px;">
-          <h3 style="font-size: 1.1em; margin-bottom: 10px;" data-text="計算所需體積">計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)</h3>
-          <div class="form-container">
-            <div class="form-row-inline">
-              <label data-text="目標細胞數量：">目標細胞數量：</label>
-              <div class="input-group">
-                <input type="number" id="wbcTargetBase" step="any" style="max-width: 100px;" data-placeholder="基數" placeholder="基數">
-                <span>× 10^</span>
-                <input type="number" id="wbcTargetExp" step="1" style="max-width: 80px;" data-placeholder="次方" placeholder="次方">
-              </div>
-            </div>
-          </div>
-          <div class="button-group">
-            <button onclick="calculateWBCVolume()" data-text="計算體積">計算體積</button>
-          </div>
-          <div id="wbcVolumeResult" class="result" style="display:none;"></div>
-        </div>
-      </div>
-      
-      <div class="flex-block">
-        <h2 data-text="紅血球計數">紅血球計數</h2>
-        <div id="rbcNote" class="note" data-text="(紅血球：一般使用25中格並選5格錯開不重疊格子)">(紅血球：一般使用25中格並選5格錯開不重疊格子)</div>
-        <div class="form-container">
-          <div class="form-row-inline">
-            <label data-text="細胞數：">細胞數：</label>
-            <input type="number" id="rbcCount" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="格數：">格數：</label>
-            <input type="number" id="rbcSquares" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="稀釋倍數：">稀釋倍數：</label>
-            <input type="number" id="rbcDilution" step="any">
-          </div>
-          <div class="form-row-inline">
-            <label data-text="單位顯示：">單位顯示：</label>
-            <select id="rbcUnit" onchange="updateRBCResult()">
-              <option value="1" data-text="個/µL">個/µL</option>
-              <option value="1000" data-text="個/mL">個/mL</option>
-            </select>
-          </div>
-        </div>
-        <div class="button-group">
-          <button onclick="calculateRBC()" data-text="計算">計算</button>
-          <button class="clear" onclick="clearRBC()" data-text="清除">清除</button>
-        </div>
-        <div id="rbcResult" class="result" style="display:none;"></div>
-        
-        <div id="rbcVolumeCalc" style="display:none; margin-top: 20px;">
-          <h3 style="font-size: 1.1em; margin-bottom: 10px;" data-text="計算所需體積">計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)</h3>
-          <div class="form-container">
-            <div class="form-row-inline">
-              <label data-text="目標細胞數量：">目標細胞數量：</label>
-              <div class="input-group">
-                <input type="number" id="rbcTargetBase" step="any" style="max-width: 100px;" data-placeholder="基數" placeholder="基數">
-                <span>× 10^</span>
-                <input type="number" id="rbcTargetExp" step="1" style="max-width: 80px;" data-placeholder="次方" placeholder="次方">
-              </div>
-            </div>
-          </div>
-          <div class="button-group">
-            <button onclick="calculateRBCVolume()" data-text="計算體積">計算體積</button>
-          </div>
-          <div id="rbcVolumeResult" class="result" style="display:none;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 計時器分頁 -->
-  <div id="timer" class="tab-content" style="display:none;">
-    <div class="timer-flex-container">
-      <div style="flex: 1;">
-        <div class="timer-section-title" data-text="倒數計時器(離線版才會響鈴)">倒數計時器(離線版才會響鈴)</div>
-        <div class="timer-block" id="countdown1">
-          <input type="text" class="timer-title" data-placeholder="計時器 1" placeholder="計時器 1" onchange="updateTimerTitle('countdown', 0, this.value)">
-          <div class="time-inputs">
-            <input type="number" min="0" data-placeholder="時" placeholder="時" id="cd-hours1">
-            <input type="number" min="0" data-placeholder="分" placeholder="分" id="cd-minutes1">
-            <input type="number" min="0" data-placeholder="秒" placeholder="秒" id="cd-seconds1">
-          </div>
-          <div class="timer-display" id="cd-display1">00:00:00</div>
-          <div class="timer-controls">
-            <button onclick="startCountdown(0)" data-text="開始">開始</button>
-            <button onclick="pauseCountdown(0)" data-text="暫停">暫停</button>
-            <button onclick="resetCountdown(0)" data-text="重設">重設</button>
-          </div>
-        </div>
-        <div class="timer-block" id="countdown2">
-          <input type="text" class="timer-title" data-placeholder="計時器 2" placeholder="計時器 2" onchange="updateTimerTitle('countdown', 1, this.value)">
-          <div class="time-inputs">
-            <input type="number" min="0" data-placeholder="時" placeholder="時" id="cd-hours2">
-            <input type="number" min="0" data-placeholder="分" placeholder="分" id="cd-minutes2">
-            <input type="number" min="0" data-placeholder="秒" placeholder="秒" id="cd-seconds2">
-          </div>
-          <div class="timer-display" id="cd-display2">00:00:00</div>
-          <div class="timer-controls">
-            <button onclick="startCountdown(1)" data-text="開始">開始</button>
-            <button onclick="pauseCountdown(1)" data-text="暫停">暫停</button>
-            <button onclick="resetCountdown(1)" data-text="重設">重設</button>
-          </div>
-        </div>
-      </div>
-      
-      <div style="flex: 1;">
-        <div class="timer-section-title" data-text="碼表">碼表</div>
-        <div class="timer-block" id="stopwatch1">
-          <input type="text" class="timer-title" data-placeholder="碼表 1" placeholder="碼表 1" onchange="updateTimerTitle('stopwatch', 0, this.value)">
-          <div class="timer-display" id="sw-display1">00:00:00.0</div>
-          <div class="timer-controls">
-            <button onclick="startStopwatch(0)" data-text="開始">開始</button>
-            <button onclick="pauseStopwatch(0)" data-text="暫停">暫停</button>
-            <button onclick="resetStopwatch(0)" data-text="重設">重設</button>
-          </div>
-        </div>
-        <div class="timer-block" id="stopwatch2">
-          <input type="text" class="timer-title" data-placeholder="碼表 2" placeholder="碼表 2" onchange="updateTimerTitle('stopwatch', 1, this.value)">
-          <div class="timer-display" id="sw-display2">00:00:00.0</div>
-          <div class="timer-controls">
-            <button onclick="startStopwatch(1)" data-text="開始">開始</button>
-            <button onclick="pauseStopwatch(1)" data-text="暫停">暫停</button>
-            <button onclick="resetStopwatch(1)" data-text="重設">重設</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-<audio id="timer-audio" src="sounds/timer.mp3" preload="auto"></audio>
-
-<script>
-  // 語言配置
-  const translations = {
-    zh: {
-      // 主標題和下載按鈕
-      "main-title": "科科計算器",
-      "download-btn": "下載離線版",
-      
-      // 分頁標籤
-      "tab-mass": "莫耳濃度",
-      "tab-dilution": "稀釋計算", 
-      "tab-acidbase": "酸鹼濃度",
-      "tab-animal": "動物投藥計算",
-      "tab-animal2": "動物投藥計算2",
-      "tab-primer": "Primer回溶/稀釋",
-      "tab-ligation": "Ligation計算",
-      "tab-cellcount": "細胞計數",
-      "tab-timer": "計時器",
-      
-      // 莫耳濃度
-      "分子量 (g/mol)：": "分子量 (g/mol)：",
-      "莫耳濃度：": "莫耳濃度：",
-      "體積：": "體積：",
-      "質量：": "質量：",
-      "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項": "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項",
-      
-      // 稀釋計算
-      "原液濃度 C₁：": "原液濃度 C₁：",
-      "目標濃度 C₂：": "目標濃度 C₂：",
-      "目標體積 V₂：": "目標體積 V₂：",
-      "原液體積 V₁：": "原液體積 V₁：",
-      "請輸入任意三個值，將可計算第四個值": "請輸入任意三個值，將可計算第四個值",
-      
-      // 酸鹼濃度
-      "密度：": "密度：",
-      "重量百分比 (%)：": "重量百分比 (%)：",
-      "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N",
-      "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項",
-      
-      // 動物投藥計算
-      "目標藥物劑量 (mg/Kg)：": "目標藥物劑量 (mg/Kg)：",
-      "希望的投藥法：": "希望的投藥法：",
-      "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL": "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL",
-      "每隻動物預估體重 (g)：": "每隻動物預估體重 (g)：",
-      "預估動物數量 (pc)：": "預估動物數量 (pc)：",
-      "使用藥物濃度：": "使用藥物濃度：",
-      "動物體重 (g)：": "動物體重 (g)：",
-      
-      // Primer
-      "Primer回溶": "Primer回溶",
-      "(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)": "(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)",
-      "Primer產量 (nmole)：": "Primer產量 (nmole)：",
-      "回溶水量 (µL)：": "回溶水量 (µL)：",
-      "回溶後濃度 (µM)：": "回溶後濃度 (µM)：",
-      "請輸入任意兩個值，將可計算第三個值": "請輸入任意兩個值，將可計算第三個值",
-      "Primer稀釋": "Primer稀釋",
-      "原液濃度 (µM)：": "原液濃度 (µM)：",
-      "目標濃度 (µM)：": "目標濃度 (µM)：",
-      "目標體積 (µL)：": "目標體積 (µL)：",
-
-      // Ligation
-      "Insert DNA 長度 (bp)：": "Insert DNA 長度 (bp)：",
-      "Vector DNA 長度 (bp)：": "Vector DNA 長度 (bp)：",
-      "Insert : Vector 比例：": "Insert : Vector 比例：",
-      "Vector DNA 質量 (ng)：": "Vector DNA 質量 (ng)：",
-      "所需 Insert DNA 質量：": "所需 Insert DNA 質量：",
-      
-      // 細胞計數
-      "白血球(細胞)計數": "白血球(細胞)計數",
-      "(白血球、細胞：一般使用四個角的大正方形)": "(白血球、細胞：一般使用四個角的大正方形)",
-      "細胞數：": "細胞數：",
-      "格數：": "格數：",
-      "稀釋倍數：": "稀釋倍數：",
-      "單位顯示：": "單位顯示：",
-      "個/µL": "個/µL",
-      "個/mL": "個/mL",
-      "紅血球計數": "紅血球計數",
-      "(紅血球：一般使用25中格並選5格錯開不重疊格子)": "(紅血球：一般使用25中格並選5格錯開不重疊格子)",
-      
-      // 計時器
-      "倒數計時器(離線版才會響鈴)": "倒數計時器(離線版才會響鈴)",
-      "計時器 1": "計時器 1",
-      "計時器 2": "計時器 2",
-      "時": "時",
-      "分": "分",
-      "秒": "秒",
-      "碼表": "碼表",
-      "碼表 1": "碼表 1",
-      "碼表 2": "碼表 2",
-      
-      // 按鈕
-      "計算": "計算",
-      "清除": "清除",
-      "計算缺失值": "計算缺失值",
-      "開始": "開始",
-      "暫停": "暫停",
-      "重設": "重設",
-      
-      // 計算結果訊息
-      "請輸入分子量": "請輸入分子量",
-      "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項": "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項",
-      "計算出莫耳濃度：": "計算出莫耳濃度：",
-      "計算出體積：": "計算出體積：",
-      "計算出質量：": "計算出質量：",
-      "請清空一個欄位以計算該值": "請清空一個欄位以計算該值",
-      "請輸入任意三個值": "請輸入任意三個值",
-      "計算出原液濃度 C₁ = ": "計算出原液濃度 C₁ = ",
-      "計算出原液體積 V₁ = ": "計算出原液體積 V₁ = ",
-      "計算出目標濃度 C₂ = ": "計算出目標濃度 C₂ = ",
-      "計算出目標體積 V₂ = ": "計算出目標體積 V₂ = ",
-      "請輸入分子量與密度": "請輸入分子量與密度",
-      "計算莫耳濃度：": "計算莫耳濃度：",
-      "計算重量百分比：": "計算重量百分比：",
-      "請輸入重量百分比或莫耳濃度其中一項，另一項留空": "請輸入重量百分比或莫耳濃度其中一項，另一項留空",
-      "請輸入所有欄位且數值皆大於 0": "請輸入所有欄位且數值皆大於 0",
-      "每隻動物投藥量：": "每隻動物投藥量：",
-      "配製藥物濃度：": "配製藥物濃度：",
-      "配製藥物總重量：": "配製藥物總重量：",
-      "配製藥物溶液總體積：": "配製藥物溶液總體積：",
-      "請輸入有效數值，且藥物濃度不可為零": "請輸入有效數值，且藥物濃度不可為零",
-      "投藥量：": "投藥量：",
-      "請輸入任意兩個欄位": "請輸入任意兩個欄位",
-      "計算後濃度：": "計算後濃度：",
-      "計算所需回溶水量：": "計算所需回溶水量：",
-      "計算所需Primer產量：": "計算所需Primer產量：",
-      "請輸入所有欄位且數值皆大於 0": "請輸入所有欄位且數值皆大於 0",
-      "原液體積：": "原液體積：",
-      "加水體積：": "加水體積：",
-      "請輸入所有必填欄位，且格數不可為0": "請輸入所有必填欄位，且格數不可為0",
-      "計算結果：": "計算結果：",
-      "科學記號表示：": "科學記號表示：",
-      "cells/µL": "個/µL",
-      "cells/mL": "個/mL",
-      "計算所需體積": "計算所需體積",
-      "目標細胞數量：": "目標細胞數量：",
-      "基數": "基數",
-      "次方": "次方",
-      "計算體積": "計算體積",
-      "所需體積：": "所需體積：",
-      "請輸入目標細胞數量": "請輸入目標細胞數量",
-      "請先計算細胞濃度": "請先計算細胞濃度"
-    },
-    en: {
-      // 主標題和下載按鈕
-      "main-title": "BioCalculator",
-      "download-btn": "Download Offline Version",
-      
-      // 分頁標籤
-      "tab-mass": "Molarity",
-      "tab-dilution": "Dilute", 
-      "tab-acidbase": "Acid-Base",
-      "tab-animal": "Animal Drug Dosage",
-      "tab-animal2": "Animal Drug Dosage 2",
-      "tab-primer": "Primer Reconstitution/Dilute",
-      "tab-ligation": "Ligation Calculate",
-      "tab-cellcount": "Cell Count",
-      "tab-timer": "Timer",
-      
-      // 莫耳濃度
-      "分子量 (g/mol)：": "Molecular Weight (g/mol)：",
-      "莫耳濃度：": "Molarity：",
-      "體積：": "Volume：",
-      "質量：": "Mass：",
-      "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項": "Please enter the [Molecular Weight] and any two of the following: [Molarity, Volume, or Mass]. The remaining value will be calculated automatically.",
-      
-      // 稀釋計算
-      "原液濃度 C₁：": "Stock Concentration C₁：",
-      "目標濃度 C₂：": "Target Concentration C₂：",
-      "目標體積 V₂：": "Target Volume V₂：",
-      "原液體積 V₁：": "Stock Volume V₁：",
-      "請輸入任意三個值，將可計算第四個值": "Please enter any three values to calculate the fourth value.",
-      
-      // 酸鹼濃度
-      "密度：": "Density：",
-      "重量百分比 (%)：": "Weight Percentage (%)：",
-      "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "Sulfuric acid (H₂SO₄) → Two H⁺ ions → 1M = 2N<br>Phosphoric acid (H₃PO₄) → Three H⁺ ions → 1M = 3N",
-      "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "Please enter the [Molecular Weight and Density], along with either the [Weight percentage or Molarity]. The remaining value will be calculated automatically.",
-      
-      // 動物投藥計算
-      "目標藥物劑量 (mg/Kg)：": "Target Drug Dosage (mg/Kg)：",
-      "希望的投藥法：": "Preferred Administration Method：",
-      "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL": "For example: Enter 10, 0.1 ➜ Administer 0.1mL per 10g<br>Then for an animal weighing 27g, administer 0.27mL.",
-      "每隻動物預估體重 (g)：": "Estimated Weight per Animal (g)：",
-      "預估動物數量 (pc)：": "Estimated Number of Animals (pc)：",
-      "使用藥物濃度：": "Drug Concentration Used：",
-      "動物體重 (g)：": "Animal Weight (g)：",
-      
-      // Primer
-      "Primer回溶": "Primer Reconstitution",
-      "(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)": "(General primer yield X nmole, reconstitute with X*10 µL water gives 100 µM)",
-      "Primer產量 (nmole)：": "Primer Yield (nmole)：",
-      "回溶水量 (µL)：": "Reconstitution Volume (µL)：",
-      "回溶後濃度 (µM)：": "Concentration After Reconstitution (µM)：",
-      "請輸入任意兩個值，將可計算第三個值": "Please enter any two values to calculate the third value.",
-      "Primer稀釋": "Primer Dilution",
-      "原液濃度 (µM)：": "Stock Concentration (µM)：",
-      "目標濃度 (µM)：": "Target Concentration (µM)：",
-      "目標體積 (µL)：": "Target Volume (µL)：",
-      
-      //Ligation
-      "Insert DNA 長度 (bp)：": "Insert DNA lenth (bp)：",
-      "Vector DNA 長度 (bp)：": "Vector DNA lenth (bp)：",
-      "Insert : Vector 比例：": "Insert : Vector ratio：",
-      "Vector DNA 質量 (ng)：": "Vector DNA mass (ng)：",
-      "所需 Insert DNA 質量：": "Required Insert DNA mass: ",
-
-      // 細胞計數
-      "白血球(細胞)計數": "White Blood Cell (Cell) Count",
-      "(白血球、細胞：一般使用四個角的大正方形)": "(Usually use large squares at the four corners)",
-      "細胞數：": "Cell Count：",
-      "格數：": "Number of Squares：",
-      "稀釋倍數：": "Dilution Factor：",
-      "單位顯示：": "Unit Display：",
-      "個/µL": "cells/µL",
-      "個/mL": "cells/mL",
-      "紅血球計數": "Red Blood Cell Count",
-      "(紅血球：一般使用25中格並選5格錯開不重疊格子)": "(Usually use 25 medium squares and select 5 non-overlapping squares)",
-      
-      // 計時器
-      "倒數計時器(離線版才會響鈴)": "Countdown Timer (Offline version will sound an alarm)",
-      "計時器 1": "Timer 1",
-      "計時器 2": "Timer 2",
-      "時": "HH",
-      "分": "MM",
-      "秒": "SS",
-      "碼表": "Stopwatch",
-      "碼表 1": "Stopwatch 1",
-      "碼表 2": "Stopwatch 2",
-      
-      // 按鈕
-      "計算": "Calculate",
-      "清除": "Clear",
-      "計算缺失值": "Calculate Missing Value",
-      "開始": "Start",
-      "暫停": "Pause",
-      "重設": "Reset",
-      
-      // 計算結果訊息
-      "請輸入分子量": "Please enter the Molecular Weight",
-      "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項": "Please enter at least any two of Molarity, Volume, or Mass",
-      "計算出莫耳濃度：": "Calculate molarity：",
-      "計算出體積：": "Calculate volume：",
-      "計算出質量：": "Calculate mass：",
-      "請清空一個欄位以計算該值": "Please clear one field of Molarity, Volume, or Mass to calculate its value",
-      "請輸入任意三個值": "Please enter any three values",
-      "計算出原液濃度 C₁ = ": "Calculate the concentration of the Stock Solution C₁ = ",
-      "計算出原液體積 V₁ = ": "Calculate the volume of the Stock Solution V₁ = ",
-      "計算出目標濃度 C₂ = ": "Calculate the target Concentration C₂ = ",
-      "計算出目標體積 V₂ = ": "Calculate the target Volume V₂ = ",
-      "請輸入分子量與密度": "Please enter Molecular Weight and Density",
-      "計算莫耳濃度：": "Calculate molarity：",
-      "計算重量百分比：": "Calculate weight percentage：",
-      "請輸入重量百分比或莫耳濃度其中一項，另一項留空": "Please enter either Weight percentage or molarity, leave the other blank",
-      "請輸入所有欄位且數值皆大於 0": "Please enter all fields and the values must be greater than 0",
-      "每隻動物投藥量：": "Dosage per animal：",
-      "配製藥物濃度：": "Prepare drug concentration：",
-      "配製藥物總重量：": "Total weight of prepared drugs：",
-      "配製藥物溶液總體積：": "Total volume of prepared drug solution：",
-      "請輸入有效數值，且藥物濃度不可為零": "Please enter a valid value, and the drug concentration cannot be zero",
-      "投藥量：": "Dosage：",
-      "請輸入任意兩個欄位": "Please enter any two fields",
-      "計算後濃度：": "Calculated concentration：",
-      "計算所需回溶水量：": "Calculate the amount of water needed for re-dissolution：",
-      "計算所需Primer產量：": "Calculate the required Primer yield：",
-      "請輸入所有欄位且數值皆大於 0": "Please enter all fields and the values must be greater than 0",
-      "原液體積：": "Stock solution volume：",
-      "加水體積：": "Water volume：",
-      "請輸入所有必填欄位，且格數不可為0": "Please fill in all required fields and the number of fields cannot be 0",
-      "計算結果：": "Calculation results：",
-      "科學記號表示：": "Scientific notation：",
-      "cells/µL": "cells/µL",
-      "cells/mL": "cells/mL",
-      "計算所需體積": "Calculate Required Volume → (When calculate, be sure to switch the unit to: cells/µL)",
-      "目標細胞數量：": "Target Cell Count：",
-      "基數": "Base",
-      "次方": "Exponent",
-      "計算體積": "Calculate Volume",
-      "所需體積：": "Required Volume：",
-      "請輸入目標細胞數量": "Please enter target cell count",
-      "請先計算細胞濃度": "Please calculate cell concentration first"
-    }
-  };
-
-  // 當前語言
-  let currentLanguage = 'zh';
-
-  // 語言切換功能
-  function switchLanguage(lang) {
-    currentLanguage = lang;
-    
-    // 更新語言按鈕狀態
-    document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
-    document.getElementById('lang-en').classList.toggle('active', lang === 'en');
-    
-    // 更新所有有 data-text 屬性的元素
-    const elements = document.querySelectorAll('[data-text]');
-    elements.forEach(el => {
-      const key = el.getAttribute('data-text');
-      if (translations[lang][key]) {
-        if (el.tagName === 'INPUT' && el.type === 'text') {
-          el.placeholder = translations[lang][key];
-        } else {
-          el.innerHTML = translations[lang][key];
-        }
-      }
-    });
-    
-    // 更新placeholder
-    const placeholderElements = document.querySelectorAll('[data-placeholder]');
-    placeholderElements.forEach(el => {
-      const key = el.getAttribute('data-placeholder');
-      if (translations[lang][key]) {
-        el.placeholder = translations[lang][key];
-      }
-    });
-    
-    // 更新主標題
-    const title = document.getElementById('main-title');
-    const downloadBtn = document.getElementById('download-btn');
-    if (lang === 'zh') {
-      title.innerHTML = '科科計算器 <a id="download-btn" href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" target="_blank" rel="noopener noreferrer">下載離線版</a>';
-    } else {
-      title.innerHTML = 'BioCalculator <a id="download-btn" href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" target="_blank" rel="noopener noreferrer">Download Offline Version</a>';
-    }
-    
-    // 更新分頁標籤
-    const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'animal2', 'primer', 'ligation', 'cellcount', 'timer'];
-    tabs.forEach(tab => {
-      const tabElement = document.getElementById(`tab-${tab}`);
-      tabElement.textContent = translations[lang][`tab-${tab}`];
-    });
-
-    // 更新選項元素
-    updateSelectOptions(lang);
-    
-    // 更新已顯示的結果內容
-    updateDisplayedResults();
-  }
-
-  function updateSelectOptions(lang) {
-    // 更新單位顯示選項
-    const wbcUnit = document.getElementById('wbcUnit');
-    const rbcUnit = document.getElementById('rbcUnit');
-    
-    if (wbcUnit) {
-      wbcUnit.options[0].text = translations[lang]['個/µL'];
-      wbcUnit.options[1].text = translations[lang]['個/mL'];
-    }
-    
-    if (rbcUnit) {
-      rbcUnit.options[0].text = translations[lang]['個/µL'];
-      rbcUnit.options[1].text = translations[lang]['個/mL'];
-    }
-  }
-
-  let audioLoopInterval = null;
-  let audioTimeout = null;
-  
-  function switchTab(tab) {
-    const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'animal2', 'primer', 'ligation', 'cellcount', 'timer'];
-    tabs.forEach(t => {
-      document.getElementById(t).style.display = (t === tab) ? 'block' : 'none';
-      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
-    });
-  }
-
-  // 顯示/隱藏結果區域的輔助函數
-  function showResult(id, text) {
-    const element = document.getElementById(id);
-    element.textContent = text;
-    element.style.display = 'block';
-  }
-
-  function hideResult(id) {
-    const element = document.getElementById(id);
-    element.style.display = 'none';
-    element.textContent = '';
-  }
-
-  // 莫耳濃度
-  function calculateMass() {
-    const molarMass = parseFloat(document.getElementById('molarMass').value);
-    const molarity = parseFloat(document.getElementById('molarity').value);
-    const molarityUnit = parseFloat(document.getElementById('molarityUnit').value);
-    const volume = parseFloat(document.getElementById('volume').value);
-    const volumeUnit = parseFloat(document.getElementById('volumeUnit').value);
-    const massValue = parseFloat(document.getElementById('massValue').value);
-    const massUnit = parseFloat(document.getElementById('massUnit').value);
-
-    if (isNaN(molarMass) || molarMass <= 0) {
-      alert(translations[currentLanguage]['請輸入分子量']);
-      return;
-    }
-
-    let filledCount = 0;
-    if (!isNaN(molarity)) filledCount++;
-    if (!isNaN(volume)) filledCount++;
-    if (!isNaN(massValue)) filledCount++;
-
-    if (filledCount < 2) {
-      alert(translations[currentLanguage]['請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項']);
-      return;
-    }
-
-    let resultText = '';
-
-    if (isNaN(molarity)) {
-      const molarityM = (massValue * massUnit) / (molarMass * volume * volumeUnit);
-      const molarityConverted = molarityM / molarityUnit;
-      document.getElementById('molarity').value = molarityConverted.toFixed(6);
-      resultText = `${translations[currentLanguage]['計算出莫耳濃度：']}${molarityConverted.toFixed(6)} ${getSelectedText('molarityUnit')}`;
-    } else if (isNaN(volume)) {
-      const volumeL = (massValue * massUnit) / (molarMass * molarity * molarityUnit);
-      const volumeConverted = volumeL / volumeUnit;
-      document.getElementById('volume').value = volumeConverted.toFixed(6);
-      resultText = `${translations[currentLanguage]['計算出體積：']}${volumeConverted.toFixed(6)} ${getSelectedText('volumeUnit')}`;
-    } else if (isNaN(massValue)) {
-      const massG = (molarity * molarityUnit) * (volume * volumeUnit) * molarMass;
-      const massConverted = massG / massUnit;
-      document.getElementById('massValue').value = massConverted.toFixed(6);
-      resultText = `${translations[currentLanguage]['計算出質量：']}${massConverted.toFixed(6)} ${getSelectedText('massUnit')}`;
-    } else {
-      resultText = translations[currentLanguage]['請清空一個欄位以計算該值'];
-    }
-
-    showResult('massResult', resultText);
-  }
-
-  function clearMass() {
-    ['molarity', 'volume', 'massValue', 'molarMass'].forEach(id => document.getElementById(id).value = '');
-    hideResult('massResult');
-  }
-
-  // 稀釋計算
-  function calculateDilution() {
-    const c1 = parseFloat(document.getElementById('c1').value);
-    const c1Unit = parseFloat(document.getElementById('c1Unit').value);
-    const v1 = parseFloat(document.getElementById('v1').value);
-    const v1Unit = parseFloat(document.getElementById('v1Unit').value);
-    const c2 = parseFloat(document.getElementById('c2').value);
-    const c2Unit = parseFloat(document.getElementById('c2Unit').value);
-    const v2 = parseFloat(document.getElementById('v2').value);
-    const v2Unit = parseFloat(document.getElementById('v2Unit').value);
-
-    let filledCount = 0;
-    [c1, v1, c2, v2].forEach(v => { if (!isNaN(v)) filledCount++; });
-
-    if (filledCount < 3) {
-      alert(translations[currentLanguage]['請輸入任意三個值']);
-      return;
-    }
-
-    try {
-      if (isNaN(c1)) {
-        const val = (c2 * c2Unit) * (v2 * v2Unit) / (v1 * v1Unit);
-        const result = val / c1Unit;
-        document.getElementById('c1').value = result.toFixed(6);
-        showResult('dilutionResult', `${translations[currentLanguage]['計算出原液濃度 C₁ = ']}${result.toFixed(6)} ${getSelectedText('c1Unit')}`);
-      } else if (isNaN(v1)) {
-        const val = (c2 * c2Unit) * (v2 * v2Unit) / (c1 * c1Unit);
-        const result = val / v1Unit;
-        document.getElementById('v1').value = result.toFixed(6);
-        showResult('dilutionResult', `${translations[currentLanguage]['計算出原液體積 V₁ = ']}${result.toFixed(6)} ${getSelectedText('v1Unit')}`);
-      } else if (isNaN(c2)) {
-        const val = (c1 * c1Unit) * (v1 * v1Unit) / (v2 * v2Unit);
-        const result = val / c2Unit;
-        document.getElementById('c2').value = result.toFixed(6);
-        showResult('dilutionResult', `${translations[currentLanguage]['計算出目標濃度 C₂ = ']}${result.toFixed(6)} ${getSelectedText('c2Unit')}`);
-      } else if (isNaN(v2)) {
-        const val = (c1 * c1Unit) * (v1 * v1Unit) / (c2 * c2Unit);
-        const result = val / v2Unit;
-        document.getElementById('v2').value = result.toFixed(6);
-        showResult('dilutionResult', `${translations[currentLanguage]['計算出目標體積 V₂ = ']}${result.toFixed(6)} ${getSelectedText('v2Unit')}`);
-      } else {
-        showResult('dilutionResult', translations[currentLanguage]['請清空一個欄位以計算該值']);
-      }
-    } catch {
-      showResult('dilutionResult', 'Calculation error, please check your input');
-    }
-  }
-
-  function clearDilution() {
-    ['c1', 'v1', 'c2', 'v2'].forEach(id => document.getElementById(id).value = '');
-    hideResult('dilutionResult');
-  }
-
-  // 酸鹼濃度雙向計算
-  function calculateAcidBase() {
-    const weightPercentInput = document.getElementById('weightPercent');
-    const molarityInput = document.getElementById('acidBaseMolarity');
-    const densityInput = document.getElementById('density');
-    const densityUnitSelect = document.getElementById('densityUnit');
-    const molarMassInput = document.getElementById('acidBaseMW');
-    const molarityUnitSelect = document.getElementById('acidBaseMolarityUnit');
-    
-    const weightPercent = parseFloat(weightPercentInput.value);
-    const molarity = parseFloat(molarityInput.value);
-    const density = parseFloat(densityInput.value);
-    const densityUnit = parseFloat(densityUnitSelect.value);
-    const molarMass = parseFloat(molarMassInput.value);
-    const molarityUnit = parseFloat(molarityUnitSelect.value);
-
-    if (isNaN(density) || isNaN(molarMass)) {
-      alert(translations[currentLanguage]['請輸入分子量與密度']);
-      return;
-    }
-
-    const densityStd = density * densityUnit;
-
-    if (!isNaN(weightPercent) && isNaN(molarity)) {
-      const molarityM = ((weightPercent * densityStd) / molarMass) * 10;
-      const molarityConverted = molarityM / molarityUnit;
-      molarityInput.value = molarityConverted.toFixed(6);
-      showResult('acidBaseResult', `${translations[currentLanguage]['計算莫耳濃度：']}${molarityConverted.toFixed(6)} ${molarityUnitSelect.options[molarityUnitSelect.selectedIndex].text}`);
-    } else if (isNaN(weightPercent) && !isNaN(molarity)) {
-      const molarityM = molarity * molarityUnit;
-      const weightPercentCalc = (molarityM * molarMass) / (densityStd * 10);
-      weightPercentInput.value = weightPercentCalc.toFixed(6);
-      showResult('acidBaseResult', `${translations[currentLanguage]['計算重量百分比：']}${weightPercentCalc.toFixed(6)} %`);
-    } else {
-      alert(translations[currentLanguage]['請輸入重量百分比或莫耳濃度其中一項，另一項留空']);
-    }
-  }
-
-  function clearAcidBase() {
-    ['weightPercent', 'acidBaseMolarity', 'density', 'acidBaseMW'].forEach(id => document.getElementById(id).value = '');
-    hideResult('acidBaseResult');
-  }
-
-  // 動物投藥計算
-  function calculateAnimalDose() {
-    const targetDose = parseFloat(document.getElementById('targetDose').value);
-    const doseB1 = parseFloat(document.getElementById('doseB1').value);
-    const doseB2 = parseFloat(document.getElementById('doseB2').value);
-    const animalWeight = parseFloat(document.getElementById('animalWeight').value);
-    const animalCount = parseFloat(document.getElementById('animalCount').value);
-
-    if ([targetDose, doseB1, doseB2, animalWeight, animalCount].some(v => isNaN(v) || v <= 0)) {
-      alert(translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
-      return;
-    }
-
-    const dosePerAnimal = (targetDose / 1000) * animalWeight;
-    const concentration = (targetDose / (1000 / doseB1)) / doseB2;
-    const totalWeight = (targetDose / (1000 / doseB1)) * ((doseB2 * animalCount * (animalWeight / doseB1)) / doseB2);
-    const totalVolume = doseB2 * animalCount * (animalWeight / doseB1);
-
-    const resultText =
-      `${translations[currentLanguage]['每隻動物投藥量：']}${dosePerAnimal.toFixed(6)} mg/pc\n` +
-      `${translations[currentLanguage]['配製藥物濃度：']}${concentration.toFixed(6)} mg/mL\n` +
-      `${translations[currentLanguage]['配製藥物總重量：']}${totalWeight.toFixed(6)} mg\n` +
-      `${translations[currentLanguage]['配製藥物溶液總體積：']}${totalVolume.toFixed(6)} mL`;
-
-    showResult('animalResult', resultText);
-  }
-
-  function clearAnimal() {
-    ['targetDose', 'doseB1', 'doseB2', 'animalWeight', 'animalCount'].forEach(id => document.getElementById(id).value = '');
-    hideResult('animalResult');
-  }
-
-  // 動物投藥計算2
-  function calculateAnimalDose2() {
-    const a = parseFloat(document.getElementById('targetDose2').value);
-    const b = parseFloat(document.getElementById('drugConc2').value);
-    const unit = document.getElementById('drugConc2Unit').value;
-    const c = parseFloat(document.getElementById('animalWeight2').value);
-
-    if (isNaN(a) || isNaN(b) || isNaN(c) || b === 0) {
-      showResult('animalResult2', translations[currentLanguage]['請輸入有效數值，且藥物濃度不可為零']);
-      return;
-    }
-
-    let d = ((a / 1000) * c) / b;
-    if (unit === "percent") {
-      d = d / 10;
-    }
-
-    showResult('animalResult2', `${translations[currentLanguage]['投藥量：']}${d.toFixed(3)} mL`);
-  }
-
-  function clearAnimal2() {
-    document.getElementById('targetDose2').value = '';
-    document.getElementById('drugConc2').value = '';
-    document.getElementById('animalWeight2').value = '';
-    document.getElementById('drugConc2Unit').selectedIndex = 0;
-    hideResult('animalResult2');
-  }
-
-  // Primer回溶雙向計算
-  function calcPrimer() {
-    let A = parseFloat(document.getElementById('primerAmount').value);
-    let B = parseFloat(document.getElementById('primerVolume').value);
-    let C = parseFloat(document.getElementById('primerConc').value);
-    let count = 0;
-    if (!isNaN(A)) count++;
-    if (!isNaN(B)) count++;
-    if (!isNaN(C)) count++;
-    if (count < 2) {
-      showResult('primerResult', translations[currentLanguage]['請輸入任意兩個欄位']);
-      return;
-    }
-    if (!isNaN(A) && !isNaN(B)) {
-      C = (A / B) * 1000;
-      document.getElementById('primerConc').value = C.toFixed(2);
-      showResult('primerResult', `${translations[currentLanguage]['計算後濃度：']}${C.toFixed(2)} µM`);
-    } else if (!isNaN(A) && !isNaN(C)) {
-      B = (A / C) * 1000;
-      document.getElementById('primerVolume').value = B.toFixed(2);
-      showResult('primerResult', `${translations[currentLanguage]['計算所需回溶水量：']}${B.toFixed(2)} µL`);
-    } else if (!isNaN(B) && !isNaN(C)) {
-      A = (C * B) / 1000;
-      document.getElementById('primerAmount').value = A.toFixed(2);
-      showResult('primerResult', `${translations[currentLanguage]['計算所需Primer產量：']}${A.toFixed(2)} nmole`);
-    }
-  }
-  
-  function clearPrimer() {
-    ['primerAmount', 'primerVolume', 'primerConc'].forEach(id => document.getElementById(id).value = '');
-    hideResult('primerResult');
-  }
-
-  // Primer稀釋計算
-  function calcDilute() {
-    let a = parseFloat(document.getElementById('stockConc').value);
-    let b = parseFloat(document.getElementById('targetConc').value);
-    let c = parseFloat(document.getElementById('targetVol').value);
-    if ([a, b, c].some(v => isNaN(v) || v <= 0)) {
-      showResult('diluteResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
-      return;
-    }
-    let d = (b / a) * c;
-    let e = c - d;
-    showResult('diluteResult', `${translations[currentLanguage]['原液體積：']}${d.toFixed(2)} µL\n${translations[currentLanguage]['加水體積：']}${e.toFixed(2)} µL`);
-  }
-  
-  function clearDilute() {
-    ['stockConc', 'targetConc', 'targetVol'].forEach(id => document.getElementById(id).value = '');
-    hideResult('diluteResult');
-  }
-
-// Ligation 計算
-  function calculateLigation() {
-    const insertLength = parseFloat(document.getElementById('insertLength').value);
-    const vectorLength = parseFloat(document.getElementById('vectorLength').value);
-    const insertRatio = parseFloat(document.getElementById('insertRatio').value);
-    const vectorRatio = parseFloat(document.getElementById('vectorRatio').value);
-    const vectorMass = parseFloat(document.getElementById('vectorMass').value);
-    
-    if ([insertLength, vectorLength, insertRatio, vectorRatio, vectorMass].some(v => isNaN(v) || v <= 0)) {
-      alert(translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
-      return;
-    }
-    
-    const requiredInsertMass = (insertRatio / vectorRatio) * vectorMass * (insertLength / vectorLength);
-    showResult('ligationResult', `${translations[currentLanguage]['所需 Insert DNA 質量：']}${requiredInsertMass.toFixed(2)} ng`);
-  }
-
-  function clearLigation() {
-    ['insertLength', 'vectorLength', 'insertRatio', 'vectorRatio', 'vectorMass'].forEach(id => document.getElementById(id).value = '');
-    hideResult('ligationResult');
-  }
-
-  // 白血球計數計算
-let wbcConcentration = 0;
-
-  function calculateWBC() {
-    const count = parseFloat(document.getElementById('wbcCount').value);
-    const squares = parseFloat(document.getElementById('wbcSquares').value);
-    const dilution = parseFloat(document.getElementById('wbcDilution').value);
-    const unit = parseFloat(document.getElementById('wbcUnit').value);
-
-    if (isNaN(count) || isNaN(squares) || isNaN(dilution) || squares === 0) {
-      alert(translations[currentLanguage]['請輸入所有必填欄位,且格數不可為0']);
-      return;
-    }
-
-    const unitText = document.getElementById("wbcUnit").selectedOptions[0].text;
-    const result = (count * dilution) / (squares * 0.1) * unit;
-    wbcConcentration = result;
-    const sciNotation = result.toExponential(2);
-    const sciParts = sciNotation.split('e');
-    const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}</sup>`;
-
-    document.getElementById("wbcResult").innerHTML =
-      `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
-    document.getElementById("wbcResult").style.display = 'block';
-    document.getElementById("wbcVolumeCalc").style.display = 'block';
-  }
-  
-    function updateWBCResult() {
-    if (document.getElementById('wbcCount').value && document.getElementById('wbcSquares').value && document.getElementById('wbcDilution').value) {
-      calculateWBC();
-    }
-  }
-
-  function calculateWBCVolume() {
-    const base = parseFloat(document.getElementById('wbcTargetBase').value);
-    const exponent = parseFloat(document.getElementById('wbcTargetExp').value);
-    
-    if (isNaN(base) || isNaN(exponent)) {
-      alert(translations[currentLanguage]['請輸入目標細胞數量']);
-      return;
-    }
-    
-    if (wbcConcentration === 0) {
-      alert(translations[currentLanguage]['請先計算細胞濃度']);
-      return;
-    }
-    
-    const targetCells = base * Math.pow(10, exponent);
-    const volumeUL = targetCells / wbcConcentration;
-    const volumeML = volumeUL / 1000;
-    
-    document.getElementById("wbcVolumeResult").innerHTML =
-      `${translations[currentLanguage]['所需體積：']}${volumeUL.toFixed(2)} µL (${volumeML.toFixed(4)} mL)`;
-    document.getElementById("wbcVolumeResult").style.display = 'block';
-  }
-
-    function clearWBC() {
-    document.getElementById('wbcCount').value = '';
-    document.getElementById('wbcSquares').value = '';
-    document.getElementById('wbcDilution').value = '';
-    document.getElementById('wbcTargetBase').value = '';
-    document.getElementById('wbcTargetExp').value = '';
-    wbcConcentration = 0;
-    hideResult('wbcResult');
-    hideResult('wbcVolumeResult');
-    document.getElementById("wbcVolumeCalc").style.display = 'none';
-  }
-
-  // 紅血球計數計算
-  let rbcConcentration = 0;
-
-  function calculateRBC() {
-    const count = parseFloat(document.getElementById('rbcCount').value);
-    const squares = parseFloat(document.getElementById('rbcSquares').value);
-    const dilution = parseFloat(document.getElementById('rbcDilution').value);
-    const unit = parseFloat(document.getElementById('rbcUnit').value);
-
-    if (isNaN(count) || isNaN(squares) || isNaN(dilution) || squares === 0) {
-      alert(translations[currentLanguage]['請輸入所有必填欄位,且格數不可為0']);
-      return;
-    }
-
-    const unitText = document.getElementById("rbcUnit").selectedOptions[0].text;
-    const result = (count * dilution) / (squares * 0.04 * 0.1) * unit;
-    rbcConcentration = result;
-    const sciNotation = result.toExponential(2);
-    const sciParts = sciNotation.split('e');
-    const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}</sup>`;
-
-    document.getElementById("rbcResult").innerHTML =
-      `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
-    document.getElementById("rbcResult").style.display = 'block';
-    document.getElementById("rbcVolumeCalc").style.display = 'block';
-  }
-  
-  function updateRBCResult() {
-    if (document.getElementById('rbcCount').value && document.getElementById('rbcSquares').value && document.getElementById('rbcDilution').value) {
-      calculateRBC();
-    }
-  }
-
-  function calculateRBCVolume() {
-    const base = parseFloat(document.getElementById('rbcTargetBase').value);
-    const exponent = parseFloat(document.getElementById('rbcTargetExp').value);
-    
-    if (isNaN(base) || isNaN(exponent)) {
-      alert(translations[currentLanguage]['請輸入目標細胞數量']);
-      return;
-    }
-    
-    if (rbcConcentration === 0) {
-      alert(translations[currentLanguage]['請先計算細胞濃度']);
-      return;
-    }
-    
-    const targetCells = base * Math.pow(10, exponent);
-    const volumeUL = targetCells / rbcConcentration;
-    const volumeML = volumeUL / 1000;
-    
-    document.getElementById("rbcVolumeResult").innerHTML =
-      `${translations[currentLanguage]['所需體積：']}${volumeUL.toFixed(2)} µL (${volumeML.toFixed(4)} mL)`;
-    document.getElementById("rbcVolumeResult").style.display = 'block';
-  }
-
-  function clearRBC() {
-    document.getElementById('rbcCount').value = '';
-    document.getElementById('rbcSquares').value = '';
-    document.getElementById('rbcDilution').value = '';
-    document.getElementById('rbcTargetBase').value = '';
-    document.getElementById('rbcTargetExp').value = '';
-    rbcConcentration = 0;
-    hideResult('rbcResult');
-    hideResult('rbcVolumeResult');
-    document.getElementById("rbcVolumeCalc").style.display = 'none';
-  }
-
-  // 計時器功能
-  const countdowns = Array(2).fill().map(() => ({
-    interval: null,
-    running: false,
-    remaining: 0,
-    title: '',
-    audioLoopInterval: null,
-    audioTimeout: null
-  }));
-  
-  const stopwatches = Array(2).fill().map(() => ({
-    interval: null,
-    running: false,
-    elapsed: 0,
-    lastStart: 0,
-    title: ''
-  }));
-
-  function updateTimerTitle(type, idx, val) {
-    if(type === 'countdown') {
-      countdowns[idx].title = val;
-    } else {
-      stopwatches[idx].title = val;
-    }
-  }
-
-  function getSelectedText(selectId) {
-  const select = document.getElementById(selectId);
-  return select.options[select.selectedIndex].text;
-  }
-
-  function startCountdown(idx) {
-    if (countdowns[idx].running) return;
-
-    if (countdowns[idx].remaining === 0) {
-      const h = parseInt(document.getElementById(`cd-hours${idx + 1}`).value) || 0;
-      const m = parseInt(document.getElementById(`cd-minutes${idx + 1}`).value) || 0;
-      const s = parseInt(document.getElementById(`cd-seconds${idx + 1}`).value) || 0;
-      countdowns[idx].remaining = h * 3600 + m * 60 + s;
-    }
-    if (countdowns[idx].remaining <= 0) return;
-
-    countdowns[idx].running = true;
-    countdowns[idx].startTimestamp = Date.now();
-    countdowns[idx].targetTimestamp = Date.now() + countdowns[idx].remaining * 1000;
-
-    countdowns[idx].interval = setInterval(() => {
-      const now = Date.now();
-      let left = Math.round((countdowns[idx].targetTimestamp - now) / 1000);
-      countdowns[idx].remaining = Math.max(0, left);
-      updateCountdownDisplay(idx);
-      if (countdowns[idx].remaining <= 0) {
-        clearInterval(countdowns[idx].interval);
-        countdowns[idx].running = false;
-
-        const audio = document.getElementById('timer-audio');
-        if (audio) {
-          audio.currentTime = 0;
-          audio.play();
-
-          countdowns[idx].audioLoopInterval = setInterval(() => {
-            audio.currentTime = 0;
-            audio.play();
-          }, 1250);
-
-          countdowns[idx].audioTimeout = setTimeout(() => {
-            clearInterval(countdowns[idx].audioLoopInterval);
-            countdowns[idx].audioLoopInterval = null;
-          }, 30000);
-        }
-      }
-    }, 200);
-    updateCountdownDisplay(idx);
-  }
-
-  function pauseCountdown(idx) {
-    if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
-    countdowns[idx].interval = null;
-    countdowns[idx].running = false;
-    if (countdowns[idx].targetTimestamp) {
-      countdowns[idx].remaining = Math.max(0, Math.round((countdowns[idx].targetTimestamp - Date.now()) / 1000));
-    }
-    stopAudio(idx);
-  }
-
-  function resetCountdown(idx) {
-    pauseCountdown(idx);
-    countdowns[idx].remaining = 0;
-    document.getElementById(`cd-hours${idx + 1}`).value = '';
-    document.getElementById(`cd-minutes${idx + 1}`).value = '';
-    document.getElementById(`cd-seconds${idx + 1}`).value = '';
-    updateCountdownDisplay(idx);
-  }
-  
-  function stopAudio(idx) {
-    if (countdowns[idx].audioLoopInterval) {
-      clearInterval(countdowns[idx].audioLoopInterval);
-      countdowns[idx].audioLoopInterval = null;
-    }
-    if (countdowns[idx].audioTimeout) {
-      clearTimeout(countdowns[idx].audioTimeout);
-      countdowns[idx].audioTimeout = null;
-    }
-    const audio = document.getElementById('timer-audio');
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-  }
-
-  function updateCountdownDisplay(idx) {
-    let t = countdowns[idx].remaining;
-    const h = Math.floor(t / 3600);
-    const m = Math.floor((t % 3600) / 60);
-    const s = t % 60;
-    document.getElementById(`cd-display${idx + 1}`).textContent =
-      `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  }
-  
-  function startStopwatch(idx) {
-    if (stopwatches[idx].running) return;
-    stopwatches[idx].running = true;
-    stopwatches[idx].lastStart = Date.now();
-    stopwatches[idx].interval = setInterval(() => {
-      updateStopwatchDisplay(idx);
-    }, 100);
-  }
-  
-  function pauseStopwatch(idx) {
-    if (stopwatches[idx].running) {
-      stopwatches[idx].elapsed += Date.now() - stopwatches[idx].lastStart;
-      stopwatches[idx].running = false;
-      clearInterval(stopwatches[idx].interval);
-      stopwatches[idx].interval = null;
-      updateStopwatchDisplay(idx);
-    }
-  }
-  
-  function resetStopwatch(idx) {
-    pauseStopwatch(idx);
-    stopwatches[idx].elapsed = 0;
-    updateStopwatchDisplay(idx);
-  }
-  
-  function updateStopwatchDisplay(idx) {
-    let elapsed = stopwatches[idx].elapsed;
-    if (stopwatches[idx].running) {
-      elapsed += Date.now() - stopwatches[idx].lastStart;
-    }
-    elapsed = Math.max(0, elapsed);
-    const totalSeconds = Math.floor(elapsed / 1000);
-    const h = Math.floor(totalSeconds / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
-    const ms = Math.floor((elapsed % 1000) / 100);
-    document.getElementById(`sw-display${idx+1}`).textContent =
-      `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${ms}`;
-  }
-
-  // 更新已顯示的結果內容
-function updateDisplayedResults() {
-  // 如果有顯示結果，重新計算它們
-  const massResult = document.getElementById('massResult');
-  if (massResult.style.display === 'block') {
-    calculateMass();
-  }
-  
-  const dilutionResult = document.getElementById('dilutionResult');
-  if (dilutionResult.style.display === 'block') {
-    calculateDilution();
-  }
-  
-  const acidBaseResult = document.getElementById('acidBaseResult');
-  if (acidBaseResult.style.display === 'block') {
-    calculateAcidBase();
-  }
-  
-  const animalResult = document.getElementById('animalResult');
-  if (animalResult.style.display === 'block') {
-    calculateAnimalDose();
-  }
-  
-  const animalResult2 = document.getElementById('animalResult2');
-  if (animalResult2.style.display === 'block') {
-    calculateAnimalDose2();
-  }
-  
-  const primerResult = document.getElementById('primerResult');
-  if (primerResult.style.display === 'block') {
-    calcPrimer();
-  }
-  
-  const diluteResult = document.getElementById('diluteResult');
-  if (diluteResult.style.display === 'block') {
-    calcDilute();
-  }
-  
-  const ligationResult = document.getElementById('ligationResult');
-  if (ligationResult.style.display === 'block') {
-    calculateLigation();
-  }
-  
-  const wbcResult = document.getElementById('wbcResult');
-  if (wbcResult.style.display === 'block') {
-    calculateWBC();
-  }
-  
-  const rbcResult = document.getElementById('rbcResult');
-  if (rbcResult.style.display === 'block') {
-    calculateRBC();
-  }
-}
-
-  // 初始化計時器顯示
-  for(let i=0; i<2; i++) {
-    updateCountdownDisplay(i);
-    updateStopwatchDisplay(i);
-  }
-
-  // 頁面載入時初始化語言
-  document.addEventListener('DOMContentLoaded', function() {
-    // 默認語言為中文，不需要額外操作
-  });
-</script>
+	<!-- 語言切換器 -->
+	<div class="language-switcher">
+		<button class="lang-btn active" id="lang-zh" onclick="switchLanguage('zh')">中文</button> <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">English</button>
+	</div>
+	<h1 id="main-title">科科計算器 <a href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" id="download-btn" rel="noopener noreferrer" target="_blank">下載離線版</a></h1>
+	<div class="tabs">
+		<div class="tab active" id="tab-mass" onclick="switchTab('mass')">
+			莫耳濃度
+		</div>
+		<div class="tab" id="tab-dilution" onclick="switchTab('dilution')">
+			稀釋計算
+		</div>
+		<div class="tab" id="tab-acidbase" onclick="switchTab('acidbase')">
+			酸鹼濃度
+		</div>
+		<div class="tab" id="tab-animal" onclick="switchTab('animal')">
+			動物投藥計算
+		</div>
+		<div class="tab" id="tab-animal2" onclick="switchTab('animal2')">
+			動物投藥計算2
+		</div>
+		<div class="tab" id="tab-primer" onclick="switchTab('primer')">
+			Primer回溶/稀釋
+		</div>
+		<div class="tab" id="tab-ligation" onclick="switchTab('ligation')">
+			Ligation計算
+		</div>
+		<div class="tab" id="tab-cellcount" onclick="switchTab('cellcount')">
+			細胞計數
+		</div>
+		<div class="tab" id="tab-timer" onclick="switchTab('timer')">
+			計時器
+		</div>
+	</div><!-- 莫耳濃度 -->
+	<div class="tab-content" id="mass">
+		<div class="form-container">
+			<div class="form-row-inline">
+				<label data-text="分子量 (g/mol)：" for="molarMass">分子量 (g/mol)：</label> <input id="molarMass" step="any" type="number">
+			</div>
+			<div class="form-row-inline">
+				<label data-text="莫耳濃度：" for="molarity">莫耳濃度：</label>
+				<div class="input-group">
+					<input id="molarity" step="any" type="number"> <select id="molarityUnit">
+						<option value="1">
+							M
+						</option>
+						<option value="0.001">
+							mM
+						</option>
+						<option value="0.000001">
+							μM
+						</option>
+						<option value="0.000000001">
+							nM
+						</option>
+						<option value="0.000000000001">
+							pM
+						</option>
+						<option value="0.000000000000001">
+							fM
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="體積：" for="volume">體積：</label>
+				<div class="input-group">
+					<input id="volume" step="any" type="number"> <select id="volumeUnit">
+						<option value="1">
+							L
+						</option>
+						<option value="0.001">
+							mL
+						</option>
+						<option value="0.000001">
+							μL
+						</option>
+						<option value="0.000000001">
+							nL
+						</option>
+						<option value="0.000000000001">
+							pL
+						</option>
+						<option value="0.000000000000001">
+							fL
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="質量：" for="massValue">質量：</label>
+				<div class="input-group">
+					<input id="massValue" step="any" type="number"> <select id="massUnit">
+						<option value="1">
+							g
+						</option>
+						<option value="1000">
+							kg
+						</option>
+						<option value="0.001">
+							mg
+						</option>
+						<option value="0.000001">
+							μg
+						</option>
+						<option value="0.000000001">
+							ng
+						</option>
+						<option value="0.000000000001">
+							pg
+						</option>
+						<option value="0.000000000000001">
+							fg
+						</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="note" data-text="請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項" id="massNote">
+			請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項
+		</div>
+		<div class="button-group">
+			<button data-text="計算" onclick="calculateMass()">計算</button> <button class="clear" data-text="清除" onclick="clearMass()">清除</button>
+		</div>
+		<div class="result" id="massResult" style="display:none;"></div>
+	</div><!-- 稀釋計算 -->
+	<div class="tab-content" id="dilution" style="display:none;">
+		<div class="form-container">
+			<div class="form-row-inline">
+				<label data-text="原液濃度 C₁：" for="c1">原液濃度 C₁：</label>
+				<div class="input-group">
+					<input id="c1" step="any" type="number"> <select id="c1Unit">
+						<option value="1">
+							M
+						</option>
+						<option value="0.001">
+							mM
+						</option>
+						<option value="0.000001">
+							μM
+						</option>
+						<option value="0.000000001">
+							nM
+						</option>
+						<option value="0.000000000001">
+							pM
+						</option>
+						<option value="0.000000000000001">
+							fM
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="目標濃度 C₂：" for="c2">目標濃度 C₂：</label>
+				<div class="input-group">
+					<input id="c2" step="any" type="number"> <select id="c2Unit">
+						<option value="1">
+							M
+						</option>
+						<option value="0.001">
+							mM
+						</option>
+						<option value="0.000001">
+							μM
+						</option>
+						<option value="0.000000001">
+							nM
+						</option>
+						<option value="0.000000000001">
+							pM
+						</option>
+						<option value="0.000000000000001">
+							fM
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="目標體積 V₂：" for="v2">目標體積 V₂：</label>
+				<div class="input-group">
+					<input id="v2" step="any" type="number"> <select id="v2Unit">
+						<option value="1">
+							L
+						</option>
+						<option value="0.001">
+							mL
+						</option>
+						<option value="0.000001">
+							μL
+						</option>
+						<option value="0.000000001">
+							nL
+						</option>
+						<option value="0.000000000001">
+							pL
+						</option>
+						<option value="0.000000000000001">
+							fL
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="原液體積 V₁：" for="v1">原液體積 V₁：</label>
+				<div class="input-group">
+					<input id="v1" step="any" type="number"> <select id="v1Unit">
+						<option value="1">
+							L
+						</option>
+						<option value="0.001">
+							mL
+						</option>
+						<option value="0.000001">
+							μL
+						</option>
+						<option value="0.000000001">
+							nL
+						</option>
+						<option value="0.000000000001">
+							pL
+						</option>
+						<option value="0.000000000000001">
+							fL
+						</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="note" data-text="請輸入任意三個值，將可計算第四個值" id="dilutionNote">
+			請輸入任意三個值，將可計算第四個值
+		</div>
+		<div class="button-group">
+			<button data-text="計算缺失值" onclick="calculateDilution()">計算缺失值</button> <button class="clear" data-text="清除" onclick="clearDilution()">清除</button>
+		</div>
+		<div class="result" id="dilutionResult" style="display:none;"></div>
+	</div><!-- 酸鹼濃度 -->
+	<div class="tab-content" id="acidbase" style="display:none;">
+		<div class="form-container">
+			<div class="form-row-inline">
+				<label data-text="分子量 (g/mol)：" for="acidBaseMW">分子量 (g/mol)：</label> <input id="acidBaseMW" step="any" type="number">
+			</div>
+			<div class="form-row-inline">
+				<label data-text="密度：" for="density">密度：</label>
+				<div class="input-group">
+					<input id="density" step="any" type="number"> <select id="densityUnit">
+						<option value="1">
+							g/mL
+						</option>
+						<option value="1">
+							g/cm³
+						</option>
+						<option value="1">
+							kg/L
+						</option>
+						<option value="0.001">
+							g/L
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="重量百分比 (%)：" for="weightPercent">重量百分比 (%)：</label> <input id="weightPercent" step="any" type="number">
+			</div>
+			<div class="form-row-inline">
+				<label data-text="莫耳濃度：" for="acidBaseMolarity">莫耳濃度：</label>
+				<div class="input-group">
+					<input id="acidBaseMolarity" step="any" type="number"> <select id="acidBaseMolarityUnit">
+						<option value="1">
+							M
+						</option>
+						<option value="0.001">
+							mM
+						</option>
+						<option value="0.000001">
+							μM
+						</option>
+						<option value="0.000000001">
+							nM
+						</option>
+						<option value="0.000000000001">
+							pM
+						</option>
+						<option value="0.000000000000001">
+							fM
+						</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div class="note" data-text="硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N&lt;br&gt;磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N" id="acidbaseNote1">
+			硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>
+			磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N
+		</div>
+		<div class="note" data-text="請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項" id="acidbaseNote2">
+			請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項
+		</div>
+		<div class="button-group">
+			<button data-text="計算" onclick="calculateAcidBase()">計算</button> <button class="clear" data-text="清除" onclick="clearAcidBase()">清除</button>
+		</div>
+		<div class="result" id="acidBaseResult" style="display:none;"></div>
+	</div><!-- 動物投藥計算 -->
+	<div class="tab-content" id="animal" style="display:none;">
+		<div class="form-container">
+			<div class="form-row-inline">
+				<label data-text="目標藥物劑量 (mg/Kg)：" for="targetDose">目標藥物劑量 (mg/Kg)：</label> <input id="targetDose" step="any" type="number">
+			</div>
+			<div class="animal-dose-group">
+				<label data-text="希望的投藥法：">希望的投藥法：</label>
+				<div class="form-row-inline indent">
+					<label>(g)：</label> <input id="doseB1" step="any" style="max-width: 150px;" type="number">
+				</div>
+				<div class="form-row-inline indent">
+					<label>(mL)：</label> <input id="doseB2" step="any" style="max-width: 150px;" type="number">
+				</div>
+				<div class="note" data-text="例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL&lt;br&gt;則動物體重測量 27g，投 0.27mL" id="animalNote">
+					例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>
+					則動物體重測量 27g，投 0.27mL
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="每隻動物預估體重 (g)：" for="animalWeight">每隻動物預估體重 (g)：</label> <input id="animalWeight" step="any" type="number">
+			</div>
+			<div class="form-row-inline">
+				<label data-text="預估動物數量 (pc)：" for="animalCount">預估動物數量 (pc)：</label> <input id="animalCount" step="any" type="number">
+			</div>
+		</div>
+		<div class="button-group">
+			<button data-text="計算" onclick="calculateAnimalDose()">計算</button> <button class="clear" data-text="清除" onclick="clearAnimal()">清除</button>
+		</div>
+		<div class="result" id="animalResult" style="display:none;"></div>
+	</div><!-- 動物投藥計算2 -->
+	<div class="tab-content" id="animal2" style="display:none;">
+		<div class="form-container">
+			<div class="form-row-inline">
+				<label data-text="目標藥物劑量 (mg/Kg)：" for="targetDose2">目標藥物劑量 (mg/Kg)：</label> <input id="targetDose2" step="any" type="number">
+			</div>
+			<div class="form-row-inline">
+				<label data-text="使用藥物濃度：" for="drugConc2">使用藥物濃度：</label>
+				<div class="input-group">
+					<input id="drugConc2" step="any" type="number"> <select id="drugConc2Unit">
+						<option value="mgml">
+							mg/mL
+						</option>
+						<option value="percent">
+							%
+						</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="動物體重 (g)：" for="animalWeight2">動物體重 (g)：</label> <input id="animalWeight2" step="any" type="number">
+			</div>
+		</div>
+		<div class="button-group">
+			<button data-text="計算" onclick="calculateAnimalDose2()">計算</button> <button class="clear" data-text="清除" onclick="clearAnimal2()">清除</button>
+		</div>
+		<div class="result" id="animalResult2" style="display:none;"></div>
+	</div><!-- Primer回溶/稀釋 -->
+	<div class="tab-content" id="primer" style="display:none;">
+		<div class="flex-container">
+			<div class="flex-block">
+				<h2 data-text="Primer回溶">Primer回溶</h2>
+				<div class="note" data-text="(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)" id="primerNote1">
+					(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)
+				</div>
+				<div class="form-container">
+					<div class="form-row-inline">
+						<label data-text="Primer產量 (nmole)：">Primer產量 (nmole)：</label> <input id="primerAmount" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="回溶水量 (µL)：">回溶水量 (µL)：</label> <input id="primerVolume" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="回溶後濃度 (µM)：">回溶後濃度 (µM)：</label> <input id="primerConc" step="any" type="number">
+					</div>
+				</div>
+				<div class="note" data-text="請輸入任意兩個值，將可計算第三個值" id="primerNote2">
+					請輸入任意兩個值，將可計算第三個值
+				</div>
+				<div class="button-group">
+					<button data-text="計算" onclick="calcPrimer()">計算</button> <button class="clear" data-text="清除" onclick="clearPrimer()">清除</button>
+				</div>
+				<div class="result" id="primerResult" style="display:none;"></div>
+			</div>
+			<div class="flex-block">
+				<h2 data-text="Primer稀釋">Primer稀釋</h2>
+				<div class="form-container">
+					<div class="form-row-inline">
+						<label data-text="原液濃度 (µM)：">原液濃度 (µM)：</label> <input id="stockConc" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="目標濃度 (µM)：">目標濃度 (µM)：</label> <input id="targetConc" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="目標體積 (µL)：">目標體積 (µL)：</label> <input id="targetVol" step="any" type="number">
+					</div>
+				</div>
+				<div class="button-group">
+					<button data-text="計算" onclick="calcDilute()">計算</button> <button class="clear" data-text="清除" onclick="clearDilute()">清除</button>
+				</div>
+				<div class="result" id="diluteResult" style="display:none;"></div>
+			</div>
+		</div>
+	</div><!-- Ligation 計算 -->
+	<div class="tab-content" id="ligation" style="display:none;">
+		<div class="form-container">
+			<div class="form-row-inline">
+				<label data-text="Insert DNA 長度 (bp)：">Insert DNA 長度 (bp)：</label> <input id="insertLength" step="any" type="number">
+			</div>
+			<div class="form-row-inline">
+				<label data-text="Vector DNA 長度 (bp)：">Vector DNA 長度 (bp)：</label> <input id="vectorLength" step="any" type="number">
+			</div>
+			<div class="form-row-inline">
+				<label data-text="Insert : Vector 比例：">Insert : Vector 比例：</label>
+				<div class="input-group">
+					<input id="insertRatio" step="any" type="number"> <span>:</span> <input id="vectorRatio" step="any" type="number">
+				</div>
+			</div>
+			<div class="form-row-inline">
+				<label data-text="Vector DNA 質量 (ng)：">Vector DNA 質量 (ng)：</label> <input id="vectorMass" step="any" type="number">
+			</div>
+		</div>
+		<div class="button-group">
+			<button data-text="計算" onclick="calculateLigation()">計算</button> <button class="clear" data-text="清除" onclick="clearLigation()">清除</button>
+		</div>
+		<div class="result" id="ligationResult" style="display:none;"></div>
+	</div><!-- 細胞計數 -->
+	<div class="tab-content" id="cellcount" style="display:none;">
+		<div class="flex-container">
+			<div class="flex-block">
+				<h2 data-text="白血球(細胞)計數">白血球(細胞)計數</h2>
+				<div class="note" data-text="(白血球、細胞：一般使用四個角的大正方形)" id="wbcNote">
+					(白血球、細胞：一般使用四個角的大正方形)
+				</div>
+				<div class="form-container">
+					<div class="form-row-inline">
+						<label data-text="細胞數：">細胞數：</label> <input id="wbcCount" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="格數：">格數：</label> <input id="wbcSquares" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="稀釋倍數：">稀釋倍數：</label> <input id="wbcDilution" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="單位顯示：">單位顯示：</label> <select id="wbcUnit" onchange="updateWBCResult()">
+							<option data-text="個/µL" value="1">
+								個/µL
+							</option>
+							<option data-text="個/mL" value="1000">
+								個/mL
+							</option>
+						</select>
+					</div>
+				</div>
+				<div class="button-group">
+					<button data-text="計算" onclick="calculateWBC()">計算</button> <button class="clear" data-text="清除" onclick="clearWBC()">清除</button>
+				</div>
+				<div class="result" id="wbcResult" style="display:none;"></div>
+				<div id="wbcVolumeCalc" style="display:none; margin-top: 20px;">
+					<h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)</h3>
+					<div class="form-container">
+						<div class="form-row-inline">
+							<label data-text="目標細胞數量：">目標細胞數量：</label>
+							<div class="input-group">
+								<input data-placeholder="基數" id="wbcTargetBase" placeholder="基數" step="any" style="max-width: 100px;" type="number"> <span>× 10^</span> <input data-placeholder="次方" id="wbcTargetExp" placeholder="次方" step="1" style="max-width: 80px;" type="number">
+							</div>
+						</div>
+					</div>
+					<div class="button-group">
+						<button data-text="計算體積" onclick="calculateWBCVolume()">計算體積</button>
+					</div>
+					<div class="result" id="wbcVolumeResult" style="display:none;"></div>
+				</div>
+			</div>
+			<div class="flex-block">
+				<h2 data-text="紅血球計數">紅血球計數</h2>
+				<div class="note" data-text="(紅血球：一般使用25中格並選5格錯開不重疊格子)" id="rbcNote">
+					(紅血球：一般使用25中格並選5格錯開不重疊格子)
+				</div>
+				<div class="form-container">
+					<div class="form-row-inline">
+						<label data-text="細胞數：">細胞數：</label> <input id="rbcCount" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="格數：">格數：</label> <input id="rbcSquares" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="稀釋倍數：">稀釋倍數：</label> <input id="rbcDilution" step="any" type="number">
+					</div>
+					<div class="form-row-inline">
+						<label data-text="單位顯示：">單位顯示：</label> <select id="rbcUnit" onchange="updateRBCResult()">
+							<option data-text="個/µL" value="1">
+								個/µL
+							</option>
+							<option data-text="個/mL" value="1000">
+								個/mL
+							</option>
+						</select>
+					</div>
+				</div>
+				<div class="button-group">
+					<button data-text="計算" onclick="calculateRBC()">計算</button> <button class="clear" data-text="清除" onclick="clearRBC()">清除</button>
+				</div>
+				<div class="result" id="rbcResult" style="display:none;"></div>
+				<div id="rbcVolumeCalc" style="display:none; margin-top: 20px;">
+					<h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)</h3>
+					<div class="form-container">
+						<div class="form-row-inline">
+							<label data-text="目標細胞數量：">目標細胞數量：</label>
+							<div class="input-group">
+								<input data-placeholder="基數" id="rbcTargetBase" placeholder="基數" step="any" style="max-width: 100px;" type="number"> <span>× 10^</span> <input data-placeholder="次方" id="rbcTargetExp" placeholder="次方" step="1" style="max-width: 80px;" type="number">
+							</div>
+						</div>
+					</div>
+					<div class="button-group">
+						<button data-text="計算體積" onclick="calculateRBCVolume()">計算體積</button>
+					</div>
+					<div class="result" id="rbcVolumeResult" style="display:none;"></div>
+				</div>
+			</div>
+		</div>
+	</div><!-- 計時器分頁 -->
+	<div class="tab-content" id="timer" style="display:none;">
+		<div class="timer-flex-container">
+			<div style="flex: 1;">
+				<div class="timer-section-title" data-text="倒數計時器(離線版才會響鈴)">
+					倒數計時器(離線版才會響鈴)
+				</div>
+				<div class="timer-block" id="countdown1">
+					<input class="timer-title" data-placeholder="計時器 1" onchange="updateTimerTitle('countdown', 0, this.value)" placeholder="計時器 1" type="text">
+					<div class="time-inputs">
+						<input data-placeholder="時" id="cd-hours1" min="0" placeholder="時" type="number"> <input data-placeholder="分" id="cd-minutes1" min="0" placeholder="分" type="number"> <input data-placeholder="秒" id="cd-seconds1" min="0" placeholder="秒" type="number">
+					</div>
+					<div class="timer-display" id="cd-display1">
+						00:00:00
+					</div>
+					<div class="timer-controls">
+						<button data-text="開始" onclick="startCountdown(0)">開始</button> <button data-text="暫停" onclick="pauseCountdown(0)">暫停</button> <button data-text="重設" onclick="resetCountdown(0)">重設</button>
+					</div>
+				</div>
+				<div class="timer-block" id="countdown2">
+					<input class="timer-title" data-placeholder="計時器 2" onchange="updateTimerTitle('countdown', 1, this.value)" placeholder="計時器 2" type="text">
+					<div class="time-inputs">
+						<input data-placeholder="時" id="cd-hours2" min="0" placeholder="時" type="number"> <input data-placeholder="分" id="cd-minutes2" min="0" placeholder="分" type="number"> <input data-placeholder="秒" id="cd-seconds2" min="0" placeholder="秒" type="number">
+					</div>
+					<div class="timer-display" id="cd-display2">
+						00:00:00
+					</div>
+					<div class="timer-controls">
+						<button data-text="開始" onclick="startCountdown(1)">開始</button> <button data-text="暫停" onclick="pauseCountdown(1)">暫停</button> <button data-text="重設" onclick="resetCountdown(1)">重設</button>
+					</div>
+				</div>
+			</div>
+			<div style="flex: 1;">
+				<div class="timer-section-title" data-text="碼表">
+					碼表
+				</div>
+				<div class="timer-block" id="stopwatch1">
+					<input class="timer-title" data-placeholder="碼表 1" onchange="updateTimerTitle('stopwatch', 0, this.value)" placeholder="碼表 1" type="text">
+					<div class="timer-display" id="sw-display1">
+						00:00:00.0
+					</div>
+					<div class="timer-controls">
+						<button data-text="開始" onclick="startStopwatch(0)">開始</button> <button data-text="暫停" onclick="pauseStopwatch(0)">暫停</button> <button data-text="重設" onclick="resetStopwatch(0)">重設</button>
+					</div>
+				</div>
+				<div class="timer-block" id="stopwatch2">
+					<input class="timer-title" data-placeholder="碼表 2" onchange="updateTimerTitle('stopwatch', 1, this.value)" placeholder="碼表 2" type="text">
+					<div class="timer-display" id="sw-display2">
+						00:00:00.0
+					</div>
+					<div class="timer-controls">
+						<button data-text="開始" onclick="startStopwatch(1)">開始</button> <button data-text="暫停" onclick="pauseStopwatch(1)">暫停</button> <button data-text="重設" onclick="resetStopwatch(1)">重設</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div><audio id="timer-audio" preload="auto" src="sounds/timer.mp3"></audio> 
+	<script>
+	 // 語言配置
+	 const translations = {
+	   zh: {
+	     // 主標題和下載按鈕
+	     "main-title": "科科計算器",
+	     "download-btn": "下載離線版",
+	     
+	     // 分頁標籤
+	     "tab-mass": "莫耳濃度",
+	     "tab-dilution": "稀釋計算", 
+	     "tab-acidbase": "酸鹼濃度",
+	     "tab-animal": "動物投藥計算",
+	     "tab-animal2": "動物投藥計算2",
+	     "tab-primer": "Primer回溶/稀釋",
+	     "tab-ligation": "Ligation計算",
+	     "tab-cellcount": "細胞計數",
+	     "tab-timer": "計時器",
+	     
+	     // 莫耳濃度
+	     "分子量 (g/mol)：": "分子量 (g/mol)：",
+	     "莫耳濃度：": "莫耳濃度：",
+	     "體積：": "體積：",
+	     "質量：": "質量：",
+	     "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項": "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項",
+	     
+	     // 稀釋計算
+	     "原液濃度 C₁：": "原液濃度 C₁：",
+	     "目標濃度 C₂：": "目標濃度 C₂：",
+	     "目標體積 V₂：": "目標體積 V₂：",
+	     "原液體積 V₁：": "原液體積 V₁：",
+	     "請輸入任意三個值，將可計算第四個值": "請輸入任意三個值，將可計算第四個值",
+	     
+	     // 酸鹼濃度
+	     "密度：": "密度：",
+	     "重量百分比 (%)：": "重量百分比 (%)：",
+	     "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N",
+	     "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項",
+	     
+	     // 動物投藥計算
+	     "目標藥物劑量 (mg/Kg)：": "目標藥物劑量 (mg/Kg)：",
+	     "希望的投藥法：": "希望的投藥法：",
+	     "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL": "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL",
+	     "每隻動物預估體重 (g)：": "每隻動物預估體重 (g)：",
+	     "預估動物數量 (pc)：": "預估動物數量 (pc)：",
+	     "使用藥物濃度：": "使用藥物濃度：",
+	     "動物體重 (g)：": "動物體重 (g)：",
+	     
+	     // Primer
+	     "Primer回溶": "Primer回溶",
+	     "(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)": "(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)",
+	     "Primer產量 (nmole)：": "Primer產量 (nmole)：",
+	     "回溶水量 (µL)：": "回溶水量 (µL)：",
+	     "回溶後濃度 (µM)：": "回溶後濃度 (µM)：",
+	     "請輸入任意兩個值，將可計算第三個值": "請輸入任意兩個值，將可計算第三個值",
+	     "Primer稀釋": "Primer稀釋",
+	     "原液濃度 (µM)：": "原液濃度 (µM)：",
+	     "目標濃度 (µM)：": "目標濃度 (µM)：",
+	     "目標體積 (µL)：": "目標體積 (µL)：",
+
+	     // Ligation
+	     "Insert DNA 長度 (bp)：": "Insert DNA 長度 (bp)：",
+	     "Vector DNA 長度 (bp)：": "Vector DNA 長度 (bp)：",
+	     "Insert : Vector 比例：": "Insert : Vector 比例：",
+	     "Vector DNA 質量 (ng)：": "Vector DNA 質量 (ng)：",
+	     "所需 Insert DNA 質量：": "所需 Insert DNA 質量：",
+	     
+	     // 細胞計數
+	     "白血球(細胞)計數": "白血球(細胞)計數",
+	     "(白血球、細胞：一般使用四個角的大正方形)": "(白血球、細胞：一般使用四個角的大正方形)",
+	     "細胞數：": "細胞數：",
+	     "格數：": "格數：",
+	     "稀釋倍數：": "稀釋倍數：",
+	     "單位顯示：": "單位顯示：",
+	     "個/µL": "個/µL",
+	     "個/mL": "個/mL",
+	     "紅血球計數": "紅血球計數",
+	     "(紅血球：一般使用25中格並選5格錯開不重疊格子)": "(紅血球：一般使用25中格並選5格錯開不重疊格子)",
+	     
+	     // 計時器
+	     "倒數計時器(離線版才會響鈴)": "倒數計時器(離線版才會響鈴)",
+	     "計時器 1": "計時器 1",
+	     "計時器 2": "計時器 2",
+	     "時": "時",
+	     "分": "分",
+	     "秒": "秒",
+	     "碼表": "碼表",
+	     "碼表 1": "碼表 1",
+	     "碼表 2": "碼表 2",
+	     
+	     // 按鈕
+	     "計算": "計算",
+	     "清除": "清除",
+	     "計算缺失值": "計算缺失值",
+	     "開始": "開始",
+	     "暫停": "暫停",
+	     "重設": "重設",
+	     
+	     // 計算結果訊息
+	     "請輸入分子量": "請輸入分子量",
+	     "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項": "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項",
+	     "計算出莫耳濃度：": "計算出莫耳濃度：",
+	     "計算出體積：": "計算出體積：",
+	     "計算出質量：": "計算出質量：",
+	     "請清空一個欄位以計算該值": "請清空一個欄位以計算該值",
+	     "請輸入任意三個值": "請輸入任意三個值",
+	     "計算出原液濃度 C₁ = ": "計算出原液濃度 C₁ = ",
+	     "計算出原液體積 V₁ = ": "計算出原液體積 V₁ = ",
+	     "計算出目標濃度 C₂ = ": "計算出目標濃度 C₂ = ",
+	     "計算出目標體積 V₂ = ": "計算出目標體積 V₂ = ",
+	     "請輸入分子量與密度": "請輸入分子量與密度",
+	     "計算莫耳濃度：": "計算莫耳濃度：",
+	     "計算重量百分比：": "計算重量百分比：",
+	     "請輸入重量百分比或莫耳濃度其中一項，另一項留空": "請輸入重量百分比或莫耳濃度其中一項，另一項留空",
+	     "請輸入所有欄位且數值皆大於 0": "請輸入所有欄位且數值皆大於 0",
+	     "每隻動物投藥量：": "每隻動物投藥量：",
+	     "配製藥物濃度：": "配製藥物濃度：",
+	     "配製藥物總重量：": "配製藥物總重量：",
+	     "配製藥物溶液總體積：": "配製藥物溶液總體積：",
+	     "請輸入有效數值，且藥物濃度不可為零": "請輸入有效數值，且藥物濃度不可為零",
+	     "投藥量：": "投藥量：",
+	     "請輸入任意兩個欄位": "請輸入任意兩個欄位",
+	     "計算後濃度：": "計算後濃度：",
+	     "計算所需回溶水量：": "計算所需回溶水量：",
+	     "計算所需Primer產量：": "計算所需Primer產量：",
+	     "請輸入所有欄位且數值皆大於 0": "請輸入所有欄位且數值皆大於 0",
+	     "原液體積：": "原液體積：",
+	     "加水體積：": "加水體積：",
+	     "請輸入所有必填欄位，且格數不可為0": "請輸入所有必填欄位，且格數不可為0",
+	     "計算結果：": "計算結果：",
+	     "科學記號表示：": "科學記號表示：",
+	     "cells/µL": "個/µL",
+	     "cells/mL": "個/mL",
+	     "計算所需體積": "計算所需體積",
+	     "目標細胞數量：": "目標細胞數量：",
+	     "基數": "基數",
+	     "次方": "次方",
+	     "計算體積": "計算體積",
+	     "所需體積：": "所需體積：",
+	     "請輸入目標細胞數量": "請輸入目標細胞數量",
+	     "請先計算細胞濃度": "請先計算細胞濃度"
+	   },
+	   en: {
+	     // 主標題和下載按鈕
+	     "main-title": "BioCalculator",
+	     "download-btn": "Download Offline Version",
+	     
+	     // 分頁標籤
+	     "tab-mass": "Molarity",
+	     "tab-dilution": "Dilute", 
+	     "tab-acidbase": "Acid-Base",
+	     "tab-animal": "Animal Drug Dosage",
+	     "tab-animal2": "Animal Drug Dosage 2",
+	     "tab-primer": "Primer Reconstitution/Dilute",
+	     "tab-ligation": "Ligation Calculate",
+	     "tab-cellcount": "Cell Count",
+	     "tab-timer": "Timer",
+	     
+	     // 莫耳濃度
+	     "分子量 (g/mol)：": "Molecular Weight (g/mol)：",
+	     "莫耳濃度：": "Molarity：",
+	     "體積：": "Volume：",
+	     "質量：": "Mass：",
+	     "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項": "Please enter the [Molecular Weight] and any two of the following: [Molarity, Volume, or Mass]. The remaining value will be calculated automatically.",
+	     
+	     // 稀釋計算
+	     "原液濃度 C₁：": "Stock Concentration C₁：",
+	     "目標濃度 C₂：": "Target Concentration C₂：",
+	     "目標體積 V₂：": "Target Volume V₂：",
+	     "原液體積 V₁：": "Stock Volume V₁：",
+	     "請輸入任意三個值，將可計算第四個值": "Please enter any three values to calculate the fourth value.",
+	     
+	     // 酸鹼濃度
+	     "密度：": "Density：",
+	     "重量百分比 (%)：": "Weight Percentage (%)：",
+	     "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "Sulfuric acid (H₂SO₄) → Two H⁺ ions → 1M = 2N<br>Phosphoric acid (H₃PO₄) → Three H⁺ ions → 1M = 3N",
+	     "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "Please enter the [Molecular Weight and Density], along with either the [Weight percentage or Molarity]. The remaining value will be calculated automatically.",
+	     
+	     // 動物投藥計算
+	     "目標藥物劑量 (mg/Kg)：": "Target Drug Dosage (mg/Kg)：",
+	     "希望的投藥法：": "Preferred Administration Method：",
+	     "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL": "For example: Enter 10, 0.1 ➜ Administer 0.1mL per 10g<br>Then for an animal weighing 27g, administer 0.27mL.",
+	     "每隻動物預估體重 (g)：": "Estimated Weight per Animal (g)：",
+	     "預估動物數量 (pc)：": "Estimated Number of Animals (pc)：",
+	     "使用藥物濃度：": "Drug Concentration Used：",
+	     "動物體重 (g)：": "Animal Weight (g)：",
+	     
+	     // Primer
+	     "Primer回溶": "Primer Reconstitution",
+	     "(一般 primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)": "(General primer yield X nmole, reconstitute with X*10 µL water gives 100 µM)",
+	     "Primer產量 (nmole)：": "Primer Yield (nmole)：",
+	     "回溶水量 (µL)：": "Reconstitution Volume (µL)：",
+	     "回溶後濃度 (µM)：": "Concentration After Reconstitution (µM)：",
+	     "請輸入任意兩個值，將可計算第三個值": "Please enter any two values to calculate the third value.",
+	     "Primer稀釋": "Primer Dilution",
+	     "原液濃度 (µM)：": "Stock Concentration (µM)：",
+	     "目標濃度 (µM)：": "Target Concentration (µM)：",
+	     "目標體積 (µL)：": "Target Volume (µL)：",
+	     
+	     //Ligation
+	     "Insert DNA 長度 (bp)：": "Insert DNA lenth (bp)：",
+	     "Vector DNA 長度 (bp)：": "Vector DNA lenth (bp)：",
+	     "Insert : Vector 比例：": "Insert : Vector ratio：",
+	     "Vector DNA 質量 (ng)：": "Vector DNA mass (ng)：",
+	     "所需 Insert DNA 質量：": "Required Insert DNA mass: ",
+
+	     // 細胞計數
+	     "白血球(細胞)計數": "White Blood Cell (Cell) Count",
+	     "(白血球、細胞：一般使用四個角的大正方形)": "(Usually use large squares at the four corners)",
+	     "細胞數：": "Cell Count：",
+	     "格數：": "Number of Squares：",
+	     "稀釋倍數：": "Dilution Factor：",
+	     "單位顯示：": "Unit Display：",
+	     "個/µL": "cells/µL",
+	     "個/mL": "cells/mL",
+	     "紅血球計數": "Red Blood Cell Count",
+	     "(紅血球：一般使用25中格並選5格錯開不重疊格子)": "(Usually use 25 medium squares and select 5 non-overlapping squares)",
+	     
+	     // 計時器
+	     "倒數計時器(離線版才會響鈴)": "Countdown Timer (Offline version will sound an alarm)",
+	     "計時器 1": "Timer 1",
+	     "計時器 2": "Timer 2",
+	     "時": "HH",
+	     "分": "MM",
+	     "秒": "SS",
+	     "碼表": "Stopwatch",
+	     "碼表 1": "Stopwatch 1",
+	     "碼表 2": "Stopwatch 2",
+	     
+	     // 按鈕
+	     "計算": "Calculate",
+	     "清除": "Clear",
+	     "計算缺失值": "Calculate Missing Value",
+	     "開始": "Start",
+	     "暫停": "Pause",
+	     "重設": "Reset",
+	     
+	     // 計算結果訊息
+	     "請輸入分子量": "Please enter the Molecular Weight",
+	     "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項": "Please enter at least any two of Molarity, Volume, or Mass",
+	     "計算出莫耳濃度：": "Calculate molarity：",
+	     "計算出體積：": "Calculate volume：",
+	     "計算出質量：": "Calculate mass：",
+	     "請清空一個欄位以計算該值": "Please clear one field of Molarity, Volume, or Mass to calculate its value",
+	     "請輸入任意三個值": "Please enter any three values",
+	     "計算出原液濃度 C₁ = ": "Calculate the concentration of the Stock Solution C₁ = ",
+	     "計算出原液體積 V₁ = ": "Calculate the volume of the Stock Solution V₁ = ",
+	     "計算出目標濃度 C₂ = ": "Calculate the target Concentration C₂ = ",
+	     "計算出目標體積 V₂ = ": "Calculate the target Volume V₂ = ",
+	     "請輸入分子量與密度": "Please enter Molecular Weight and Density",
+	     "計算莫耳濃度：": "Calculate molarity：",
+	     "計算重量百分比：": "Calculate weight percentage：",
+	     "請輸入重量百分比或莫耳濃度其中一項，另一項留空": "Please enter either Weight percentage or molarity, leave the other blank",
+	     "請輸入所有欄位且數值皆大於 0": "Please enter all fields and the values must be greater than 0",
+	     "每隻動物投藥量：": "Dosage per animal：",
+	     "配製藥物濃度：": "Prepare drug concentration：",
+	     "配製藥物總重量：": "Total weight of prepared drugs：",
+	     "配製藥物溶液總體積：": "Total volume of prepared drug solution：",
+	     "請輸入有效數值，且藥物濃度不可為零": "Please enter a valid value, and the drug concentration cannot be zero",
+	     "投藥量：": "Dosage：",
+	     "請輸入任意兩個欄位": "Please enter any two fields",
+	     "計算後濃度：": "Calculated concentration：",
+	     "計算所需回溶水量：": "Calculate the amount of water needed for re-dissolution：",
+	     "計算所需Primer產量：": "Calculate the required Primer yield：",
+	     "請輸入所有欄位且數值皆大於 0": "Please enter all fields and the values must be greater than 0",
+	     "原液體積：": "Stock solution volume：",
+	     "加水體積：": "Water volume：",
+	     "請輸入所有必填欄位，且格數不可為0": "Please fill in all required fields and the number of fields cannot be 0",
+	     "計算結果：": "Calculation results：",
+	     "科學記號表示：": "Scientific notation：",
+	     "cells/µL": "cells/µL",
+	     "cells/mL": "cells/mL",
+	     "計算所需體積": "Calculate Required Volume → (When calculate, be sure to switch the unit to: cells/µL)",
+	     "目標細胞數量：": "Target Cell Count：",
+	     "基數": "Base",
+	     "次方": "Exponent",
+	     "計算體積": "Calculate Volume",
+	     "所需體積：": "Required Volume：",
+	     "請輸入目標細胞數量": "Please enter target cell count",
+	     "請先計算細胞濃度": "Please calculate cell concentration first"
+	   }
+	 };
+
+	 // 當前語言
+	 let currentLanguage = 'zh';
+
+	 // 語言切換功能
+	 function switchLanguage(lang) {
+	   currentLanguage = lang;
+	   
+	   // 更新語言按鈕狀態
+	   document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
+	   document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+	   
+	   // 更新所有有 data-text 屬性的元素
+	   const elements = document.querySelectorAll('[data-text]');
+	   elements.forEach(el => {
+	     const key = el.getAttribute('data-text');
+	     if (translations[lang][key]) {
+	       if (el.tagName === 'INPUT' && el.type === 'text') {
+	         el.placeholder = translations[lang][key];
+	       } else {
+	         el.innerHTML = translations[lang][key];
+	       }
+	     }
+	   });
+	   
+	   // 更新placeholder
+	   const placeholderElements = document.querySelectorAll('[data-placeholder]');
+	   placeholderElements.forEach(el => {
+	     const key = el.getAttribute('data-placeholder');
+	     if (translations[lang][key]) {
+	       el.placeholder = translations[lang][key];
+	     }
+	   });
+	   
+	   // 更新主標題
+	   const title = document.getElementById('main-title');
+	   const downloadBtn = document.getElementById('download-btn');
+	   if (lang === 'zh') {
+	     title.innerHTML = '科科計算器 <a id="download-btn" href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" target="_blank" rel="noopener noreferrer">下載離線版<\/a>';
+	   } else {
+	     title.innerHTML = 'BioCalculator <a id="download-btn" href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" target="_blank" rel="noopener noreferrer">Download Offline Version<\/a>';
+	   }
+	   
+	   // 更新分頁標籤
+	   const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'animal2', 'primer', 'ligation', 'cellcount', 'timer'];
+	   tabs.forEach(tab => {
+	     const tabElement = document.getElementById(`tab-${tab}`);
+	     tabElement.textContent = translations[lang][`tab-${tab}`];
+	   });
+
+	   // 更新選項元素
+	   updateSelectOptions(lang);
+	   
+	   // 更新已顯示的結果內容
+	   updateDisplayedResults();
+	 }
+
+	 function updateSelectOptions(lang) {
+	   // 更新單位顯示選項
+	   const wbcUnit = document.getElementById('wbcUnit');
+	   const rbcUnit = document.getElementById('rbcUnit');
+	   
+	   if (wbcUnit) {
+	     wbcUnit.options[0].text = translations[lang]['個/µL'];
+	     wbcUnit.options[1].text = translations[lang]['個/mL'];
+	   }
+	   
+	   if (rbcUnit) {
+	     rbcUnit.options[0].text = translations[lang]['個/µL'];
+	     rbcUnit.options[1].text = translations[lang]['個/mL'];
+	   }
+	 }
+
+	 let audioLoopInterval = null;
+	 let audioTimeout = null;
+	 
+	 function switchTab(tab) {
+	   const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'animal2', 'primer', 'ligation', 'cellcount', 'timer'];
+	   tabs.forEach(t => {
+	     document.getElementById(t).style.display = (t === tab) ? 'block' : 'none';
+	     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+	   });
+	 }
+
+	 // 顯示/隱藏結果區域的輔助函數
+	 function showResult(id, text) {
+	   const element = document.getElementById(id);
+	   element.textContent = text;
+	   element.style.display = 'block';
+	 }
+
+	 function hideResult(id) {
+	   const element = document.getElementById(id);
+	   element.style.display = 'none';
+	   element.textContent = '';
+	 }
+
+	 // 莫耳濃度
+	 function calculateMass() {
+	   const molarMass = parseFloat(document.getElementById('molarMass').value);
+	   const molarity = parseFloat(document.getElementById('molarity').value);
+	   const molarityUnit = parseFloat(document.getElementById('molarityUnit').value);
+	   const volume = parseFloat(document.getElementById('volume').value);
+	   const volumeUnit = parseFloat(document.getElementById('volumeUnit').value);
+	   const massValue = parseFloat(document.getElementById('massValue').value);
+	   const massUnit = parseFloat(document.getElementById('massUnit').value);
+
+	   if (isNaN(molarMass) || molarMass <= 0) {
+	     alert(translations[currentLanguage]['請輸入分子量']);
+	     return;
+	   }
+
+	   let filledCount = 0;
+	   if (!isNaN(molarity)) filledCount++;
+	   if (!isNaN(volume)) filledCount++;
+	   if (!isNaN(massValue)) filledCount++;
+
+	   if (filledCount < 2) {
+	     alert(translations[currentLanguage]['請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項']);
+	     return;
+	   }
+
+	   let resultText = '';
+
+	   if (isNaN(molarity)) {
+	     const molarityM = (massValue * massUnit) / (molarMass * volume * volumeUnit);
+	     const molarityConverted = molarityM / molarityUnit;
+	     document.getElementById('molarity').value = molarityConverted.toFixed(6);
+	     resultText = `${translations[currentLanguage]['計算出莫耳濃度：']}${molarityConverted.toFixed(6)} ${getSelectedText('molarityUnit')}`;
+	   } else if (isNaN(volume)) {
+	     const volumeL = (massValue * massUnit) / (molarMass * molarity * molarityUnit);
+	     const volumeConverted = volumeL / volumeUnit;
+	     document.getElementById('volume').value = volumeConverted.toFixed(6);
+	     resultText = `${translations[currentLanguage]['計算出體積：']}${volumeConverted.toFixed(6)} ${getSelectedText('volumeUnit')}`;
+	   } else if (isNaN(massValue)) {
+	     const massG = (molarity * molarityUnit) * (volume * volumeUnit) * molarMass;
+	     const massConverted = massG / massUnit;
+	     document.getElementById('massValue').value = massConverted.toFixed(6);
+	     resultText = `${translations[currentLanguage]['計算出質量：']}${massConverted.toFixed(6)} ${getSelectedText('massUnit')}`;
+	   } else {
+	     resultText = translations[currentLanguage]['請清空一個欄位以計算該值'];
+	   }
+
+	   showResult('massResult', resultText);
+	 }
+
+	 function clearMass() {
+	   ['molarity', 'volume', 'massValue', 'molarMass'].forEach(id => document.getElementById(id).value = '');
+	   hideResult('massResult');
+	 }
+
+	 // 稀釋計算
+	 function calculateDilution() {
+	   const c1 = parseFloat(document.getElementById('c1').value);
+	   const c1Unit = parseFloat(document.getElementById('c1Unit').value);
+	   const v1 = parseFloat(document.getElementById('v1').value);
+	   const v1Unit = parseFloat(document.getElementById('v1Unit').value);
+	   const c2 = parseFloat(document.getElementById('c2').value);
+	   const c2Unit = parseFloat(document.getElementById('c2Unit').value);
+	   const v2 = parseFloat(document.getElementById('v2').value);
+	   const v2Unit = parseFloat(document.getElementById('v2Unit').value);
+
+	   let filledCount = 0;
+	   [c1, v1, c2, v2].forEach(v => { if (!isNaN(v)) filledCount++; });
+
+	   if (filledCount < 3) {
+	     alert(translations[currentLanguage]['請輸入任意三個值']);
+	     return;
+	   }
+
+	   try {
+	     if (isNaN(c1)) {
+	       const val = (c2 * c2Unit) * (v2 * v2Unit) / (v1 * v1Unit);
+	       const result = val / c1Unit;
+	       document.getElementById('c1').value = result.toFixed(6);
+	       showResult('dilutionResult', `${translations[currentLanguage]['計算出原液濃度 C₁ = ']}${result.toFixed(6)} ${getSelectedText('c1Unit')}`);
+	     } else if (isNaN(v1)) {
+	       const val = (c2 * c2Unit) * (v2 * v2Unit) / (c1 * c1Unit);
+	       const result = val / v1Unit;
+	       document.getElementById('v1').value = result.toFixed(6);
+	       showResult('dilutionResult', `${translations[currentLanguage]['計算出原液體積 V₁ = ']}${result.toFixed(6)} ${getSelectedText('v1Unit')}`);
+	     } else if (isNaN(c2)) {
+	       const val = (c1 * c1Unit) * (v1 * v1Unit) / (v2 * v2Unit);
+	       const result = val / c2Unit;
+	       document.getElementById('c2').value = result.toFixed(6);
+	       showResult('dilutionResult', `${translations[currentLanguage]['計算出目標濃度 C₂ = ']}${result.toFixed(6)} ${getSelectedText('c2Unit')}`);
+	     } else if (isNaN(v2)) {
+	       const val = (c1 * c1Unit) * (v1 * v1Unit) / (c2 * c2Unit);
+	       const result = val / v2Unit;
+	       document.getElementById('v2').value = result.toFixed(6);
+	       showResult('dilutionResult', `${translations[currentLanguage]['計算出目標體積 V₂ = ']}${result.toFixed(6)} ${getSelectedText('v2Unit')}`);
+	     } else {
+	       showResult('dilutionResult', translations[currentLanguage]['請清空一個欄位以計算該值']);
+	     }
+	   } catch {
+	     showResult('dilutionResult', 'Calculation error, please check your input');
+	   }
+	 }
+
+	 function clearDilution() {
+	   ['c1', 'v1', 'c2', 'v2'].forEach(id => document.getElementById(id).value = '');
+	   hideResult('dilutionResult');
+	 }
+
+	 // 酸鹼濃度雙向計算
+	 function calculateAcidBase() {
+	   const weightPercentInput = document.getElementById('weightPercent');
+	   const molarityInput = document.getElementById('acidBaseMolarity');
+	   const densityInput = document.getElementById('density');
+	   const densityUnitSelect = document.getElementById('densityUnit');
+	   const molarMassInput = document.getElementById('acidBaseMW');
+	   const molarityUnitSelect = document.getElementById('acidBaseMolarityUnit');
+	   
+	   const weightPercent = parseFloat(weightPercentInput.value);
+	   const molarity = parseFloat(molarityInput.value);
+	   const density = parseFloat(densityInput.value);
+	   const densityUnit = parseFloat(densityUnitSelect.value);
+	   const molarMass = parseFloat(molarMassInput.value);
+	   const molarityUnit = parseFloat(molarityUnitSelect.value);
+
+	   if (isNaN(density) || isNaN(molarMass)) {
+	     alert(translations[currentLanguage]['請輸入分子量與密度']);
+	     return;
+	   }
+
+	   const densityStd = density * densityUnit;
+
+	   if (!isNaN(weightPercent) && isNaN(molarity)) {
+	     const molarityM = ((weightPercent * densityStd) / molarMass) * 10;
+	     const molarityConverted = molarityM / molarityUnit;
+	     molarityInput.value = molarityConverted.toFixed(6);
+	     showResult('acidBaseResult', `${translations[currentLanguage]['計算莫耳濃度：']}${molarityConverted.toFixed(6)} ${molarityUnitSelect.options[molarityUnitSelect.selectedIndex].text}`);
+	   } else if (isNaN(weightPercent) && !isNaN(molarity)) {
+	     const molarityM = molarity * molarityUnit;
+	     const weightPercentCalc = (molarityM * molarMass) / (densityStd * 10);
+	     weightPercentInput.value = weightPercentCalc.toFixed(6);
+	     showResult('acidBaseResult', `${translations[currentLanguage]['計算重量百分比：']}${weightPercentCalc.toFixed(6)} %`);
+	   } else {
+	     alert(translations[currentLanguage]['請輸入重量百分比或莫耳濃度其中一項，另一項留空']);
+	   }
+	 }
+
+	 function clearAcidBase() {
+	   ['weightPercent', 'acidBaseMolarity', 'density', 'acidBaseMW'].forEach(id => document.getElementById(id).value = '');
+	   hideResult('acidBaseResult');
+	 }
+
+	 // 動物投藥計算
+	 function calculateAnimalDose() {
+	   const targetDose = parseFloat(document.getElementById('targetDose').value);
+	   const doseB1 = parseFloat(document.getElementById('doseB1').value);
+	   const doseB2 = parseFloat(document.getElementById('doseB2').value);
+	   const animalWeight = parseFloat(document.getElementById('animalWeight').value);
+	   const animalCount = parseFloat(document.getElementById('animalCount').value);
+
+	   if ([targetDose, doseB1, doseB2, animalWeight, animalCount].some(v => isNaN(v) || v <= 0)) {
+	     alert(translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
+	     return;
+	   }
+
+	   const dosePerAnimal = (targetDose / 1000) * animalWeight;
+	   const concentration = (targetDose / (1000 / doseB1)) / doseB2;
+	   const totalWeight = (targetDose / (1000 / doseB1)) * ((doseB2 * animalCount * (animalWeight / doseB1)) / doseB2);
+	   const totalVolume = doseB2 * animalCount * (animalWeight / doseB1);
+
+	   const resultText =
+	     `${translations[currentLanguage]['每隻動物投藥量：']}${dosePerAnimal.toFixed(6)} mg/pc\n` +
+	     `${translations[currentLanguage]['配製藥物濃度：']}${concentration.toFixed(6)} mg/mL\n` +
+	     `${translations[currentLanguage]['配製藥物總重量：']}${totalWeight.toFixed(6)} mg\n` +
+	     `${translations[currentLanguage]['配製藥物溶液總體積：']}${totalVolume.toFixed(6)} mL`;
+
+	   showResult('animalResult', resultText);
+	 }
+
+	 function clearAnimal() {
+	   ['targetDose', 'doseB1', 'doseB2', 'animalWeight', 'animalCount'].forEach(id => document.getElementById(id).value = '');
+	   hideResult('animalResult');
+	 }
+
+	 // 動物投藥計算2
+	 function calculateAnimalDose2() {
+	   const a = parseFloat(document.getElementById('targetDose2').value);
+	   const b = parseFloat(document.getElementById('drugConc2').value);
+	   const unit = document.getElementById('drugConc2Unit').value;
+	   const c = parseFloat(document.getElementById('animalWeight2').value);
+
+	   if (isNaN(a) || isNaN(b) || isNaN(c) || b === 0) {
+	     showResult('animalResult2', translations[currentLanguage]['請輸入有效數值，且藥物濃度不可為零']);
+	     return;
+	   }
+
+	   let d = ((a / 1000) * c) / b;
+	   if (unit === "percent") {
+	     d = d / 10;
+	   }
+
+	   showResult('animalResult2', `${translations[currentLanguage]['投藥量：']}${d.toFixed(3)} mL`);
+	 }
+
+	 function clearAnimal2() {
+	   document.getElementById('targetDose2').value = '';
+	   document.getElementById('drugConc2').value = '';
+	   document.getElementById('animalWeight2').value = '';
+	   document.getElementById('drugConc2Unit').selectedIndex = 0;
+	   hideResult('animalResult2');
+	 }
+
+	 // Primer回溶雙向計算
+	 function calcPrimer() {
+	   let A = parseFloat(document.getElementById('primerAmount').value);
+	   let B = parseFloat(document.getElementById('primerVolume').value);
+	   let C = parseFloat(document.getElementById('primerConc').value);
+	   let count = 0;
+	   if (!isNaN(A)) count++;
+	   if (!isNaN(B)) count++;
+	   if (!isNaN(C)) count++;
+	   if (count < 2) {
+	     showResult('primerResult', translations[currentLanguage]['請輸入任意兩個欄位']);
+	     return;
+	   }
+	   if (!isNaN(A) && !isNaN(B)) {
+	     C = (A / B) * 1000;
+	     document.getElementById('primerConc').value = C.toFixed(2);
+	     showResult('primerResult', `${translations[currentLanguage]['計算後濃度：']}${C.toFixed(2)} µM`);
+	   } else if (!isNaN(A) && !isNaN(C)) {
+	     B = (A / C) * 1000;
+	     document.getElementById('primerVolume').value = B.toFixed(2);
+	     showResult('primerResult', `${translations[currentLanguage]['計算所需回溶水量：']}${B.toFixed(2)} µL`);
+	   } else if (!isNaN(B) && !isNaN(C)) {
+	     A = (C * B) / 1000;
+	     document.getElementById('primerAmount').value = A.toFixed(2);
+	     showResult('primerResult', `${translations[currentLanguage]['計算所需Primer產量：']}${A.toFixed(2)} nmole`);
+	   }
+	 }
+	 
+	 function clearPrimer() {
+	   ['primerAmount', 'primerVolume', 'primerConc'].forEach(id => document.getElementById(id).value = '');
+	   hideResult('primerResult');
+	 }
+
+	 // Primer稀釋計算
+	 function calcDilute() {
+	   let a = parseFloat(document.getElementById('stockConc').value);
+	   let b = parseFloat(document.getElementById('targetConc').value);
+	   let c = parseFloat(document.getElementById('targetVol').value);
+	   if ([a, b, c].some(v => isNaN(v) || v <= 0)) {
+	     showResult('diluteResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
+	     return;
+	   }
+	   let d = (b / a) * c;
+	   let e = c - d;
+	   showResult('diluteResult', `${translations[currentLanguage]['原液體積：']}${d.toFixed(2)} µL\n${translations[currentLanguage]['加水體積：']}${e.toFixed(2)} µL`);
+	 }
+	 
+	 function clearDilute() {
+	   ['stockConc', 'targetConc', 'targetVol'].forEach(id => document.getElementById(id).value = '');
+	   hideResult('diluteResult');
+	 }
+
+	// Ligation 計算
+	 function calculateLigation() {
+	   const insertLength = parseFloat(document.getElementById('insertLength').value);
+	   const vectorLength = parseFloat(document.getElementById('vectorLength').value);
+	   const insertRatio = parseFloat(document.getElementById('insertRatio').value);
+	   const vectorRatio = parseFloat(document.getElementById('vectorRatio').value);
+	   const vectorMass = parseFloat(document.getElementById('vectorMass').value);
+	   
+	   if ([insertLength, vectorLength, insertRatio, vectorRatio, vectorMass].some(v => isNaN(v) || v <= 0)) {
+	     alert(translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
+	     return;
+	   }
+	   
+	   const requiredInsertMass = (insertRatio / vectorRatio) * vectorMass * (insertLength / vectorLength);
+	   showResult('ligationResult', `${translations[currentLanguage]['所需 Insert DNA 質量：']}${requiredInsertMass.toFixed(2)} ng`);
+	 }
+
+	 function clearLigation() {
+	   ['insertLength', 'vectorLength', 'insertRatio', 'vectorRatio', 'vectorMass'].forEach(id => document.getElementById(id).value = '');
+	   hideResult('ligationResult');
+	 }
+
+	 // 白血球計數計算
+	let wbcConcentration = 0;
+
+	 function calculateWBC() {
+	   const count = parseFloat(document.getElementById('wbcCount').value);
+	   const squares = parseFloat(document.getElementById('wbcSquares').value);
+	   const dilution = parseFloat(document.getElementById('wbcDilution').value);
+	   const unit = parseFloat(document.getElementById('wbcUnit').value);
+
+	   if (isNaN(count) || isNaN(squares) || isNaN(dilution) || squares === 0) {
+	     alert(translations[currentLanguage]['請輸入所有必填欄位,且格數不可為0']);
+	     return;
+	   }
+
+	   const unitText = document.getElementById("wbcUnit").selectedOptions[0].text;
+	   const result = (count * dilution) / (squares * 0.1) * unit;
+	   wbcConcentration = result;
+	   const sciNotation = result.toExponential(2);
+	   const sciParts = sciNotation.split('e');
+	   const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}<\/sup>`;
+
+	   document.getElementById("wbcResult").innerHTML =
+	     `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
+	   document.getElementById("wbcResult").style.display = 'block';
+	   document.getElementById("wbcVolumeCalc").style.display = 'block';
+	 }
+	 
+	   function updateWBCResult() {
+	   if (document.getElementById('wbcCount').value && document.getElementById('wbcSquares').value && document.getElementById('wbcDilution').value) {
+	     calculateWBC();
+	   }
+	 }
+
+	 function calculateWBCVolume() {
+	   const base = parseFloat(document.getElementById('wbcTargetBase').value);
+	   const exponent = parseFloat(document.getElementById('wbcTargetExp').value);
+	   
+	   if (isNaN(base) || isNaN(exponent)) {
+	     alert(translations[currentLanguage]['請輸入目標細胞數量']);
+	     return;
+	   }
+	   
+	   if (wbcConcentration === 0) {
+	     alert(translations[currentLanguage]['請先計算細胞濃度']);
+	     return;
+	   }
+	   
+	   const targetCells = base * Math.pow(10, exponent);
+	   const volumeUL = targetCells / wbcConcentration;
+	   const volumeML = volumeUL / 1000;
+	   
+	   document.getElementById("wbcVolumeResult").innerHTML =
+	     `${translations[currentLanguage]['所需體積：']}${volumeUL.toFixed(2)} µL (${volumeML.toFixed(4)} mL)`;
+	   document.getElementById("wbcVolumeResult").style.display = 'block';
+	 }
+
+	   function clearWBC() {
+	   document.getElementById('wbcCount').value = '';
+	   document.getElementById('wbcSquares').value = '';
+	   document.getElementById('wbcDilution').value = '';
+	   document.getElementById('wbcTargetBase').value = '';
+	   document.getElementById('wbcTargetExp').value = '';
+	   wbcConcentration = 0;
+	   hideResult('wbcResult');
+	   hideResult('wbcVolumeResult');
+	   document.getElementById("wbcVolumeCalc").style.display = 'none';
+	 }
+
+	 // 紅血球計數計算
+	 let rbcConcentration = 0;
+
+	 function calculateRBC() {
+	   const count = parseFloat(document.getElementById('rbcCount').value);
+	   const squares = parseFloat(document.getElementById('rbcSquares').value);
+	   const dilution = parseFloat(document.getElementById('rbcDilution').value);
+	   const unit = parseFloat(document.getElementById('rbcUnit').value);
+
+	   if (isNaN(count) || isNaN(squares) || isNaN(dilution) || squares === 0) {
+	     alert(translations[currentLanguage]['請輸入所有必填欄位,且格數不可為0']);
+	     return;
+	   }
+
+	   const unitText = document.getElementById("rbcUnit").selectedOptions[0].text;
+	   const result = (count * dilution) / (squares * 0.04 * 0.1) * unit;
+	   rbcConcentration = result;
+	   const sciNotation = result.toExponential(2);
+	   const sciParts = sciNotation.split('e');
+	   const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}<\/sup>`;
+
+	   document.getElementById("rbcResult").innerHTML =
+	     `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
+	   document.getElementById("rbcResult").style.display = 'block';
+	   document.getElementById("rbcVolumeCalc").style.display = 'block';
+	 }
+	 
+	 function updateRBCResult() {
+	   if (document.getElementById('rbcCount').value && document.getElementById('rbcSquares').value && document.getElementById('rbcDilution').value) {
+	     calculateRBC();
+	   }
+	 }
+
+	 function calculateRBCVolume() {
+	   const base = parseFloat(document.getElementById('rbcTargetBase').value);
+	   const exponent = parseFloat(document.getElementById('rbcTargetExp').value);
+	   
+	   if (isNaN(base) || isNaN(exponent)) {
+	     alert(translations[currentLanguage]['請輸入目標細胞數量']);
+	     return;
+	   }
+	   
+	   if (rbcConcentration === 0) {
+	     alert(translations[currentLanguage]['請先計算細胞濃度']);
+	     return;
+	   }
+	   
+	   const targetCells = base * Math.pow(10, exponent);
+	   const volumeUL = targetCells / rbcConcentration;
+	   const volumeML = volumeUL / 1000;
+	   
+	   document.getElementById("rbcVolumeResult").innerHTML =
+	     `${translations[currentLanguage]['所需體積：']}${volumeUL.toFixed(2)} µL (${volumeML.toFixed(4)} mL)`;
+	   document.getElementById("rbcVolumeResult").style.display = 'block';
+	 }
+
+	 function clearRBC() {
+	   document.getElementById('rbcCount').value = '';
+	   document.getElementById('rbcSquares').value = '';
+	   document.getElementById('rbcDilution').value = '';
+	   document.getElementById('rbcTargetBase').value = '';
+	   document.getElementById('rbcTargetExp').value = '';
+	   rbcConcentration = 0;
+	   hideResult('rbcResult');
+	   hideResult('rbcVolumeResult');
+	   document.getElementById("rbcVolumeCalc").style.display = 'none';
+	 }
+
+	 // 計時器功能
+	 const countdowns = Array(2).fill().map(() => ({
+	   interval: null,
+	   running: false,
+	   remaining: 0,
+	   title: '',
+	   audioLoopInterval: null,
+	   audioTimeout: null
+	 }));
+	 
+	 const stopwatches = Array(2).fill().map(() => ({
+	   interval: null,
+	   running: false,
+	   elapsed: 0,
+	   lastStart: 0,
+	   title: ''
+	 }));
+
+	 function updateTimerTitle(type, idx, val) {
+	   if(type === 'countdown') {
+	     countdowns[idx].title = val;
+	   } else {
+	     stopwatches[idx].title = val;
+	   }
+	 }
+
+	 function getSelectedText(selectId) {
+	 const select = document.getElementById(selectId);
+	 return select.options[select.selectedIndex].text;
+	 }
+
+	 function startCountdown(idx) {
+	   if (countdowns[idx].running) return;
+
+	   if (countdowns[idx].remaining === 0) {
+	     const h = parseInt(document.getElementById(`cd-hours${idx + 1}`).value) || 0;
+	     const m = parseInt(document.getElementById(`cd-minutes${idx + 1}`).value) || 0;
+	     const s = parseInt(document.getElementById(`cd-seconds${idx + 1}`).value) || 0;
+	     countdowns[idx].remaining = h * 3600 + m * 60 + s;
+	   }
+	   if (countdowns[idx].remaining <= 0) return;
+
+	   countdowns[idx].running = true;
+	   countdowns[idx].startTimestamp = Date.now();
+	   countdowns[idx].targetTimestamp = Date.now() + countdowns[idx].remaining * 1000;
+
+	   countdowns[idx].interval = setInterval(() => {
+	     const now = Date.now();
+	     let left = Math.round((countdowns[idx].targetTimestamp - now) / 1000);
+	     countdowns[idx].remaining = Math.max(0, left);
+	     updateCountdownDisplay(idx);
+	     if (countdowns[idx].remaining <= 0) {
+	       clearInterval(countdowns[idx].interval);
+	       countdowns[idx].running = false;
+
+	       const audio = document.getElementById('timer-audio');
+	       if (audio) {
+	         audio.currentTime = 0;
+	         audio.play();
+
+	         countdowns[idx].audioLoopInterval = setInterval(() => {
+	           audio.currentTime = 0;
+	           audio.play();
+	         }, 1250);
+
+	         countdowns[idx].audioTimeout = setTimeout(() => {
+	           clearInterval(countdowns[idx].audioLoopInterval);
+	           countdowns[idx].audioLoopInterval = null;
+	         }, 30000);
+	       }
+	     }
+	   }, 200);
+	   updateCountdownDisplay(idx);
+	 }
+
+	 function pauseCountdown(idx) {
+	   if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
+	   countdowns[idx].interval = null;
+	   countdowns[idx].running = false;
+	   if (countdowns[idx].targetTimestamp) {
+	     countdowns[idx].remaining = Math.max(0, Math.round((countdowns[idx].targetTimestamp - Date.now()) / 1000));
+	   }
+	   stopAudio(idx);
+	 }
+
+	 function resetCountdown(idx) {
+	   pauseCountdown(idx);
+	   countdowns[idx].remaining = 0;
+	   document.getElementById(`cd-hours${idx + 1}`).value = '';
+	   document.getElementById(`cd-minutes${idx + 1}`).value = '';
+	   document.getElementById(`cd-seconds${idx + 1}`).value = '';
+	   updateCountdownDisplay(idx);
+	 }
+	 
+	 function stopAudio(idx) {
+	   if (countdowns[idx].audioLoopInterval) {
+	     clearInterval(countdowns[idx].audioLoopInterval);
+	     countdowns[idx].audioLoopInterval = null;
+	   }
+	   if (countdowns[idx].audioTimeout) {
+	     clearTimeout(countdowns[idx].audioTimeout);
+	     countdowns[idx].audioTimeout = null;
+	   }
+	   const audio = document.getElementById('timer-audio');
+	   if (audio) {
+	     audio.pause();
+	     audio.currentTime = 0;
+	   }
+	 }
+
+	 function updateCountdownDisplay(idx) {
+	   let t = countdowns[idx].remaining;
+	   const h = Math.floor(t / 3600);
+	   const m = Math.floor((t % 3600) / 60);
+	   const s = t % 60;
+	   document.getElementById(`cd-display${idx + 1}`).textContent =
+	     `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+	 }
+	 
+	 function startStopwatch(idx) {
+	   if (stopwatches[idx].running) return;
+	   stopwatches[idx].running = true;
+	   stopwatches[idx].lastStart = Date.now();
+	   stopwatches[idx].interval = setInterval(() => {
+	     updateStopwatchDisplay(idx);
+	   }, 100);
+	 }
+	 
+	 function pauseStopwatch(idx) {
+	   if (stopwatches[idx].running) {
+	     stopwatches[idx].elapsed += Date.now() - stopwatches[idx].lastStart;
+	     stopwatches[idx].running = false;
+	     clearInterval(stopwatches[idx].interval);
+	     stopwatches[idx].interval = null;
+	     updateStopwatchDisplay(idx);
+	   }
+	 }
+	 
+	 function resetStopwatch(idx) {
+	   pauseStopwatch(idx);
+	   stopwatches[idx].elapsed = 0;
+	   updateStopwatchDisplay(idx);
+	 }
+	 
+	 function updateStopwatchDisplay(idx) {
+	   let elapsed = stopwatches[idx].elapsed;
+	   if (stopwatches[idx].running) {
+	     elapsed += Date.now() - stopwatches[idx].lastStart;
+	   }
+	   elapsed = Math.max(0, elapsed);
+	   const totalSeconds = Math.floor(elapsed / 1000);
+	   const h = Math.floor(totalSeconds / 3600);
+	   const m = Math.floor((totalSeconds % 3600) / 60);
+	   const s = totalSeconds % 60;
+	   const ms = Math.floor((elapsed % 1000) / 100);
+	   document.getElementById(`sw-display${idx+1}`).textContent =
+	     `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${ms}`;
+	 }
+
+	 // 更新已顯示的結果內容
+	function updateDisplayedResults() {
+	 // 如果有顯示結果，重新計算它們
+	 const massResult = document.getElementById('massResult');
+	 if (massResult.style.display === 'block') {
+	   calculateMass();
+	 }
+	 
+	 const dilutionResult = document.getElementById('dilutionResult');
+	 if (dilutionResult.style.display === 'block') {
+	   calculateDilution();
+	 }
+	 
+	 const acidBaseResult = document.getElementById('acidBaseResult');
+	 if (acidBaseResult.style.display === 'block') {
+	   calculateAcidBase();
+	 }
+	 
+	 const animalResult = document.getElementById('animalResult');
+	 if (animalResult.style.display === 'block') {
+	   calculateAnimalDose();
+	 }
+	 
+	 const animalResult2 = document.getElementById('animalResult2');
+	 if (animalResult2.style.display === 'block') {
+	   calculateAnimalDose2();
+	 }
+	 
+	 const primerResult = document.getElementById('primerResult');
+	 if (primerResult.style.display === 'block') {
+	   calcPrimer();
+	 }
+	 
+	 const diluteResult = document.getElementById('diluteResult');
+	 if (diluteResult.style.display === 'block') {
+	   calcDilute();
+	 }
+	 
+	 const ligationResult = document.getElementById('ligationResult');
+	 if (ligationResult.style.display === 'block') {
+	   calculateLigation();
+	 }
+	 
+	 const wbcResult = document.getElementById('wbcResult');
+	 if (wbcResult.style.display === 'block') {
+	   calculateWBC();
+	 }
+	 
+	 const rbcResult = document.getElementById('rbcResult');
+	 if (rbcResult.style.display === 'block') {
+	   calculateRBC();
+	 }
+	}
+
+	 // 初始化計時器顯示
+	 for(let i=0; i<2; i++) {
+	   updateCountdownDisplay(i);
+	   updateStopwatchDisplay(i);
+	 }
+
+	 // 頁面載入時初始化語言
+	 document.addEventListener('DOMContentLoaded', function() {
+	   // 默認語言為中文，不需要額外操作
+	 });
+	</script>
 </body>
 </html>
