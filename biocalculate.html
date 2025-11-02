@@ -1129,7 +1129,7 @@
 	        "體積 (mL)": "體積 (mL)",
 	        "計算批量結果": "計算批量結果",
 	        "所需目標細胞體積：": "所需目標細胞體積：",
-	        "所需添加培養液體積：": "所需添加培養液體積：",
+	        "所需添加培養基體積：": "所需添加培養基體積：",
 	        "總體積：": "總體積：",
 	        "找不到所需體積數值，請先計算體積。": "找不到所需體積數值，請先計算體積。",
 	        "請輸入有效的份數與每份體積 (mL)。": "請輸入有效的份數與每份體積 (mL)。",
@@ -1281,7 +1281,7 @@
 	        "體積 (mL)": "Volume (mL)",
 	        "計算批量結果": "Calculate Batch Result",
 	        "所需目標細胞體積：": "Required Target Cell Volume：",
-	        "所需添加培養液體積：": "Required Media Volume：",
+	        "所需添加培養基體積：": "Required Medium Volume：",
 	        "總體積：": "Total Volume：",
 	        "找不到所需體積數值，請先計算體積。": "Could not find the required volume value, please calculate the volume first.",
 	        "請輸入有效的份數與每份體積 (mL)。": "Please enter a valid number of aliquots and volume per aliquot (mL).",
@@ -1813,7 +1813,7 @@
 	   const totalUL = needCellVol + mediaUL;
 	   const r = document.getElementById('wbcBatchResult');
 	   r.innerText = `${translations[currentLanguage]['所需目標細胞體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
-	     `${translations[currentLanguage]['所需添加培養液體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
+	     `${translations[currentLanguage]['所需添加培養基體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
 	     `${translations[currentLanguage]['總體積：']} ${totalUL.toFixed(2)} µL (${(totalUL/1000).toFixed(2)} mL)`;
 	   r.style.display = 'block';
 	 } catch (e) {
@@ -1841,7 +1841,7 @@
 	   const totalUL = needCellVol + mediaUL;
 	   const r = document.getElementById('rbcBatchResult');
 	   r.innerText = `${translations[currentLanguage]['所需目標細胞體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
-	     `${translations[currentLanguage]['所需添加培養液體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
+	     `${translations[currentLanguage]['所需添加培養基體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
 	     `${translations[currentLanguage]['總體積：']} ${totalUL.toFixed(2)} µL (${(totalUL/1000).toFixed(2)} mL)`;
 	   r.style.display = 'block';
 	 } catch (e) {
