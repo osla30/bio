@@ -19,5 +19,5 @@
 
 ## 🚀 **快速開始**
 1. [線上使用](https://osla30.github.io/bio/biocalculate)
-2. [離線下載](https://drive.google.com/drive/folders/... ) 
+2. [離線下載](https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing)
 3. 1 秒計算，實驗效率翻倍！
