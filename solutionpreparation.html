@@ -185,7 +185,14 @@ function calculate() {
       } else {
         massGrams = vVal * (tVal * parseFloat(tUnit)) * V_liters;
       }
-      out += `- [${name}]: ${massGrams.toFixed(4)} g\n`;
+      
+      // 修改 2: 判斷是否轉為 mg
+      if (massGrams < 1 && massGrams > 0) {
+        out += `- [${name}]: ${(massGrams * 1000).toFixed(6)} mg\n`;
+      } else {
+        out += `- [${name}]: ${massGrams.toFixed(6)} g\n`; // 修改 1: 四位改六位
+      }
+
     } else {
       const stockUnitSelect = box.querySelector('.s-stock-unit');
       const stockUnit = stockUnitSelect ? stockUnitSelect.value : "1";
@@ -199,7 +206,13 @@ function calculate() {
         const cTarget = isTargetPerc ? tVal : tVal * parseFloat(tUnit);
         volRequiredL = (cTarget * V_liters) / cStock;
         const volML = volRequiredL * 1000;
-        out += `- [${name}]: ${volML.toFixed(4)} mL\n`;
+
+        // 修改 2: 判斷是否轉為 μL
+        if (volML < 1 && volML > 0) {
+          out += `- [${name}]: ${(volML * 1000).toFixed(6)} μL\n`;
+        } else {
+          out += `- [${name}]: ${volML.toFixed(6)} mL\n`; // 修改 1: 四位改六位
+        }
       } else {
         out += `- [${name}]: ${T[lang].mixError}\n`;
       }
