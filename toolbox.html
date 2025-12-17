@@ -8,7 +8,6 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-pink-100 via-sky-100 to-violet-200 p-6">
   <div class="max-w-6xl mx-auto">
-    <!-- Header -->
     <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
       <div>
         <h1 class="text-4xl font-extrabold text-violet-700 drop-shadow">科科計算工具箱</h1>
@@ -16,7 +15,6 @@
       </div>
     </header>
 
-    <!-- 搜尋區 -->
     <section class="mb-4">
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1">
@@ -30,7 +28,6 @@
       </div>
     </section>
 
-    <!-- 工具卡片 -->
     <main>
       <div id="toolGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       <div id="noResult" class="hidden mt-8 text-center text-slate-500">❌ 找不到符合條件的工具。</div>
@@ -49,6 +46,11 @@
       { title: "TGOne抄寫紙本", url: "https://drive.google.com/file/d/1ImMVqoS0MFTVE7sP_CGpgBiLzuiv7_ox/view", description: "TGOne 計算後抄寫小紙條 (SDS-PAGE用)" },
       { title: "Bio-Rad TGX鑄膠計算器", url: "https://osla30.github.io/bio/tgxcalculate", description: "Bio-Rad TGX 鑄膠計算 (SDS-PAGE用)<br><br>Bio-Rad TGX 快速凝膠試劑組-介紹：https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" },
       { title: "經典SDS-PAGE鑄膠計算器", url: "https://osla30.github.io/bio/classicpagecalculate", description: "傳統經典 鑄膠計算 (SDS-PAGE用)<br><br>適用傳統 4X 上下膠 Buffer：<br>4X 上膠 Buffer (0.5M Tris, pH6.8)<br>4X 下膠 Buffer (1.5M Tris, pH8.8)<br>10% SDS" },
+      { 
+        title: "溶液配製", 
+        url: "https://osla30.github.io/bio/solutionpreparation", 
+        description: "常用實驗室溶液配製計算：<br>根據目標濃度、體積與分子量，精確計算所需溶質質量。" 
+      }
     ];
 
     const toolGrid = document.getElementById("toolGrid");
@@ -67,7 +69,10 @@
       toolGrid.innerHTML = "";
       list.forEach((tool, i) => {
         const card = document.createElement("article");
+        
+        // 為了讓第6個(index 5)模塊顏色與第1個(index 0)一樣，使用取餘數邏輯
         const color = COLORS[i % COLORS.length];
+        
         card.className = `relative bg-gradient-to-br ${color} p-5 rounded-2xl shadow-lg hover:-translate-y-1 hover:shadow-xl transition flex flex-col h-full`;
         card.innerHTML = `
           <div class="flex-1">
