@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>溶液配製 | Solution Preparation</title>
+
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background: #f9f9f9; border-radius: 8px; font-size: 14px; }
+    h1 { text-align: center; color: #2563eb; margin-bottom: 10px; }
+    .language-switcher { text-align: right; margin-bottom: 10px; }
+    .lang-btn { padding: 4px 10px; border: 1px solid #888; background: #f0f0f0; color: #000; cursor: pointer; border-radius: 4px; font-size: 12px; margin-left: 5px; }
+    .lang-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .form-row-inline { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    label { font-weight: bold; min-width: 120px; }
+    input, select { padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    .fixed-unit { padding: 6px 8px; background: #eee; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+    .solute-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+    .solute-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .remove-solute { background: #ef4444; color: #fff; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; }
+    button { padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .btn-add { background: #059669; color: #fff; border: 1px solid #059669; }
+    .btn-calc { background: #2563eb; color: #fff; border: 1px solid #2563eb; }
+    .btn-clear { background: #6b7280; color: #fff; border: 1px solid #6b7280; }
+    .result { margin-top: 15px; padding: 15px; background: #fff; border-left: 4px solid #2563eb; white-space: pre-wrap; font-weight: bold; color: #2563eb; line-height: 1.6; }
+  </style>
+</head>
+
+<body>
+
+<div class="language-switcher">
+  <button id="btn-zh" class="lang-btn active" onclick="switchLang('zh')">中文</button>
+  <button id="btn-en" class="lang-btn" onclick="switchLang('en')">English</button>
+</div>
+
+<h1 id="title">溶液配製</h1>
+
+<div class="form-row-inline">
+  <label id="lbl-total">目標總體積：</label>
+  <input id="totalVol" type="number" value="100" step="any">
+  <select id="totalUnit">
+    <option value="1">L</option>
+    <option value="0.001" selected>mL</option>
+    <option value="0.000001">µL</option>
+  </select>
+</div>
+
+<hr>
+
+<div id="solute-list"></div>
+
+<div style="margin-top:10px;">
+  <button class="btn-add" onclick="addSolute()" id="btn-add">＋ 新增溶質</button>
+  <button class="btn-calc" onclick="calculate()" id="btn-calc">計算配製清單</button>
+  <button class="btn-clear" onclick="clearAll()" id="btn-clear">清除全部</button>
+</div>
+
+<div id="result" class="result" style="display:none;"></div>
+
+<script>
+const T = {
+  zh: {
+    title: '溶液配製', total: '目標總體積：', add: '＋ 新增溶質', calc: '計算配製清單', clear: '清除全部',
+    name: '溶質名稱', solid: '固體粉末', stock: '高濃度原液', mw: '分子量 (g/mol)',
+    stockConc: '原液濃度', target: '目標濃度', remove: '移除',
+    guide: '★ 配製說明： ★', take: '1. 取以下物質：', addSolvent: '2. 加入溶劑補足總體積至：',
+    mixError: '錯誤 (莫耳濃度與百分比單位不可混用)'
+  },
+  en: {
+    title: 'Solution Preparation', total: 'Target Total Volume:', add: '+ Add Solute', calc: 'Calculate Recipe', clear: 'Clear All',
+    name: 'Solute Name', solid: 'Solid Powder', stock: 'Stock Solution', mw: 'MW (g/mol)',
+    stockConc: 'Stock Conc.', target: 'Target Conc.', remove: 'Remove',
+    guide: '★ Preparation Guide: ★', take: '1. Take following solutes:', addSolvent: '2. Add solvent up to:',
+    mixError: 'Error (Cannot mix Molarity and % units)'
+  }
+};
+
+let lang = 'zh';
+
+const concUnitOptions = `
+  <option value="1">M</option>
+  <option value="0.001" selected>mM</option>
+  <option value="0.000001">µM</option>
+  <option value="0.000000001">nM</option>
+  <option value="0.000000000001">pM</option>
+  <option value="0.000000000000001">fM</option>
+  <option value="perc">%(w/v)</option>
+`;
+
+function switchLang(l) {
+  lang = l;
+  document.getElementById('btn-zh').classList.toggle('active', l==='zh');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+  document.getElementById('title').innerText = T[l].title;
+  document.getElementById('lbl-total').innerText = T[l].total;
+  document.getElementById('btn-add').innerText = T[l].add;
+  document.getElementById('btn-calc').innerText = T[l].calc;
+  document.getElementById('btn-clear').innerText = T[l].clear;
+  
+  // 遍歷所有已存在的溶質卡片進行語系更新
+  document.querySelectorAll('.solute-item').forEach(refreshSoluteText);
+  
+  if (document.getElementById('result').style.display === 'block') calculate();
+}
+
+function addSolute() {
+  const box = document.createElement('div');
+  box.className = 'solute-item';
+  box.innerHTML = `
+    <div class="solute-header">
+      <input class="s-name" placeholder="${T[lang].name}">
+      <button class="remove-solute" onclick="this.parentElement.parentElement.remove()">${T[lang].remove}</button>
+    </div>
+    <div class="form-row-inline">
+      <label></label>
+      <select class="s-source" onchange="toggleSource(this)">
+        <option value="solid">${T[lang].solid}</option>
+        <option value="stock">${T[lang].stock}</option>
+      </select>
+    </div>
+    <div class="form-row-inline">
+      <input class="s-val" type="number" step="any" placeholder="${T[lang].mw}">
+      <span class="left-unit-container"><span class="fixed-unit">g/mol</span></span>
+      <span style="margin: 0 5px;">➔</span>
+      <input class="s-target" type="number" step="any" placeholder="${T[lang].target}">
+      <select class="s-target-unit">${concUnitOptions}</select>
+    </div>`;
+  document.getElementById('solute-list').appendChild(box);
+}
+
+function toggleSource(sel) {
+  const box = sel.closest('.solute-item');
+  const leftUnitContainer = box.querySelector('.left-unit-container');
+  const valInput = box.querySelector('.s-val');
+  
+  if (sel.value === 'solid') {
+    valInput.placeholder = T[lang].mw;
+    leftUnitContainer.innerHTML = `<span class="fixed-unit">g/mol</span>`;
+  } else {
+    valInput.placeholder = T[lang].stockConc;
+    leftUnitContainer.innerHTML = `<select class="s-stock-unit">${concUnitOptions}</select>`;
+  }
+}
+
+// 修正後的 refreshSoluteText 函數
+function refreshSoluteText(box) {
+  box.querySelector('.s-name').placeholder = T[lang].name;
+  box.querySelector('.remove-solute').innerText = T[lang].remove;
+  
+  const sel = box.querySelector('.s-source');
+  sel.options[0].text = T[lang].solid;
+  sel.options[1].text = T[lang].stock;
+  
+  // 關鍵修正：根據目前的模式（固體或原液）更新中間輸入框的 placeholder
+  const valInput = box.querySelector('.s-val');
+  if (sel.value === 'solid') {
+    valInput.placeholder = T[lang].mw;
+  } else {
+    valInput.placeholder = T[lang].stockConc;
+  }
+  
+  box.querySelector('.s-target').placeholder = T[lang].target;
+}
+
+function calculate() {
+  const totalVolVal = parseFloat(document.getElementById('totalVol').value);
+  const totalUnitVal = parseFloat(document.getElementById('totalUnit').value);
+  const V_liters = totalVolVal * totalUnitVal; 
+  
+  let out = `${T[lang].guide}\n\n${T[lang].take}\n`;
+
+  document.querySelectorAll('.solute-item').forEach((box, i) => {
+    const name = box.querySelector('.s-name').value || `${T[lang].name}${i+1}`;
+    const src = box.querySelector('.s-source').value;
+    const vVal = parseFloat(box.querySelector('.s-val').value);
+    const tVal = parseFloat(box.querySelector('.s-target').value);
+    const tUnit = box.querySelector('.s-target-unit').value;
+
+    if (isNaN(vVal) || isNaN(tVal)) return;
+
+    if (src === 'solid') {
+      let massGrams = 0;
+      if (tUnit === 'perc') {
+        massGrams = (tVal / 100) * (V_liters * 1000);
+      } else {
+        massGrams = vVal * (tVal * parseFloat(tUnit)) * V_liters;
+      }
+      out += `- [${name}]: ${massGrams.toFixed(4)} g\n`;
+    } else {
+      const stockUnitSelect = box.querySelector('.s-stock-unit');
+      const stockUnit = stockUnitSelect ? stockUnitSelect.value : "1";
+      let volRequiredL = 0;
+
+      const isStockPerc = (stockUnit === 'perc');
+      const isTargetPerc = (tUnit === 'perc');
+
+      if (isStockPerc === isTargetPerc) {
+        const cStock = isStockPerc ? vVal : vVal * parseFloat(stockUnit);
+        const cTarget = isTargetPerc ? tVal : tVal * parseFloat(tUnit);
+        volRequiredL = (cTarget * V_liters) / cStock;
+        const volML = volRequiredL * 1000;
+        out += `- [${name}]: ${volML.toFixed(4)} mL\n`;
+      } else {
+        out += `- [${name}]: ${T[lang].mixError}\n`;
+      }
+    }
+  });
+
+  const unitText = document.getElementById('totalUnit').options[document.getElementById('totalUnit').selectedIndex].text;
+  out += `\n${T[lang].addSolvent} ${totalVolVal} ${unitText}`;
+  
+  const resDiv = document.getElementById('result');
+  resDiv.innerText = out;
+  resDiv.style.display = 'block';
+}
+
+function clearAll() {
+  document.getElementById('solute-list').innerHTML = '';
+  document.getElementById('result').style.display = 'none';
+}
+
+addSolute();
+</script>
+</body>
+</html>
