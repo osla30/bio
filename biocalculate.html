@@ -452,9 +452,6 @@
 		<div class="tab" id="tab-animal" onclick="switchTab('animal')">
 			動物投藥計算
 		</div>
-		<div class="tab" id="tab-animal2" onclick="switchTab('animal2')">
-			動物投藥計算2
-		</div>
 		<div class="tab" id="tab-primer" onclick="switchTab('primer')">
 			Primer回溶/稀釋
 		</div>
@@ -736,63 +733,89 @@
 		</div>
 		<div class="result" id="acidBaseResult" style="display:none;"></div>
 	</div><!-- 動物投藥計算 -->
-	<div class="tab-content" id="animal" style="display:none;">
-		<div class="form-container">
-			<div class="form-row-inline">
-				<label data-text="目標藥物劑量 (mg/Kg)：" for="targetDose">目標藥物劑量 (mg/Kg)：</label> <input id="targetDose" step="any" type="number">
-			</div>
-			<div class="animal-dose-group">
-				<label data-text="希望的投藥法：">希望的投藥法：</label>
-				<div class="form-row-inline indent">
-					<label>(g)：</label> <input id="doseB1" step="any" style="max-width: 150px;" type="number">
-				</div>
-				<div class="form-row-inline indent">
-					<label>(mL)：</label> <input id="doseB2" step="any" style="max-width: 150px;" type="number">
-				</div>
-				<div class="note" data-text="例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL&lt;br&gt;則動物體重測量 27g，投 0.27mL" id="animalNote">
-					例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>
-					則動物體重測量 27g，投 0.27mL
-				</div>
-			</div>
-			<div class="form-row-inline">
-				<label data-text="每隻動物預估體重 (g)：" for="animalWeight">每隻動物預估體重 (g)：</label> <input id="animalWeight" step="any" type="number">
-			</div>
-			<div class="form-row-inline">
-				<label data-text="預估動物數量 (pc)：" for="animalCount">預估動物數量 (pc)：</label> <input id="animalCount" step="any" type="number">
-			</div>
-		</div>
-		<div class="button-group">
-			<button data-text="計算" onclick="calculateAnimalDose()">計算</button> <button class="clear" data-text="清除" onclick="clearAnimal()">清除</button>
-		</div>
-		<div class="result" id="animalResult" style="display:none;"></div>
-	</div><!-- 動物投藥計算2 -->
-	<div class="tab-content" id="animal2" style="display:none;">
-		<div class="form-container">
-			<div class="form-row-inline">
-				<label data-text="目標藥物劑量 (mg/Kg)：" for="targetDose2">目標藥物劑量 (mg/Kg)：</label> <input id="targetDose2" step="any" type="number">
-			</div>
-			<div class="form-row-inline">
-				<label data-text="使用藥物濃度：" for="drugConc2">使用藥物濃度：</label>
-				<div class="input-group">
-					<input id="drugConc2" step="any" type="number"> <select id="drugConc2Unit">
-						<option value="mgml">
-							mg/mL
-						</option>
-						<option value="percent">
-							%
-						</option>
-					</select>
-				</div>
-			</div>
-			<div class="form-row-inline">
-				<label data-text="動物體重 (g)：" for="animalWeight2">動物體重 (g)：</label> <input id="animalWeight2" step="any" type="number">
-			</div>
-		</div>
-		<div class="button-group">
-			<button data-text="計算" onclick="calculateAnimalDose2()">計算</button> <button class="clear" data-text="清除" onclick="clearAnimal2()">清除</button>
-		</div>
-		<div class="result" id="animalResult2" style="display:none;"></div>
-	</div><!-- Primer回溶/稀釋 -->
+<div class="tab-content" id="animal" style="display:none;">
+  <div class="flex-container">
+
+    <!-- 左：原 動物投藥計算 -->
+    <div class="flex-block">
+      <div class="form-container">
+        <div class="form-row-inline">
+          <label data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
+          <input id="targetDose" type="number" step="any">
+        </div>
+
+        <div class="animal-dose-group">
+          <label data-text="希望的投藥法：">希望的投藥法：</label>
+
+          <div class="form-row-inline indent">
+            <label>(g)：</label>
+            <input id="doseB1" type="number" step="any">
+          </div>
+
+          <div class="form-row-inline indent">
+            <label>(mL)：</label>
+            <input id="doseB2" type="number" step="any">
+          </div>
+
+      <div class="note" data-text="例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL">
+        例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>
+        則動物體重測量 27g，投 0.27mL
+      </div>
+        </div>
+
+        <div class="form-row-inline">
+          <label data-text="每隻動物預估體重 (g)：">每隻動物預估體重 (g)：</label>
+          <input id="animalWeight" type="number" step="any">
+        </div>
+
+        <div class="form-row-inline">
+          <label data-text="預估動物數量 (pc)：">預估動物數量 (pc)：</label>
+          <input id="animalCount" type="number" step="any">
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button data-text="計算" onclick="calculateAnimalDose()">計算</button>
+        <button class="clear" data-text="清除" onclick="clearAnimal()">清除</button>
+      </div>
+      <div class="result" id="animalResult" style="display:none;"></div>
+    </div>
+
+    <!-- 右：原 動物投藥計算2 -->
+    <div class="flex-block">
+      <div class="form-container">
+        <div class="form-row-inline">
+          <label data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
+          <input id="targetDose2" type="number" step="any">
+        </div>
+
+        <div class="form-row-inline">
+          <label data-text="使用藥物濃度：">使用藥物濃度：</label>
+          <div class="input-group">
+            <input id="drugConc2" type="number" step="any">
+            <select id="drugConc2Unit">
+              <option value="mgml">mg/mL</option>
+              <option value="percent">%</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-inline">
+          <label data-text="動物體重 (g)：">動物體重 (g)：</label>
+          <input id="animalWeight2" type="number" step="any">
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button data-text="計算" onclick="calculateAnimalDose2()">計算</button>
+        <button class="clear" data-text="清除" onclick="clearAnimal2()">清除</button>
+      </div>
+      <div class="result" id="animalResult2" style="display:none;"></div>
+    </div>
+
+  </div>
+</div>
+<!-- Primer回溶/稀釋 -->
 	<div class="tab-content" id="primer" style="display:none;">
 		<div class="flex-container">
 			<div class="flex-block">
@@ -1057,7 +1080,6 @@
 	        "tab-dilution": "稀釋計算", 
 	        "tab-acidbase": "酸鹼濃度",
 	        "tab-animal": "動物投藥計算",
-	        "tab-animal2": "動物投藥計算2",
 	        "tab-primer": "Primer回溶/稀釋",
 	        "tab-ligation": "Ligation計算",
 	        "tab-cellcount": "細胞計數",
@@ -1091,6 +1113,8 @@
 	        "預估動物數量 (pc)：": "預估動物數量 (pc)：",
 	        "使用藥物濃度：": "使用藥物濃度：",
 	        "動物體重 (g)：": "動物體重 (g)：",
+			"計算": "計算",
+			"清除": "清除",
 	        
 	        // Primer
 	        "Primer回溶": "Primer回溶",
@@ -1243,6 +1267,8 @@
 	        "預估動物數量 (pc)：": "Estimated Number of Animals (pc)：",
 	        "使用藥物濃度：": "Drug Concentration Used：",
 	        "動物體重 (g)：": "Animal Weight (g)：",
+			"計算": "Calculate",
+			"清除": "Clear",
 	        
 	        // Primer
 	        "Primer回溶": "Primer Reconstitution",
@@ -1396,7 +1422,7 @@
 	      }
 	      
 	      // 更新分頁標籤
-	      const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'animal2', 'primer', 'ligation', 'cellcount', 'timer'];
+	      const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'primer', 'ligation', 'cellcount', 'timer'];
 	      tabs.forEach(tab => {
 	        const tabElement = document.getElementById(`tab-${tab}`);
 	        tabElement.textContent = translations[lang][`tab-${tab}`];
@@ -1429,7 +1455,7 @@
 	    let audioTimeout = null;
 	    
 	    function switchTab(tab) {
-	      const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'animal2', 'primer', 'ligation', 'cellcount', 'timer'];
+	      const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'primer', 'ligation', 'cellcount', 'timer'];
 	      tabs.forEach(t => {
 	        document.getElementById(t).style.display = (t === tab) ? 'block' : 'none';
 	        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
