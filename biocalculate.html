@@ -303,6 +303,15 @@
 	        text-align: center;
 	        font-weight: bold;
 	      }
+
+          /* --- 溶液配製 (Solution Preparation) 樣式整合 --- */
+          .solute-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+          .solute-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+          .remove-solute { background: #ef4444; color: #fff; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; height: fit-content; margin: 0; }
+          .remove-solute:hover { background: #dc2626; }
+          .fixed-unit { padding: 6px 8px; background: #eee; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; display: inline-block; }
+          .btn-add { background: #059669; color: #fff; }
+          .btn-add:hover { background: #047857; }
 	      
 	      /* 響應式設計 */
 	      @media (min-width: 640px) {
@@ -434,7 +443,6 @@
 	</style>
 </head>
 <body>
-	<!-- 語言切換器 -->
 	<div class="language-switcher">
 		<button class="lang-btn active" id="lang-zh" onclick="switchLanguage('zh')">中文</button> <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">English</button>
 	</div>
@@ -448,6 +456,9 @@
 		</div>
 		<div class="tab" id="tab-acidbase" onclick="switchTab('acidbase')">
 			酸鹼濃度
+		</div>
+        <div class="tab" id="tab-solprep" onclick="switchTab('solprep')">
+			溶液配製
 		</div>
 		<div class="tab" id="tab-animal" onclick="switchTab('animal')">
 			動物投藥計算
@@ -464,8 +475,9 @@
 		<div class="tab" id="tab-timer" onclick="switchTab('timer')">
 			計時器
 		</div>
-	</div><!-- 莫耳濃度 -->
-	<div class="tab-content" id="mass">
+	</div>
+    
+    <div class="tab-content" id="mass">
 		<div class="form-container">
 			<div class="form-row-inline">
 				<label data-text="分子量 (g/mol)：" for="molarMass">分子量 (g/mol)：</label> <input id="molarMass" step="any" type="number">
@@ -556,8 +568,9 @@
 			<button data-text="計算" onclick="calculateMass()">計算</button> <button class="clear" data-text="清除" onclick="clearMass()">清除</button>
 		</div>
 		<div class="result" id="massResult" style="display:none;"></div>
-	</div><!-- 稀釋計算 -->
-	<div class="tab-content" id="dilution" style="display:none;">
+	</div>
+    
+    <div class="tab-content" id="dilution" style="display:none;">
 		<div class="form-container">
 			<div class="form-row-inline">
 				<label data-text="原液濃度 C₁：" for="c1">原液濃度 C₁：</label>
@@ -667,8 +680,9 @@
 			<button data-text="計算缺失值" onclick="calculateDilution()">計算缺失值</button> <button class="clear" data-text="清除" onclick="clearDilution()">清除</button>
 		</div>
 		<div class="result" id="dilutionResult" style="display:none;"></div>
-	</div><!-- 酸鹼濃度 -->
-	<div class="tab-content" id="acidbase" style="display:none;">
+	</div>
+    
+    <div class="tab-content" id="acidbase" style="display:none;">
 		<div class="form-container">
 			<div class="form-row-inline">
 				<label data-text="分子量 (g/mol)：" for="acidBaseMW">分子量 (g/mol)：</label> <input id="acidBaseMW" step="any" type="number">
@@ -732,91 +746,116 @@
 			<button data-text="計算" onclick="calculateAcidBase()">計算</button> <button class="clear" data-text="清除" onclick="clearAcidBase()">清除</button>
 		</div>
 		<div class="result" id="acidBaseResult" style="display:none;"></div>
-	</div><!-- 動物投藥計算 -->
-<div class="tab-content" id="animal" style="display:none;">
-  <div class="flex-container">
+	</div>
 
-    <!-- 左：原 動物投藥計算 -->
-    <div class="flex-block">
-      <div class="form-container">
-        <div class="form-row-inline">
-          <label data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
-          <input id="targetDose" type="number" step="any">
+    <div class="tab-content" id="solprep" style="display:none;">
+        <div class="form-container">
+            <div class="form-row-inline">
+              <label id="lbl-total" data-text="solprep-total">目標總體積：</label>
+              <input id="totalVol" type="number" value="100" step="any" style="max-width: 150px;">
+              <select id="totalUnit" style="max-width: 80px;">
+                <option value="1">L</option>
+                <option value="0.001" selected>mL</option>
+                <option value="0.000001">µL</option>
+              </select>
+            </div>
         </div>
-
-        <div class="animal-dose-group">
-          <label data-text="希望的投藥法：">希望的投藥法：</label>
-
-          <div class="form-row-inline indent">
-            <label>(g)：</label>
-            <input id="doseB1" type="number" step="any">
-          </div>
-
-          <div class="form-row-inline indent">
-            <label>(mL)：</label>
-            <input id="doseB2" type="number" step="any">
-          </div>
-
-      <div class="note" data-text="例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL">
-        例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>
-        則動物體重測量 27g，投 0.27mL
-      </div>
+        
+        <hr style="border: 0; border-top: 1px solid #ddd; margin: 15px 0;">
+        
+        <div id="solute-list"></div>
+        
+        <div class="button-group">
+          <button class="btn-add" onclick="addSolute()" data-text="solprep-add">＋ 新增溶質</button>
+          <button class="btn-calc" onclick="calculateSolPrep()" data-text="solprep-calc">計算配製清單</button>
+          <button class="clear" onclick="clearSolPrep()" data-text="solprep-clear">清除全部</button>
         </div>
-
-        <div class="form-row-inline">
-          <label data-text="每隻動物預估體重 (g)：">每隻動物預估體重 (g)：</label>
-          <input id="animalWeight" type="number" step="any">
-        </div>
-
-        <div class="form-row-inline">
-          <label data-text="預估動物數量 (pc)：">預估動物數量 (pc)：</label>
-          <input id="animalCount" type="number" step="any">
-        </div>
-      </div>
-
-      <div class="button-group">
-        <button data-text="計算" onclick="calculateAnimalDose()">計算</button>
-        <button class="clear" data-text="清除" onclick="clearAnimal()">清除</button>
-      </div>
-      <div class="result" id="animalResult" style="display:none;"></div>
+        
+        <div id="solprepResult" class="result" style="display:none;"></div>
     </div>
 
-    <!-- 右：原 動物投藥計算2 -->
-    <div class="flex-block">
-      <div class="form-container">
-        <div class="form-row-inline">
-          <label data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
-          <input id="targetDose2" type="number" step="any">
-        </div>
+    <div class="tab-content" id="animal" style="display:none;">
+      <div class="flex-container">
 
-        <div class="form-row-inline">
-          <label data-text="使用藥物濃度：">使用藥物濃度：</label>
-          <div class="input-group">
-            <input id="drugConc2" type="number" step="any">
-            <select id="drugConc2Unit">
-              <option value="mgml">mg/mL</option>
-              <option value="percent">%</option>
-            </select>
+        <div class="flex-block">
+          <div class="form-container">
+            <div class="form-row-inline">
+              <label data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
+              <input id="targetDose" type="number" step="any">
+            </div>
+
+            <div class="animal-dose-group">
+              <label data-text="希望的投藥法：">希望的投藥法：</label>
+
+              <div class="form-row-inline indent">
+                <label>(g)：</label>
+                <input id="doseB1" type="number" step="any">
+              </div>
+
+              <div class="form-row-inline indent">
+                <label>(mL)：</label>
+                <input id="doseB2" type="number" step="any">
+              </div>
+
+          <div class="note" data-text="例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL">
+            例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>
+            則動物體重測量 27g，投 0.27mL
           </div>
+            </div>
+
+            <div class="form-row-inline">
+              <label data-text="每隻動物預估體重 (g)：">每隻動物預估體重 (g)：</label>
+              <input id="animalWeight" type="number" step="any">
+            </div>
+
+            <div class="form-row-inline">
+              <label data-text="預估動物數量 (pc)：">預估動物數量 (pc)：</label>
+              <input id="animalCount" type="number" step="any">
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button data-text="計算" onclick="calculateAnimalDose()">計算</button>
+            <button class="clear" data-text="清除" onclick="clearAnimal()">清除</button>
+          </div>
+          <div class="result" id="animalResult" style="display:none;"></div>
         </div>
 
-        <div class="form-row-inline">
-          <label data-text="動物體重 (g)：">動物體重 (g)：</label>
-          <input id="animalWeight2" type="number" step="any">
-        </div>
-      </div>
+        <div class="flex-block">
+          <div class="form-container">
+            <div class="form-row-inline">
+              <label data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
+              <input id="targetDose2" type="number" step="any">
+            </div>
 
-      <div class="button-group">
-        <button data-text="計算" onclick="calculateAnimalDose2()">計算</button>
-        <button class="clear" data-text="清除" onclick="clearAnimal2()">清除</button>
+            <div class="form-row-inline">
+              <label data-text="使用藥物濃度：">使用藥物濃度：</label>
+              <div class="input-group">
+                <input id="drugConc2" type="number" step="any">
+                <select id="drugConc2Unit">
+                  <option value="mgml">mg/mL</option>
+                  <option value="percent">%</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row-inline">
+              <label data-text="動物體重 (g)：">動物體重 (g)：</label>
+              <input id="animalWeight2" type="number" step="any">
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button data-text="計算" onclick="calculateAnimalDose2()">計算</button>
+            <button class="clear" data-text="清除" onclick="clearAnimal2()">清除</button>
+          </div>
+          <div class="result" id="animalResult2" style="display:none;"></div>
+        </div>
+
       </div>
-      <div class="result" id="animalResult2" style="display:none;"></div>
     </div>
-
-  </div>
-</div>
-<!-- Primer回溶/稀釋 -->
-	<div class="tab-content" id="primer" style="display:none;">
+    
+    <div class="tab-content" id="primer" style="display:none;">
 		<div class="flex-container">
 			<div class="flex-block">
 				<h2 data-text="Primer回溶">Primer回溶</h2>
@@ -861,8 +900,9 @@
 				<div class="result" id="diluteResult" style="display:none;"></div>
 			</div>
 		</div>
-	</div><!-- Ligation 計算 -->
-	<div class="tab-content" id="ligation" style="display:none;">
+	</div>
+    
+    <div class="tab-content" id="ligation" style="display:none;">
 		<div class="form-container">
 			<div class="form-row-inline">
 				<label data-text="Insert DNA 長度 (bp)：">Insert DNA 長度 (bp)：</label> <input id="insertLength" step="any" type="number">
@@ -884,8 +924,9 @@
 			<button data-text="計算" onclick="calculateLigation()">計算</button> <button class="clear" data-text="清除" onclick="clearLigation()">清除</button>
 		</div>
 		<div class="result" id="ligationResult" style="display:none;"></div>
-	</div><!-- 細胞計數 -->
-	<div class="tab-content" id="cellcount" style="display:none;">
+	</div>
+    
+    <div class="tab-content" id="cellcount" style="display:none;">
 		<div class="flex-container">
 			<div class="flex-block">
 				<h2 data-text="白血球(細胞)計數">白血球(細胞)計數</h2>
@@ -1010,8 +1051,9 @@
 				</div>
 			</div>
 		</div>
-	</div><!-- 計時器分頁 -->
-	<div class="tab-content" id="timer" style="display:none;">
+	</div>
+    
+    <div class="tab-content" id="timer" style="display:none;">
 		<div class="timer-flex-container">
 			<div style="flex: 1;">
 				<div class="timer-section-title" data-text="倒數計時器(離線版才會響鈴)">
@@ -1079,6 +1121,7 @@
 	        "tab-mass": "莫耳濃度",
 	        "tab-dilution": "稀釋計算", 
 	        "tab-acidbase": "酸鹼濃度",
+            "tab-solprep": "溶液配製",
 	        "tab-animal": "動物投藥計算",
 	        "tab-primer": "Primer回溶/稀釋",
 	        "tab-ligation": "Ligation計算",
@@ -1104,6 +1147,23 @@
 	        "重量百分比 (%)：": "重量百分比 (%)：",
 	        "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N",
 	        "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項",
+
+            // 溶液配製 (Solution Preparation)
+            "solprep-total": "目標總體積：",
+            "solprep-add": "＋ 新增溶質",
+            "solprep-calc": "計算配製清單",
+            "solprep-clear": "清除全部",
+            "solprep-name": "溶質名稱",
+            "solprep-solid": "固體粉末",
+            "solprep-stock": "高濃度原液",
+            "solprep-mw": "分子量 (g/mol)",
+            "solprep-stockConc": "原液濃度",
+            "solprep-target": "目標濃度",
+            "solprep-remove": "移除",
+            "solprep-guide": "★ 配製說明： ★",
+            "solprep-take": "1. 取以下物質：",
+            "solprep-addSolvent": "2. 加入溶劑補足總體積至：",
+            "solprep-mixError": "錯誤 (莫耳濃度與百分比單位不可混用)",
 	        
 	        // 動物投藥計算
 	        "目標藥物劑量 (mg/Kg)：": "目標藥物劑量 (mg/Kg)：",
@@ -1232,6 +1292,7 @@
 	        "tab-mass": "Molarity",
 	        "tab-dilution": "Dilute", 
 	        "tab-acidbase": "Acid-Base",
+            "tab-solprep": "Solution Prep",
 	        "tab-animal": "Animal Drug Dosage",
 	        "tab-animal2": "Animal Drug Dosage 2",
 	        "tab-primer": "Primer Reconstitution/Dilute",
@@ -1258,6 +1319,23 @@
 	        "重量百分比 (%)：": "Weight Percentage (%)：",
 	        "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "Sulfuric acid (H₂SO₄) → Two H⁺ ions → 1M = 2N<br>Phosphoric acid (H₃PO₄) → Three H⁺ ions → 1M = 3N",
 	        "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "Please enter the [Molecular Weight and Density], along with either the [Weight percentage or Molarity]. The remaining value will be calculated automatically.",
+            
+            // 溶液配製 (Solution Preparation)
+            "solprep-total": "Target Total Volume:",
+            "solprep-add": "+ Add Solute",
+            "solprep-calc": "Calculate Recipe",
+            "solprep-clear": "Clear All",
+            "solprep-name": "Solute Name",
+            "solprep-solid": "Solid Powder",
+            "solprep-stock": "Stock Solution",
+            "solprep-mw": "MW (g/mol)",
+            "solprep-stockConc": "Stock Conc.",
+            "solprep-target": "Target Conc.",
+            "solprep-remove": "Remove",
+            "solprep-guide": "★ Preparation Guide: ★",
+            "solprep-take": "1. Take following solutes:",
+            "solprep-addSolvent": "2. Add solvent up to:",
+            "solprep-mixError": "Error (Cannot mix Molarity and % units)",
 	        
 	        // 動物投藥計算
 	        "目標藥物劑量 (mg/Kg)：": "Target Drug Dosage (mg/Kg)：",
@@ -1422,7 +1500,7 @@
 	      }
 	      
 	      // 更新分頁標籤
-	      const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'primer', 'ligation', 'cellcount', 'timer'];
+	      const tabs = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer', 'ligation', 'cellcount', 'timer'];
 	      tabs.forEach(tab => {
 	        const tabElement = document.getElementById(`tab-${tab}`);
 	        tabElement.textContent = translations[lang][`tab-${tab}`];
@@ -1430,6 +1508,9 @@
 
 	      // 更新選項元素
 	      updateSelectOptions(lang);
+          
+          // 更新溶液配製動態列表文字
+          updateSolPrepList(lang);
 	      
 	      // 更新已顯示的結果內容
 	      updateDisplayedResults();
@@ -1455,7 +1536,7 @@
 	    let audioTimeout = null;
 	    
 	    function switchTab(tab) {
-	      const tabs = ['mass', 'dilution', 'acidbase', 'animal', 'primer', 'ligation', 'cellcount', 'timer'];
+	      const tabs = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer', 'ligation', 'cellcount', 'timer'];
 	      tabs.forEach(t => {
 	        document.getElementById(t).style.display = (t === tab) ? 'block' : 'none';
 	        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
@@ -1624,6 +1705,153 @@
 	      ['weightPercent', 'acidBaseMolarity', 'density', 'acidBaseMW'].forEach(id => document.getElementById(id).value = '');
 	      hideResult('acidBaseResult');
 	    }
+        
+        // --- 溶液配製 (Solution Preparation) Functions ---
+        
+        const solPrepConcUnitOptions = `
+          <option value="1">M</option>
+          <option value="0.001" selected>mM</option>
+          <option value="0.000001">µM</option>
+          <option value="0.000000001">nM</option>
+          <option value="0.000000000001">pM</option>
+          <option value="0.000000000000001">fM</option>
+          <option value="perc">%(w/v)</option>
+        `;
+
+        function addSolute() {
+          const lang = currentLanguage;
+          const box = document.createElement('div');
+          box.className = 'solute-item';
+          box.innerHTML = `
+            <div class="solute-header">
+              <input class="s-name" placeholder="${translations[lang]['solprep-name']}">
+              <button class="remove-solute" onclick="this.parentElement.parentElement.remove()">${translations[lang]['solprep-remove']}</button>
+            </div>
+            <div class="form-row-inline">
+              <label></label>
+              <select class="s-source" onchange="toggleSoluteSource(this)">
+                <option value="solid">${translations[lang]['solprep-solid']}</option>
+                <option value="stock">${translations[lang]['solprep-stock']}</option>
+              </select>
+            </div>
+            <div class="form-row-inline">
+              <input class="s-val" type="number" step="any" placeholder="${translations[lang]['solprep-mw']}">
+              <span class="left-unit-container"><span class="fixed-unit">g/mol</span></span>
+              <span style="margin: 0 5px;">➔</span>
+              <input class="s-target" type="number" step="any" placeholder="${translations[lang]['solprep-target']}">
+              <select class="s-target-unit">${solPrepConcUnitOptions}</select>
+            </div>`;
+          document.getElementById('solute-list').appendChild(box);
+        }
+
+        function toggleSoluteSource(sel) {
+          const lang = currentLanguage;
+          const box = sel.closest('.solute-item');
+          const leftUnitContainer = box.querySelector('.left-unit-container');
+          const valInput = box.querySelector('.s-val');
+          
+          if (sel.value === 'solid') {
+            valInput.placeholder = translations[lang]['solprep-mw'];
+            leftUnitContainer.innerHTML = `<span class="fixed-unit">g/mol</span>`;
+          } else {
+            valInput.placeholder = translations[lang]['solprep-stockConc'];
+            leftUnitContainer.innerHTML = `<select class="s-stock-unit">${solPrepConcUnitOptions}</select>`;
+          }
+        }
+
+        function updateSolPrepList(lang) {
+            document.querySelectorAll('.solute-item').forEach((box) => {
+              box.querySelector('.s-name').placeholder = translations[lang]['solprep-name'];
+              box.querySelector('.remove-solute').innerText = translations[lang]['solprep-remove'];
+              const sel = box.querySelector('.s-source');
+              const currentVal = sel.value;
+              sel.options[0].text = translations[lang]['solprep-solid'];
+              sel.options[1].text = translations[lang]['solprep-stock'];
+              const valInput = box.querySelector('.s-val');
+              if (currentVal === 'solid') {
+                valInput.placeholder = translations[lang]['solprep-mw'];
+              } else {
+                valInput.placeholder = translations[lang]['solprep-stockConc'];
+              }
+              box.querySelector('.s-target').placeholder = translations[lang]['solprep-target'];
+            });
+        }
+
+        function calculateSolPrep() {
+          const lang = currentLanguage;
+          const totalVolVal = parseFloat(document.getElementById('totalVol').value);
+          const totalUnitVal = parseFloat(document.getElementById('totalUnit').value);
+          
+          if(isNaN(totalVolVal) || totalVolVal <= 0) {
+             alert(translations[lang]['請輸入所有欄位且數值皆大於 0']);
+             return;
+          }
+
+          const V_liters = totalVolVal * totalUnitVal; 
+          let out = `${translations[lang]['solprep-guide']}\n\n${translations[lang]['solprep-take']}\n`;
+          let hasItems = false;
+
+          document.querySelectorAll('.solute-item').forEach((box, i) => {
+            const name = box.querySelector('.s-name').value || `${translations[lang]['solprep-name']}${i+1}`;
+            const src = box.querySelector('.s-source').value;
+            const vVal = parseFloat(box.querySelector('.s-val').value);
+            const tVal = parseFloat(box.querySelector('.s-target').value);
+            const tUnit = box.querySelector('.s-target-unit').value;
+
+            if (isNaN(vVal) || isNaN(tVal)) return;
+            hasItems = true;
+
+            if (src === 'solid') {
+              let massGrams = 0;
+              if (tUnit === 'perc') {
+                massGrams = (tVal / 100) * (V_liters * 1000);
+              } else {
+                massGrams = vVal * (tVal * parseFloat(tUnit)) * V_liters;
+              }
+              if (massGrams < 1 && massGrams > 0) {
+                out += `- [${name}]: ${(massGrams * 1000).toFixed(6)} mg\n`;
+              } else {
+                out += `- [${name}]: ${massGrams.toFixed(6)} g\n`;
+              }
+            } else {
+              const stockUnitSelect = box.querySelector('.s-stock-unit');
+              const stockUnit = stockUnitSelect ? stockUnitSelect.value : "1";
+              let volRequiredL = 0;
+              const isStockPerc = (stockUnit === 'perc');
+              const isTargetPerc = (tUnit === 'perc');
+              if (isStockPerc === isTargetPerc) {
+                const cStock = isStockPerc ? vVal : vVal * parseFloat(stockUnit);
+                const cTarget = isTargetPerc ? tVal : tVal * parseFloat(tUnit);
+                volRequiredL = (cTarget * V_liters) / cStock;
+                const volML = volRequiredL * 1000;
+                if (volML < 1 && volML > 0) {
+                  out += `- [${name}]: ${(volML * 1000).toFixed(6)} μL\n`;
+                } else {
+                  out += `- [${name}]: ${volML.toFixed(6)} mL\n`;
+                }
+              } else {
+                out += `- [${name}]: ${translations[lang]['solprep-mixError']}\n`;
+              }
+            }
+          });
+          
+          if (!hasItems) {
+            alert(translations[lang]['請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項']); // Reuse existing message or create simple one
+            return;
+          }
+
+          const unitText = document.getElementById('totalUnit').options[document.getElementById('totalUnit').selectedIndex].text;
+          out += `\n${translations[lang]['solprep-addSolvent']} ${totalVolVal} ${unitText}`;
+          const resDiv = document.getElementById('solprepResult');
+          resDiv.innerText = out;
+          resDiv.style.display = 'block';
+        }
+
+        function clearSolPrep() {
+          document.getElementById('solute-list').innerHTML = '';
+          document.getElementById('solprepResult').style.display = 'none';
+          addSolute(); // Add one empty row back
+        }
 
 	    // 動物投藥計算
 	    function calculateAnimalDose() {
@@ -2141,6 +2369,11 @@
 	    if (acidBaseResult.style.display === 'block') {
 	      calculateAcidBase();
 	    }
+        
+        const solprepResult = document.getElementById('solprepResult');
+        if (solprepResult.style.display === 'block') {
+          calculateSolPrep();
+        }
 	    
 	    const animalResult = document.getElementById('animalResult');
 	    if (animalResult.style.display === 'block') {
@@ -2187,6 +2420,7 @@
 	    // 頁面載入時初始化語言
 	    document.addEventListener('DOMContentLoaded', function() {
 	      // 默認語言為中文，不需要額外操作
+          addSolute(); // 初始化溶液配製的一個空欄位
 	    });
 	</script>
 </body>
