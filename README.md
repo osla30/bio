@@ -1,4 +1,4 @@
-# 🧪 科科計算工具箱 (BioToolbox)
+# 🧪 科科計算工具箱 (BioToolBox)
 
 [![Website](https://img.shields.io/badge/Website-Open%20Toolbox-brightgreen?style=for-the-badge&logo=googlechrome)](https://osla30.github.io/bio/toolbox)
 [![Update](https://img.shields.io/badge/Status-Active%20Maintenance-orange?style=for-the-badge)](https://github.com/osla30/bio)
