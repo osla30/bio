@@ -54,8 +54,6 @@
 👉 **[點我贊助支持小編](https://pse.is/4524sw)**
 
 ---
-
 * 本專案採用 MIT 授權，歡迎分享給實驗室同儕。
 
----
 *Powered by Research Spirit.*
