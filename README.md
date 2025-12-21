@@ -5,7 +5,7 @@
 
 **「專為生醫實驗研究者打造的極速計算工具。」** 擺脫繁瑣的 Excel 公式與手算錯誤，將複雜的實驗計算縮短至數秒內完成。
 
-🔗 **立即開啟工具箱：[https://osla30.github.io/bio/toolbox](https://osla30.github.io/bio/toolbox)**
+🔗 **立即開啟工具箱：[https://osla30.github.io/bio/toolbox](https://osla30.github.io/bio/toolbox{:target="_blank"})**
 
 ---
 
