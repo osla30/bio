@@ -3,7 +3,10 @@
 [![Website](https://img.shields.io/badge/Website-Open%20Toolbox-brightgreen?style=for-the-badge&logo=googlechrome)](https://osla30.github.io/bio/toolbox)
 [![Update](https://img.shields.io/badge/Status-Active%20Maintenance-orange?style=for-the-badge)](https://github.com/osla30/bio)
 
-**「專為生醫實驗研究者打造的極速計算工具。」** 擺脫繁瑣的 Excel 公式與手算錯誤，將複雜的實驗計算縮短至數秒內完成。
+專為生醫實驗研究者打造的極速計算工具，擺脫繁瑣的 Excel 公式與手算錯誤，將複雜的實驗計算縮短至數秒內完成。
+
+**「讓您進行實驗時，從從容容，游刃有餘！」**
+
 
 🔗 **立即開啟工具箱：<a href="https://osla30.github.io/bio/toolbox" target="_blank">https://osla30.github.io/bio/toolbox</a>**
 
