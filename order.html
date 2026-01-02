@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>引子訂購單 (快速型)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+        }
+        .instructions {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .form-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #0056b3;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .input-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="email"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #0056b3;
+            color: white;
+        }
+        .btn-group {
+            margin-top: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+        .btn-add { background-color: #28a745; color: white; }
+        .btn-add:hover { background-color: #218838; }
+        .btn-delete { background-color: #dc3545; color: white; }
+        .btn-delete:hover { background-color: #c82333; }
+        .btn-export { background-color: #0056b3; color: white; font-weight: bold; }
+        .btn-export:hover { background-color: #004494; }
+        
+        /* 針對 Oligo 序列特別加寬 */
+        .col-seq { width: 35%; }
+        .col-idx { width: 50px; text-align: center; }
+
+        /* 錯誤提示樣式 */
+        .input-error {
+            border-color: red !important;
+            background-color: #fff8f8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>引子訂購單 (快速型)</h1>
+
+    <div class="instructions">
+        <strong>注意事項：</strong>
+        <ol>
+            <li>每一填寫格僅填寫數值即可，不可加註計量單位等其他物件。</li>
+            <li><strong>OD 僅限選擇：</strong> 2, 5, 10。</li>
+            <li><strong>純化方式僅限：</strong> Desalt, OPC。</li>
+            <li><strong>序列限制字元：</strong> A, B, C, D, G, H, K, M, N, R, S, T, V, W, Y (輸入時會自動過濾無效字元)。</li>
+        </ol>
+    </div>
+
+    <div class="form-section">
+        <span class="section-title">客戶基本資訊</span>
+        <div class="input-group">
+            <div class="input-item">
+                <label>訂購者姓名</label>
+                <input type="text" id="custName" placeholder="請輸入姓名">
+            </div>
+            <div class="input-item">
+                <label>聯絡電話</label>
+                <input type="text" id="custPhone" placeholder="例如: 02-12345678">
+            </div>
+            <div class="input-item" style="flex: 0 0 100px;">
+                <label>分機</label>
+                <input type="text" id="custExt">
+            </div>
+        </div>
+        <div class="input-group">
+            <div class="input-item">
+                <label>通知信箱</label>
+                <input type="email" id="custEmail" placeholder="user@example.com">
+            </div>
+            <div class="input-item" style="flex: 2;">
+                <label>收件地址</label>
+                <input type="text" id="custAddr">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <span class="section-title">Oligo 訂購內容</span>
+        <table id="oligoTable">
+            <thead>
+                <tr>
+                    <th class="col-idx">#</th>
+                    <th>Oligo Title (名稱)</th>
+                    <th class="col-seq">Sequences (5' to 3')</th>
+                    <th>Quantity (O.D.)</th>
+                    <th>Quality (純化方式)</th>
+                    <th>留做定序註記</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+        <div style="margin-top: 10px;">
+            <button class="btn-add" onclick="addRow()">+ 新增一行</button>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-export" onclick="exportToExcel()">匯出 Excel 訂購單</button>
+    </div>
+</div>
+
+<script>
+    // 允許的序列字元 (用於 Regex 驗證)
+    const allowedCharsRegex = /[^ABCDGHKMNRSTVWY]/g;
+
+    // 初始化：頁面載入時建立預設的行數
+    window.onload = function() {
+        for(let i=0; i<5; i++) {
+            addRow();
+        }
+    };
+
+    function addRow() {
+        const table = document.getElementById('oligoTable').getElementsByTagName('tbody')[0];
+        const rowCount = table.rows.length + 1;
+        const newRow = table.insertRow();
+
+        newRow.innerHTML = `
+            <td class="col-idx">${rowCount}</td>
+            <td><input type="text" class="oligo-title"></td>
+            <td>
+                <input type="text" class="oligo-seq" 
+                       placeholder="僅限 A,B,C,D,G,H,K,M,N,R,S,T,V,W,Y" 
+                       oninput="validateSeq(this)">
+            </td>
+            <td>
+                <select class="oligo-qty">
+                    <option value="2">2 OD</option>
+                    <option value="5">5 OD</option>
+                    <option value="10">10 OD</option>
+                </select>
+            </td>
+            <td>
+                <select class="oligo-qual">
+                    <option value="Desalt">Desalt</option>
+                    <option value="OPC">OPC</option>
+                </select>
+            </td>
+            <td><input type="text" class="oligo-note"></td>
+            <td style="text-align:center;">
+                <button class="btn-delete" onclick="deleteRow(this)" style="padding: 5px 10px; font-size:12px;">刪除</button>
+            </td>
+        `;
+    }
+
+    // 序列驗證函式
+    function validateSeq(input) {
+        // 1. 強制轉大寫
+        let val = input.value.toUpperCase();
+        
+        // 2. 檢查是否有非法字元
+        if (val.match(allowedCharsRegex)) {
+            // 如果有非法字元，將其移除
+            val = val.replace(allowedCharsRegex, '');
+            // 可選：加上閃爍或紅色邊框提示
+            input.classList.add('input-error');
+            setTimeout(() => input.classList.remove('input-error'), 500);
+        }
+        
+        // 3. 更新欄位值
+        input.value = val;
+    }
+
+    function deleteRow(btn) {
+        const row = btn.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+        updateRowNumbers();
+    }
+
+    function updateRowNumbers() {
+        const table = document.getElementById('oligoTable').getElementsByTagName('tbody')[0];
+        for (let i = 0; i < table.rows.length; i++) {
+            table.rows[i].cells[0].innerText = i + 1;
+        }
+    }
+
+    function exportToExcel() {
+        // 1. 準備資料結構 (Array of Arrays)
+        
+        // 取得使用者輸入
+        const name = document.getElementById('custName').value;
+        const phone = document.getElementById('custPhone').value;
+        const ext = document.getElementById('custExt').value;
+        const email = document.getElementById('custEmail').value;
+        const addr = document.getElementById('custAddr').value;
+
+        // 建立標頭與說明文字 (對應原始檔案結構)
+        const data = [
+            ["", "", "", "", "", "", "", "", "", "", "P"], 
+            ["注意事項："], 
+            ["1. 填寫標準空白表單時，每一填寫格僅填寫數值即可，不可加註計量單位等其他物件。"], 
+            ["2. 請注意填寫格的說明標註，並確實依照指定格式填寫，格式填寫錯誤時，將造成資料讀寫錯誤，而影響後續系統處理結果。"], 
+            ["3. 每一行 Oligo 資料僅填寫名稱便達到可匯入資料庫之條件，未填寫完整之資料可進入系統中隨時更新。"], 
+            ["4. 本系統可自動讀入公司資料，除非資料異動，本單據可不需輸入公司資訊。"], 
+            ["5.   檔案匯入後仍為尚未送出狀態，必須進入系統再確認及執行送出表單動作始得正式送件。"],
+            ["########## 以下空白部分為可填寫部份，請依照需求完成填寫，客戶資訊部份若無異動可免填，由系統自動讀入 ##########"],
+            // 客戶資料 Row
+            ["訂購者姓名", name, "", "聯絡電話", phone, "", "分機", ext], 
+            ["通知信箱", email, "", "收件地址", addr],
+            [""], // 空行
+            // Table Header
+            ["Oligo Title", "Sequences (5' to 3')", "Quantity(O.D.)", "Quality", "留做定序註記"]
+        ];
+
+        // 2. 取得表格資料
+        const tableBody = document.getElementById('oligoTable').getElementsByTagName('tbody')[0];
+        let hasData = false;
+
+        for (let i = 0; i < tableBody.rows.length; i++) {
+            const row = tableBody.rows[i];
+            const title = row.querySelector('.oligo-title').value;
+            const seq = row.querySelector('.oligo-seq').value; // 已經在 input 事件中轉大寫並過濾
+            const qty = row.querySelector('.oligo-qty').value;
+            const qual = row.querySelector('.oligo-qual').value;
+            const note = row.querySelector('.oligo-note').value;
+
+            // 匯出判斷：如果 Title 或 Sequence 有填寫才匯出
+            if (title || seq) {
+                data.push([title, seq, qty, qual, note]);
+                hasData = true;
+            }
+        }
+
+        if (!hasData) {
+            alert("請至少填寫一行 Oligo 資料！");
+            return;
+        }
+
+        // 3. 建立 Worksheet
+        const ws = XLSX.utils.aoa_to_sheet(data);
+
+        // 4. 設定欄寬
+        ws['!cols'] = [
+            { wch: 20 }, // Title
+            { wch: 40 }, // Sequence
+            { wch: 15 }, // Qty
+            { wch: 15 }, // Quality
+            { wch: 20 }, // Note
+        ];
+
+        // 5. 建立 Workbook 並匯出
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        // 產生檔名
+        const date = new Date();
+        const dateStr = date.getFullYear() + ("0" + (date.getMonth() + 1)).slice(-2) + ("0" + date.getDate()).slice(-2);
+        // 若使用者沒填姓名，檔名用 "Unknown"
+        const safeName = name ? name : "Client";
+        const fileName = `引子訂購單_${safeName}_${dateStr}.xlsx`;
+
+        XLSX.writeFile(wb, fileName);
+    }
+</script>
+
+</body>
+</html>
