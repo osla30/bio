@@ -751,7 +751,7 @@
 				</div>
 				<div class="result" id="wbcResult" style="display:none;"></div>
 				<div id="wbcVolumeCalc" style="display:none; margin-top: 20px;">
-					<h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)</h3>
+					<h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積 → <span style="color: red;">(計算時，上面的計算務必切換單位為：個/µL)</span></h3>
 					<div class="form-container">
 						<div class="form-row-inline">
 							<label data-text="目標細胞數量：">目標細胞數量：</label>
@@ -805,7 +805,7 @@
 				</div>
 				<div class="result" id="rbcResult" style="display:none;"></div>
 				<div id="rbcVolumeCalc" style="display:none; margin-top: 20px;">
-					<h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)</h3>
+					<h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積 → <span style="color: red;">(計算時，上面的計算務必切換單位為：個/µL)</span></h3>
 					<div class="form-container">
 						<div class="form-row-inline">
 							<label data-text="目標細胞數量：">目標細胞數量：</label>
@@ -841,7 +841,7 @@
     <div class="tab-content" id="timer" style="display:none;">
 		<div class="timer-flex-container">
 			<div style="flex: 1;">
-				<div class="timer-section-title" data-text="倒數計時器(離線版才會響鈴)">倒數計時器(離線版才會響鈴)</div>
+				<div class="timer-section-title" data-text="倒數計時器">倒數計時器</div>
 				<div class="timer-block" id="countdown1">
 					<input class="timer-title" data-placeholder="計時器 1" onchange="updateTimerTitle('countdown', 0, this.value)" placeholder="計時器 1" type="text">
 					<div class="time-inputs">
@@ -881,7 +881,7 @@
 				</div>
 			</div>
 		</div>
-	</div><audio id="timer-audio" preload="auto" src="sounds/timer.mp3"></audio>
+	</div>
     <script>
     // === 1. 參數與全域變數設定 ===
     
@@ -903,6 +903,8 @@
     
     const complement = { 'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C' };
     let tmRowCount = 0;
+    let calculatedWbcVolUL = 0; // 用來暫存 WBC 算出來的體積
+    let calculatedRbcVolUL = 0; // 用來暫存 RBC 算出來的體積
 
     // 語言配置
     const translations = {
@@ -1046,7 +1048,7 @@
         "計算錯誤：": "計算錯誤：",
         
         // 計時器
-        "倒數計時器(離線版才會響鈴)": "倒數計時器(離線版才會響鈴)",
+        "倒數計時器": "倒數計時器",
         "計時器 1": "計時器 1",
         "計時器 2": "計時器 2",
         "時": "時",
@@ -1096,7 +1098,7 @@
         "科學記號表示：": "科學記號表示：",
         "cells/µL": "個/µL",
         "cells/mL": "個/mL",
-        "計算所需體積": "計算所需體積 → (計算時，上面的計算務必切換單位為：個/µL)",
+        "計算所需體積": "計算所需體積 → <span style='color: red;'>(計算時，上面的計算務必切換單位為：個/µL)</span>",
         "目標細胞數量：": "目標細胞數量：",
         "基數": "基數",
         "次方": "次方",
@@ -1243,7 +1245,7 @@
         "計算錯誤：": "Calculation Error：",
         
         // 計時器
-        "倒數計時器(離線版才會響鈴)": "Countdown Timer (Offline version will sound an alarm)",
+        "倒數計時器": "Countdown Timer",
         "計時器 1": "Timer 1",
         "計時器 2": "Timer 2",
         "時": "HH",
@@ -1294,7 +1296,7 @@
         "科學記號表示：": "Scientific notation：",
         "cells/µL": "cells/µL",
         "cells/mL": "cells/mL",
-        "計算所需體積": "Calculate Required Volume → (When calculate, be sure to switch the unit to: cells/µL)",
+        "計算所需體積": "Calculate Required Volume → <span style='color: red;'>(When calculate, be sure to switch the unit to: cells/µL)</span>",
         "目標細胞數量：": "Target Cell Count：",
         "基數": "Base",
         "次方": "Exponent",
@@ -2203,6 +2205,7 @@
       
       const targetCells = base * Math.pow(10, exponent);
       const volumeUL = targetCells / wbcConcentration;
+      calculatedWbcVolUL = volumeUL; // 把算好的數字存起來！
       const volumeML = volumeUL / 1000;
       
       document.getElementById("wbcVolumeResult").innerHTML =
@@ -2213,13 +2216,15 @@
 
     function calcWBCBatch() {
         try {
-           const needText = document.getElementById('wbcVolumeResult').innerText || document.getElementById('wbcVolumeResult').textContent;
-           const m = needText.match(/([\d\.]+)\s*µL/);
-           if (!m) {
+           // ★★★ 修改開始：不再去讀 HTML 文字，而是檢查變數 (步驟 3) ★★★
+           // 如果變數是 0，代表使用者還沒按過「計算體積」
+           if (calculatedWbcVolUL <= 0) {
              alert(translations[currentLanguage]['找不到所需體積數值，請先計算體積。']);
              return;
            }
-           const needUL = parseFloat(m[1]);
+           const needUL = calculatedWbcVolUL; // 直接從變數拿數字，超穩！
+           // ★★★ 修改結束 ★★★
+
            const A = parseFloat(document.getElementById('wbcBatchN').value);
            const B = parseFloat(document.getElementById('wbcBatchVol').value);
            if (isNaN(A) || A <= 0 || isNaN(B) || B <= 0) {
@@ -2248,6 +2253,7 @@
       document.getElementById('wbcBatchN').value = '';
       document.getElementById('wbcBatchVol').value = '';
       wbcConcentration = 0;
+      calculatedWbcVolUL = 0; // 清除時，把暫存的體積也忘掉
       hideResult('wbcResult');
       hideResult('wbcVolumeResult');
       document.getElementById("wbcVolumeCalc").style.display = 'none';
@@ -2304,6 +2310,7 @@
       
       const targetCells = base * Math.pow(10, exponent);
       const volumeUL = targetCells / rbcConcentration;
+      calculatedRbcVolUL = volumeUL; // 把算好的數字存起來！
       const volumeML = volumeUL / 1000;
       
       document.getElementById("rbcVolumeResult").innerHTML =
@@ -2314,21 +2321,23 @@
 
     function calcRBCBatch() {
         try {
-           const needText = document.getElementById('rbcVolumeResult').innerText || document.getElementById('rbcVolumeResult').textContent;
-           const m = needText.match(/([\d\.]+)\s*µL/);
-           if (!m) {
+           // ★★★ 修改開始：不再去讀 HTML 文字，而是檢查變數 (步驟 3) ★★★
+           // 如果變數是 0，代表使用者還沒按過「計算體積」
+           if (calculatedRbcVolUL <= 0) {
              alert(translations[currentLanguage]['找不到所需體積數值，請先計算體積。']);
              return;
            }
-           const needUL = parseFloat(m[1]);
+           const needUL = calculatedRbcVolUL; // 直接從變數拿數字，超穩！
+           // ★★★ 修改結束 ★★★
+
            const A = parseFloat(document.getElementById('rbcBatchN').value);
            const B = parseFloat(document.getElementById('rbcBatchVol').value);
            if (isNaN(A) || A <= 0 || isNaN(B) || B <= 0) {
              alert(translations[currentLanguage]['請輸入有效的份數與每份體積 (mL)。']);
              return;
            }
-           const needCellVol = needUL * A;
-           const mediaUL = (B * 1000 - needUL) * A;
+           const needCellVol = needUL * A; 
+           const mediaUL = (B * 1000 - needUL) * A; 
            const totalUL = needCellVol + mediaUL;
            const r = document.getElementById('rbcBatchResult');
            r.innerText = `${translations[currentLanguage]['所需目標細胞體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
@@ -2349,6 +2358,7 @@
       document.getElementById('rbcBatchN').value = '';
       document.getElementById('rbcBatchVol').value = '';
       rbcConcentration = 0;
+      calculatedRbcVolUL = 0; // 清除時，把暫存的體積也忘掉
       hideResult('rbcResult');
       hideResult('rbcVolumeResult');
       document.getElementById("rbcVolumeCalc").style.display = 'none';
@@ -2364,6 +2374,35 @@
     const stopwatches = Array(2).fill().map(() => ({
       interval: null, running: false, elapsed: 0, lastStart: 0, title: ''
     }));
+    
+    // === 新增：Web Audio API 發聲函式 (不需外部檔案) ===
+    function playBeep() {
+      // 兼容不同瀏覽器的 AudioContext
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      // 設定聲音頻率 (880Hz 類似鬧鐘的嗶嗶聲)
+      osc.type = 'square'; 
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.05);
+      osc.frequency.setValueAtTime(0, ctx.currentTime + 0.055); // 聲音中斷一下
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+
+      // 設定音量 (淡出效果，避免爆音)
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.25);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25); // 0.5秒後完全停止
+    }
 
     function updateTimerTitle(type, idx, val) {
       if(type === 'countdown') { countdowns[idx].title = val; } 
@@ -2395,17 +2434,24 @@
         let left = Math.round((countdowns[idx].targetTimestamp - now) / 1000);
         countdowns[idx].remaining = Math.max(0, left);
         updateCountdownDisplay(idx);
+        
+        // ★★★ 修改點：倒數結束時 ★★★
         if (countdowns[idx].remaining <= 0) {
           clearInterval(countdowns[idx].interval);
           countdowns[idx].running = false;
 
-          const audio = document.getElementById('timer-audio');
-          if (audio) {
-            audio.currentTime = 0;
-            audio.play();
-            countdowns[idx].audioLoopInterval = setInterval(() => { audio.currentTime = 0; audio.play(); }, 1250);
-            countdowns[idx].audioTimeout = setTimeout(() => { clearInterval(countdowns[idx].audioLoopInterval); countdowns[idx].audioLoopInterval = null; }, 30000);
-          }
+          // 1. 立即嗶一聲
+          playBeep();
+          
+          // 2. 設定循環嗶聲 (每 0.625 秒響一次)
+          countdowns[idx].audioLoopInterval = setInterval(() => { 
+            playBeep(); 
+          }, 625);
+          
+          // 3. 設定 30 秒後自動停止
+          countdowns[idx].audioTimeout = setTimeout(() => { 
+            stopAudio(idx); 
+          }, 30000);
         }
       }, 200);
       updateCountdownDisplay(idx);
@@ -2431,10 +2477,17 @@
     }
     
     function stopAudio(idx) {
-      if (countdowns[idx].audioLoopInterval) { clearInterval(countdowns[idx].audioLoopInterval); countdowns[idx].audioLoopInterval = null; }
-      if (countdowns[idx].audioTimeout) { clearTimeout(countdowns[idx].audioTimeout); countdowns[idx].audioTimeout = null; }
-      const audio = document.getElementById('timer-audio');
-      if (audio) { audio.pause(); audio.currentTime = 0; }
+      // 清除循環嗶聲
+      if (countdowns[idx].audioLoopInterval) { 
+        clearInterval(countdowns[idx].audioLoopInterval); 
+        countdowns[idx].audioLoopInterval = null; 
+      }
+      // 清除自動停止計時器
+      if (countdowns[idx].audioTimeout) { 
+        clearTimeout(countdowns[idx].audioTimeout); 
+        countdowns[idx].audioTimeout = null; 
+      }
+      // 這裡不需要再呼叫 audio.pause() 了，因為電子音是即時合成的
     }
 
     function updateCountdownDisplay(idx) {
