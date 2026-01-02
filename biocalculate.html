@@ -886,11 +886,19 @@
     // === 1. 參數與全域變數設定 ===
     
     // Bio-Toyobo Tm 計算參數 (Breslauer et al. 1986)
-    const breslauerParams = {
-        'AA': {H: -9.1, S: -24.0}, 'TT': {H: -9.1, S: -24.0}, 'AT': {H: -8.6, S: -23.9}, 'TA': {H: -6.0, S: -16.9},
-        'CA': {H: -5.8, S: -12.9}, 'TG': {H: -5.8, S: -12.9}, 'GT': {H: -6.5, S: -17.3}, 'AC': {H: -6.5, S: -17.3},
-        'CT': {H: -7.8, S: -20.8}, 'AG': {H: -7.8, S: -20.8}, 'GA': {H: -5.6, S: -13.5}, 'TC': {H: -5.6, S: -13.5},
-        'CG': {H: -11.9, S: -27.8}, 'GC': {H: -11.1, S: -26.7}, 'GG': {H: -11.0, S: -26.6}, 'CC': {H: -11.0, S: -26.6}
+    const santaLuciaParams = {
+        // Nearest Neighbor pairs
+        'AA': {H: -7.9, S: -22.2}, 'TT': {H: -7.9, S: -22.2},
+        'AT': {H: -7.2, S: -20.4}, 'TA': {H: -7.2, S: -21.3},
+        'CA': {H: -8.5, S: -22.7}, 'TG': {H: -8.5, S: -22.7},
+        'GT': {H: -8.4, S: -22.4}, 'AC': {H: -8.4, S: -22.4},
+        'CT': {H: -7.8, S: -21.0}, 'AG': {H: -7.8, S: -21.0},
+        'GA': {H: -8.2, S: -22.2}, 'TC': {H: -8.2, S: -22.2},
+        'CG': {H: -10.6, S: -27.2}, 'GC': {H: -9.8, S: -24.4},
+        'GG': {H: -8.0, S: -19.9}, 'CC': {H: -8.0, S: -19.9},
+        // Initiation (Terminal) corrections
+        'initGC': {H: 0.1, S: -2.8}, // Ends with G or C
+        'initAT': {H: 2.3, S: 4.1}   // Ends with A or T
     };
     
     const complement = { 'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C' };
@@ -1204,8 +1212,8 @@
         "結果：": "Result:",
         
         // Ligation
-        "Insert DNA 長度 (bp)：": "Insert DNA lenth (bp)：",
-        "Vector DNA 長度 (bp)：": "Vector DNA lenth (bp)：",
+        "Insert DNA 長度 (bp)：": "Insert DNA length (bp)：",
+        "Vector DNA 長度 (bp)：": "Vector DNA length (bp)：",
         "Insert : Vector 比例：": "Insert : Vector ratio：",
         "Vector DNA 質量 (ng)：": "Vector DNA mass (ng)：",
         "所需 Insert DNA 質量：": "Required Insert DNA mass: ",
@@ -1847,41 +1855,90 @@
     }
 
     function calculateRow(inputElement) {
-        const row = inputElement.parentNode.parentNode; // tr
-        // Note: Mobile responsiveness might change structure slightly but usually input is inside td
-        // If input is inside a div or something else, closest('tr') is safer
-        const tr = inputElement.closest('tr');
+        const row = inputElement.closest('tr'); // 使用 closest 較為保險
         
+        // 清理輸入，轉大寫
         let val = inputElement.value.replace(/[^a-zA-Z]/g, '').replace(/[^ATCGatcg]/g, '').toUpperCase();
         if (inputElement.value !== val) inputElement.value = val;
 
-        const lenCell = tr.querySelector('.len-cell');
-        const gcCell = tr.querySelector('.gc-cell');
-        const tmCell = tr.querySelector('.tm-cell');
+        const lenCell = row.querySelector('.len-cell');
+        const gcCell = row.querySelector('.gc-cell');
+        const tmCell = row.querySelector('.tm-cell');
 
-        if (!val || val.length < 2) { lenCell.innerText = "-"; gcCell.innerText = "-"; tmCell.innerText = "-"; return; }
+        if (!val || val.length < 2) { 
+            lenCell.innerText = "-"; 
+            gcCell.innerText = "-"; 
+            tmCell.innerText = "-"; 
+            return; 
+        }
 
         const length = val.length;
         const gcPercent = ((val.match(/[GC]/g) || []).length / length) * 100;
         
-        const Na = 50e-3, R = 1.987, C = 500 * 1e-9;
+        // === Primer3 計算核心設定 ===
+        const Na = 50e-3;     // 50 mM Na+ (Primer3 預設單價陽離子濃度)
+        const C_primer = 500e-9; // 500 nM Primer (一般設定 0.5 µM)
+        const R = 1.987;      // 氣體常數 (cal/K·mol)
+        
         let tmVal = 0;
 
-        if (length <= 36) {
-            let sumH = 0, sumS = 0;
+        // Primer3 通常對長度 60bp 以下都使用 NN 法，超過才切換公式
+        // 這裡設定為 60bp，涵蓋絕大多數 Primer
+        if (length <= 60) {
+            let sumH = 0;
+            let sumS = 0;
+
+            // 1. 計算相鄰鹼基對 (Nearest Neighbor)
             for (let i = 0; i < length - 1; i++) {
                 const pair = val.substr(i, 2);
-                if (breslauerParams[pair]) { sumH += breslauerParams[pair].H; sumS += breslauerParams[pair].S; }
+                if (santaLuciaParams[pair]) { 
+                    sumH += santaLuciaParams[pair].H; 
+                    sumS += santaLuciaParams[pair].S; 
+                }
             }
-            const denominator = -10.8 + sumS + (R * Math.log(C / 4));
-            tmVal = ((1000 * sumH) / denominator) - 273.15 + (16.6 * Math.log10(Na));
+
+            // 2. 加入末端修正 (Initiation parameters)
+            // 檢查 5' 端
+            const firstBase = val[0];
+            if (firstBase === 'G' || firstBase === 'C') {
+                sumH += santaLuciaParams['initGC'].H;
+                sumS += santaLuciaParams['initGC'].S;
+            } else { // A or T
+                sumH += santaLuciaParams['initAT'].H;
+                sumS += santaLuciaParams['initAT'].S;
+            }
+            
+            // 檢查 3' 端
+            const lastBase = val[length - 1];
+            if (lastBase === 'G' || lastBase === 'C') {
+                sumH += santaLuciaParams['initGC'].H;
+                sumS += santaLuciaParams['initGC'].S;
+            } else { // A or T
+                sumH += santaLuciaParams['initAT'].H;
+                sumS += santaLuciaParams['initAT'].S;
+            }
+
+            // 3. 鹽濃度修正 (SantaLucia 1998 Salt Correction on Entropy)
+            // 公式：DeltaS_adjusted = DeltaS + 0.368 * (N-1) * ln([Na+])
+            // 說明：Primer3 預設將鹽濃度影響算在 Entropy (S) 上，而非最後加在 Tm
+            const saltCorrection = 0.368 * (length - 1) * Math.log(Na);
+            sumS += saltCorrection;
+
+            // 4. 計算 Tm
+            // Tm = (1000 * H) / (S + R * ln(C/4)) - 273.15
+            // 注意：Primer3 假設是非對稱 Primer (非 Self-complementary)，所以濃度除以 4 (C/4)
+            const denominator = sumS + (R * Math.log(C_primer / 4));
+            tmVal = ((1000 * sumH) / denominator) - 273.15;
+
         } else {
-            tmVal = 81.5 + (16.6 * Math.log10(Na)) + (0.41 * gcPercent) - (500 / length);
+            // 超長序列 (>60bp) 使用簡易公式 (與 Primer3 長序列邏輯近似)
+            tmVal = 81.5 + (16.6 * Math.log10(Na)) + (0.41 * gcPercent) - (600 / length);
         }
 
         lenCell.innerText = length;
         gcCell.innerText = gcPercent.toFixed(1) + '%';
-        tmCell.innerText = tmVal.toFixed(1) + ' °C';
+        // Primer3 慣例通常顯示到小數點下 1-2 位
+        tmCell.innerText = tmVal.toFixed(2) + ' °C';
     }
 
     // Structure Analysis
