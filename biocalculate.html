@@ -639,6 +639,27 @@
 	</div>
 
     <div class="tab-content" id="tmcalc" style="display:none;">
+        <details style="margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+    <summary style="cursor: pointer; font-weight: bold; color: #555;" data-text="tm-adv-title">⚙️ 進階參數設定</summary>
+    <div class="form-container" style="margin-top: 10px; grid-template-columns: 1fr 1fr;">
+        <div class="form-row-inline">
+            <label data-text="tm-na-conc">Na⁺ 濃度 (mM):</label>
+            <input type="number" id="tm-na" value="50" onchange="recalcAllTm()">
+        </div>
+        <div class="form-row-inline">
+            <label data-text="tm-mg-conc">Mg²⁺ 濃度 (mM):</label>
+            <input type="number" id="tm-mg" value="0" onchange="recalcAllTm()">
+        </div>
+        <div class="form-row-inline">
+            <label data-text="tm-p-conc">Primer 濃度 (nM):</label>
+            <input type="number" id="tm-pconc" value="500" onchange="recalcAllTm()">
+        </div>
+        <div class="note" style="grid-column: 1 / -1; margin-top:5px;" data-text="tm-adv-note">
+            調整參數後將自動重新計算所有 Tm 值。<br>
+            Mg²⁺ 校正採用 Owczarzy et al. (2008) 算法轉換為等效 Na⁺。
+        </div>
+    </div>
+</details>
         <table class="calc-table" id="primerTable">
             <thead>
                 <tr>
@@ -946,6 +967,11 @@
         "tm-status-yes": "有 (Yes)",
         "tm-status-no": "無 (No)",
         "tm-warn-short": "序列太短，無法分析。",
+        "tm-adv-title": "⚙️ 進階參數設定",
+        "tm-na-conc": "Na⁺ 濃度 (mM):",
+        "tm-mg-conc": "Mg²⁺ 濃度 (mM):",
+        "tm-p-conc": "Primer 濃度 (nM):",
+        "tm-adv-note": "調整參數後將自動重新計算所有 Tm 值。<br>Mg²⁺ 校正採用 Owczarzy et al. (2008) 算法轉換為等效 Na⁺。",
         
         // 莫耳濃度
         "分子量 (g/mol)：": "分子量 (g/mol)：",
@@ -1145,6 +1171,11 @@
         "tm-status-yes": "Yes",
         "tm-status-no": "No",
         "tm-warn-short": "Sequence too short for analysis.",
+        "tm-adv-title": "⚙️ Advanced Settings",
+        "tm-na-conc": "Na⁺ Conc. (mM):",
+        "tm-mg-conc": "Mg²⁺ Conc. (mM):",
+        "tm-p-conc": "Primer Conc. (nM):",
+        "tm-adv-note": "Tm values will recalculate automatically upon adjustment.<br>Mg²⁺ correction uses Owczarzy et al. (2008) equivalent Na⁺ algorithm.",
 
         // 莫耳濃度
         "分子量 (g/mol)：": "Molecular Weight (g/mol)：",
@@ -1403,6 +1434,7 @@
       const element = document.getElementById(id);
       element.textContent = text;
       element.style.display = 'block';
+      element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function hideResult(id) {
@@ -1855,92 +1887,94 @@
         document.querySelectorAll('#tableBody tr').forEach((row, idx) => row.cells[0].innerText = idx + 1); 
         tmRowCount = document.querySelectorAll('#tableBody tr').length; 
     }
+    
+    function recalcAllTm() {
+    // 找出所有有輸入序列的輸入框，重新觸發計算
+    const inputs = document.querySelectorAll('.seq-input');
+    inputs.forEach(input => {
+        if (input.value) calculateRow(input);
+    });
+    }
 
     function calculateRow(inputElement) {
-        const row = inputElement.closest('tr'); // 使用 closest 較為保險
-        
-        // 清理輸入，轉大寫
-        let val = inputElement.value.replace(/[^a-zA-Z]/g, '').replace(/[^ATCGatcg]/g, '').toUpperCase();
-        if (inputElement.value !== val) inputElement.value = val;
+    const row = inputElement.closest('tr');
+    
+    // 清理輸入
+    let val = inputElement.value.replace(/[^a-zA-Z]/g, '').replace(/[^ATCGatcg]/g, '').toUpperCase();
+    if (inputElement.value !== val) inputElement.value = val;
 
-        const lenCell = row.querySelector('.len-cell');
-        const gcCell = row.querySelector('.gc-cell');
-        const tmCell = row.querySelector('.tm-cell');
+    const lenCell = row.querySelector('.len-cell');
+    const gcCell = row.querySelector('.gc-cell');
+    const tmCell = row.querySelector('.tm-cell');
 
-        if (!val || val.length < 2) { 
-            lenCell.innerText = "-"; 
-            gcCell.innerText = "-"; 
-            tmCell.innerText = "-"; 
-            return; 
+    if (!val || val.length < 2) { 
+        lenCell.innerText = "-"; 
+        gcCell.innerText = "-"; 
+        tmCell.innerText = "-"; 
+        return; 
+    }
+
+    const length = val.length;
+    const gcPercent = ((val.match(/[GC]/g) || []).length / length) * 100;
+    
+    // === 1. 讀取進階設定參數 (修正點) ===
+    let Na_mM = parseFloat(document.getElementById('tm-na').value) || 50;
+    let Mg_mM = parseFloat(document.getElementById('tm-mg').value) || 0;
+    let Primer_nM = parseFloat(document.getElementById('tm-pconc').value) || 500;
+
+    // === 2. 單位轉換 ===
+    let Na = Na_mM / 1000;          // mM -> M
+    let Mg = Mg_mM / 1000;          // mM -> M
+    let C_primer = Primer_nM / 1e9; // nM -> M
+    const R = 1.987;                // cal/K·mol
+
+    // === 3. 鎂離子/鹽濃度校正 (Owczarzy et al. 2008) ===
+    // 計算單價陽離子等效濃度 (Monovalent equivalent)
+    let Na_eq = Na;
+    if (Mg > 0) {
+        // 當有 Mg 時，使用校正公式
+        Na_eq = Na + 4 * Math.sqrt(Mg);
+    }
+
+    let tmVal = 0;
+
+    if (length <= 60) {
+        let sumH = 0;
+        let sumS = 0;
+
+        // Nearest Neighbor
+        for (let i = 0; i < length - 1; i++) {
+            const pair = val.substr(i, 2);
+            if (santaLuciaParams[pair]) { 
+                sumH += santaLuciaParams[pair].H; 
+                sumS += santaLuciaParams[pair].S; 
+            }
         }
 
-        const length = val.length;
-        const gcPercent = ((val.match(/[GC]/g) || []).length / length) * 100;
-        
-        // === Primer3 計算核心設定 ===
-        const Na = 50e-3;     // 50 mM Na+ (Primer3 預設單價陽離子濃度)
-        const C_primer = 500e-9; // 500 nM Primer (一般設定 0.5 µM)
-        const R = 1.987;      // 氣體常數 (cal/K·mol)
-        
-        let tmVal = 0;
+        // Terminal Corrections
+        const firstBase = val[0];
+        const lastBase = val[length - 1];
+        if (['G','C'].includes(firstBase)) { sumH += santaLuciaParams['initGC'].H; sumS += santaLuciaParams['initGC'].S; }
+        else { sumH += santaLuciaParams['initAT'].H; sumS += santaLuciaParams['initAT'].S; }
+        if (['G','C'].includes(lastBase)) { sumH += santaLuciaParams['initGC'].H; sumS += santaLuciaParams['initGC'].S; }
+        else { sumH += santaLuciaParams['initAT'].H; sumS += santaLuciaParams['initAT'].S; }
 
-        // Primer3 通常對長度 60bp 以下都使用 NN 法，超過才切換公式
-        // 這裡設定為 60bp，涵蓋絕大多數 Primer
-        if (length <= 60) {
-            let sumH = 0;
-            let sumS = 0;
+        // Salt Correction (修正點：使用 Na_eq)
+        const saltCorrection = 0.368 * (length - 1) * Math.log(Na_eq);
+        sumS += saltCorrection;
 
-            // 1. 計算相鄰鹼基對 (Nearest Neighbor)
-            for (let i = 0; i < length - 1; i++) {
-                const pair = val.substr(i, 2);
-                if (santaLuciaParams[pair]) { 
-                    sumH += santaLuciaParams[pair].H; 
-                    sumS += santaLuciaParams[pair].S; 
-                }
-            }
+        // Calculate Tm (修正點：使用讀取到的 C_primer)
+        const denominator = sumS + (R * Math.log(C_primer / 4));
+        tmVal = ((1000 * sumH) / denominator) - 273.15;
 
-            // 2. 加入末端修正 (Initiation parameters)
-            // 檢查 5' 端
-            const firstBase = val[0];
-            if (firstBase === 'G' || firstBase === 'C') {
-                sumH += santaLuciaParams['initGC'].H;
-                sumS += santaLuciaParams['initGC'].S;
-            } else { // A or T
-                sumH += santaLuciaParams['initAT'].H;
-                sumS += santaLuciaParams['initAT'].S;
-            }
-            
-            // 檢查 3' 端
-            const lastBase = val[length - 1];
-            if (lastBase === 'G' || lastBase === 'C') {
-                sumH += santaLuciaParams['initGC'].H;
-                sumS += santaLuciaParams['initGC'].S;
-            } else { // A or T
-                sumH += santaLuciaParams['initAT'].H;
-                sumS += santaLuciaParams['initAT'].S;
-            }
+    } else {
+        // 長序列公式 (修正點：使用 Na_eq)
+        tmVal = 81.5 + (16.6 * Math.log10(Na_eq)) + (0.41 * gcPercent) - (600 / length);
+    }
 
-            // 3. 鹽濃度修正 (SantaLucia 1998 Salt Correction on Entropy)
-            // 公式：DeltaS_adjusted = DeltaS + 0.368 * (N-1) * ln([Na+])
-            // 說明：Primer3 預設將鹽濃度影響算在 Entropy (S) 上，而非最後加在 Tm
-            const saltCorrection = 0.368 * (length - 1) * Math.log(Na);
-            sumS += saltCorrection;
-
-            // 4. 計算 Tm
-            // Tm = (1000 * H) / (S + R * ln(C/4)) - 273.15
-            // 注意：Primer3 假設是非對稱 Primer (非 Self-complementary)，所以濃度除以 4 (C/4)
-            const denominator = sumS + (R * Math.log(C_primer / 4));
-            tmVal = ((1000 * sumH) / denominator) - 273.15;
-
-        } else {
-            // 超長序列 (>60bp) 使用簡易公式 (與 Primer3 長序列邏輯近似)
-            tmVal = 81.5 + (16.6 * Math.log10(Na)) + (0.41 * gcPercent) - (600 / length);
-        }
-
-        lenCell.innerText = length;
-        gcCell.innerText = gcPercent.toFixed(1) + '%';
-        // Primer3 慣例通常顯示到小數點下 1-2 位
-        tmCell.innerText = tmVal.toFixed(2) + ' °C';
+    lenCell.innerText = length;
+    gcCell.innerText = gcPercent.toFixed(1) + '%';
+    tmCell.innerText = tmVal.toFixed(2) + ' °C';
     }
 
     // Structure Analysis
@@ -2375,33 +2409,58 @@
       interval: null, running: false, elapsed: 0, lastStart: 0, title: ''
     }));
     
-    // === 新增：Web Audio API 發聲函式 (不需外部檔案) ===
+    // === 修改後的 Web Audio API 發聲函式 ===
+    // === 修改後的 Web Audio API 發聲函式 (全域變數版) ===
+    let audioCtx = null; // 全域變數
+
     function playBeep() {
-      // 兼容不同瀏覽器的 AudioContext
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
+    // 1. 初始化 AudioContext (只建立一次)
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+            audioCtx = new AudioContext();
+        } else {
+            return; // 瀏覽器不支援
+        }
+    }
 
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+    // 2. 防呆機制：如果是 suspended 狀態，嘗試喚醒
+    // 這是解決「計時結束沒聲音」的關鍵
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+            triggerOscillator();
+        }).catch(err => console.error("Audio resume failed", err));
+    } else {
+        triggerOscillator();
+    }
+    }
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+    function triggerOscillator() {
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
 
-      // 設定聲音頻率 (880Hz 類似鬧鐘的嗶嗶聲)
-      osc.type = 'square'; 
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.05);
-      osc.frequency.setValueAtTime(0, ctx.currentTime + 0.055); // 聲音中斷一下
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
 
-      // 設定音量 (淡出效果，避免爆音)
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.25);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(3000, t);
 
-      osc.start();
-      osc.stop(ctx.currentTime + 0.25); // 0.5秒後完全停止
+    // 四連音節奏
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.setValueAtTime(0, t + 0.08);
+    
+    gain.gain.setValueAtTime(0.1, t + 0.15);
+    gain.gain.setValueAtTime(0, t + 0.23);
+    
+    gain.gain.setValueAtTime(0.1, t + 0.30);
+    gain.gain.setValueAtTime(0, t + 0.38);
+    
+    gain.gain.setValueAtTime(0.1, t + 0.45);
+    gain.gain.setValueAtTime(0, t + 0.53);
+
+    osc.start(t);
+    osc.stop(t + 0.6);
     }
 
     function updateTimerTitle(type, idx, val) {
@@ -2446,7 +2505,7 @@
           // 2. 設定循環嗶聲 (每 0.625 秒響一次)
           countdowns[idx].audioLoopInterval = setInterval(() => { 
             playBeep(); 
-          }, 625);
+          }, 1000);
           
           // 3. 設定 30 秒後自動停止
           countdowns[idx].audioTimeout = setTimeout(() => { 
