@@ -40,8 +40,10 @@
 
 
 ### 🎯 分子生物學計算
-* **Primer回溶與稀釋**：配製 Primer 時，快速計算各種濃度與體積，加錯水體積時，也不會慌張。
-* **Ligation計算**：快速計算 Insert 與 Vector 的莫耳比。
+* **Primer 回溶與稀釋**：配製 Primer 時，快速計算各種濃度與體積，加錯水體積時，也不會慌張。
+* **Primer Tm值計算**：得知 Primer 大約的 Tm值，長度、GC%、二級結構與 Dimer。
+* **DNA 反轉/互補**：輸入 DNA 序列，可進行反轉、互補、反轉+互補，同時具有去除 ATCG 以外字元的功能。
+* **Ligation 計算**：快速計算 Insert 與 Vector 的莫耳比。
 
 
 ### 🎯 SDS-PAGE膠體配製計算
