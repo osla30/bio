@@ -47,8 +47,8 @@
 
 
 ### 🎯 蛋白質相關計算
-* **快速計算SDS-PAGE膠體配製所需溶液體積與配方**：支援 2X、4X Buffer 鑄膠，支援小編自製 TGOne 系統，同時也支援 BioRad TGX 系統。
-* **Bradford/BCA 蛋白質定量**：Bradford/BCA 蛋白質定量、Western Blot 樣本配製計算。
+* **SDS-PAGE膠體配製計算**：支援 2X、4X Buffer 鑄膠，支援小編自製 TGOne 系統，同時也支援 BioRad TGX 系統。
+* **Bradford/BCA 蛋白質定量**：Bradford/BCA 蛋白質定量計算、Western Blot 樣本配製計算。
 
 ---
 
