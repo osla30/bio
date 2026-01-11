@@ -46,8 +46,9 @@
 * **Ligation 計算**：快速計算 Insert 與 Vector 的莫耳比。
 
 
-### 🎯 SDS-PAGE膠體配製計算
-* **快速計算膠體配製所需溶液體積與配方**：支援 2X、4X Buffer 鑄膠，支援小編自製 TGOne 系統，同時也支援 BioRad TGX 系統。
+### 🎯 蛋白質相關計算
+* **快速計算SDS-PAGE膠體配製所需溶液體積與配方**：支援 2X、4X Buffer 鑄膠，支援小編自製 TGOne 系統，同時也支援 BioRad TGX 系統。
+* **Bradford/BCA 蛋白質定量**：Bradford/BCA 蛋白質定量、Western Blot 樣本配製計算。
 
 ---
 
