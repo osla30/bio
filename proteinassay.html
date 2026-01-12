@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bradford / BCA Protein Assay | 蛋白質定量工具</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         :root {
@@ -24,7 +25,6 @@
             padding-bottom: 50px;
         }
 
-        /* Navbar 優化 */
         .navbar {
             background-color: #fff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -96,7 +96,6 @@
             margin: 0 5px;
         }
 
-        /* 手機版 Navbar 調整 */
         @media (max-width: 991px) {
             .navbar-collapse {
                 margin-top: 15px;
@@ -154,6 +153,13 @@
             color: white;
         }
         .btn-success-custom:hover { background-color: #157347; border-color: #146c43; color: white; }
+
+        .btn-info-custom {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+            color: white;
+        }
+        .btn-info-custom:hover { background-color: #31d2f2; border-color: #25cff2; color: white; }
 
         .bulk-input-container {
             background: #fff;
@@ -236,7 +242,6 @@
             border-radius: 4px;
         }
         
-        /* 紅色強調字樣式 */
         .text-danger-bold {
             color: #dc3545;
             font-weight: bold;
@@ -260,7 +265,9 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <div class="navbar-nav mx-auto mb-2 mb-lg-0 text-center">
                     <button class="btn btn-primary-custom nav-action-btn" onclick="calculate()" data-i18n="calculate_btn">Calculate Analysis</button>
-                    <button class="btn btn-success-custom nav-action-btn" onclick="exportExcel()" data-i18n="export_btn">Export Excel</button>
+                    <button class="btn btn-success-custom nav-action-btn" onclick="exportExcel()" data-i18n="export_btn">Export CSV</button>
+                    <button class="btn btn-info-custom nav-action-btn" onclick="downloadChart()" data-i18n="download_chart_btn">Download Chart</button>
+                    
                     <button class="btn btn-outline-secondary nav-action-btn" onclick="clearData()" data-i18n="clear_btn">Clear All</button>
                 </div>
 
@@ -357,6 +364,7 @@
                     </div>
                     <div class="card-body">
                         <div id="r2_warning_box" class="alert alert-warning py-1 px-2 mb-2" style="display:none; font-size:0.85rem;"></div>
+                        <div id="chart_range_warning" class="alert alert-secondary py-1 px-2 mb-2" style="display:none; font-size:0.85rem;"></div>
                         <div class="chart-container-wrapper">
                             <canvas id="elisaChart"></canvas>
                         </div>
@@ -438,9 +446,6 @@
     </div> 
     
     <script>
-        // ==========================================
-        //  UI & LOCALIZATION
-        // ==========================================
         const i18n = {
             en: {
                 title: "Bradford / BCA Protein Assay",
@@ -455,7 +460,8 @@
                 dilution_factor: "Dilution Factor:",
                 dilution_hint: "Result concentration will be multiplied by this factor. (Calculated based on standard)",
                 calculate_btn: "Calculate",
-                export_btn: "Export Excel",
+                export_btn: "Export CSV (Excel)",
+                download_chart_btn: "Download Chart Image",
                 clear_btn: "Clear All",
                 standard_curve: "Standard Curve",
                 calculation_results: "Results",
@@ -474,7 +480,6 @@
                 mean_od: "Mean OD",
                 col_net_od: "Blank-subtracted OD",
                 download_offline: "Download Offline",
-                // Western Blot Translations
                 wb_title: "Western Blot Recipe Calculator",
                 target_protein: "Target Mass (µg)",
                 target_vol: "Target Vol (per well, µL)",
@@ -504,7 +509,8 @@
                 dilution_factor: "樣本稀釋倍數:",
                 dilution_hint: "計算出的濃度將會乘以輸入的倍數 (基於標準品回歸)。",
                 calculate_btn: "開始計算",
-                export_btn: "匯出 Excel",
+                export_btn: "匯出 CSV (Excel)",
+                download_chart_btn: "下載圖表圖片",
                 clear_btn: "清除全部",
                 standard_curve: "標準曲線圖",
                 calculation_results: "計算結果",
@@ -523,7 +529,6 @@
                 mean_od: "平均 OD",
                 col_net_od: "扣除 Blank 之 OD",
                 download_offline: "下載離線版",
-                // Western Blot Translations
                 wb_title: "Western Blot 樣本配製計算",
                 target_protein: "目標蛋白量 (µg)",
                 target_vol: "單孔目標體積 (µL)",
@@ -720,23 +725,17 @@
             };
         }
 
-        // ==========================================
-        //  WESTERN BLOT LOGIC
-        // ==========================================
         function getWBValues(conc, targetMass, targetVol, bufferX, prepN) {
             if (typeof conc !== 'number' || isNaN(conc) || conc <= 0) {
                 return { valid: false, reason: "Invalid Conc", vals: null };
             }
-            
             if (bufferX <= 1) {
                 return { valid: false, reason: "BuffX <= 1", vals: null };
             }
-
             let v_prot = (targetMass / conc) * prepN;
             let v_buff = (targetVol / bufferX) * prepN;
             let v_total = targetVol * prepN;
             let v_water = v_total - v_prot - v_buff;
-
             return { 
                 valid: true, 
                 reason: "OK", 
@@ -760,17 +759,13 @@
 
             globalSampleResults.forEach(res => {
                 let wbData = getWBValues(res.conc, targetMass, targetVol, bufferX, prepN);
-                
                 let rowHtml = `<td>${res.name}</td>`;
-                
                 if (wbData.valid) {
                     let v = wbData.vals;
-                    
                     let protClass = (v.v_prot < 0) ? "text-danger fw-bold" : "";
                     let waterClass = (v.v_water < 0) ? "text-danger fw-bold" : "";
                     let buffClass = (v.v_buff < 0) ? "text-danger fw-bold" : "";
                     let totalClass = (v.v_total < 0) ? "text-danger fw-bold" : "";
-                    
                     rowHtml += `
                         <td class="${protClass}">${v.v_prot.toFixed(2)}</td>
                         <td class="${waterClass}">${v.v_water.toFixed(2)}</td>
@@ -786,13 +781,7 @@
             });
         }
 
-        // ==========================================
-        //  MAIN CALCULATION
-        // ==========================================
         function calculate() {
-            // ==========================================
-            //  防呆機制 1：標準品 (Standard) 行數檢查
-            // ==========================================
             let checkStdConc = parseBulkInput('std_conc_input');
             let checkStdOD1 = parseBulkInput('std_od_input_1');
             
@@ -800,13 +789,9 @@
                 let msg = (currentLang === 'zh') 
                     ? `警告：標準品的「濃度行數 (${checkStdConc.length})」與「OD 行數 (${checkStdOD1.length})」不符！\n\n這可能導致數據錯位，是否仍要繼續？`
                     : `Warning: Standard Row count mismatch! Conc: ${checkStdConc.length}, OD: ${checkStdOD1.length}.\nProceed anyway?`;
-                
                 if (!confirm(msg)) return; 
             }
 
-            // ==========================================
-            //  防呆機制 2：樣本 (Sample) 行數檢查
-            // ==========================================
             let checkSampleNames = parseStringInput('sample_name_input');
             let checkSampleOD1 = parseBulkInput('sample_od_input_1');
 
@@ -814,10 +799,8 @@
                 let msg = (currentLang === 'zh') 
                     ? `警告：樣本的「名稱行數 (${checkSampleNames.length})」與「OD 行數 (${checkSampleOD1.length})」不符！\n\n請檢查是否漏複製或有多餘空行。\n是否仍要繼續？`
                     : `Warning: Sample Row count mismatch! Names: ${checkSampleNames.length}, OD: ${checkSampleOD1.length}.\nProceed anyway?`;
-                
                 if (!confirm(msg)) return; 
             }
-            // ==========================================
 
             globalStdData = getStandardData();
             let dilution = parseFloat(document.getElementById('dilutionFactor').value) || 1;
@@ -833,7 +816,6 @@
 
             globalBlankOD = blankPoint.y; 
 
-            // y_net = y_raw - blankOD
             let processedStdData = globalStdData.map(d => ({
                 x: d.x,
                 y: d.y - globalBlankOD, 
@@ -868,8 +850,8 @@
             let sampleList = getSampleData();
             let results = [];
             sampleList.forEach(item => {
-                let netOD = item.od - globalBlankOD; // 扣除 Blank
-                let conc = fitModel.solve(netOD);    // 帶入 Net OD
+                let netOD = item.od - globalBlankOD; 
+                let conc = fitModel.solve(netOD);    
                 let note = "";
                 let statusType = "ok"; 
 
@@ -895,10 +877,8 @@
                 let valStr = "---";
                 if (typeof res.conc === 'number' && !isNaN(res.conc)) {
                     valStr = res.conc.toFixed(4);
-                    // 已移除 (< LOD) 的文字判斷
                 }
                 
-                // 依然保留負值變紅色的樣式
                 let valClass = (res.conc < 0) ? "text-danger fw-bold" : "fw-bold text-primary";
                 
                 let badgeClass = "bg-success";
@@ -918,56 +898,131 @@
                 </tr>`;
             });
 
-            drawChart(processedStdData, fitModel, results);
+            if(typeof Chart !== 'undefined') {
+                drawChart(processedStdData, fitModel, results);
+            }
             calculateRecipe(); 
         }
 
         function drawChart(stdData, fitModel, sampleResults) {
-            const ctx = document.getElementById('elisaChart').getContext('2d');
-            
-            let maxStdX = Math.max(...stdData.map(d => d.x));
-            let maxSampleX = 0;
-            if(sampleResults && sampleResults.length > 0) {
-                 sampleResults.forEach(s => {
-                     if(s.conc && s.conc > maxSampleX && s.conc < maxStdX * 3) maxSampleX = s.conc; 
-                 });
-            }
-            let maxX = Math.max(maxStdX, maxSampleX);
+    const ctx = document.getElementById('elisaChart').getContext('2d');
+    
+    // 1. 計算標準曲線的最大 X 值
+    let maxStdX = Math.max(...stdData.map(d => d.x));
+    
+    // 2. 設定顯示上限 (例如：標準曲線最大值的 3 倍)
+    // 超過這個範圍的樣本將不會撐開圖表，以免標準曲線被壓縮得太扁
+    const VISUAL_LIMIT_RATIO = 3;
+    let displayLimit = maxStdX * VISUAL_LIMIT_RATIO;
 
-            let fitPoints = [];
-            for(let i=0; i<=100; i++) {
-                let x = (maxX * 1.1) * (i/100);
-                let y = fitModel.predict(x);
-                fitPoints.push({x: x, y: y});
-            }
+    // 3. 檢查樣本是否超出顯示上限
+    let maxSampleX = 0;
+    let hasHiddenPoints = false; // 標記是否有樣本被隱藏
 
-            if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'scatter',
-                data: {
-                    datasets: [
-                        { label: 'Std Data (Blank-subtracted OD)', data: stdData, backgroundColor:'#0d6efd', pointRadius:5 },
-                        { label: 'Linear Fit', data: fitPoints, type:'line', borderColor:'#0d6efd', borderWidth:2, pointRadius:0, borderDash:[5,5], fill:false, tension:0 }
-                    ]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    scales: { 
-                        x: {
-                            type: 'linear', 
-                            position:'bottom', 
-                            title:{display:true, text:i18n[currentLang].conc_lbl},
-                            min: 0
-                        }, 
-                        y: {
-                            title:{display:true, text:i18n[currentLang].od_net_lbl},
-                            suggestedMin: 0 
-                        } 
-                    } 
+    if(sampleResults && sampleResults.length > 0) {
+            sampleResults.forEach(s => {
+                if(typeof s.conc === 'number' && !isNaN(s.conc)) {
+                    if (s.conc > displayLimit) {
+                        // 如果樣本濃度 > 顯示上限，標記為隱藏，不更新 maxSampleX
+                        hasHiddenPoints = true;
+                    } else if (s.conc > maxSampleX) {
+                        // 如果樣本濃度在範圍內，且比目前記錄的大，則更新 maxSampleX
+                        maxSampleX = s.conc;
+                    }
                 }
             });
+    }
+
+    // 4. 決定最終圖表的 X 軸最大值 (取標準品或樣本中較大者，但不會超過 displayLimit)
+    let maxX = Math.max(maxStdX, maxSampleX);
+
+    // 5. 處理警告框顯示 (UI)
+    const chartWarningBox = document.getElementById('chart_range_warning');
+    if (chartWarningBox) {
+        if (hasHiddenPoints) {
+            chartWarningBox.innerHTML = (currentLang === 'zh')
+                ? `<strong>注意：</strong>部分高濃度樣本 (> ${displayLimit.toFixed(1)}) 已超出圖表顯示範圍而未繪出，但下方表格仍保有完整計算結果。`
+                : `<strong>Note:</strong> Some high concentration samples (> ${displayLimit.toFixed(1)}) are hidden from the chart. Full results are in the table below.`;
+            chartWarningBox.style.display = 'block';
+        } else {
+            chartWarningBox.style.display = 'none';
         }
+    }
+
+    // 產生迴歸線的點 (畫到目前的顯示邊界即可)
+    let fitPoints = [];
+    for(let i=0; i<=100; i++) {
+        let x = (maxX * 1.1) * (i/100); // 多畫 10% 讓線條延伸一點點
+        let y = fitModel.predict(x);
+        fitPoints.push({x: x, y: y});
+    }
+
+    // --- 以下為原本的圖表繪製邏輯 (Plugin 與 Config) ---
+
+    const whiteBackgroundPlugin = {
+        id: 'customCanvasBackgroundColor',
+        beforeDraw: (chart) => {
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, chart.width, chart.height);
+            ctx.restore();
+        }
+    };
+
+    const textPlugin = {
+        id: 'equationAnnotation',
+        afterDraw: (chart) => {
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.font = 'bold 14px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+            ctx.fillStyle = '#0d6efd';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom'; 
+            const x = chart.chartArea.right - 10;
+            const y = chart.chartArea.bottom - 10;
+            ctx.fillText(`R² = ${fitModel.r2.toFixed(5)}`, x, y);
+            ctx.fillText(fitModel.equation, x, y - 20);
+            ctx.restore();
+        }
+    };
+
+    if(myChart) myChart.destroy();
+    
+    myChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                { label: 'Std Data (Blank-subtracted OD)', data: stdData, backgroundColor:'#0d6efd', pointRadius:5 },
+                { label: 'Linear Fit', data: fitPoints, type:'line', borderColor:'#0d6efd', borderWidth:2, pointRadius:0, borderDash:[5,5], fill:false, tension:0 },
+                // 這裡可以選擇是否要把樣本點也畫上去，目前的邏輯只畫 Std 和 線
+                // 如果你想把樣本點畫上去，需要再加一個 dataset
+            ]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            scales: { 
+                x: {
+                    type: 'linear', 
+                    position:'bottom', 
+                    title:{display:true, text:i18n[currentLang].conc_lbl},
+                    min: 0,
+                    // 這裡不需要強制設 max，因為我們是透過控制 dataset 的範圍來控制
+                }, 
+                y: {
+                    title:{display:true, text:i18n[currentLang].od_net_lbl},
+                    suggestedMin: 0 
+                } 
+            },
+            plugins: {
+                legend: { }
+            }
+        },
+        plugins: [whiteBackgroundPlugin, textPlugin] 
+    });
+}
 
         function loadDemoData() {
             document.getElementById('stdReplicates').value = '2'; 
@@ -976,16 +1031,10 @@
             const demoStdConc = "0\n0.125\n0.250\n0.500\n0.750\n1.000\n1.500\n2.000";
             const demoStdOD1 = "0.045\n0.100\n0.157\n0.265\n0.355\n0.460\n0.650\n0.855";
             const demoStdOD2 = "0.047\n0.096\n0.153\n0.270\n0.360\n0.465\n0.640\n0.845";
-
-            const elStdConc = document.getElementById('std_conc_input');
-            if(elStdConc) elStdConc.value = demoStdConc;
-
-            const elStdOD1 = document.getElementById('std_od_input_1');
-            if(elStdOD1) elStdOD1.value = demoStdOD1;
-
-            const elStdOD2 = document.getElementById('std_od_input_2');
-            if(elStdOD2) elStdOD2.value = demoStdOD2;
-
+            
+            document.getElementById('std_conc_input').value = demoStdConc;
+            document.getElementById('std_od_input_1').value = demoStdOD1;
+            document.getElementById('std_od_input_2').value = demoStdOD2;
 
             document.getElementById('sampleReplicates').value = '2';
             renderSampleInputs(); 
@@ -994,14 +1043,9 @@
             const demoSampleOD1 = "1.200\n0.050\n0.495\n0.040"; 
             const demoSampleOD2 = "1.210\n0.051\n0.490\n0.039";
 
-            const elSampleName = document.getElementById('sample_name_input');
-            if(elSampleName) elSampleName.value = demoSampleName;
-
-            const elSampleOD1 = document.getElementById('sample_od_input_1');
-            if(elSampleOD1) elSampleOD1.value = demoSampleOD1;
-
-            const elSampleOD2 = document.getElementById('sample_od_input_2');
-            if(elSampleOD2) elSampleOD2.value = demoSampleOD2;
+            document.getElementById('sample_name_input').value = demoSampleName;
+            document.getElementById('sample_od_input_1').value = demoSampleOD1;
+            document.getElementById('sample_od_input_2').value = demoSampleOD2;
         }
 
         function clearData() {
@@ -1015,108 +1059,128 @@
             globalStdData = []; globalSampleResults = []; globalBlankOD = 0;
         }
 
+        function downloadChart() {
+            if (!myChart) {
+                alert(currentLang === 'zh' ? "請先進行計算以產生圖表。" : "Please calculate first to generate the chart.");
+                return;
+            }
+            const canvas = document.getElementById('elisaChart');
+            const link = document.createElement('a');
+            link.download = `Standard_Curve_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ==========================================
+        //  MODIFIED EXPORT FUNCTION (CSV METHOD)
+        // ==========================================
         function exportExcel() {
             if (globalSampleResults.length === 0) { alert(i18n[currentLang].no_calc_alert); return; }
-            
-            const wb = XLSX.utils.book_new();
+
+            let csvContent = "";
             const now = new Date().toLocaleString();
             let dilution = document.getElementById('dilutionFactor').value;
+            
+            // 修正數值 0 不顯示的問題
+            const row = (arr) => arr.map(x => `"${String((x === null || x === undefined) ? "" : x).replace(/"/g, '""')}"`).join(",") + "\n";
 
-            // ==========================================
-            //  PART 1: Protein Quantification Results
-            // ==========================================
+            // --- PART 1: 參數與標頭 ---
+            csvContent += row(["Protein Quantification Report (Bradford/BCA)"]);
+            csvContent += row(["Date", now]);
+            csvContent += row(["Model", "Linear Regression (y=ax+b)"]);
+            csvContent += row(["Blank OD Used", globalBlankOD]);
+            csvContent += row(["Dilution Factor", dilution]);
+            
+            let cleanEquation = globalFitResult ? globalFitResult.equation.replace(/<[^>]*>/g, " ").trim() : "";
+            csvContent += row(["Equation", cleanEquation]);
+            csvContent += row(["R2", globalFitResult ? globalFitResult.r2.toFixed(6) : ""]);
+            csvContent += row([]); 
+
+            // --- PART 2: 標準曲線數據 (已移至最前) ---
+            let maxStdReps = 0;
+            globalStdData.forEach(pt => { if(pt.rawOds && pt.rawOds.length > maxStdReps) maxStdReps = pt.rawOds.length; });
+            
+            let stdHeader = ["Concentration (X) (µg/μL)"];
+            for(let i=1; i<=maxStdReps; i++) stdHeader.push(`OD #${i}`);
+            stdHeader.push("Mean OD (Y)", "Blank-subtracted OD");
+
+            csvContent += row(["--- Standard Curve Data ---"]);
+            csvContent += row(stdHeader);
+
+            globalStdData.forEach(pt => {
+                let r = [pt.x];
+                for(let i=0; i<maxStdReps; i++) r.push((pt.rawOds && pt.rawOds[i] !== undefined) ? pt.rawOds[i] : "");
+                r.push(pt.y.toFixed(4), (pt.y - globalBlankOD).toFixed(4));
+                csvContent += row(r);
+            });
+            csvContent += row([]); 
+
+            // --- PART 3: 定量結果 ---
             let maxSampleReps = 0;
             globalSampleResults.forEach(res => { if(res.rawOds && res.rawOds.length > maxSampleReps) maxSampleReps = res.rawOds.length; });
-            
+
             let sampleHeader = ["Sample Name"];
             for(let i=1; i<=maxSampleReps; i++) sampleHeader.push(`OD #${i}`);
             sampleHeader.push("Mean OD", "Blank-subtracted OD", "Conc (µg/μL)", "Status");
-
-            // --- [修改] 清理 Equation 中的 HTML 標籤 ---
-            let cleanEquation = globalFitResult.equation.replace(/<[^>]*>/g, " ").trim(); 
-            // ----------------------------------------
-
-            let wsData = [ 
-                ["Protein Quantification Report (Bradford/BCA)"], 
-                ["Date", now], 
-                ["Model", "Linear Regression (y=ax+b)"],
-                ["Blank OD Used", globalBlankOD], 
-                ["Dilution Factor", dilution], 
-                ["R2", globalFitResult.r2.toFixed(6)],
-                [], 
-                ["--- Parameters ---"],
-                ["Equation", cleanEquation], // 使用清理過的字串
-                [],
-                sampleHeader 
-            ];
             
-            globalSampleResults.forEach(res => {
-                let row = [res.name];
-                for(let i=0; i<maxSampleReps; i++) row.push((res.rawOds && res.rawOds[i] !== undefined) ? res.rawOds[i] : "");
-                let concVal = (typeof res.conc==='number' && !isNaN(res.conc) ? Number(res.conc.toFixed(4)) : "NaN");
-                row.push(res.od, res.netOD.toFixed(4), concVal, (res.note||"OK"));
-                wsData.push(row);
-            });
+            csvContent += row(["--- Calculation Results ---"]);
+            csvContent += row(sampleHeader);
 
-            // ==========================================
-            //  PART 2: Western Blot Recipe Calculation
-            // ==========================================
+            globalSampleResults.forEach(res => {
+                let r = [res.name];
+                for(let i=0; i<maxSampleReps; i++) r.push((res.rawOds && res.rawOds[i] !== undefined) ? res.rawOds[i] : "");
+                let concVal = (typeof res.conc==='number' && !isNaN(res.conc) ? res.conc.toFixed(4) : "NaN");
+                r.push(res.od.toFixed(4), res.netOD.toFixed(4), concVal, (res.note||"OK"));
+                csvContent += row(r);
+            });
+            csvContent += row([]); 
+
+            // --- PART 4: Western Blot Recipe ---
             let targetMass = parseFloat(document.getElementById('wb_mass').value) || 0;
             let targetVol = parseFloat(document.getElementById('wb_vol').value) || 0;
             let bufferX = parseFloat(document.getElementById('wb_buffer').value) || 1;
             let prepN = parseFloat(document.getElementById('wb_n').value) || 1;
 
-            wsData.push([]); 
-            wsData.push([]); 
-            wsData.push(["--- Western Blot Recipe Calculation ---"]);
-            wsData.push(["Target Mass (µg)", targetMass]);
-            wsData.push(["Target Volume (per well, µL)", targetVol]);
-            wsData.push(["Sample Buffer (X)", bufferX]);
-            wsData.push(["Replicates (n)", prepN]);
-            wsData.push([]);
+            csvContent += row(["--- Western Blot Recipe Calculation ---"]);
+            csvContent += row(["Target Mass (µg)", targetMass]);
+            csvContent += row(["Target Vol (µL)", targetVol]);
+            csvContent += row(["Buffer (X)", bufferX]);
+            csvContent += row(["Replicates (n)", prepN]);
+            
+            csvContent += row([]); // 新增空行
 
-            wsData.push(["Sample Name", "Protein Vol (µL)", "ddH2O (µL)", "Buffer Vol (µL)", "Total Vol (µL)"]);
+            csvContent += row(["Sample Name", "Protein Vol (µL)", "ddH2O (µL)", "Buffer Vol (µL)", "Total Vol (µL)"]);
 
             globalSampleResults.forEach(res => {
                 let wbData = getWBValues(res.conc, targetMass, targetVol, bufferX, prepN);
-                
                 if (wbData.valid) {
                     let v = wbData.vals;
-                    wsData.push([
+                    csvContent += row([
                         res.name,
-                        Number(v.v_prot.toFixed(2)),
-                        Number(v.v_water.toFixed(2)),
-                        Number(v.v_buff.toFixed(2)),
-                        Number(v.v_total.toFixed(2))
+                        v.v_prot.toFixed(2),
+                        v.v_water.toFixed(2),
+                        v.v_buff.toFixed(2),
+                        v.v_total.toFixed(2)
                     ]);
                 } else {
-                     let errMsg = "Invalid";
-                     if(wbData.reason === "BuffX <= 1") errMsg = "Buffer X <= 1";
-                     wsData.push([res.name, errMsg, "---", "---", "---"]);
+                     let errMsg = (wbData.reason === "BuffX <= 1") ? "Buffer X <= 1" : "Invalid";
+                     csvContent += row([res.name, errMsg, "---", "---", "---"]);
                 }
             });
 
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(wsData), "Results");
-
-            // ==========================================
-            //  PART 3: Standard Curve Data Sheet
-            // ==========================================
-            let maxStdReps = 0;
-            globalStdData.forEach(pt => { if(pt.rawOds && pt.rawOds.length > maxStdReps) maxStdReps = pt.rawOds.length; });
-            let stdHeader = ["Concentration (X) (µg/μL)"];
-            for(let i=1; i<=maxStdReps; i++) stdHeader.push(`OD #${i}`);
-            stdHeader.push("Mean OD (Y)", "Blank-subtracted OD"); 
+            // 觸發下載
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
             
-            let stdWsData = [ ["Standard Curve Data"], [], stdHeader ];
-            globalStdData.forEach(pt => {
-                let row = [pt.x];
-                for(let i=0; i<maxStdReps; i++) row.push((pt.rawOds && pt.rawOds[i] !== undefined) ? pt.rawOds[i] : "");
-                row.push(pt.y, (pt.y - globalBlankOD).toFixed(4));
-                stdWsData.push(row);
-            });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(stdWsData), "Standards");
-
-            XLSX.writeFile(wb, "Protein_Quant_Result.xlsx");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "Protein_Quant_Result.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>
