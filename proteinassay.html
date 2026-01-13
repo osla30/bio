@@ -618,7 +618,7 @@
             const count = 10; 
             const container = document.getElementById('stdDataContainer');
             let html = `<div class="d-flex gap-2">`;
-            html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].conc_lbl}</div><textarea id="std_conc_input" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
+            html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].conc_lbl.replace('(μg/μL)', '<span class="text-danger">(μg/μL)</span>')}</div><textarea id="std_conc_input" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
             for(let r=1; r<=reps; r++) {
                 html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].od_lbl} #${r}</div><textarea id="std_od_input_${r}" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
             }
