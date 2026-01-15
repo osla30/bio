@@ -46,8 +46,9 @@
       { title: "TGOne抄寫紙本", url: "https://drive.google.com/file/d/1ImMVqoS0MFTVE7sP_CGpgBiLzuiv7_ox/view", description: "TGOne 計算後抄寫小紙條 (SDS-PAGE用)" },
       { title: "Bio-Rad TGX鑄膠計算器", url: "https://osla30.github.io/bio/tgxcalculate", description: "Bio-Rad TGX 鑄膠計算 (SDS-PAGE用)<br><br>Bio-Rad TGX 快速凝膠試劑組-介紹：https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" },
       { title: "經典SDS-PAGE鑄膠計算器", url: "https://osla30.github.io/bio/classicpagecalculate", description: "傳統經典 鑄膠計算 (SDS-PAGE用)<br><br>適用傳統 4X 上下膠 Buffer：<br>4X 上膠 Buffer (0.5M Tris, pH6.8)<br>4X 下膠 Buffer (1.5M Tris, pH8.8)<br>10% SDS" },
-      // 新增的第六個區塊
-      { title: "Bradford/BCA 蛋白質定量工具", url: "https://osla30.github.io/bio/proteinassay", description: "蛋白質定量計算、Western Blot 樣本配製計算" }
+      { title: "Bradford/BCA 蛋白質定量工具", url: "https://osla30.github.io/bio/proteinassay", description: "蛋白質定量計算、Western Blot 樣本配製計算" },
+      // 新增的第七個區塊：qPCR 工具
+      { title: "qPCR 相對定量分析工具", url: "https://osla30.github.io/bio/qpcr", description: "以 2^(-ΔΔCt) 方法，進行 qPCR 相對定量分析<br><br><br><br><br>" }
     ];
 
     const toolGrid = document.getElementById("toolGrid");
@@ -67,7 +68,7 @@
       list.forEach((tool, i) => {
         const card = document.createElement("article");
         
-        // 為了讓第6個(index 5)模塊顏色與第1個(index 0)一樣，使用取餘數邏輯
+        // 顏色循環邏輯保持不變：第7個工具會自動使用第2種顏色 (Sky blue)
         const color = COLORS[i % COLORS.length];
         
         card.className = `relative bg-gradient-to-br ${color} p-5 rounded-2xl shadow-lg hover:-translate-y-1 hover:shadow-xl transition flex flex-col h-full`;
