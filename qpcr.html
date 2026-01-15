@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>qPCR 分析工具 / qPCR Analysis Tool</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #2980b9;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --excel-green: #217346;
+        }
+
+        body {
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--primary);
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; position: relative; }
+        
+        /* header container for title and language switch */
+        .header-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        h1 { margin: 0; text-align: center; }
+
+        /* --- 修改處：右上角按鈕群組樣式 --- */
+        .header-controls {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px; /* 按鈕間距 */
+        }
+
+        /* 通用按鈕樣式 (適用於 link 與 button) */
+        .top-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none; /* 移除超連結底線 */
+            line-height: normal;
+        }
+        .top-btn:hover { background: var(--accent); color: white; }
+        /* ---------------------------------- */
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #e1e4e8;
+        }
+
+        .step-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* 基因區塊 */
+        .gene-block {
+            background-color: #fafbfc;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .gene-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding-right: 40px;
+        }
+
+        .gene-name-input {
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 5px;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            width: 200px;
+            color: #d35400;
+        }
+
+        .input-row { display: flex; gap: 15px; }
+        .input-col { flex: 1; }
+        
+        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9em; }
+        
+        textarea {
+            width: 100%;
+            height: 180px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        /* 按鈕與控制項 */
+        button {
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 5px;
+            border: none;
+            font-size: 15px;
+            font-weight: bold;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn-primary { background-color: var(--accent); color: white; }
+        .btn-primary:hover { background-color: #1f6391; }
+        
+        .btn-success { background-color: var(--success); color: white; width: 100%; padding: 12px; font-size: 16px; }
+        .btn-success:hover { background-color: #219150; }
+
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: #c0392b; }
+
+        .btn-add { background-color: var(--warning); color: #fff; }
+        .btn-add:hover { background-color: #e67e22; }
+
+        /* Excel 風格按鈕 */
+        .btn-excel {
+            background-color: var(--excel-green); 
+            color: white;
+            padding: 6px 15px; 
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-excel:hover { background-color: #1a5c38; }
+
+        .delete-block-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: transparent;
+            color: #999;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .delete-block-btn:hover {
+            background-color: #ffebee;
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        input[type="number"] { padding: 8px; width: 60px; text-align: center; font-size: 16px; }
+        select, input[type="text"] { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+
+        /* 結果表格 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; position: sticky; top: 0; z-index: 10; }
+        tr:hover { background-color: #f1f1f1; }
+
+        tr.gene-separator { border-top: 2px solid #bdc3c7; }
+
+        .bar-container { background: #eee; height: 16px; border-radius: 8px; overflow: hidden; }
+        .bar { height: 100%; background: #e74c3c; }
+
+        .hidden { display: none; }
+        .error-msg { color: red; font-size: 0.9em; margin-top: 5px; display: none; }
+        .info-box { background: #e8f4fd; color: #0c5460; padding: 10px; border-radius: 5px; font-size: 0.9em; margin-top: 10px; }
+        .warning-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba; margin-bottom: 20px; display: none; }
+        
+        td { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+        
+        .checkbox-wrapper {
+            display: flex; 
+            align-items: center; 
+            margin-top: 5px; 
+            font-size: 0.9em; 
+            color: #555;
+            gap: 5px;
+        }
+        .checkbox-wrapper input { width: auto; margin: 0; }
+        
+        /* RWD for header */
+        @media (max-width: 600px) {
+            .header-row { flex-direction: column; gap: 10px; }
+            /* 修改 RWD 行為以適應按鈕群組 */
+            .header-controls { position: static; transform: none; margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-row">
+        <h1 data-i18n="title">🧬 qPCR 相對定量分析工具 2^(-ΔΔCt)</h1>
+        
+        <div class="header-controls">
+            <a href="https://drive.google.com/file/d/1yDgXBFR4p9nPmxe5KaJ15Y5XY6S_jSX9/view?usp=sharing" class="top-btn" target="_blank" title="Download Offline Version">
+                📥 <span data-i18n="btnOffline">下載離線版</span>
+            </a>
+            
+            <button class="top-btn" onclick="toggleLanguage()">
+                🌐 <span id="langText">English</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="step-title" data-i18n="step1">1. 初始設定</div>
+        <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
+            <label data-i18n="initGeneCount">初始基因數量：</label>
+            <input type="number" id="geneCountInput" value="2" min="2" max="20">
+            <button class="btn-primary" onclick="generateGeneBlocks()" data-i18n="startBuild">開始建立區塊</button>
+            <span style="margin-left:auto; font-size:0.9em; color:#666; cursor:pointer; text-decoration:underline;" onclick="loadDemoData()" data-i18n="loadDemo">[載入範例數據]</span>
+        </div>
+        <div style="color: #7f8c8d; font-size: 0.9em; margin-top: 5px;" data-i18n="minGeneNote">
+            * 至少需要 2 個基因 (1 個內參 + 1 個目標)
+        </div>
+    </div>
+
+    <div id="dataEntrySection" class="card hidden">
+        <div class="step-title">
+            <span data-i18n="step2">2. 輸入數據</span>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-add" onclick="addSingleBlock(false)" data-i18n="addBlock">➕ 新增一個區塊</button>
+                <button class="btn-danger" onclick="clearAllBlocks()" data-i18n="clearBlocks">🗑️ 清空所有區塊</button>
+            </div>
+        </div>
+        
+        <p style="font-size:0.9em; color:#666; margin-bottom:15px;" data-i18n="dataInstr">
+            請輸入樣品名稱與 Ct 值。系統會自動計算<span style='color: #e74c3c; font-weight: bold;'>相同樣品名稱</span>的平均 Ct 值 (技術重複)。<br>若為不同生物個體 (生物重複)，請務必使用不同名稱區分 (如 WT-1, WT-2)。
+        </p>
+
+        <div id="geneBlocksContainer"></div>
+        
+        <div style="margin-top: 20px;">
+            <button class="btn-success" onclick="processData()" data-i18n="nextStep">下一步：設定參數</button>
+        </div>
+        <div id="globalError" style="color:red; text-align:center; margin-top:10px;"></div>
+    </div>
+
+    <div id="settingsSection" class="card hidden">
+        <div class="step-title" data-i18n="step3">3. 參數設定</div>
+        
+        <div style="display:flex; gap:30px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:300px;">
+                <label data-i18n="refGeneLabel">選擇內參基因 (Reference Gene)</label>
+                <select id="refGeneSelect"></select>
+                <div class="info-box">
+                    <span data-i18n="deltaCtFormula">用於計算 $\Delta Ct = Ct_{Target} - Ct_{Ref}$</span>
+                </div>
+            </div>
+
+            <div style="flex:1; min-width:300px;">
+                <label data-i18n="controlKeyLabel">對照組關鍵字 (Control Keyword)</label>
+                <input type="text" id="controlKeyword" value="WT" placeholder="例如: WT">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="exactMatchCheckbox">
+                    <label for="exactMatchCheckbox" style="margin-bottom:0; font-weight:normal; cursor:pointer;" data-i18n="exactMatch">完全符合 (Exact Match) - 避免誤抓相似名稱</label>
+                </div>
+                <div class="info-box" style="margin-top: 5px;" data-i18n="calibratorNote">
+                    系統會找出符合此關鍵字的樣品，<br>
+                    算出 <b>平均 $\Delta Ct$</b> 作為校正基準 (Calibrator)。
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" style="margin-top:20px; width:100%" onclick="calculateResults()" data-i18n="startCalc">開始計算</button>
+    </div>
+
+    <div id="resultSection" class="card hidden">
+        <div class="step-title">
+            <span data-i18n="step4">4. 分析結果</span>
+            <button class="btn-excel" onclick="exportCSV()" data-i18n="exportCSV">📊 匯出 CSV (Excel)</button>
+        </div>
+        
+        <div id="warningBox" class="warning-box"></div>
+
+        <div style="margin-bottom:10px; font-weight:bold; color:#2980b9;" id="calibratorInfo"></div>
+
+        <div style="overflow-x: auto;">
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th style="width:10%" data-i18n="colGene">基因</th>
+                        <th style="width:15%" data-i18n="colSample">樣品</th>
+                        <th>Mean Ct</th>
+                        <th>ΔCt</th>
+                        <th>ΔΔCt</th>
+                        <th>Fold Change</th>
+                        <th style="width:100px" data-i18n="colTrend">趨勢</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 多語言設定 ---
+    let currentLang = 'zh'; // 預設中文
+    
+    const translations = {
+        'zh': {
+            title: "🧬 qPCR 相對定量分析工具 2^(-ΔΔCt)",
+            langBtn: "English",
+            btnOffline: "下載離線版", // 新增文字
+            step1: "1. 初始設定",
+            initGeneCount: "初始基因數量：",
+            startBuild: "開始建立區塊",
+            loadDemo: "[載入範例數據]",
+            minGeneNote: "* 至少需要 2 個基因 (1 個內參 + 1 個目標)",
+            step2: "2. 輸入數據",
+            addBlock: "➕ 新增一個區塊",
+            clearBlocks: "🗑️ 清空所有區塊",
+            dataInstr: "請輸入樣品名稱與 Ct 值。系統會自動計算<span style='color: #e74c3c; font-weight: bold;'>相同樣品名稱</span>的平均 Ct 值 (技術重複)。<br>若為不同生物個體 (生物重複)，請務必使用不同名稱區分 (如 WT-1, WT-2)。",
+            nextStep: "下一步：設定參數",
+            geneNameLabel: "基因名稱：",
+            sampleLabel: "⬇️ 樣品名稱 (Sample)",
+            ctLabel: "⬇️ Ct 值 (輸入原始數值，系統自動取平均)",
+            errorRowMsg: "⚠️ 行數不符，請檢查。",
+            step3: "3. 參數設定",
+            refGeneLabel: "選擇內參基因 (Reference Gene)",
+            deltaCtFormula: "用於計算 $\\Delta Ct = Ct_{Target} - Ct_{Ref}$",
+            controlKeyLabel: "對照組關鍵字 (Control Keyword)",
+            exactMatch: "完全符合 (Exact Match) - 避免誤抓相似名稱",
+            calibratorNote: "系統會找出符合此關鍵字的樣品，<br>算出 <b>平均 $\\Delta Ct$</b> 作為校正基準 (Calibrator)。",
+            startCalc: "開始計算",
+            step4: "4. 分析結果",
+            exportCSV: "📊 匯出 CSV (Excel)",
+            colGene: "基因",
+            colSample: "樣品",
+            colTrend: "趨勢",
+            // JS 內部訊息
+            alertMinGene: "錯誤：初始至少需要 2 個基因。",
+            alertConfirmClear: "確定要清空所有已生成的區塊嗎？\n此動作無法復原！",
+            alertBlockCount: "錯誤：目前只有 {n} 個區塊。\n分析至少需要 2 個基因 (1個內參 + 1個目標)。",
+            alertRowMismatch: "部分區塊的樣品與 Ct 值行數不一致，請檢查紅色錯誤。",
+            alertValidGene: "有效數據的基因數量不足 2 個，請檢查是否有空白區塊。",
+            alertNoKeyword: "請輸入對照組關鍵字 (例如 WT)。",
+            alertNoCalibrator: "找不到 {mode} \"{keyword}\" 且資料完整的樣品，無法計算基準值。",
+            modeExact: "完全符合",
+            modeContains: "包含關鍵字",
+            warnMissingRef: "⚠️ <b>警告：</b>以下樣品因缺少內參基因 ({ref}) 的數據，已被排除在計算之外：<br>{samples}",
+            calibInfo: "ℹ️ 已使用 {n} 個 \"{keyword}\" {mode} 樣品的平均 ΔCt 作為基準",
+            demoLoaded: "已載入範例！",
+            placeholderKeyword: "例如: WT"
+        },
+        'en': {
+            title: "🧬 qPCR Analysis Tool 2^(-ΔΔCt)",
+            langBtn: "中文",
+            btnOffline: "Download Offline", // 新增文字
+            step1: "1. Initial Setup",
+            initGeneCount: "Initial Gene Count:",
+            startBuild: "Generate Blocks",
+            loadDemo: "[Load Demo Data]",
+            minGeneNote: "* At least 2 genes required (1 Ref + 1 Target)",
+            step2: "2. Data Entry",
+            addBlock: "➕ Add Block",
+            clearBlocks: "🗑️ Clear All",
+            dataInstr: "Enter Sample Names and Ct Values. The system automatically averages values for <span style='color: #e74c3c; font-weight: bold;'>identical sample names</span> (Technical Replicates).<br>For Biological Replicates, please use unique names (e.g., WT-1, WT-2).",
+            nextStep: "Next: Parameters",
+            geneNameLabel: "Gene Name:",
+            sampleLabel: "⬇️ Sample Names",
+            ctLabel: "⬇️ Ct Values (Raw data allowed, auto-averaged)",
+            errorRowMsg: "⚠️ Row count mismatch.",
+            step3: "3. Parameters",
+            refGeneLabel: "Select Reference Gene",
+            deltaCtFormula: "Calculates $\\Delta Ct = Ct_{Target} - Ct_{Ref}$",
+            controlKeyLabel: "Control Group Keyword",
+            exactMatch: "Exact Match - Avoid partial matches",
+            calibratorNote: "Finds samples matching this keyword,<br>calculates <b>Mean $\\Delta Ct$</b> as the Calibrator.",
+            startCalc: "Calculate Results",
+            step4: "4. Results",
+            exportCSV: "📊 Export CSV (Excel)",
+            colGene: "Gene",
+            colSample: "Sample",
+            colTrend: "Trend",
+            // JS Messages
+            alertMinGene: "Error: At least 2 genes required initially.",
+            alertConfirmClear: "Are you sure you want to clear all blocks?\nThis cannot be undone!",
+            alertBlockCount: "Error: Only {n} blocks found.\nAnalysis requires at least 2 genes (1 Ref + 1 Target).",
+            alertRowMismatch: "Row count mismatch in some blocks. Please check red warnings.",
+            alertValidGene: "Less than 2 valid genes found. Please check for empty blocks.",
+            alertNoKeyword: "Please enter a Control Keyword (e.g., WT).",
+            alertNoCalibrator: "No valid samples found matching {mode} \"{keyword}\". Cannot calculate calibrator.",
+            modeExact: "Exact Match",
+            modeContains: "Keyword",
+            warnMissingRef: "⚠️ <b>Warning:</b> The following samples are excluded due to missing Reference Gene ({ref}) data:<br>{samples}",
+            calibInfo: "ℹ️ Used mean ΔCt of {n} \"{keyword}\" samples ({mode}) as Calibrator",
+            demoLoaded: "Demo Loaded!",
+            placeholderKeyword: "e.g., WT"
+        }
+    };
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        updateTexts();
+    }
+
+    function t(key) {
+        return translations[currentLang][key] || key;
+    }
+
+    function updateTexts() {
+        // Update simple text elements
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if(translations[currentLang][key]) {
+                el.innerHTML = translations[currentLang][key]; // innerHTML allows formatting
+            }
+        });
+
+        // 修改處：透過 ID 更新按鈕文字，避免覆蓋圖示
+        document.getElementById('langText').innerText = translations[currentLang]['langBtn'];
+
+        // Update Inputs placeholders if needed
+        const keyInput = document.getElementById('controlKeyword');
+        if(keyInput) keyInput.placeholder = t('placeholderKeyword');
+
+        // Re-calculate results if they are visible
+        const resultSection = document.getElementById('resultSection');
+        if(!resultSection.classList.contains('hidden') && GENE_LIST.length > 0) {
+            calculateResults();
+        }
+    }
+
+    // --- 原始邏輯 (以下皆未變動) ---
+    let GLOBAL_DATA = {}; 
+    let GENE_LIST = [];
+    let SAMPLE_LIST = new Set();
+    let blockCounter = 0; 
+
+    function generateGeneBlocks() {
+        const countInput = document.getElementById('geneCountInput');
+        let count = parseInt(countInput.value) || 0;
+
+        if (count < 2) {
+            alert(t('alertMinGene'));
+            return;
+        }
+
+        const container = document.getElementById('geneBlocksContainer');
+        container.innerHTML = ''; 
+        blockCounter = 0;
+
+        for (let i = 0; i < count; i++) {
+            addSingleBlock(true); 
+        }
+        
+        showStep(2);
+    }
+
+    function addSingleBlock(isAuto = false) {
+        blockCounter++;
+        const container = document.getElementById('geneBlocksContainer');
+        const id = `block_${Date.now()}_${blockCounter}`; 
+        
+        const currentCount = container.children.length + 1;
+
+        // Note: We use data-i18n here so updateTexts() can fix them later.
+        // But for initial render, we inject current lang text.
+        const html = `
+            <div class="gene-block" id="${id}">
+                <button type="button" class="delete-block-btn" onclick="removeBlock('${id}')" title="Delete">✕</button>
+                <div class="gene-header">
+                    <label data-i18n="geneNameLabel">${t('geneNameLabel')}</label>
+                    <input type="text" class="gene-name-input" value="Gene ${currentCount}">
+                </div>
+                <div class="input-row">
+                    <div class="input-col">
+                        <label data-i18n="sampleLabel">${t('sampleLabel')}</label>
+                        <textarea class="samples-input" placeholder="WT-1\nWT-2\nTreat-1..."></textarea>
+                    </div>
+                    <div class="input-col">
+                        <label data-i18n="ctLabel">${t('ctLabel')}</label>
+                        <textarea class="cts-input" placeholder="22.5\n22.8\n24.0..."></textarea>
+                    </div>
+                </div>
+                <div class="error-msg" data-i18n="errorRowMsg" style="display:none; color:red;">${t('errorRowMsg')}</div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+        
+        if (!isAuto) {
+             setTimeout(() => {
+                const newEl = document.getElementById(id);
+                if(newEl) newEl.scrollIntoView({behavior: "smooth", block: "center"});
+             }, 100);
+        }
+    }
+
+    function removeBlock(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
+    function clearAllBlocks() {
+        if(confirm(t('alertConfirmClear'))) {
+            document.getElementById('geneBlocksContainer').innerHTML = '';
+            blockCounter = 0; 
+        }
+    }
+
+    function showStep(step) {
+        if(step === 2) {
+            document.getElementById('dataEntrySection').classList.remove('hidden');
+            document.getElementById('settingsSection').classList.add('hidden');
+            document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('dataEntrySection').scrollIntoView({behavior: "smooth"});
+        }
+    }
+
+    function processData() {
+        GLOBAL_DATA = {};
+        GENE_LIST = [];
+        SAMPLE_LIST = new Set();
+        let hasError = false;
+
+        const blocks = document.querySelectorAll('.gene-block');
+        
+        if (blocks.length < 2) {
+            alert(t('alertBlockCount').replace('{n}', blocks.length));
+            return;
+        }
+
+        blocks.forEach((block) => {
+            const geneName = block.querySelector('.gene-name-input').value.trim();
+            const sampleText = block.querySelector('.samples-input').value.trim();
+            const ctText = block.querySelector('.cts-input').value.trim();
+            const errorMsg = block.querySelector('.error-msg');
+
+            const samples = sampleText.split(/[\n\r]+/).map(s => s.trim()).filter(s => s);
+            const cts = ctText.split(/[\n\r]+/).map(c => c.trim()).filter(c => c);
+
+            if (samples.length !== cts.length) {
+                errorMsg.style.display = 'block';
+                hasError = true;
+                return; 
+            }
+            errorMsg.style.display = 'none';
+            if (samples.length === 0) return; 
+
+            if (!GENE_LIST.includes(geneName)) {
+                GENE_LIST.push(geneName);
+            }
+
+            for(let i=0; i<samples.length; i++) {
+                const sName = samples[i];
+                const ctVal = parseFloat(cts[i]);
+
+                if (!isNaN(ctVal)) {
+                    SAMPLE_LIST.add(sName);
+                    if (!GLOBAL_DATA[sName]) GLOBAL_DATA[sName] = {};
+                    if (!GLOBAL_DATA[sName][geneName]) GLOBAL_DATA[sName][geneName] = [];
+                    GLOBAL_DATA[sName][geneName].push(ctVal);
+                }
+            }
+        });
+
+        if (hasError) {
+            alert(t('alertRowMismatch'));
+            return;
+        }
+        if (GENE_LIST.length < 2) {
+             alert(t('alertValidGene'));
+             return;
+        }
+
+        populateSettings();
+        document.getElementById('settingsSection').classList.remove('hidden');
+        document.getElementById('settingsSection').scrollIntoView({behavior: "smooth"});
+    }
+
+    function populateSettings() {
+        const refSelect = document.getElementById('refGeneSelect');
+        refSelect.innerHTML = '';
+        
+        GENE_LIST.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g;
+            opt.innerText = g;
+            if (['GAPDH', 'ACTB', '18S', 'NUCQ'].includes(g.toUpperCase())) opt.selected = true;
+            refSelect.appendChild(opt);
+        });
+    }
+
+    function calculateResults() {
+        const refGene = document.getElementById('refGeneSelect').value;
+        const ctrlKeyword = document.getElementById('controlKeyword').value.trim();
+        const useExactMatch = document.getElementById('exactMatchCheckbox').checked; 
+
+        if (!ctrlKeyword) {
+            alert(t('alertNoKeyword'));
+            return;
+        }
+
+        const tbody = document.querySelector('#resultTable tbody');
+        tbody.innerHTML = '';
+        
+        const warningBox = document.getElementById('warningBox');
+        let skippedSamples = [];
+
+        // A. Delta Ct
+        let sampleStats = {}; 
+        SAMPLE_LIST.forEach(sName => {
+            if (!GLOBAL_DATA[sName][refGene]) {
+                skippedSamples.push(sName); 
+                return;
+            }
+
+            sampleStats[sName] = {};
+            const refMean = getMean(GLOBAL_DATA[sName][refGene]);
+
+            GENE_LIST.forEach(gName => {
+                if (GLOBAL_DATA[sName][gName]) {
+                    const targetMean = getMean(GLOBAL_DATA[sName][gName]);
+                    sampleStats[sName][gName] = {
+                        meanCt: targetMean,
+                        deltaCt: targetMean - refMean
+                    };
+                }
+            });
+        });
+
+        if (skippedSamples.length > 0) {
+            warningBox.innerHTML = t('warnMissingRef')
+                .replace('{ref}', refGene)
+                .replace('{samples}', skippedSamples.join(', '));
+            warningBox.style.display = 'block';
+        } else {
+            warningBox.style.display = 'none';
+        }
+
+        // B. Calibrator
+        let calibrators = {}; 
+        let controlCount = 0; 
+
+        SAMPLE_LIST.forEach(sName => {
+            const isMatch = useExactMatch ? (sName === ctrlKeyword) : sName.includes(ctrlKeyword);
+            if (isMatch && sampleStats[sName] && sampleStats[sName][refGene]) {
+                controlCount++;
+            }
+        });
+
+        GENE_LIST.forEach(gName => {
+            let sumDelta = 0;
+            let count = 0;
+            SAMPLE_LIST.forEach(sName => {
+                const isMatch = useExactMatch ? (sName === ctrlKeyword) : sName.includes(ctrlKeyword);
+
+                if (isMatch && sampleStats[sName] && sampleStats[sName][gName]) {
+                    sumDelta += sampleStats[sName][gName].deltaCt;
+                    count++;
+                }
+            });
+            if (count > 0) {
+                calibrators[gName] = sumDelta / count;
+            }
+        });
+
+        if (Object.keys(calibrators).length === 0) {
+            const matchMsg = useExactMatch ? t('modeExact') : t('modeContains');
+            alert(t('alertNoCalibrator').replace('{mode}', matchMsg).replace('{keyword}', ctrlKeyword));
+            return;
+        }
+
+        // C. Render
+        const sortedSamples = Array.from(SAMPLE_LIST).sort(); 
+        let lastGene = "";
+
+        GENE_LIST.forEach(gName => {
+            sortedSamples.forEach(sName => {
+                if (!sampleStats[sName] || !sampleStats[sName][gName]) return;
+
+                const stats = sampleStats[sName][gName];
+                const calibDelta = calibrators[gName];
+
+                let ddCt = null;
+                let foldChange = null;
+
+                if (calibDelta !== undefined) {
+                    ddCt = stats.deltaCt - calibDelta;
+                    foldChange = Math.pow(2, -ddCt);
+                }
+
+                const tr = document.createElement('tr');
+                if (gName !== lastGene && lastGene !== "") {
+                    tr.classList.add('gene-separator');
+                }
+                lastGene = gName;
+
+                let barHtml = '';
+                if (foldChange !== null) {
+                    let w = Math.min(foldChange * 20, 100); 
+                    barHtml = `<div class="bar-container"><div class="bar" style="width:${w}%"></div></div>`;
+                }
+
+                tr.innerHTML = `
+                    <td style="font-weight:bold;">${gName}</td>
+                    <td>${sName}</td>
+                    <td>${stats.meanCt.toFixed(6)}</td>
+                    <td style="color:#666">${stats.deltaCt.toFixed(6)}</td>
+                    <td>${ddCt !== null ? ddCt.toFixed(6) : '-'}</td>
+                    <td style="font-weight:bold; color:${foldChange > 1.5 ? '#c0392b' : '#2c3e50'}">
+                        ${foldChange !== null ? foldChange.toFixed(6) : '-'}
+                    </td>
+                    <td>${barHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+
+        const matchModeText = useExactMatch ? `(${t('modeExact')})` : `(${t('modeContains')})`;
+        document.getElementById('calibratorInfo').innerText = 
+            t('calibInfo')
+                .replace('{n}', controlCount)
+                .replace('{keyword}', ctrlKeyword)
+                .replace('{mode}', matchModeText);
+        
+        document.getElementById('resultSection').classList.remove('hidden');
+        document.getElementById('resultSection').scrollIntoView({behavior: "smooth"});
+    }
+
+    function getMean(arr) {
+        return arr.reduce((a,b)=>a+b,0) / arr.length;
+    }
+
+    function exportCSV() {
+        let csv = "Gene,Sample,Mean Ct,Delta Ct,ddCt,Fold Change\n";
+        
+        document.querySelectorAll('#resultTable tbody tr').forEach(tr => {
+            const cols = Array.from(tr.querySelectorAll('td')).slice(0,6).map(td => td.innerText);
+            csv += cols.join(",") + "\n";
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "qpcr_results.csv"; 
+        link.click();
+    }
+
+    // --- 範例數據 ---
+    function loadDemoData() {
+        document.getElementById('geneCountInput').value = 2;
+        generateGeneBlocks();
+
+        const samples = "WT-1\nWT-2\nWT-3\nTreat-1\nTreat-2\nTreat-3";
+        
+        setTimeout(() => {
+            const blocks = document.querySelectorAll('.gene-block');
+            if(blocks.length >= 2) {
+                blocks[0].querySelector('.gene-name-input').value = "GAPDH";
+                blocks[0].querySelector('.samples-input').value = samples;
+                blocks[0].querySelector('.cts-input').value = "22.5\n22.4\n22.6\n22.5\n22.8\n22.7";
+
+                blocks[1].querySelector('.gene-name-input').value = "IL6";
+                blocks[1].querySelector('.samples-input').value = samples;
+                blocks[1].querySelector('.cts-input').value = "30.5\n30.4\n30.6\n26.5\n26.8\n26.2";
+            }
+            document.getElementById('controlKeyword').value = "WT";
+            document.getElementById('exactMatchCheckbox').checked = false;
+            alert(t('demoLoaded'));
+        }, 100);
+    }
+</script>
+
+</body>
+</html>
