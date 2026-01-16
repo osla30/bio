@@ -44,6 +44,7 @@
 * **Primer Tm值計算**：得知 Primer 大約的 Tm值，長度、GC%、二級結構與 Dimer。
 * **DNA 反轉/互補**：輸入 DNA 序列，可進行反轉、互補、反轉+互補，同時具有去除 ATCG 以外字元的功能。
 * **Ligation 計算**：快速計算 Insert 與 Vector 的莫耳比。
+* **qPCR 相對定量分析**：輸入 qPCR Raw Data，快速以 2^(-ΔΔCt) 方法進行 qPCR 相對定量分析。
 
 
 ### 🎯 蛋白質相關計算
