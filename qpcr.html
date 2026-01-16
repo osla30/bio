@@ -771,17 +771,52 @@
     }
 
     function exportCSV() {
-        let csv = "Gene,Sample,Mean Ct,Delta Ct,ddCt,Fold Change\n";
+        // 1. 定義標題：增加 "Raw Ct Values" 欄位
+        // \uFEFF 是 BOM (Byte Order Mark)，讓 Excel 能正確識別中文編碼
+        let csv = "\uFEFFGene,Sample,Raw Ct Values,Mean Ct,Delta Ct,ddCt,Fold Change\n";
         
-        document.querySelectorAll('#resultTable tbody tr').forEach(tr => {
-            const cols = Array.from(tr.querySelectorAll('td')).slice(0,6).map(td => td.innerText);
-            csv += cols.join(",") + "\n";
+        // 2. 遍歷目前的結果表格
+        const rows = document.querySelectorAll('#resultTable tbody tr');
+        
+        rows.forEach(tr => {
+            const cells = tr.querySelectorAll('td');
+            if (cells.length === 0) return;
+
+            // 從表格中獲取已計算的數據
+            const gene = cells[0].innerText;
+            const sample = cells[1].innerText;
+            const meanCt = cells[2].innerText;
+            const deltaCt = cells[3].innerText;
+            const ddCt = cells[4].innerText;
+            const foldChange = cells[5].innerText;
+
+            // 3. 從 GLOBAL_DATA 撈取原始 Ct 值
+            let rawCtsString = "";
+            if (GLOBAL_DATA[sample] && GLOBAL_DATA[sample][gene]) {
+                // 將陣列 [22.5, 22.6] 轉為字串 "22.5; 22.6"
+                rawCtsString = GLOBAL_DATA[sample][gene].join("; ");
+            }
+
+            // 4. 組合 CSV 行 (使用引號包覆數值，避免 Excel 混淆分隔符)
+            // 這裡將 Raw Data 放在樣品名稱後面
+            const rowData = [
+                `"${gene}"`,
+                `"${sample}"`,
+                `"${rawCtsString}"`, // 原始數據
+                `"${meanCt}"`,
+                `"${deltaCt}"`,
+                `"${ddCt}"`,
+                `"${foldChange}"`
+            ];
+            
+            csv += rowData.join(",") + "\n";
         });
         
+        // 下載檔案
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "qpcr_results.csv"; 
+        link.download = "qpcr_results_full.csv"; 
         link.click();
     }
 
