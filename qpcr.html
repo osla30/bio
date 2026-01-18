@@ -357,8 +357,8 @@
                 <div class="info-box">
                     <span data-i18n="deltaCtFormula">用於計算 $\Delta Ct = Ct_{Target} - \text{Mean}(Ct_{Refs})$</span>
                     <br>
-                    <span style="font-size:0.85em; color:#666;">
-                        * 支援多重內參：若選擇多個，將使用其 Ct 值的算術平均數 (等同於表現量的幾何平均) 進行校正。
+                    <span style="font-size:0.85em; color:#666;" data-i18n="multiRefNote">
+                    * 支援多重內參：若選擇多個，將使用其 Ct 值的算術平均數 (等同於表現量的幾何平均) 進行校正。
                     </span>
                 </div>
             </div>
@@ -526,6 +526,7 @@
             step3: "3. 參數設定",
             refGeneLabel: "選擇內參基因 (Reference Genes)",
             deltaCtFormula: "用於計算 $\\Delta Ct = Ct_{Target} - \\text{Mean}(Ct_{Refs})$",
+            multiRefNote: "* 支援多重內參：若選擇多個，將使用其 Ct 值的算術平均數 (等同於表現量的幾何平均) 進行校正。",
             controlKeyLabel: "對照組關鍵字 (Control Keyword)",
             exactMatch: "完全符合 (Exact Match) - 用於精確群組比對 (如 \"WT\" vs \"WT-1\")",
             calibratorNote: "系統會找出符合此關鍵字的樣本，<br>算出 <b>平均 $\\Delta Ct$</b> 作為校正基準 (Calibrator)。",
@@ -587,6 +588,7 @@
             step3: "3. Parameters",
             refGeneLabel: "Select Reference Genes",
             deltaCtFormula: "Calculates ΔCt = Ct_Target - Mean(Ct_Refs)",
+            multiRefNote: "* Multiple Reference Genes: If multiple are selected, the arithmetic mean of their Ct values (equivalent to the geometric mean of quantity) is used for normalization.",
             controlKeyLabel: "Control Group Keyword",
             exactMatch: "Exact Match (matches Group Name)",
             calibratorNote: "Finds samples matching this keyword, calculates Mean ΔCt as Calibrator.",
