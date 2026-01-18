@@ -17,6 +17,7 @@
             --bg: #f4f6f9;
             --card-bg: #ffffff;
             --excel-green: #217346;
+            --excel-dark: #14442a;
         }
 
         body {
@@ -165,6 +166,17 @@
         }
         .btn-excel:hover { background-color: #1a5c38; }
 
+        .btn-excel-all {
+            background-color: var(--excel-dark);
+            color: white;
+            padding: 6px 15px; 
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-excel-all:hover { background-color: #0d2e1c; }
+
         .delete-block-btn {
             position: absolute;
             top: 10px;
@@ -201,6 +213,8 @@
         .hidden { display: none; }
         .error-msg { color: red; font-size: 0.9em; margin-top: 5px; display: none; }
         .info-box { background: #e8f4fd; color: #0c5460; padding: 10px; border-radius: 5px; font-size: 0.9em; margin-top: 10px; }
+        
+        /* 內參警告框：黃色 */
         .warning-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba; margin-bottom: 20px; display: none; }
         
         td { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
@@ -225,6 +239,26 @@
             max-height: 500px;
             overflow-y: auto;
         }
+        
+        .anova-result-box {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            border-left: 5px solid;
+        }
+        .anova-pass {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #28a745;
+        }
+        /* 淺紅色警告框 (ANOVA不顯著) */
+        .anova-fail {
+            background-color: #ffebee;
+            color: #c0392b; 
+            border-color: #ef9a9a;
+        }
+
         .stat-item {
             margin-bottom: 15px;
             padding-bottom: 15px;
@@ -235,18 +269,10 @@
         .stat-sig { color: #e74c3c; font-weight: bold; }
         .stat-bonferroni { color: #8e44ad; font-size: 0.9em; display: block; margin-top: 3px; }
         
-        .anova-box { 
-            background-color: #fff3e0; 
-            border: 1px solid #ffcc80; 
-            padding: 10px; 
-            border-radius: 5px; 
-            margin-bottom: 15px; 
-            color: #e65100;
-        }
-        
         @media (max-width: 600px) {
             .header-row { flex-direction: column; gap: 10px; }
             .header-controls { position: static; transform: none; margin-top: 10px; }
+            .export-btn-group { flex-direction: column; width: 100%; }
         }
     </style>
 </head>
@@ -336,6 +362,7 @@
         </div>
         
         <div id="warningBox" class="warning-box"></div>
+        
         <div style="margin-bottom:10px; font-weight:bold; color:#2980b9;" id="calibratorInfo"></div>
 
         <div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
@@ -358,13 +385,17 @@
     <div id="statsSection" class="card hidden">
         <div class="step-title">
             <span data-i18n="step5">5. 統計分析與作圖 (Statistics & Plots)</span>
+            <div class="export-btn-group" style="display:flex; gap:10px;">
+                <button class="btn-excel" onclick="exportStatsCSV()">📊 <span data-i18n="btnExportStats">匯出當前基因統計</span></button>
+                <button class="btn-excel-all" onclick="exportAllStatsCSV()">📑 <span data-i18n="btnExportAllStats">匯出全部基因統計</span></button>
+            </div>
         </div>
         
         <div class="info-box" style="margin-bottom:20px;">
             <strong data-i18n="statNoteTitle">💡 統計科學修正說明：</strong>
             <span data-i18n="statNoteBody">
                 為了符合統計假設，<b>P 值計算採用 ΔCt 值進行檢定</b>（而非 2^-ΔΔCt）。<br>
-                若比較組數 > 1，系統已自動應用 <b>Bonferroni 校正</b> 以避免偽陽性，圖表星號 (*) 代表校正後的顯著差異。
+                系統會對 <b>3 組以上</b> 的數據執行 <b>One-way ANOVA</b>。若為 2 組則直接進行 T-test。
             </span>
         </div>
 
@@ -420,8 +451,10 @@
             colGene: "基因",
             colSample: "樣本",
             step5: "5. 統計分析與作圖 (Statistics & Plots)",
+            btnExportStats: "匯出當前基因統計",
+            btnExportAllStats: "匯出全部基因統計",
             statNoteTitle: "💡 統計科學修正說明：",
-            statNoteBody: "為了符合統計假設，<b>P 值計算採用 ΔCt 值進行檢定</b>（而非 2^-ΔΔCt）。<br>若比較組數 > 1，系統已自動應用 <b>Bonferroni 校正</b> 以避免偽陽性，圖表星號 (*) 代表校正後的顯著差異。",
+            statNoteBody: "為了符合統計假設，<b>P 值計算採用 ΔCt 值進行檢定</b>（而非 2^-ΔΔCt）。<br>系統會對 <b>3 組以上</b> 的數據執行 <b>One-way ANOVA</b>。若為 2 組則直接進行 T-test。",
             bonferroniWarn: "⚠️ 檢測到多組比較 ({n} 組)。<br>P 值已自動應用 <b>Bonferroni 校正</b> (P_adj = P * {n})。",
             statPanelTitle: "統計檢定結果 (基於 ΔCt)",
             plotGeneLabel: "選擇繪圖基因：",
@@ -442,7 +475,14 @@
             calibInfo: "ℹ️ 已使用 {n} 個 \"{keyword}\" {mode} 樣本的平均 ΔCt 作為基準",
             demoLoaded: "已載入範例！",
             placeholderKeyword: "例如: WT",
-            alertNoControlGroup: "錯誤：找不到符合「對照組關鍵字」的分組。請檢查關鍵字是否與樣本名稱一致。"
+            alertNoControlGroup: "錯誤：找不到符合「對照組關鍵字」的分組。請檢查關鍵字是否與樣本名稱一致。",
+            alertNoStats: "無統計數據可匯出",
+            alertAllStatsNoRef: "跳過 {gene} (為內參基因)",
+            alertAllStatsError: "基因 {gene} 無法計算: {msg}",
+            anovaTitle: "單因子變異數分析 (One-way ANOVA)",
+            anovaSigMsg: "✅ P = {p} < 0.05 (組間有顯著差異)",
+            anovaNsMsg: "⚠️ P = {p} > 0.05 (組間無顯著差異)",
+            anovaNsHint: "由於 ANOVA 不顯著，統計上不建議進行個別組間比較 (Post-hoc test)，請謹慎解讀以下結果。"
         },
         'en': {
             title: "🧬 qPCR Analysis Tool 2^(-ΔΔCt)",
@@ -474,8 +514,10 @@
             colGene: "Gene",
             colSample: "Sample",
             step5: "5. Statistics & Plots",
+            btnExportStats: "Export Current Gene Stats",
+            btnExportAllStats: "Export All Genes Stats",
             statNoteTitle: "💡 Statistics Note:",
-            statNoteBody: "Stats are performed on ΔCt values. <br><b>Bonferroni correction</b> is automatically applied for multiple comparisons. Stars (*) indicate significance after correction.",
+            statNoteBody: "Stats are performed on ΔCt values. <br>System performs <b>One-way ANOVA</b> for 3+ groups. Pairwise comparisons (Bonferroni) are listed below.",
             bonferroniWarn: "⚠️ Multiple comparisons detected ({n} groups).<br>P-values adjusted via <b>Bonferroni correction</b> (P_adj = P * {n}).",
             statPanelTitle: "Statistical Test (Based on ΔCt)",
             plotGeneLabel: "Select Gene for Plot:",
@@ -490,11 +532,19 @@
             alertValidGene: "Less than 2 valid genes.",
             alertNoKeyword: "Please enter Control Keyword.",
             alertNoCalibrator: "No valid control samples found.",
-            warnMissingRef: "⚠️ Warning: Missing Ref Gene data for some samples.",
+            // 修正：補上缺失內參警告的英文翻譯細節
+            warnMissingRef: "⚠️ <b>Warning:</b> The following samples are excluded due to missing Reference Gene ({ref}) data:<br>{samples}",
             calibInfo: "ℹ️ Used {n} \"{keyword}\" samples as Calibrator",
             demoLoaded: "Demo Loaded!",
             placeholderKeyword: "e.g., WT",
-            alertNoControlGroup: "Error: No group matches the Control Keyword. Please check if the keyword matches sample names."
+            alertNoControlGroup: "Error: No group matches the Control Keyword. Please check if the keyword matches sample names.",
+            alertNoStats: "No stats data available",
+            alertAllStatsNoRef: "Skipping {gene} (Ref Gene)",
+            alertAllStatsError: "Gene {gene} error: {msg}",
+            anovaTitle: "One-way ANOVA",
+            anovaSigMsg: "✅ P = {p} < 0.05 (Significant Difference)",
+            anovaNsMsg: "⚠️ P = {p} > 0.05 (No Significant Difference)",
+            anovaNsHint: "Since ANOVA is not significant, pairwise comparisons are not recommended. Please interpret results below with caution."
         }
     };
 
@@ -521,6 +571,8 @@
         if(!document.getElementById('statsSection').classList.contains('hidden')) {
              updatePlot();
         }
+        
+        // 更新 Calibrator Info
         const infoEl = document.getElementById('calibratorInfo');
         if (infoEl) {
             const savedN = infoEl.getAttribute('data-n');
@@ -534,6 +586,20 @@
                     .replace('{mode}', matchModeText);
             }
         }
+
+        // 新增：更新缺失內參警告框 (Missing Ref Warning)
+        const warningEl = document.getElementById('warningBox');
+        if (warningEl && warningEl.style.display !== 'none') {
+            const missingSamples = warningEl.getAttribute('data-missing-samples');
+            const refGene = warningEl.getAttribute('data-ref-gene');
+            
+            if (missingSamples && refGene) {
+                const msg = t('warnMissingRef')
+                    .replace('{ref}', refGene)
+                    .replace('{samples}', missingSamples);
+                warningEl.innerHTML = msg;
+            }
+        }
     }
 
     // --- 核心變數 ---
@@ -542,9 +608,12 @@
     let SAMPLE_LIST = new Set();
     let FOLD_CHANGE_DATA = []; 
     let blockCounter = 0; 
+    
+    // 用於儲存 "當前" 顯示基因的統計結果 (供單一匯出使用)
+    let CURRENT_STATS_EXPORT_DATA = []; 
+    let CURRENT_ANOVA_RESULT = null; // 儲存當前基因的 ANOVA P
 
     // --- Utility Function: Get Group Name ---
-    // 核心修復：統一使用此函數處理分組，移除結尾的數字編號
     function getGroupName(sampleName) {
         return sampleName.replace(/[-_ ]\d+$/, ''); 
     }
@@ -686,9 +755,15 @@
         
         // A. Delta Ct
         let sampleStats = {}; 
+        let missingRefSamples = []; // 用於收集缺少內參的樣本
         
         SAMPLE_LIST.forEach(sName => {
-            if (!GLOBAL_DATA[sName][refGene]) { return; }
+            // 檢查該樣本是否有內參基因數據
+            if (!GLOBAL_DATA[sName][refGene] || GLOBAL_DATA[sName][refGene].length === 0) { 
+                missingRefSamples.push(sName);
+                return; 
+            }
+            
             sampleStats[sName] = {};
             const refMean = getMean(GLOBAL_DATA[sName][refGene]);
             GENE_LIST.forEach(gName => {
@@ -699,12 +774,30 @@
             });
         });
 
-        // B. Calibrator (修復邏輯：使用 getGroupName 進行 Exact Match)
+        // 顯示或隱藏警告框
+        const warningEl = document.getElementById('warningBox');
+        if (missingRefSamples.length > 0) {
+            // 儲存數據以供切換語言使用
+            warningEl.setAttribute('data-missing-samples', missingRefSamples.join(', '));
+            warningEl.setAttribute('data-ref-gene', refGene);
+
+            const msg = t('warnMissingRef')
+                .replace('{ref}', refGene)
+                .replace('{samples}', missingRefSamples.join(', '));
+            warningEl.innerHTML = msg;
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.style.display = 'none';
+            // 清除暫存數據
+            warningEl.removeAttribute('data-missing-samples');
+            warningEl.removeAttribute('data-ref-gene');
+        }
+
+        // B. Calibrator
         let calibrators = {}; 
         let controlCount = 0; 
         
         SAMPLE_LIST.forEach(sName => {
-            // *** Critical Fix: 使用 Group Name 進行比對 ***
             const groupName = getGroupName(sName);
             const isMatch = useExactMatch ? (groupName === ctrlKeyword) : sName.includes(ctrlKeyword);
             
@@ -755,7 +848,7 @@
                             gene: gName,
                             sample: sName,
                             foldChange: foldChange,
-                            deltaCt: stats.deltaCt // 保存 Delta Ct 用於 T-test
+                            deltaCt: stats.deltaCt 
                         });
                     }
                 }
@@ -795,7 +888,7 @@
         document.getElementById('resultSection').scrollIntoView({behavior: "smooth"});
     }
 
-    // --- 3. 統計與繪圖 (核心更新) ---
+    // --- 3. 統計與繪圖 (核心邏輯: ANOVA + T-test) ---
 
     function initStatsSection() {
         const select = document.getElementById('plotGeneSelect');
@@ -814,20 +907,15 @@
         updatePlot();
     }
 
-    function calculateStandardError(values) {
-        if (values.length < 2) return 0;
-        const mean = getMean(values);
-        const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (values.length - 1);
-        return Math.sqrt(variance) / Math.sqrt(values.length);
-    }
-
-    function updatePlot() {
-        const targetGene = document.getElementById('plotGeneSelect').value;
-        if (!targetGene) return;
-
+    /**
+     * 核心計算函數：針對單一基因進行統計分析 (ANOVA + Pairwise)
+     * @param {string} targetGene 基因名稱
+     * @returns {object} { results: Array, groupsFC: Object, groupNames: Array, error: string, anovaP: number }
+     */
+    function calculateGeneStats(targetGene) {
         const ctrlKeyword = document.getElementById('controlKeyword').value.trim();
         const useExactMatch = document.getElementById('exactMatchCheckbox').checked;
-        
+
         // 1. 整理數據
         let groupsFC = {};     
         let groupsDeltaCt = {}; 
@@ -849,43 +937,38 @@
             a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
         );
 
-        // Anti-Stupid Check for Control Group
         const controlGroupMatch = groupNames.find(g => 
             useExactMatch ? g === ctrlKeyword : g.includes(ctrlKeyword)
         );
         
         if (!controlGroupMatch) {
-            const errorMsg = `❌ ${t('alertNoControlGroup')}`;
-            document.getElementById('statResultsContainer').innerHTML = "";
-            document.getElementById('plotlyChart').innerHTML = `
-                <div style="display:flex;justify-content:center;align-items:center;height:100%;color:#e74c3c;font-size:1.1em;border:2px dashed #e74c3c;border-radius:10px;">
-                    ${errorMsg}
-                </div>`;
-            return;
+            return { error: `❌ ${t('alertNoControlGroup')}` };
         }
 
         const controlGroup = controlGroupMatch;
         groupNames = [controlGroup, ...groupNames.filter(g => g !== controlGroup)];
 
-        // --- Bonferroni 邏輯 ---
-        const comparisonCount = groupNames.length - 1; // 扣除 Control 自己
-        let statResultsHTML = "";
-        
-        if (comparisonCount > 1) {
-        // 修改這裡：使用 t() 取得翻譯，並用 replaceAll 替換掉所有的 {n}
-        const warnText = t('bonferroniWarn').replace(/\{n\}/g, comparisonCount);
-    
-        statResultsHTML += `
-        <div style="background:#fff8e1; color:#856404; padding:8px; border-radius:4px; font-size:0.9em; margin-bottom:15px; border:1px solid #ffeeba;">
-            ${warnText}
-        </div>
-        `;
+        // --- ANOVA Calculation ---
+        // 收集所有有效組別的 Delta Ct 陣列 (用於 ANOVA)
+        let anovaDataArrays = [];
+        groupNames.forEach(g => {
+            if(groupsDeltaCt[g] && groupsDeltaCt[g].length >= 2) {
+                anovaDataArrays.push(groupsDeltaCt[g]);
+            }
+        });
+
+        // *** 修正重點：只有當組別數 > 2 時才進行 ANOVA ***
+        let anovaP = null;
+        if (anovaDataArrays.length > 2) {
+            // jStat.anovaftest(array1, array2, ...)
+            anovaP = jStat.anovaftest(...anovaDataArrays);
         }
 
-        let annotations = []; 
-        const ctrlDeltaCtData = groupsDeltaCt[controlGroup];
-        
         // --- Pairwise Comparisons ---
+        const comparisonCount = groupNames.length - 1; 
+        const ctrlDeltaCtData = groupsDeltaCt[controlGroup];
+        let results = [];
+
         groupNames.forEach(grp => {
             if (grp === controlGroup) return;
             
@@ -893,51 +976,144 @@
             const meanFC = getMean(fcData);
             const semFC = calculateStandardError(fcData);
             const ctrlFCMean = getMean(groupsFC[controlGroup]);
+            const ctrlFCSem = calculateStandardError(groupsFC[controlGroup]);
             const expDeltaCt = groupsDeltaCt[grp];
             
+            let statObj = {
+                comparison: `${grp} vs ${controlGroup}`,
+                grp: grp,
+                ctrl: controlGroup,
+                nExp: expDeltaCt ? expDeltaCt.length : 0,
+                nCtrl: ctrlDeltaCtData ? ctrlDeltaCtData.length : 0,
+                meanFC: meanFC,
+                ctrlMeanFC: ctrlFCMean,
+                semFC: semFC,
+                ctrlSemFC: ctrlFCSem,
+                pRaw: 1.0,
+                pAdj: 1.0,
+                sig: 'ns'
+            };
+
             if (ctrlDeltaCtData && ctrlDeltaCtData.length > 1 && expDeltaCt && expDeltaCt.length > 1) {
-                // T-test (Raw P)
-                let pValue = twoSampleTtest(expDeltaCt, ctrlDeltaCtData); 
-                
-                // Bonferroni Correction
+                let pValue = twoSampleTtest(expDeltaCt, ctrlDeltaCtData);
                 let adjPValue = pValue * comparisonCount;
                 if (adjPValue > 1.0) adjPValue = 1.0;
                 
-                // 使用校正後的 P 值判斷星號
-                const stars = getStars(adjPValue); 
-                const isSig = adjPValue < 0.05;
+                statObj.pRaw = pValue;
+                statObj.pAdj = adjPValue;
+                statObj.sig = getStars(adjPValue);
+            } else {
+                statObj.error = "N<2";
+            }
+            results.push(statObj);
+        });
 
-                statResultsHTML += `
+        return { 
+            results: results, 
+            groupsFC: groupsFC, 
+            groupNames: groupNames, 
+            comparisonCount: comparisonCount,
+            controlGroup: controlGroup,
+            anovaP: anovaP // 回傳 ANOVA P 值 (如果組別<=2，此值為 null)
+        };
+    }
+
+    function updatePlot() {
+        const targetGene = document.getElementById('plotGeneSelect').value;
+        if (!targetGene) return;
+
+        // 呼叫核心計算函數
+        const analysis = calculateGeneStats(targetGene);
+        
+        if (analysis.error) {
+            document.getElementById('statResultsContainer').innerHTML = "";
+            document.getElementById('plotlyChart').innerHTML = `
+                <div style="display:flex;justify-content:center;align-items:center;height:100%;color:#e74c3c;font-size:1.1em;border:2px dashed #e74c3c;border-radius:10px;">
+                    ${analysis.error}
+                </div>`;
+            CURRENT_STATS_EXPORT_DATA = [];
+            CURRENT_ANOVA_RESULT = null;
+            return;
+        }
+
+        const { results, groupsFC, groupNames, comparisonCount, controlGroup, anovaP } = analysis;
+        
+        // 儲存當前數據供匯出
+        CURRENT_STATS_EXPORT_DATA = results.map(r => ({ ...r, targetGene: targetGene, anovaP: anovaP }));
+        CURRENT_ANOVA_RESULT = anovaP;
+
+        let finalHTML = "";
+
+        // --- 1. 顯示 ANOVA 結果 (僅當組數 > 2 時) ---
+        if (anovaP !== null) {
+            const isAnovaSig = anovaP < 0.05;
+            const pText = anovaP.toFixed(6);
+            const msg = isAnovaSig ? t('anovaSigMsg').replace('{p}', pText) : t('anovaNsMsg').replace('{p}', pText);
+            const cssClass = isAnovaSig ? 'anova-pass' : 'anova-fail';
+            
+            finalHTML += `
+                <div class="anova-result-box ${cssClass}">
+                    <strong>${t('anovaTitle')}</strong><br>
+                    <span style="font-size:1.1em">${msg}</span>
+                    ${!isAnovaSig ? `<br><div style='margin-top:5px; font-size:0.9em; opacity:0.85;'>${t('anovaNsHint')}</div>` : ''}
+                </div>
+            `;
+        }
+        
+        // --- 2. 顯示成對比較列表 (總是顯示) ---
+        if (comparisonCount > 1) {
+            const warnText = t('bonferroniWarn').replace(/\{n\}/g, comparisonCount);
+            finalHTML += `
+            <div style="background:#fff8e1; color:#856404; padding:8px; border-radius:4px; font-size:0.9em; margin-bottom:15px; border:1px solid #ffeeba;">
+                ${warnText}
+            </div>`;
+        }
+        
+        results.forEach(stat => {
+            if (stat.error) {
+                finalHTML += `<div class="stat-item">${stat.grp}: N<2, 無法檢定</div>`;
+            } else {
+                const isSig = stat.pAdj < 0.05;
+                finalHTML += `
                     <div class="stat-item">
-                        <div><b>${grp} vs ${controlGroup}</b></div>
-                        <div>Mean FC: ${meanFC.toFixed(2)} vs ${ctrlFCMean.toFixed(2)}</div>
-                        <div>${t('pVal')}: ${pValue.toFixed(8)}</div>
+                        <div><b>${stat.comparison}</b> <span style="font-size:0.8em; color:#666;">(n=${stat.nExp} vs n=${stat.nCtrl})</span></div>
+                        <div>Mean FC: ${stat.meanFC.toFixed(2)} vs ${stat.ctrlMeanFC.toFixed(2)}</div>
+                        <div>${t('pVal')}: ${stat.pRaw.toFixed(8)}</div>
                         <div class="stat-bonferroni">
-                            ${t('pValAdj')}: <span class="${isSig ? 'stat-sig' : ''}">${adjPValue.toFixed(8)} ${stars}</span>
+                            ${t('pValAdj')}: <span class="${isSig ? 'stat-sig' : ''}">${stat.pAdj.toFixed(8)} ${stat.sig}</span>
                         </div>
                     </div>
                 `;
-
-                const yPos = Math.max(0, meanFC) + semFC + (Math.max(0.1, meanFC) * 0.15);
-                
-                annotations.push({
-                    x: grp,
-                    y: yPos,
-                    text: stars,
-                    xanchor: 'center',
-                    yanchor: 'bottom',
-                    showarrow: false,
-                    font: { size: 16, color: stars !== 'ns' ? '#e74c3c' : '#7f8c8d' }
-                });
-
-            } else {
-                statResultsHTML += `<div class="stat-item">${grp}: N<2, 無法檢定</div>`;
             }
         });
-        
-        document.getElementById('statResultsContainer').innerHTML = statResultsHTML || "無足夠數據進行比較";
 
-        // 3. 繪圖數據
+        document.getElementById('statResultsContainer').innerHTML = finalHTML || "無數據";
+
+        // --- 3. 繪圖 (永遠顯示圖表，方便使用者檢查數據分布) ---
+        let annotations = [];
+        
+        // 星號顯示邏輯：
+        // 1. 如果有跑 ANOVA (組數>2) 且 ANOVA 顯著 -> 標示星號
+        // 2. 如果沒跑 ANOVA (組數=2) -> 直接標示 T-test 星號
+        const showStars = (anovaP === null) || (anovaP < 0.05);
+
+        if (showStars) {
+            results.forEach(stat => {
+                if (!stat.error) {
+                    const yPos = Math.max(0, stat.meanFC) + stat.semFC + (Math.max(0.1, stat.meanFC) * 0.15);
+                    annotations.push({
+                        x: stat.grp,
+                        y: yPos,
+                        text: stat.sig,
+                        xanchor: 'center',
+                        yanchor: 'bottom',
+                        showarrow: false,
+                        font: { size: 16, color: stat.sig !== 'ns' ? '#e74c3c' : '#7f8c8d' }
+                    });
+                }
+            });
+        }
+
         const xData = [];
         const yMean = [];
         const yError = [];
@@ -989,6 +1165,13 @@
         };
 
         Plotly.newPlot('plotlyChart', [traceBar, tracePoints], layout, {responsive: true});
+    }
+
+    function calculateStandardError(values) {
+        if (!values || values.length < 2) return 0;
+        const mean = getMean(values);
+        const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (values.length - 1);
+        return Math.sqrt(variance) / Math.sqrt(values.length);
     }
 
     function getStars(p) {
@@ -1049,6 +1232,79 @@
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = "qpcr_results.csv"; 
+        link.click();
+    }
+    
+    // 匯出當前基因統計
+    function exportStatsCSV() {
+        const geneName = document.getElementById('plotGeneSelect').value;
+        if (!CURRENT_STATS_EXPORT_DATA || CURRENT_STATS_EXPORT_DATA.length === 0) {
+            alert(t('alertNoStats'));
+            return;
+        }
+        
+        const filename = `qpcr_stats_${geneName}_report.csv`;
+        downloadStatsCSV(CURRENT_STATS_EXPORT_DATA, filename);
+    }
+
+    // 匯出所有基因統計
+    function exportAllStatsCSV() {
+        const refGene = document.getElementById('refGeneSelect').value;
+        let allStats = [];
+
+        GENE_LIST.forEach(gene => {
+            if (gene === refGene) return; 
+
+            const analysis = calculateGeneStats(gene);
+            
+            if (analysis.error) {
+                console.warn(`Skipping ${gene}: ${analysis.error}`);
+            } else {
+                // 將該基因的結果加入總表，並標記 targetGene 和 anovaP
+                const taggedResults = analysis.results.map(r => ({ 
+                    ...r, 
+                    targetGene: gene,
+                    anovaP: analysis.anovaP
+                }));
+                allStats = allStats.concat(taggedResults);
+            }
+        });
+
+        if (allStats.length === 0) {
+            alert(t('alertNoStats'));
+            return;
+        }
+
+        downloadStatsCSV(allStats, "qpcr_stats_ALL_GENES_report.csv");
+    }
+
+    // 通用 CSV 下載函數 (新增 ANOVA_P 欄位)
+    function downloadStatsCSV(data, filename) {
+        let csv = "\uFEFFTarget_Gene,ANOVA_P_Value,Comparison,Group_N,Control_N,Mean_FC_Exp,Mean_FC_Ctrl,SEM_Exp,SEM_Ctrl,P_Value_Raw,P_Value_Adj,Significance\n";
+        
+        data.forEach(d => {
+            const anovaStr = (d.anovaP !== null && d.anovaP !== undefined) ? d.anovaP.toFixed(8) : "N/A";
+            const row = [
+                `"${d.targetGene}"`,
+                anovaStr,
+                `"${d.comparison}"`,
+                d.nExp,
+                d.nCtrl,
+                d.meanFC.toFixed(4),
+                d.ctrlMeanFC.toFixed(4),
+                d.semFC.toFixed(4),
+                d.ctrlSemFC.toFixed(4),
+                d.pRaw.toFixed(8),
+                d.pAdj.toFixed(8),
+                `"${d.sig}"`
+            ];
+            csv += row.join(",") + "\n";
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
         link.click();
     }
 
