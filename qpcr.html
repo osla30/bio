@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>qPCR 分析工具 / qPCR Analysis Tool</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+
     <style>
         :root {
             --primary: #2c3e50;
@@ -27,7 +30,6 @@
 
         .container { max-width: 1200px; margin: 0 auto; position: relative; }
         
-        /* header container for title and language switch */
         .header-row {
             display: flex;
             justify-content: center;
@@ -37,17 +39,15 @@
         }
         h1 { margin: 0; text-align: center; }
 
-        /* --- 修改處：右上角按鈕群組樣式 --- */
         .header-controls {
             position: absolute;
             right: 0;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
-            gap: 10px; /* 按鈕間距 */
+            gap: 10px;
         }
 
-        /* 通用按鈕樣式 (適用於 link 與 button) */
         .top-btn {
             background: transparent;
             border: 1px solid var(--accent);
@@ -60,11 +60,10 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            text-decoration: none; /* 移除超連結底線 */
+            text-decoration: none;
             line-height: normal;
         }
         .top-btn:hover { background: var(--accent); color: white; }
-        /* ---------------------------------- */
 
         .card {
             background: var(--card-bg);
@@ -89,7 +88,6 @@
             gap: 10px;
         }
 
-        /* 基因區塊 */
         .gene-block {
             background-color: #fafbfc;
             border: 1px solid #ced4da;
@@ -134,7 +132,6 @@
             box-sizing: border-box;
         }
 
-        /* 按鈕與控制項 */
         button {
             cursor: pointer;
             padding: 8px 16px;
@@ -157,7 +154,6 @@
         .btn-add { background-color: var(--warning); color: #fff; }
         .btn-add:hover { background-color: #e67e22; }
 
-        /* Excel 風格按鈕 */
         .btn-excel {
             background-color: var(--excel-green); 
             color: white;
@@ -195,16 +191,12 @@
         input[type="number"] { padding: 8px; width: 60px; text-align: center; font-size: 16px; }
         select, input[type="text"] { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
 
-        /* 結果表格 */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
         th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #eee; }
         th { background-color: #f8f9fa; position: sticky; top: 0; z-index: 10; }
         tr:hover { background-color: #f1f1f1; }
 
         tr.gene-separator { border-top: 2px solid #bdc3c7; }
-
-        .bar-container { background: #eee; height: 16px; border-radius: 8px; overflow: hidden; }
-        .bar { height: 100%; background: #e74c3c; }
 
         .hidden { display: none; }
         .error-msg { color: red; font-size: 0.9em; margin-top: 5px; display: none; }
@@ -213,20 +205,45 @@
         
         td { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
         
-        .checkbox-wrapper {
-            display: flex; 
-            align-items: center; 
-            margin-top: 5px; 
-            font-size: 0.9em; 
-            color: #555;
-            gap: 5px;
-        }
+        .checkbox-wrapper { display: flex; align-items: center; margin-top: 5px; font-size: 0.9em; color: #555; gap: 5px; }
         .checkbox-wrapper input { width: auto; margin: 0; }
+
+        /* 統計區塊樣式 */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 900px) {
+            .stat-grid { grid-template-columns: 1fr; }
+        }
+        .stat-panel {
+            background: #fafbfc;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .stat-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .stat-item:last-child { border-bottom: none; }
+        .stat-val { font-weight: bold; color: #2c3e50; }
+        .stat-sig { color: #e74c3c; font-weight: bold; }
+        .anova-box { 
+            background-color: #fff3e0; 
+            border: 1px solid #ffcc80; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin-bottom: 15px; 
+            color: #e65100;
+        }
         
-        /* RWD for header */
         @media (max-width: 600px) {
             .header-row { flex-direction: column; gap: 10px; }
-            /* 修改 RWD 行為以適應按鈕群組 */
             .header-controls { position: static; transform: none; margin-top: 10px; }
         }
     </style>
@@ -241,7 +258,6 @@
             <a href="https://drive.google.com/file/d/1yDgXBFR4p9nPmxe5KaJ15Y5XY6S_jSX9/view?usp=sharing" class="top-btn" target="_blank" title="Download Offline Version">
                 📥 <span data-i18n="btnOffline">下載離線版</span>
             </a>
-            
             <button class="top-btn" onclick="toggleLanguage()">
                 🌐 <span id="langText">English</span>
             </button>
@@ -318,10 +334,9 @@
         </div>
         
         <div id="warningBox" class="warning-box"></div>
-
         <div style="margin-bottom:10px; font-weight:bold; color:#2980b9;" id="calibratorInfo"></div>
 
-        <div style="overflow-x: auto;">
+        <div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
             <table id="resultTable">
                 <thead>
                     <tr>
@@ -331,24 +346,52 @@
                         <th>ΔCt</th>
                         <th>ΔΔCt</th>
                         <th>Fold Change</th>
-                        <th style="width:100px" data-i18n="colTrend">趨勢</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
         </div>
     </div>
+
+    <div id="statsSection" class="card hidden">
+        <div class="step-title">
+            <span data-i18n="step5">5. 統計分析與作圖 (Statistics & Plots)</span>
+        </div>
+        
+        <div class="info-box" style="margin-bottom:20px;">
+            <strong data-i18n="statNoteTitle">💡 統計科學修正說明：</strong>
+            <span data-i18n="statNoteBody">
+                為了符合統計假設，<b>P 值計算採用 ΔCt 值進行檢定</b>（而非 2^-ΔΔCt）。<br>
+                圖表 Y 軸維持顯示 Fold Change 以符合視覺習慣，但星號 (*) 代表 ΔCt 的顯著差異。
+            </span>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-panel">
+                <h4 style="margin-top:0; border-bottom:1px solid #ddd; padding-bottom:10px;" data-i18n="statPanelTitle">統計檢定結果 (基於 ΔCt)</h4>
+                <div id="statResultsContainer"></div>
+            </div>
+
+            <div>
+                 <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <label data-i18n="plotGeneLabel">選擇繪圖基因：</label>
+                    <select id="plotGeneSelect" onchange="updatePlot()" style="width:auto; padding:5px;"></select>
+                 </div>
+                 <div id="plotlyChart" style="width:100%; height:500px;"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
     // --- 多語言設定 ---
-    let currentLang = 'zh'; // 預設中文
+    let currentLang = 'zh'; 
     
     const translations = {
         'zh': {
             title: "🧬 qPCR 相對定量分析工具 2^(-ΔΔCt)",
             langBtn: "English",
-            btnOffline: "下載離線版", // 新增文字
+            btnOffline: "下載離線版",
             step1: "1. 初始設定",
             initGeneCount: "初始基因數量：",
             startBuild: "開始建立區塊",
@@ -374,8 +417,14 @@
             exportCSV: "📊 匯出 CSV (Excel)",
             colGene: "基因",
             colSample: "樣本",
-            colTrend: "趨勢",
-            // JS 內部訊息
+            step5: "5. 統計分析與作圖 (Statistics & Plots)",
+            statNoteTitle: "💡 統計科學修正說明：",
+            statNoteBody: "為了符合統計假設，<b>P 值計算採用 ΔCt 值進行檢定</b>（而非 2^-ΔΔCt）。<br>圖表 Y 軸維持顯示 Fold Change 以符合視覺習慣，但星號 (*) 代表 ΔCt 的顯著差異。",
+            statPanelTitle: "統計檢定結果 (基於 ΔCt)",
+            plotGeneLabel: "選擇繪圖基因：",
+            pVal: "P值",
+            statSig: "顯著",
+            statNs: "不顯著",
             alertMinGene: "錯誤：初始至少需要 2 個基因。",
             alertConfirmClear: "確定要清空所有已生成的區塊嗎？\n此動作無法復原！",
             alertBlockCount: "錯誤：目前只有 {n} 個區塊。\n分析至少需要 2 個基因 (1個內參 + 1個目標)。",
@@ -388,12 +437,13 @@
             warnMissingRef: "⚠️ <b>警告：</b>以下樣本因缺少內參基因 ({ref}) 的數據，已被排除在計算之外：<br>{samples}",
             calibInfo: "ℹ️ 已使用 {n} 個 \"{keyword}\" {mode} 樣本的平均 ΔCt 作為基準",
             demoLoaded: "已載入範例！",
-            placeholderKeyword: "例如: WT"
+            placeholderKeyword: "例如: WT",
+            alertNoControlGroup: "錯誤：找不到符合「對照組關鍵字」的分組。請檢查關鍵字是否與樣本名稱一致。"
         },
         'en': {
             title: "🧬 qPCR Analysis Tool 2^(-ΔΔCt)",
             langBtn: "中文",
-            btnOffline: "Download Offline", // 新增文字
+            btnOffline: "Download Offline",
             step1: "1. Initial Setup",
             initGeneCount: "Initial Gene Count:",
             startBuild: "Generate Blocks",
@@ -402,38 +452,43 @@
             step2: "2. Data Entry",
             addBlock: "➕ Add Block",
             clearBlocks: "🗑️ Clear All",
-            dataInstr: "Enter Sample Names and Ct Values. The system automatically averages values for <span style='color: #e74c3c; font-weight: bold;'>identical sample names</span> <span style='color: #e74c3c; font-weight: bold;'>(Technical Replicates)</span>.<br>For <span style='color: #e74c3c; font-weight: bold;'>distinct independent samples (Biological Replicates)</span>, please use unique names (e.g., WT-1, WT-2).",
+            dataInstr: "Enter Sample Names and Ct Values. Same names = Technical Replicates. Biological Replicates must have unique names (e.g., WT-1, WT-2).",
             nextStep: "Next: Parameters",
             geneNameLabel: "Gene Name:",
             sampleLabel: "⬇️ Sample Names",
-            ctLabel: "⬇️ Ct Values (Raw data allowed, auto-averaged)",
+            ctLabel: "⬇️ Ct Values",
             errorRowMsg: "⚠️ Row count mismatch.",
             step3: "3. Parameters",
             refGeneLabel: "Select Reference Gene",
-            deltaCtFormula: "Calculates $\\Delta Ct = Ct_{Target} - Ct_{Ref}$",
+            deltaCtFormula: "Calculates ΔCt = Ct_Target - Ct_Ref",
             controlKeyLabel: "Control Group Keyword",
-            exactMatch: "Exact Match - Avoid partial matches",
-            calibratorNote: "Finds samples matching this keyword,<br>calculates <b>Mean $\\Delta Ct$</b> as the Calibrator.",
+            exactMatch: "Exact Match",
+            calibratorNote: "Finds samples matching this keyword, calculates Mean ΔCt as Calibrator.",
             startCalc: "Calculate Results",
             step4: "4. Results",
             exportCSV: "📊 Export CSV (Excel)",
             colGene: "Gene",
             colSample: "Sample",
-            colTrend: "Trend",
-            // JS Messages
-            alertMinGene: "Error: At least 2 genes required initially.",
-            alertConfirmClear: "Are you sure you want to clear all blocks?\nThis cannot be undone!",
-            alertBlockCount: "Error: Only {n} blocks found.\nAnalysis requires at least 2 genes (1 Ref + 1 Target).",
-            alertRowMismatch: "Row count mismatch in some blocks. Please check red warnings.",
-            alertValidGene: "Less than 2 valid genes found. Please check for empty blocks.",
-            alertNoKeyword: "Please enter a Control Keyword (e.g., WT).",
-            alertNoCalibrator: "No valid samples found matching {mode} \"{keyword}\". Cannot calculate calibrator.",
-            modeExact: "Exact Match",
-            modeContains: "Keyword",
-            warnMissingRef: "⚠️ <b>Warning:</b> The following samples are excluded due to missing Reference Gene ({ref}) data:<br>{samples}",
-            calibInfo: "ℹ️ Used mean ΔCt of {n} \"{keyword}\" samples ({mode}) as Calibrator",
+            step5: "5. Statistics & Plots",
+            statNoteTitle: "💡 Statistics Note:",
+            statNoteBody: "Stats are performed on ΔCt values to meet normality assumptions. Plot shows Fold Change, but stars (*) reflect ΔCt significance.",
+            statPanelTitle: "Statistical Test (Based on ΔCt)",
+            plotGeneLabel: "Select Gene for Plot:",
+            pVal: "P-value",
+            statSig: "Significant",
+            statNs: "Not Significant",
+            alertMinGene: "Error: At least 2 genes required.",
+            alertConfirmClear: "Are you sure you want to clear all?",
+            alertBlockCount: "Error: Only {n} blocks found.",
+            alertRowMismatch: "Row count mismatch.",
+            alertValidGene: "Less than 2 valid genes.",
+            alertNoKeyword: "Please enter Control Keyword.",
+            alertNoCalibrator: "No valid control samples found.",
+            warnMissingRef: "⚠️ Warning: Missing Ref Gene data for some samples.",
+            calibInfo: "ℹ️ Used {n} \"{keyword}\" samples as Calibrator",
             demoLoaded: "Demo Loaded!",
-            placeholderKeyword: "e.g., WT"
+            placeholderKeyword: "e.g., WT",
+            alertNoControlGroup: "Error: No group matches the Control Keyword. Please check if the keyword matches sample names."
         }
     };
 
@@ -447,51 +502,59 @@
     }
 
     function updateTexts() {
-        // Update simple text elements
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if(translations[currentLang][key]) {
-                el.innerHTML = translations[currentLang][key]; // innerHTML allows formatting
+                el.innerHTML = translations[currentLang][key]; // 使用 innerHTML 支援 HTML 標籤
             }
         });
-
-        // 修改處：透過 ID 更新按鈕文字，避免覆蓋圖示
         document.getElementById('langText').innerText = translations[currentLang]['langBtn'];
-
-        // Update Inputs placeholders if needed
         const keyInput = document.getElementById('controlKeyword');
         if(keyInput) keyInput.placeholder = t('placeholderKeyword');
-
-        // Re-calculate results if they are visible
-        const resultSection = document.getElementById('resultSection');
-        if(!resultSection.classList.contains('hidden') && GENE_LIST.length > 0) {
-            calculateResults();
+        
+        // Re-draw plot if active
+        if(!document.getElementById('statsSection').classList.contains('hidden')) {
+             updatePlot();
+        }
+        const infoEl = document.getElementById('calibratorInfo');
+        // 檢查是否有存過數據
+        if (infoEl) {
+            const savedN = infoEl.getAttribute('data-n');
+            const savedKw = infoEl.getAttribute('data-kw');
+            
+            // 如果有存過，就用當前語言重新翻譯一次
+            if (savedN && savedKw) {
+                const matchModeText = document.getElementById('exactMatchCheckbox').checked ? 
+                    (currentLang === 'zh' ? '完全符合' : 'Exact Match') : 
+                    (currentLang === 'zh' ? '包含關鍵字' : 'Keyword');
+                
+                infoEl.innerText = t('calibInfo')
+                    .replace('{n}', savedN)
+                    .replace('{keyword}', savedKw)
+                    .replace('{mode}', matchModeText);
+            }
         }
     }
 
-    // --- 原始邏輯 (以下皆未變動) ---
+    // --- 核心變數 ---
     let GLOBAL_DATA = {}; 
     let GENE_LIST = [];
     let SAMPLE_LIST = new Set();
+    // 這裡我們儲存物件 { gene, sample, foldChange, deltaCt }
+    let FOLD_CHANGE_DATA = []; 
     let blockCounter = 0; 
 
+    // --- 1. 建立界面與數據輸入 ---
     function generateGeneBlocks() {
         const countInput = document.getElementById('geneCountInput');
         let count = parseInt(countInput.value) || 0;
-
-        if (count < 2) {
-            alert(t('alertMinGene'));
-            return;
-        }
+        if (count < 2) { alert(t('alertMinGene')); return; }
 
         const container = document.getElementById('geneBlocksContainer');
         container.innerHTML = ''; 
         blockCounter = 0;
 
-        for (let i = 0; i < count; i++) {
-            addSingleBlock(true); 
-        }
-        
+        for (let i = 0; i < count; i++) { addSingleBlock(true); }
         showStep(2);
     }
 
@@ -499,11 +562,9 @@
         blockCounter++;
         const container = document.getElementById('geneBlocksContainer');
         const id = `block_${Date.now()}_${blockCounter}`; 
-        
         const currentCount = container.children.length + 1;
 
-        // Note: We use data-i18n here so updateTexts() can fix them later.
-        // But for initial render, we inject current lang text.
+        // 注意：這裡直接使用 t('key') 來插入目前的語言文字
         const html = `
             <div class="gene-block" id="${id}">
                 <button type="button" class="delete-block-btn" onclick="removeBlock('${id}')" title="Delete">✕</button>
@@ -521,24 +582,16 @@
                         <textarea class="cts-input" placeholder="22.5\n22.8\n24.0..."></textarea>
                     </div>
                 </div>
-                <div class="error-msg" data-i18n="errorRowMsg" style="display:none; color:red;">${t('errorRowMsg')}</div>
+                <div class="error-msg" data-i18n="errorRowMsg" style="display:none;">${t('errorRowMsg')}</div>
             </div>
         `;
         container.insertAdjacentHTML('beforeend', html);
-        
         if (!isAuto) {
-             setTimeout(() => {
-                const newEl = document.getElementById(id);
-                if(newEl) newEl.scrollIntoView({behavior: "smooth", block: "center"});
-             }, 100);
+             setTimeout(() => { document.getElementById(id)?.scrollIntoView({behavior: "smooth", block: "center"}); }, 100);
         }
     }
 
-    function removeBlock(id) {
-        const el = document.getElementById(id);
-        if (el) el.remove();
-    }
-
+    function removeBlock(id) { document.getElementById(id)?.remove(); }
     function clearAllBlocks() {
         if(confirm(t('alertConfirmClear'))) {
             document.getElementById('geneBlocksContainer').innerHTML = '';
@@ -551,6 +604,7 @@
             document.getElementById('dataEntrySection').classList.remove('hidden');
             document.getElementById('settingsSection').classList.add('hidden');
             document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('statsSection').classList.add('hidden');
             document.getElementById('dataEntrySection').scrollIntoView({behavior: "smooth"});
         }
     }
@@ -562,11 +616,7 @@
         let hasError = false;
 
         const blocks = document.querySelectorAll('.gene-block');
-        
-        if (blocks.length < 2) {
-            alert(t('alertBlockCount').replace('{n}', blocks.length));
-            return;
-        }
+        if (blocks.length < 2) { alert(t('alertBlockCount').replace('{n}', blocks.length)); return; }
 
         blocks.forEach((block) => {
             const geneName = block.querySelector('.gene-name-input').value.trim();
@@ -585,14 +635,11 @@
             errorMsg.style.display = 'none';
             if (samples.length === 0) return; 
 
-            if (!GENE_LIST.includes(geneName)) {
-                GENE_LIST.push(geneName);
-            }
+            if (!GENE_LIST.includes(geneName)) GENE_LIST.push(geneName);
 
             for(let i=0; i<samples.length; i++) {
                 const sName = samples[i];
                 const ctVal = parseFloat(cts[i]);
-
                 if (!isNaN(ctVal)) {
                     SAMPLE_LIST.add(sName);
                     if (!GLOBAL_DATA[sName]) GLOBAL_DATA[sName] = {};
@@ -602,14 +649,8 @@
             }
         });
 
-        if (hasError) {
-            alert(t('alertRowMismatch'));
-            return;
-        }
-        if (GENE_LIST.length < 2) {
-             alert(t('alertValidGene'));
-             return;
-        }
+        if (hasError) { alert(t('alertRowMismatch')); return; }
+        if (GENE_LIST.length < 2) { alert(t('alertValidGene')); return; }
 
         populateSettings();
         document.getElementById('settingsSection').classList.remove('hidden');
@@ -619,88 +660,59 @@
     function populateSettings() {
         const refSelect = document.getElementById('refGeneSelect');
         refSelect.innerHTML = '';
-        
         GENE_LIST.forEach(g => {
             const opt = document.createElement('option');
-            opt.value = g;
-            opt.innerText = g;
-            if (['GAPDH', 'ACTB', '18S', 'NUCQ'].includes(g.toUpperCase())) opt.selected = true;
+            opt.value = g; opt.innerText = g;
+            if (['GAPDH', 'ACTB', '18S'].includes(g.toUpperCase())) opt.selected = true;
             refSelect.appendChild(opt);
         });
     }
 
+    // --- 2. 計算邏輯 ---
     function calculateResults() {
         const refGene = document.getElementById('refGeneSelect').value;
         const ctrlKeyword = document.getElementById('controlKeyword').value.trim();
         const useExactMatch = document.getElementById('exactMatchCheckbox').checked; 
 
-        if (!ctrlKeyword) {
-            alert(t('alertNoKeyword'));
-            return;
-        }
+        if (!ctrlKeyword) { alert(t('alertNoKeyword')); return; }
 
         const tbody = document.querySelector('#resultTable tbody');
         tbody.innerHTML = '';
+        FOLD_CHANGE_DATA = []; 
         
-        const warningBox = document.getElementById('warningBox');
-        let skippedSamples = [];
-
         // A. Delta Ct
         let sampleStats = {}; 
+        
         SAMPLE_LIST.forEach(sName => {
-            if (!GLOBAL_DATA[sName][refGene]) {
-                skippedSamples.push(sName); 
-                return;
-            }
-
+            if (!GLOBAL_DATA[sName][refGene]) { return; }
             sampleStats[sName] = {};
             const refMean = getMean(GLOBAL_DATA[sName][refGene]);
-
             GENE_LIST.forEach(gName => {
                 if (GLOBAL_DATA[sName][gName]) {
                     const targetMean = getMean(GLOBAL_DATA[sName][gName]);
-                    sampleStats[sName][gName] = {
-                        meanCt: targetMean,
-                        deltaCt: targetMean - refMean
-                    };
+                    sampleStats[sName][gName] = { meanCt: targetMean, deltaCt: targetMean - refMean };
                 }
             });
         });
 
-        if (skippedSamples.length > 0) {
-            warningBox.innerHTML = t('warnMissingRef')
-                .replace('{ref}', refGene)
-                .replace('{samples}', skippedSamples.join(', '));
-            warningBox.style.display = 'block';
-        } else {
-            warningBox.style.display = 'none';
-        }
-
         // B. Calibrator
         let calibrators = {}; 
         let controlCount = 0; 
-
         SAMPLE_LIST.forEach(sName => {
             const isMatch = useExactMatch ? (sName === ctrlKeyword) : sName.includes(ctrlKeyword);
-            if (isMatch && sampleStats[sName] && sampleStats[sName][refGene]) {
-                controlCount++;
-            }
+            if (isMatch && sampleStats[sName] && sampleStats[sName][refGene]) { controlCount++; }
         });
 
         GENE_LIST.forEach(gName => {
-            let sumDelta = 0;
-            let count = 0;
+            let sumDelta = 0, count = 0;
             SAMPLE_LIST.forEach(sName => {
                 const isMatch = useExactMatch ? (sName === ctrlKeyword) : sName.includes(ctrlKeyword);
-
                 if (isMatch && sampleStats[sName] && sampleStats[sName][gName]) {
                     sumDelta += sampleStats[sName][gName].deltaCt;
                     count++;
                 }
             });
-            if (count > 0) {
-                calibrators[gName] = sumDelta / count;
-            }
+            if (count > 0) calibrators[gName] = sumDelta / count;
         });
 
         if (Object.keys(calibrators).length === 0) {
@@ -709,141 +721,390 @@
             return;
         }
 
-        // C. Render
-        const sortedSamples = Array.from(SAMPLE_LIST).sort(); 
+        // C. Render Table
+        const sortedSamples = Array.from(SAMPLE_LIST).sort((a, b) => 
+            a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+        );
+        
         let lastGene = "";
-
         GENE_LIST.forEach(gName => {
+            const calibDelta = calibrators[gName];
             sortedSamples.forEach(sName => {
                 if (!sampleStats[sName] || !sampleStats[sName][gName]) return;
 
                 const stats = sampleStats[sName][gName];
-                const calibDelta = calibrators[gName];
-
                 let ddCt = null;
                 let foldChange = null;
 
                 if (calibDelta !== undefined) {
                     ddCt = stats.deltaCt - calibDelta;
                     foldChange = Math.pow(2, -ddCt);
+                    
+                    if (gName !== refGene) {
+                        FOLD_CHANGE_DATA.push({
+                            gene: gName,
+                            sample: sName,
+                            foldChange: foldChange,
+                            deltaCt: stats.deltaCt // 保存 Delta Ct 用於 T-test
+                        });
+                    }
                 }
 
                 const tr = document.createElement('tr');
-                if (gName !== lastGene && lastGene !== "") {
-                    tr.classList.add('gene-separator');
-                }
+                if (gName !== lastGene && lastGene !== "") tr.classList.add('gene-separator');
                 lastGene = gName;
-
-                let barHtml = '';
-                if (foldChange !== null) {
-                    let w = Math.min(foldChange * 20, 100); 
-                    barHtml = `<div class="bar-container"><div class="bar" style="width:${w}%"></div></div>`;
-                }
 
                 tr.innerHTML = `
                     <td style="font-weight:bold;">${gName}</td>
                     <td>${sName}</td>
-                    <td>${stats.meanCt.toFixed(6)}</td>
-                    <td style="color:#666">${stats.deltaCt.toFixed(6)}</td>
-                    <td>${ddCt !== null ? ddCt.toFixed(6) : '-'}</td>
+                    <td>${stats.meanCt.toFixed(4)}</td>
+                    <td style="color:#666">${stats.deltaCt.toFixed(4)}</td>
+                    <td>${ddCt !== null ? ddCt.toFixed(4) : '-'}</td>
                     <td style="font-weight:bold; color:${foldChange > 1.5 ? '#c0392b' : '#2c3e50'}">
-                        ${foldChange !== null ? foldChange.toFixed(6) : '-'}
+                        ${foldChange !== null ? foldChange.toFixed(4) : '-'}
                     </td>
-                    <td>${barHtml}</td>
                 `;
                 tbody.appendChild(tr);
             });
         });
 
-        const matchModeText = useExactMatch ? `(${t('modeExact')})` : `(${t('modeContains')})`;
-        document.getElementById('calibratorInfo').innerText = 
-            t('calibInfo')
-                .replace('{n}', controlCount)
-                .replace('{keyword}', ctrlKeyword)
-                .replace('{mode}', matchModeText);
+        const infoEl = document.getElementById('calibratorInfo');
+        infoEl.setAttribute('data-n', controlCount);       // 記住樣本數
+        infoEl.setAttribute('data-kw', ctrlKeyword);       // 記住關鍵字
+        
+        const matchModeText = useExactMatch ? 
+            (currentLang === 'zh' ? '完全符合' : 'Exact Match') : 
+            (currentLang === 'zh' ? '包含關鍵字' : 'Keyword');
+
+        infoEl.innerText = t('calibInfo')
+            .replace('{n}', controlCount)
+            .replace('{keyword}', ctrlKeyword)
+            .replace('{mode}', matchModeText);
         
         document.getElementById('resultSection').classList.remove('hidden');
+        document.getElementById('statsSection').classList.remove('hidden');
+        
+        initStatsSection();
         document.getElementById('resultSection').scrollIntoView({behavior: "smooth"});
     }
 
-    function getMean(arr) {
-        return arr.reduce((a,b)=>a+b,0) / arr.length;
+    // --- 3. 統計與繪圖 (核心更新) ---
+
+    function initStatsSection() {
+        const select = document.getElementById('plotGeneSelect');
+        const refGene = document.getElementById('refGeneSelect').value;
+        select.innerHTML = '';
+        
+        GENE_LIST.forEach(g => {
+            if (g !== refGene) {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.innerText = g;
+                select.appendChild(opt);
+            }
+        });
+        
+        updatePlot();
+    }
+
+    function getGroupName(sampleName) {
+        return sampleName.replace(/[-_ ]\d+$/, ''); 
+    }
+
+    function calculateStandardError(values) {
+        if (values.length < 2) return 0;
+        const mean = getMean(values);
+        const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (values.length - 1);
+        return Math.sqrt(variance) / Math.sqrt(values.length);
+    }
+
+    function updatePlot() {
+        const targetGene = document.getElementById('plotGeneSelect').value;
+        if (!targetGene) return;
+
+        const ctrlKeyword = document.getElementById('controlKeyword').value.trim();
+        
+        // 1. 整理數據：分開收集 Fold Change (繪圖) 和 Delta Ct (統計)
+        let groupsFC = {};     
+        let groupsDeltaCt = {}; 
+        
+        FOLD_CHANGE_DATA.forEach(d => {
+            if (d.gene === targetGene) {
+                const grpName = getGroupName(d.sample);
+                
+                if (!groupsFC[grpName]) groupsFC[grpName] = [];
+                groupsFC[grpName].push(d.foldChange);
+
+                if (!groupsDeltaCt[grpName]) groupsDeltaCt[grpName] = [];
+                groupsDeltaCt[grpName].push(d.deltaCt);
+            }
+        });
+
+        // 2. 排序
+        let groupNames = Object.keys(groupsFC).sort((a, b) => 
+            a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+        );
+
+        // *** 安全性修正：嚴格檢查對照組是否存在 (Anti-Stupid Check) ***
+        const controlGroupMatch = groupNames.find(g => g.includes(ctrlKeyword));
+        
+        if (!controlGroupMatch) {
+            // 如果在繪圖階段找不到對照組 (例如使用者改了關鍵字卻沒按重新計算)
+            const errorMsg = `❌ ${t('alertNoControlGroup')}`;
+            document.getElementById('statResultsContainer').innerHTML = "";
+            document.getElementById('plotlyChart').innerHTML = `
+                <div style="display:flex;justify-content:center;align-items:center;height:100%;color:#e74c3c;font-size:1.1em;border:2px dashed #e74c3c;border-radius:10px;">
+                    ${errorMsg}
+                </div>`;
+            return;
+        }
+
+        const controlGroup = controlGroupMatch;
+        groupNames = [controlGroup, ...groupNames.filter(g => g !== controlGroup)];
+
+        let statResultsHTML = "";
+        let annotations = []; 
+
+        // --- ANOVA Check (使用 Delta Ct) ---
+        if (groupNames.length > 2) {
+            try {
+                // *** 科學修正：ANOVA 使用 Delta Ct ***
+                const allDeltaCtArrays = groupNames.map(name => groupsDeltaCt[name]);
+                
+                const hasEmpty = allDeltaCtArrays.some(arr => arr.length === 0);
+                if(!hasEmpty) {
+                    const anovaP = jStat.anovaone(allDeltaCtArrays);
+                    if(!isNaN(anovaP)) {
+                        const anovaSig = anovaP < 0.05;
+                        const anovaStars = getStars(anovaP);
+                        statResultsHTML += `
+                            <div class="anova-box">
+                                <div><b>One-way ANOVA (Global, on ΔCt)</b></div>
+                                <div>P-value: <span class="${anovaSig ? 'stat-sig' : ''}">${anovaP.toFixed(8)} ${anovaStars}</span></div>
+                            </div>
+                        `;
+                    }
+                }
+            } catch(e) { console.warn("ANOVA calculation failed", e); }
+        }
+
+        const ctrlDeltaCtData = groupsDeltaCt[controlGroup];
+        
+        // --- Pairwise Comparisons & Annotations ---
+        groupNames.forEach(grp => {
+            if (grp === controlGroup) return;
+            
+            // 繪圖用：Fold Change
+            const fcData = groupsFC[grp];
+            const meanFC = getMean(fcData);
+            const semFC = calculateStandardError(fcData);
+            const ctrlFCMean = getMean(groupsFC[controlGroup]);
+
+            // 統計用：Delta Ct
+            const expDeltaCt = groupsDeltaCt[grp];
+            
+            if (ctrlDeltaCtData && ctrlDeltaCtData.length > 1 && expDeltaCt && expDeltaCt.length > 1) {
+                // *** 科學修正：T-test 使用 Delta Ct ***
+                const pValue = twoSampleTtest(expDeltaCt, ctrlDeltaCtData); 
+                const isSig = pValue < 0.05;
+                const stars = getStars(pValue);
+                
+                statResultsHTML += `
+                    <div class="stat-item">
+                        <div><b>${grp} vs ${controlGroup}</b></div>
+                        <div>Mean FC: ${meanFC.toFixed(2)} vs ${ctrlFCMean.toFixed(2)}</div>
+                        <div>${t('pVal')} (ΔCt): <span class="${isSig ? 'stat-sig' : ''}">${pValue.toFixed(8)} ${stars}</span></div>
+                    </div>
+                `;
+
+                const yPos = Math.max(0, meanFC) + semFC + (Math.max(0.1, meanFC) * 0.15);
+                
+                if (stars !== 'ns') { 
+                    annotations.push({
+                        x: grp,
+                        y: yPos,
+                        text: stars,
+                        xanchor: 'center',
+                        yanchor: 'bottom',
+                        showarrow: false,
+                        font: { size: 16, color: '#e74c3c' }
+                    });
+                } else {
+                     annotations.push({
+                        x: grp,
+                        y: yPos,
+                        text: "ns",
+                        xanchor: 'center',
+                        yanchor: 'bottom',
+                        showarrow: false,
+                        font: { size: 12, color: '#7f8c8d' }
+                    });
+                }
+
+            } else {
+                statResultsHTML += `<div class="stat-item">${grp}: N<2, 無法檢定</div>`;
+            }
+        });
+        
+        document.getElementById('statResultsContainer').innerHTML = statResultsHTML || "無足夠數據進行比較";
+
+        // 3. 繪圖數據 (使用 Fold Change)
+        const xData = [];
+        const yMean = [];
+        const yError = [];
+        const tracePointsX = [];
+        const tracePointsY = [];
+
+        groupNames.forEach(grp => {
+            const vals = groupsFC[grp];
+            const mean = getMean(vals);
+            const sem = calculateStandardError(vals);
+            
+            xData.push(grp);
+            yMean.push(mean);
+            yError.push(sem);
+            
+            vals.forEach(v => {
+                tracePointsX.push(grp);
+                tracePointsY.push(v);
+            });
+        });
+
+        // Trace 1: Bar
+        const traceBar = {
+            x: xData,
+            y: yMean,
+            type: 'bar',
+            name: 'Mean ± SEM (FC)',
+            marker: { color: 'rgba(52, 152, 219, 0.7)', line: { width: 1 } },
+            error_y: {
+                type: 'data',
+                array: yError,
+                visible: true,
+                color: '#2c3e50',
+                thickness: 1.5,
+                width: 5
+            }
+        };
+
+        // Trace 2: Points
+        const tracePoints = {
+            x: tracePointsX,
+            y: tracePointsY,
+            mode: 'markers',
+            type: 'scatter',
+            name: 'Replicates',
+            marker: { color: '#2c3e50', size: 8, symbol: 'circle-open', opacity: 0.8 },
+            hoverinfo: 'y'
+        };
+
+        const layout = {
+            title: `Relative Expression: ${targetGene}`,
+            yaxis: { title: 'Fold Change (2^-ΔΔCt)', zeroline: true },
+            xaxis: { title: 'Group', categoryorder: 'array', categoryarray: groupNames },
+            annotations: annotations, 
+            showlegend: false,
+            template: 'plotly_white',
+            margin: { t: 50, b: 50, l: 60, r: 20 }
+        };
+
+        Plotly.newPlot('plotlyChart', [traceBar, tracePoints], layout, {responsive: true});
+    }
+
+    function getStars(p) {
+        if (p < 0.001) return '***';
+        if (p < 0.01) return '**';
+        if (p < 0.05) return '*';
+        return 'ns';
+    }
+
+    // --- 4. 工具函數 ---
+    function getMean(arr) { 
+        if(!arr || arr.length===0) return 0;
+        return arr.reduce((a,b)=>a+b,0) / arr.length; 
+    }
+
+    function twoSampleTtest(sample1, sample2) {
+        const n1 = sample1.length;
+        const n2 = sample2.length;
+        if(n1 < 2 || n2 < 2) return 1.0; 
+
+        const m1 = jStat.mean(sample1);
+        const m2 = jStat.mean(sample2);
+        const v1 = jStat.variance(sample1);
+        const v2 = jStat.variance(sample2);
+
+        const pooledVariance = ((n1 - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2);
+        const se = Math.sqrt(pooledVariance * (1/n1 + 1/n2));
+        
+        if (se === 0) return (m1 === m2) ? 1.0 : 0.0;
+
+        const tStat = (m1 - m2) / se;
+        const df = n1 + n2 - 2;
+        const p = (1 - jStat.studentt.cdf(Math.abs(tStat), df)) * 2;
+        
+        return p;
     }
 
     function exportCSV() {
-        // 1. 定義標題：增加 "Raw Ct Values" 欄位
-        // \uFEFF 是 BOM (Byte Order Mark)，讓 Excel 能正確識別中文編碼
         let csv = "\uFEFFGene,Sample,Raw Ct Values,Mean Ct,Delta Ct,ddCt,Fold Change\n";
-        
-        // 2. 遍歷目前的結果表格
         const rows = document.querySelectorAll('#resultTable tbody tr');
-        
         rows.forEach(tr => {
             const cells = tr.querySelectorAll('td');
             if (cells.length === 0) return;
-
-            // 從表格中獲取已計算的數據
             const gene = cells[0].innerText;
             const sample = cells[1].innerText;
             const meanCt = cells[2].innerText;
             const deltaCt = cells[3].innerText;
             const ddCt = cells[4].innerText;
             const foldChange = cells[5].innerText;
-
-            // 3. 從 GLOBAL_DATA 撈取原始 Ct 值
             let rawCtsString = "";
             if (GLOBAL_DATA[sample] && GLOBAL_DATA[sample][gene]) {
-                // 將陣列 [22.5, 22.6] 轉為字串 "22.5; 22.6"
                 rawCtsString = GLOBAL_DATA[sample][gene].join("; ");
             }
-
-            // 4. 組合 CSV 行 (使用引號包覆數值，避免 Excel 混淆分隔符)
-            // 這裡將 Raw Data 放在樣本名稱後面
-            const rowData = [
-                `"${gene}"`,
-                `"${sample}"`,
-                `"${rawCtsString}"`, // 原始數據
-                `"${meanCt}"`,
-                `"${deltaCt}"`,
-                `"${ddCt}"`,
-                `"${foldChange}"`
-            ];
-            
+            const rowData = [`"${gene}"`, `"${sample}"`, `"${rawCtsString}"`, `"${meanCt}"`, `"${deltaCt}"`, `"${ddCt}"`, `"${foldChange}"`];
             csv += rowData.join(",") + "\n";
         });
-        
-        // 下載檔案
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "qpcr_results_full.csv"; 
+        link.download = "qpcr_results.csv"; 
         link.click();
     }
 
-    // --- 範例數據 ---
+    // --- 修改後的範例數據 ---
     function loadDemoData() {
-        document.getElementById('geneCountInput').value = 2;
+        document.getElementById('geneCountInput').value = 3;
         generateGeneBlocks();
-
-        const samples = "WT-1\nWT-2\nWT-3\nTreat-1\nTreat-2\nTreat-3";
         
+        // 定義數據
+        const samples = "WT-1\nWT-2\nWT-3\nTreatA-1\nTreatA-2\nTreatA-3\nTreatB-1\nTreatB-2\nTreatB-3";
+        const gapdhCt = "22.5\n22.4\n22.6\n22.5\n22.8\n22.7\n22.6\n22.5\n22.8";
+        const il6Ct = "30.5\n30.4\n30.6\n27.5\n27.1\n27.9\n28.5\n28.9\n28.2";
+        const il17Ct = "30.7\n30.2\n30.4\n28.5\n28.8\n28.2\n29.1\n28.8\n28.3";
+
         setTimeout(() => {
             const blocks = document.querySelectorAll('.gene-block');
-            if(blocks.length >= 2) {
+            if(blocks.length >= 3) {
+                // Block 1: GAPDH
                 blocks[0].querySelector('.gene-name-input').value = "GAPDH";
                 blocks[0].querySelector('.samples-input').value = samples;
-                blocks[0].querySelector('.cts-input').value = "22.5\n22.4\n22.6\n22.5\n22.8\n22.7";
+                blocks[0].querySelector('.cts-input').value = gapdhCt;
 
+                // Block 2: IL6
                 blocks[1].querySelector('.gene-name-input').value = "IL6";
                 blocks[1].querySelector('.samples-input').value = samples;
-                blocks[1].querySelector('.cts-input').value = "30.5\n30.4\n30.6\n26.5\n26.8\n26.2";
+                blocks[1].querySelector('.cts-input').value = il6Ct;
+
+                // Block 3: IL17
+                blocks[2].querySelector('.gene-name-input').value = "IL17";
+                blocks[2].querySelector('.samples-input').value = samples;
+                blocks[2].querySelector('.cts-input').value = il17Ct;
             }
             document.getElementById('controlKeyword').value = "WT";
-            document.getElementById('exactMatchCheckbox').checked = false;
             alert(t('demoLoaded'));
         }, 100);
     }
 </script>
-
 </body>
 </html>
