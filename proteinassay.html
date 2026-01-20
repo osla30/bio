@@ -931,49 +931,20 @@
     // 1. 計算標準曲線的最大 X 值
     let maxStdX = Math.max(...stdData.map(d => d.x));
     
-    // 2. 設定顯示上限 (例如：標準曲線最大值的 3 倍)
-    // 超過這個範圍的樣本將不會撐開圖表，以免標準曲線被壓縮得太扁
-    const VISUAL_LIMIT_RATIO = 3;
-    let displayLimit = maxStdX * VISUAL_LIMIT_RATIO;
+    // 【修改核心】：直接將 X 軸最大值鎖定為標準品的最大濃度
+    // 我們不再去檢查 sampleResults，這樣即便稀釋倍數很大，圖表也不會被拉長
+    let maxX = maxStdX;
 
-    // 3. 檢查樣本是否超出顯示上限
-    let maxSampleX = 0;
-    let hasHiddenPoints = false; // 標記是否有樣本被隱藏
-
-    if(sampleResults && sampleResults.length > 0) {
-            sampleResults.forEach(s => {
-                if(typeof s.conc === 'number' && !isNaN(s.conc)) {
-                    if (s.conc > displayLimit) {
-                        // 如果樣本濃度 > 顯示上限，標記為隱藏，不更新 maxSampleX
-                        hasHiddenPoints = true;
-                    } else if (s.conc > maxSampleX) {
-                        // 如果樣本濃度在範圍內，且比目前記錄的大，則更新 maxSampleX
-                        maxSampleX = s.conc;
-                    }
-                }
-            });
-    }
-
-    // 4. 決定最終圖表的 X 軸最大值 (取標準品或樣本中較大者，但不會超過 displayLimit)
-    let maxX = Math.max(maxStdX, maxSampleX);
-
-    // 5. 處理警告框顯示 (UI)
+    // 隱藏「超出範圍警告」，因為現在我們是故意不延伸圖表的
     const chartWarningBox = document.getElementById('chart_range_warning');
     if (chartWarningBox) {
-        if (hasHiddenPoints) {
-            chartWarningBox.innerHTML = (currentLang === 'zh')
-                ? `<strong>注意：</strong>部分高濃度樣本 (> ${displayLimit.toFixed(1)}) 已超出圖表顯示範圍而未繪出，但下方表格仍保有完整計算結果。`
-                : `<strong>Note:</strong> Some high concentration samples (> ${displayLimit.toFixed(1)}) are hidden from the chart. Full results are in the table below.`;
-            chartWarningBox.style.display = 'block';
-        } else {
-            chartWarningBox.style.display = 'none';
-        }
+        chartWarningBox.style.display = 'none';
     }
 
-    // 產生迴歸線的點 (畫到目前的顯示邊界即可)
+    // 產生迴歸線的點 (只畫到標準品最大值的 1.1 倍，稍微延伸一點點即可，不畫到樣本濃度去)
     let fitPoints = [];
     for(let i=0; i<=100; i++) {
-        let x = (maxX * 1.1) * (i/100); // 多畫 10% 讓線條延伸一點點
+        let x = (maxX * 1.1) * (i/100); 
         let y = fitModel.predict(x);
         fitPoints.push({x: x, y: y});
     }
@@ -1017,8 +988,6 @@
             datasets: [
                 { label: 'Std Data (Blank-subtracted OD)', data: stdData, backgroundColor:'#0d6efd', pointRadius:5 },
                 { label: 'Linear Fit', data: fitPoints, type:'line', borderColor:'#0d6efd', borderWidth:2, pointRadius:0, borderDash:[5,5], fill:false, tension:0 },
-                // 這裡可以選擇是否要把樣本點也畫上去，目前的邏輯只畫 Std 和 線
-                // 如果你想把樣本點畫上去，需要再加一個 dataset
             ]
         },
         options: { 
@@ -1030,7 +999,7 @@
                     position:'bottom', 
                     title:{display:true, text:i18n[currentLang].conc_lbl},
                     min: 0,
-                    // 這裡不需要強制設 max，因為我們是透過控制 dataset 的範圍來控制
+                    // 這裡不需強制設 max，Chart.js 會自動根據 fitPoints (只到 maxX * 1.1) 調整範圍
                 }, 
                 y: {
                     title:{display:true, text:i18n[currentLang].od_net_lbl},
