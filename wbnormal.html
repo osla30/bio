@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WB Stats V32 (Pro)</title>
+    <title>WB 條帶相對定量標準化工具 / WB Band Relative Quantitation & Normalization Tool</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
 
@@ -1178,6 +1178,7 @@
     }
 
     // --- Render Card using Plotly ---
+    // --- 優化後的 Render Card 函式 (支援智慧型 Tukey 括號分層) ---
     function renderCard(title, stats, stars, details, container, maxY, pairwiseSig = []) {
         const id = 'plot-' + Math.random().toString(36).substr(2);
         const div = document.createElement('div');
@@ -1224,68 +1225,69 @@
         const annotations = [];
         const shapes = [];
 
-        // Determine graph top range
-        let graphTop = maxY * 1.25;
+        // --- 智慧型動態高度與括號演算法 ---
+        let graphTop = maxY * 1.25; // 預設頂部高度
 
-        // 1. Dunnett Mode (or empty pairwise): standard stars above bars
         if (pairwiseSig.length === 0) {
+            // 1. Dunnett Mode: 星號標註在 Bar 正上方
             stats.forEach((s, i) => {
                 if (stars[i] && stars[i] !== 'ns' && stars[i] !== '') {
-                    // Only show star if significant
-                    const yPos = s.mean + s.sem + (maxY * 0.1); 
+                    const yPos = s.mean + s.sem + (maxY * 0.05); 
                     annotations.push({
-                        x: xIds[i], 
-                        y: yPos,
-                        text: stars[i],
-                        xanchor: 'center',
-                        yanchor: 'bottom',
-                        showarrow: false,
+                        x: xIds[i], y: yPos, text: stars[i],
+                        xanchor: 'center', yanchor: 'bottom', showarrow: false,
                         font: { size: 16, color: '#dc2626', weight: 'bold' }
                     });
                 }
             });
-        } 
-        // 2. Tukey Mode: Draw Stratified Brackets by Distance
-        else {
-            const stepHeight = maxY * 0.15; // Gap between bracket levels
-            const baseHeight = maxY * 1.05; // Starting height
-
-            // Sort pairs? Actually, we determine height by distance directly.
-            // Distance 1 (e.g. 0-1) -> Level 1
-            // Distance 2 (e.g. 0-2) -> Level 2
+        } else {
+            // 2. Tukey Mode: 智慧型分層括號
+            const stepHeight = maxY * 0.12; // 每一層的高度間距
+            const baseHeight = maxY * 1.1;  // 第一層括號的起始高度
             
-            pairwiseSig.forEach((pair) => {
-                const idx1 = pair.i;
-                const idx2 = pair.j;
-                const dist = Math.abs(idx2 - idx1);
+            // 排序：區間短的優先畫（在下層），長的後畫（在上層）
+            const sortedPairs = [...pairwiseSig].sort((a, b) => (a.j - a.i) - (b.j - b.i));
+            
+            // 用來紀錄 x 軸各點位目前的最高佔用 Y 值
+            let currentYLevels = new Array(stats.length).fill(baseHeight);
+
+            sortedPairs.forEach((pair) => {
+                const idx1 = Math.min(pair.i, pair.j);
+                const idx2 = Math.max(pair.i, pair.j);
                 
-                // Stratification Layer: max(1, dist) to ensure adjacent (dist=1) is level 1
-                const layer = Math.max(1, dist); 
-                
-                const currentY = baseHeight + (layer - 1) * stepHeight;
-                
-                // Update graphTop dynamic range to fit highest bracket
-                if (currentY + stepHeight > graphTop) {
-                    graphTop = currentY + stepHeight * 1.5; 
+                // 找出該區間 [idx1, idx2] 內目前最高的 Y Level
+                let targetY = 0;
+                for (let k = idx1; k <= idx2; k++) {
+                    if (currentYLevels[k] > targetY) targetY = currentYLevels[k];
                 }
 
-                // Bracket shape
+                const currentY = targetY;
+
+                // 更新 graphTop 以確保不會超出畫布
+                if (currentY + stepHeight > graphTop) graphTop = currentY + stepHeight * 1.2;
+
+                // 繪製括號路徑 (M = 起點, L = 線條)
                 shapes.push({
                     type: 'path',
                     path: `M ${idx1},${currentY - (maxY*0.02)} L ${idx1},${currentY} L ${idx2},${currentY} L ${idx2},${currentY - (maxY*0.02)}`,
-                    line: { color: '#555', width: 1.5 },
+                    line: { color: '#444', width: 1.2 },
                     xref: 'x', yref: 'y'
                 });
 
-                // Star annotation
+                // 標註顯著性星號
                 annotations.push({
                     x: (idx1 + idx2) / 2, 
                     y: currentY,
                     text: pair.star,
                     xanchor: 'center', yanchor: 'bottom', showarrow: false,
-                    font: { size: 14, color: '#dc2626', weight: 'bold' },
-                    bgcolor: 'rgba(255,255,255,0.7)'
+                    font: { size: 13, color: '#dc2626', weight: 'bold' },
+                    bgcolor: 'rgba(255,255,255,0.75)' // 增加背景白暈，避免星號被括號線穿過
                 });
+
+                // 重要：更新該區間內所有點的高度紀錄，為下一層提供支撐高度
+                for (let k = idx1; k <= idx2; k++) {
+                    currentYLevels[k] = currentY + stepHeight;
+                }
             });
         }
 
@@ -1293,14 +1295,14 @@
             x: xIds, 
             y: yValues,
             type: 'bar',
-            marker: { color: colors },
+            marker: { color: colors, line: { color: '#555', width: 0.5 } },
             error_y: {
                 type: 'data',
                 array: yErrors,
                 visible: true,
                 color: '#000000', 
-                thickness: 1.5,
-                width: 6
+                thickness: 1.2,
+                width: 4
             },
             hovertemplate: '<b>%{text}</b><br>Mean: %{y:.3f}<br>SEM: %{error_y.array:.3f}<extra></extra>',
             text: xLabels, 
@@ -1310,17 +1312,15 @@
         const layout = {
             title: false,
             yaxis: { 
-                title: 'Fold Change', 
+                title: 'Relative Fold Change', 
                 zeroline: true,
-                range: [0, graphTop] 
+                range: [0, graphTop],
+                gridcolor: '#f0f0f0'
             },
             xaxis: { 
                 type: 'category', 
-                tickmode: 'array',
                 tickvals: xIds,    
                 ticktext: xLabels, 
-                categoryorder: 'array',
-                categoryarray: xIds, 
                 automargin: true 
             }, 
             margin: { t: 40, b: 50, l: 60, r: 20 },
@@ -1328,21 +1328,19 @@
             annotations: annotations,
             shapes: shapes,
             template: 'plotly_white', 
-            dragmode: 'zoom',
-            bargap: 0.2
+            bargap: 0.25
         };
 
         const config = {
             responsive: true,
-            scrollZoom: false,
             displaylogo: false,
-            modeBarButtonsToRemove: ['lasso2d', 'select2d'], 
+            modeBarButtonsToRemove: ['lasso2d', 'select2d', 'pan2d'], 
             toImageButtonOptions: {
                 format: 'png',
-                filename: title + '_chart',
+                filename: title + '_WB_Stats',
                 height: 500,
                 width: 700,
-                scale: 3
+                scale: 3 // 高解析度匯出
             }
         };
 
