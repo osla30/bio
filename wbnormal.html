@@ -744,7 +744,7 @@
                 const allRawVals = state.groups.map(g => rawRatios[g]); 
 
                 // Note text logic
-                const noteText = "Note: Stats calculated on Raw Ratios (Target/HKP).";
+                const noteText = "Note: Raw band intensities were normalized to housekeeping proteins (Target/HKP) for statistical analysis. Fold change relative to control was used only for data presentation.";
                 // Format Q values for display helper
                 const fmtQ = (v) => (typeof v === 'number' ? v.toFixed(2) : '-');
 
