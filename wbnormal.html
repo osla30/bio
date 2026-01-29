@@ -6,6 +6,7 @@
     <title>WB 條帶相對定量標準化工具 / WB Band Relative Quantitation & Normalization Tool</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root { --primary: #4f46e5; --bg: #f3f4f6; --card: #ffffff; --header-bg: #ffffff; }
@@ -730,7 +731,7 @@
                     
                     stats.push({ 
                         group: g, mean: m, sem: sem, n: n, vals: norm,
-                        rawStr: norm.map(v=>v.toFixed(2)).join(', '),
+                        rawStr: norm.map(v=>v.toFixed(9)).join(', '),
                         rawInput: target.vals[g].join('; '),
                         hkpRawInput: hkp.vals[g].join('; '), 
                         pText: '-'
@@ -1184,7 +1185,10 @@
         const div = document.createElement('div');
         div.className = 'card';
         div.innerHTML = `
-            <h3>${title}</h3>
+            <h3>${title}
+                <button onclick="exportCardImage(this, '${title}')" style="font-size:0.8rem; background:#4b5563; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+            📸 匯出此區塊圖檔</button>
+            </h3>
             <div id="${id}" class="chart-box"></div>
             <div class="stat-details">${details}</div>
             <table>
@@ -1346,6 +1350,31 @@
 
         Plotly.newPlot(id, data, layout, config);
     }
+    // --- 新增：匯出完整卡片圖檔功能 ---
+// --- 修改版：匯出完整卡片圖檔 (自動命名) ---
+function exportCardImage(btn, filename) {
+    const card = btn.closest('.card'); 
+    
+    // 暫時隱藏按鈕
+    btn.style.display = 'none';
+
+    html2canvas(card, {
+        backgroundColor: '#ffffff',
+        scale: 2 
+    }).then(canvas => {
+        // 復原按鈕
+        btn.style.display = 'inline-block';
+
+        // 處理檔名：去除前後空白，若有不合法字元可視需求處理，這裡簡單加上後綴
+        // 例如：Caspase-3 -> Caspase-3_Report.png
+        const safeName = (filename || 'WB_Result').trim();
+
+        const link = document.createElement('a');
+        link.download = safeName + '_Report.png'; 
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    });
+}
 </script>
 </body>
 </html>
