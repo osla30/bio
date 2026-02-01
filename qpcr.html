@@ -773,7 +773,21 @@
                 return;
             }
 
-            const compositeRefCt = getMean(refCts); // 內參平均
+            // 步驟 1: 線性化 (Linearization)
+            // 將 Ct 值轉為相對量 (RQ)。目前假設效率為 100% (Base = 2)。
+            // 未來如果要支援引物效率，將這裡的 2 改成 user 輸入的 Efficiency 即可 (例如 1.95)
+            const linearValues = refCts.map(ct => Math.pow(2, -ct));
+
+            // 步驟 2: 計算幾何平均 (Geometric Mean)
+            // 公式：(RQ1 * RQ2 * ... * RQn) ^ (1/n)
+            const product = linearValues.reduce((acc, val) => acc * val, 1);
+            const geoMean = Math.pow(product, 1 / refCts.length);
+
+            // 步驟 3: 轉回等效 Ct 值 (Log-back)
+            // 這樣後續的 Delta Ct 計算 (Target - Ref) 程式碼完全不用改
+            // 公式：Ct = -log2(GeoMean)
+            // 未來若有引物效率，這裡的 Math.log2 要改為 Math.log(geoMean) / Math.log(Efficiency)
+            const compositeRefCt = -Math.log2(geoMean);
             sampleStats[sName] = {};
 
             GENE_LIST.forEach(gName => {
