@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>qPCR 分析工具 / qPCR Analysis Tool</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50; --accent: #2980b9; --success: #27ae60;
+            --danger: #e74c3c; --warning: #f39c12; --bg: #f4f6f9;
+            --card-bg: #ffffff; --excel-green: #217346; --excel-dark: #14442a;
+            --group-bg: #fff; --group-border: #dfe6e9;
+        }
+
+        body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--primary); line-height: 1.5; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; position: relative; }
+        
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 10px; }
+        h1 { margin: 0; text-align: left; }
+
+        .header-controls { display: flex; gap: 10px; }
+        .top-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.9em; transition: all 0.2s; display: flex; align-items: center; gap: 5px; text-decoration: none; line-height: normal; }
+        .top-btn:hover { background: var(--accent); color: white; }
+
+        .card { background: var(--card-bg); border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 25px; border: 1px solid #e1e4e8; }
+        
+        .step-title { font-size: 1.2em; font-weight: 700; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+        /* Gene Block Styles */
+        .gene-block { background-color: #eef2f7; border: 1px solid #ced4da; border-radius: 8px; padding: 15px; margin-bottom: 25px; position: relative; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .gene-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-right: 40px; flex-wrap: wrap; border-bottom: 1px solid #dde1e4; padding-bottom: 10px; }
+        .gene-name-input { font-size: 1.1em; font-weight: bold; padding: 5px; border: 1px solid #aaa; border-radius: 4px; width: 200px; color: #d35400; }
+        
+        /* Group Block Styles */
+        .groups-container { display: flex; flex-direction: column; gap: 10px; }
+        .group-block { background-color: var(--group-bg); border: 1px solid var(--group-border); border-left: 4px solid var(--accent); border-radius: 6px; padding: 15px; position: relative; }
+        .group-block.is-control { border-left-color: var(--danger); background-color: #fff5f5; }
+        
+        .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .group-control-option { display: flex; align-items: center; gap: 5px; font-weight: 600; font-size: 0.9em; cursor: pointer; color: var(--danger); }
+        
+        .input-row { display: flex; gap: 15px; }
+        .input-col { flex: 1; }
+        
+        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9em; }
+        textarea { width: 100%; height: 120px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; resize: vertical; box-sizing: border-box; }
+
+        button { cursor: pointer; padding: 8px 16px; border-radius: 5px; border: none; font-size: 15px; font-weight: bold; transition: 0.2s; white-space: nowrap; }
+        .btn-primary { background-color: var(--accent); color: white; }
+        .btn-primary:hover { background-color: #1f6391; }
+        .btn-success { background-color: var(--success); color: white; width: 100%; padding: 12px; font-size: 16px; margin-top: 10px; }
+        .btn-success:hover { background-color: #219150; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn-add { background-color: var(--warning); color: #fff; }
+        .btn-add:hover { background-color: #e67e22; }
+        .btn-add-group { background-color: #fff; border: 1px dashed #aaa; color: #555; width: 100%; margin-top: 10px; padding: 8px; }
+        .btn-add-group:hover { background-color: #f9f9f9; border-color: #888; color: #333; }
+        .btn-delete-group { background: transparent; color: #999; border: none; font-size: 1.2em; padding: 0 5px; }
+        .btn-delete-group:hover { color: var(--danger); }
+
+        .btn-excel { background-color: var(--excel-green); color: white; padding: 6px 15px; font-size: 0.95em; display: flex; align-items: center; gap: 5px; }
+        .btn-excel:hover { background-color: #1a5c38; }
+        .btn-excel-all { background-color: var(--excel-dark); color: white; padding: 6px 15px; font-size: 0.95em; display: flex; align-items: center; gap: 5px; }
+        .btn-excel-all:hover { background-color: #0d2e1c; }
+
+        .delete-gene-btn { position: absolute; top: 10px; right: 10px; background-color: transparent; color: #999; border: 1px solid #ddd; border-radius: 50%; width: 30px; height: 30px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+        .delete-gene-btn:hover { background-color: #ffebee; color: var(--danger); border-color: var(--danger); }
+
+        input[type="number"] { padding: 8px; width: 60px; text-align: center; font-size: 16px; }
+        select, input[type="text"] { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+
+        /* Checkbox styling */
+        .ref-checkbox-wrapper { display: flex; align-items: center; gap: 8px; background: #fff; padding: 5px 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.9em; color: #2c3e50; }
+        .ref-checkbox-wrapper input { cursor: pointer; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; position: sticky; top: 0; z-index: 10; }
+        tr:hover { background-color: #f1f1f1; }
+        tr.gene-separator { border-top: 2px solid #bdc3c7; }
+
+        .hidden { display: none; }
+        .error-msg { color: red; font-size: 0.9em; margin-top: 5px; display: none; }
+        .warning-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; border: 1px solid #ffeeba; margin-bottom: 20px; display: none; }
+        
+        /* Stats Panel */
+        .stat-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+        @media (max-width: 900px) { .stat-grid { grid-template-columns: 1fr; } }
+        .stat-panel { background: #fafbfc; border: 1px solid #eee; padding: 15px; border-radius: 8px; max-height: 500px; overflow-y: auto; }
+        .anova-result-box { padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.95em; border-left: 5px solid; }
+        .anova-pass { background-color: #d4edda; color: #155724; border-color: #28a745; }
+        .anova-fail { background-color: #ffebee; color: #c0392b; border-color: #ef9a9a; }
+        .stat-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #ddd; }
+        .stat-item:last-child { border-bottom: none; }
+        .stat-sig { color: #e74c3c; font-weight: bold; }
+        .stat-method { color: #8e44ad; font-size: 0.85em; display: block; margin-top: 3px; font-style: italic; }
+
+        @media (max-width: 600px) {
+            .header-row { flex-direction: column; gap: 10px; }
+            .header-controls { position: static; transform: none; margin-top: 10px; }
+            .export-btn-group { flex-direction: column; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-row">
+        <h1 data-i18n="title">🧬 qPCR 相對定量分析工具 2^(-ΔΔCt)</h1>
+        
+        <div class="header-controls">
+            <a href="https://drive.google.com/file/d/1yDgXBFR4p9nPmxe5KaJ15Y5XY6S_jSX9/view?usp=sharing" target="_blank" class="top-btn">
+            📥 <span data-i18n="btnOffline">下載離線版</span>
+            </a>
+            <button class="top-btn" onclick="toggleLanguage()">
+                🌐 <span id="langText">English</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="step-title" data-i18n="step1">1. 初始設定</div>
+        <div style="display:flex; align-items:center; gap:15px; flex-wrap: wrap;">
+            <label data-i18n="initGeneCount">初始基因數量：</label>
+            <input type="number" id="geneCountInput" value="2" min="2" max="20">
+            <button class="btn-primary" onclick="generateGeneBlocks()" data-i18n="startBuild">開始建立區塊</button>
+            <span style="margin-left:auto; font-size:0.9em; color:#666; cursor:pointer; text-decoration:underline;" onclick="loadDemoData()" data-i18n="loadDemo">[載入範例數據]</span>
+        </div>
+        <div style="color: #7f8c8d; font-size: 0.9em; margin-top: 5px;" data-i18n="minGeneNote">
+            * 至少需要 2 個基因 (含內參與目標)
+        </div>
+    </div>
+
+    <div id="dataEntrySection" class="card hidden">
+        <div class="step-title">
+            <span data-i18n="step2">2. 輸入數據與設定</span>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-add" onclick="addSingleGeneBlock()" data-i18n="addBlock">➕ 新增基因區塊</button>
+                <button class="btn-danger" onclick="clearAllBlocks()" data-i18n="clearBlocks">🗑️ 清空所有</button>
+            </div>
+        </div>
+        
+        <p style="font-size:0.9em; color:#666; margin-bottom:15px;" data-i18n="dataInstr"></p>
+
+        <div id="geneBlocksContainer"></div>
+        
+        <div style="margin-top: 20px;">
+            <button class="btn-success" onclick="calculateResults()" data-i18n="btnCalculate">開始計算 (Calculate)</button>
+        </div>
+        <div id="globalError" style="color:red; text-align:center; margin-top:10px;"></div>
+    </div>
+
+    <div id="resultSection" class="card hidden">
+        <div class="step-title">
+            <span data-i18n="step4">3. 分析結果</span>
+            <button class="btn-excel" onclick="exportCSV()" data-i18n="exportCSV">📊 匯出 CSV (Excel)</button>
+        </div>
+        
+        <div id="warningBox" class="warning-box"></div>
+        <div style="margin-bottom:10px; font-weight:bold; color:#2980b9;" id="calibratorInfo"></div>
+
+        <div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th style="width:10%" data-i18n="colGene">基因</th>
+                        <th style="width:15%" data-i18n="colSample">樣本</th>
+                        <th>Mean Ct</th>
+                        <th>ΔCt</th>
+                        <th>ΔΔCt</th>
+                        <th>Fold Change</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="statsSection" class="card hidden">
+        <div class="step-title">
+    <span data-i18n="step5">4. 統計分析與作圖 (Statistics & Plots)</span>
+
+    <div class="export-btn-group" style="display:flex; gap:10px;">
+        <button class="btn-excel" onclick="exportStatsCSV()">📊 <span data-i18n="btnExportStats">匯出當前基因統計</span></button>
+        <button class="btn-excel-all" onclick="exportAllStatsCSV()">📑 <span data-i18n="btnExportAllStats">匯出全部基因統計</span></button>
+    </div>
+</div>
+        
+        <div class="info-box" style="margin-bottom:20px; background: #e8f4fd; color: #0c5460; padding: 10px; border-radius: 5px; font-size: 0.9em;">
+            <strong data-i18n="statNoteTitle">💡 統計科學修正說明：</strong>
+            <span data-i18n="statNoteBody">
+                為了符合常態分佈假設，<b>P 值計算採用 ΔCt 值</b>。<br>
+                3 組以上執行 <b>One-way ANOVA + Dunnett's or Tukey's Test</b> (與 Control 比較 or 兩兩比較)。<br>
+                僅 2 組時執行 <b>Welch's t-test</b> (不假設變異數相等)。
+            </span>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-panel">
+    <h4 style="margin-top:0; border-bottom:1px solid #ddd; padding-bottom:10px;" data-i18n="statPanelTitle">統計檢定結果 (基於 ΔCt)</h4>
+    
+    <div id="posthocWrapper" style="font-size:0.9em; font-weight:normal; display:flex; align-items:center; gap:5px; margin-bottom: 10px;">
+        <label>Post-hoc:</label>
+        <select id="posthocMethod" onchange="updatePlot()" style="width:auto; padding:5px; font-size:0.9em;">
+            <option value="dunnett" data-i18n="optDunnett">Dunnett's (vs Control)</option>
+            <option value="tukey" data-i18n="optTukey">Tukey's HSD (All Pairs)</option>
+        </select>
+    </div>
+    <div id="statResultsContainer"></div>
+</div>
+
+            <div>
+                 <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <label data-i18n="plotGeneLabel">選擇繪圖基因：</label>
+                    <select id="plotGeneSelect" onchange="updatePlot()" style="width:auto; padding:5px;"></select>
+                 </div>
+                 <div id="plotlyChart" style="width:100%; height:500px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 完整版統計臨界值表 (提供內插法使用) ---
+    // 擴充 k=30, 40 以支援高通量
+    // 1. Alpha = 0.05 (*)
+    const DUNNETT_D_TABLE_05 = {
+        2: { 2: 4.30, 3: 3.18, 4: 2.78, 5: 2.57, 10: 2.23, 15: 2.13, 20: 2.09, 30: 2.04, 60: 2.00, 120: 1.98, 999: 1.96 },
+        3: { 2: 5.43, 3: 3.88, 4: 3.36, 5: 3.03, 10: 2.57, 15: 2.44, 20: 2.38, 30: 2.32, 60: 2.27, 120: 2.24, 999: 2.21 },
+        4: { 2: 6.15, 3: 4.29, 4: 3.69, 5: 3.39, 10: 2.81, 15: 2.64, 20: 2.57, 30: 2.50, 60: 2.43, 120: 2.39, 999: 2.36 },
+        5: { 2: 6.68, 3: 4.58, 4: 3.92, 5: 3.66, 10: 2.97, 15: 2.79, 20: 2.70, 30: 2.62, 60: 2.55, 120: 2.51, 999: 2.47 },
+        6: { 2: 7.09, 3: 4.80, 4: 4.09, 5: 3.87, 10: 3.11, 15: 2.90, 20: 2.81, 30: 2.72, 60: 2.63, 120: 2.59, 999: 2.55 },
+        7: { 2: 7.42, 3: 4.98, 4: 4.23, 5: 4.05, 10: 3.22, 15: 2.99, 20: 2.89, 30: 2.80, 60: 2.71, 120: 2.66, 999: 2.62 },
+        8: { 2: 7.71, 3: 5.14, 4: 4.35, 5: 4.20, 10: 3.31, 15: 3.07, 20: 2.96, 30: 2.87, 60: 2.77, 120: 2.72, 999: 2.68 },
+        9: { 2: 7.96, 3: 5.27, 4: 4.45, 5: 4.33, 10: 3.39, 15: 3.14, 20: 3.03, 30: 2.93, 60: 2.83, 120: 2.78, 999: 2.73 },
+        10: { 2: 8.19, 3: 5.39, 4: 4.55, 5: 4.45, 10: 3.47, 15: 3.20, 20: 3.08, 30: 2.98, 60: 2.88, 120: 2.83, 999: 2.78 },
+        12: { 2: 8.58, 3: 5.53, 4: 4.66, 5: 4.65, 10: 3.59, 15: 3.30, 20: 3.18, 30: 3.07, 60: 2.96, 120: 2.91, 999: 2.86 },
+        15: { 2: 9.09, 3: 5.72, 4: 4.79, 5: 4.88, 10: 3.73, 15: 3.43, 20: 3.29, 30: 3.17, 60: 3.06, 120: 3.00, 999: 2.95 },
+        20: { 5: 5.17, 10: 3.91, 15: 3.59, 20: 3.43, 30: 3.30, 60: 3.19, 120: 3.12, 999: 3.07 },
+        30: { 5: 5.55, 10: 4.15, 15: 3.80, 20: 3.63, 30: 3.49, 60: 3.36, 120: 3.29, 999: 3.23 },
+        40: { 5: 5.80, 10: 4.30, 15: 3.94, 20: 3.76, 30: 3.60, 60: 3.47, 120: 3.39, 999: 3.33 }
+    };
+
+    // 2. Alpha = 0.01 (**)
+    const DUNNETT_D_TABLE_01 = {
+        2: { 2: 9.92, 3: 5.84, 4: 4.60, 5: 4.03, 10: 3.17, 15: 2.95, 20: 2.84, 30: 2.75, 60: 2.66, 120: 2.62, 999: 2.58 },
+        3: { 2: 13.0, 3: 7.45, 4: 5.76, 5: 4.63, 10: 3.56, 15: 3.29, 20: 3.15, 30: 3.03, 60: 2.92, 120: 2.86, 999: 2.81 },
+        4: { 2: 14.9, 3: 8.40, 4: 6.45, 5: 4.98, 10: 3.80, 15: 3.48, 20: 3.33, 30: 3.19, 60: 3.06, 120: 2.99, 999: 2.94 },
+        5: { 2: 16.3, 3: 9.05, 4: 6.92, 5: 5.22, 10: 3.96, 15: 3.62, 20: 3.46, 30: 3.31, 60: 3.16, 120: 3.09, 999: 3.04 },
+        6: { 2: 17.4, 3: 9.54, 4: 7.28, 5: 5.41, 10: 4.10, 15: 3.73, 20: 3.56, 30: 3.40, 60: 3.24, 120: 3.17, 999: 3.11 },
+        7: { 2: 18.3, 3: 9.93, 4: 7.56, 5: 5.56, 10: 4.21, 15: 3.82, 20: 3.64, 30: 3.48, 60: 3.31, 120: 3.23, 999: 3.18 },
+        8: { 2: 19.1, 3: 10.26, 4: 7.79, 5: 5.69, 10: 4.30, 15: 3.90, 20: 3.71, 30: 3.54, 60: 3.37, 120: 3.29, 999: 3.23 },
+        9: { 2: 19.8, 3: 10.54, 4: 7.99, 5: 5.80, 10: 4.39, 15: 3.97, 20: 3.77, 30: 3.59, 60: 3.42, 120: 3.33, 999: 3.28 },
+        10: { 2: 20.4, 3: 10.79, 4: 8.17, 5: 5.89, 10: 4.46, 15: 4.03, 20: 3.82, 30: 3.64, 60: 3.46, 120: 3.37, 999: 3.32 },
+        12: { 2: 21.5, 3: 11.22, 4: 8.48, 5: 6.04, 10: 4.57, 15: 4.12, 20: 3.91, 30: 3.73, 60: 3.54, 120: 3.44, 999: 3.39 },
+        15: { 2: 23.0, 3: 11.76, 4: 8.86, 5: 6.20, 10: 4.68, 15: 4.22, 20: 4.00, 30: 3.82, 60: 3.62, 120: 3.53, 999: 3.47 },
+        20: { 5: 6.39, 10: 4.82, 15: 4.35, 20: 4.12, 30: 3.94, 60: 3.74, 120: 3.64, 999: 3.58 },
+        30: { 5: 6.78, 10: 5.09, 15: 4.58, 20: 4.34, 30: 4.14, 60: 3.93, 120: 3.82, 999: 3.75 },
+        40: { 5: 7.05, 10: 5.28, 15: 4.75, 20: 4.49, 30: 4.28, 60: 4.07, 120: 3.95, 999: 3.87 }
+    };
+
+    // 3. Alpha = 0.001 (***)
+    const DUNNETT_D_TABLE_001 = {
+        2: { 2: 31.6, 3: 12.9, 4: 8.61, 5: 6.87, 10: 4.59, 15: 4.07, 20: 3.85, 30: 3.65, 60: 3.46, 120: 3.37, 999: 3.29 },
+        3: { 2: 39.0, 3: 15.5, 4: 10.2, 5: 7.60, 10: 5.06, 15: 4.48, 20: 4.22, 30: 3.99, 60: 3.77, 120: 3.67, 999: 3.48 },
+        4: { 2: 44.0, 3: 17.3, 4: 11.2, 5: 8.03, 10: 5.35, 15: 4.73, 20: 4.46, 30: 4.21, 60: 3.97, 120: 3.86, 999: 3.59 },
+        5: { 2: 47.0, 3: 18.5, 4: 12.0, 5: 8.34, 10: 5.56, 15: 4.92, 20: 4.63, 30: 4.37, 60: 4.12, 120: 4.00, 999: 3.67 },
+        6: { 2: 50.0, 3: 19.5, 4: 12.5, 5: 8.59, 10: 5.73, 15: 5.07, 20: 4.77, 30: 4.50, 60: 4.23, 120: 4.11, 999: 3.73 },
+        7: { 2: 52.0, 3: 20.2, 4: 13.0, 5: 8.79, 10: 5.87, 15: 5.19, 20: 4.89, 30: 4.61, 60: 4.33, 120: 4.20, 999: 3.78 },
+        8: { 2: 54.0, 3: 20.9, 4: 13.4, 5: 8.96, 10: 5.99, 15: 5.30, 20: 4.99, 30: 4.70, 60: 4.42, 120: 4.29, 999: 3.82 },
+        9: { 2: 56.0, 3: 21.5, 4: 13.7, 5: 9.11, 10: 6.09, 15: 5.39, 20: 5.08, 30: 4.78, 60: 4.49, 120: 4.36, 999: 3.86 },
+        10: { 2: 58.0, 3: 22.0, 4: 14.0, 5: 9.24, 10: 6.18, 15: 5.47, 20: 5.16, 30: 4.86, 60: 4.56, 120: 4.42, 999: 3.89 },
+        12: { 2: 61.5, 3: 23.0, 4: 14.6, 5: 9.46, 10: 6.34, 15: 5.61, 20: 5.29, 30: 4.98, 60: 4.68, 120: 4.53, 999: 3.95 },
+        15: { 2: 66.0, 3: 24.2, 4: 15.3, 5: 9.72, 10: 6.52, 15: 5.77, 20: 5.44, 30: 5.12, 60: 4.81, 120: 4.66, 999: 4.02 },
+        20: { 5: 10.05, 10: 6.75, 15: 5.98, 20: 5.63, 30: 5.30, 60: 4.98, 120: 4.82, 999: 4.11 }
+    };
+
+    // --- Tukey's Q Table (Studentized Range) Extended to k=15 ---
+    // ✅ 完整修正版：包含 0.05, 0.01, 0.001 的 df=2, 3, 4 數據
+    const TUKEY_Q = {
+        0.05: {
+            2: {2:6.08,3:8.33,4:9.80,5:10.88,6:11.73,7:12.43,8:13.03,9:13.54,10:13.99,11:14.39,12:14.75,13:15.08,14:15.37,15:15.65},
+            3: {2:4.50,3:5.91,4:6.82,5:7.50,6:8.04,7:8.48,8:8.85,9:9.18,10:9.46,11:9.72,12:9.95,13:10.15,14:10.35,15:10.52},
+            4: {2:3.93,3:5.04,4:5.76,5:6.29,6:6.71,7:7.05,8:7.35,9:7.60,10:7.83,11:8.03,12:8.21,13:8.37,14:8.52,15:8.66},
+            5: {2:3.64,3:4.60,4:5.22,5:5.67,6:6.03,7:6.33,8:6.58,9:6.80,10:6.99,11:7.17,12:7.32,13:7.47,14:7.60,15:7.72},
+            10: {2:3.15,3:3.88,4:4.33,5:4.65,6:4.91,7:5.12,8:5.30,9:5.46,10:5.60,11:5.73,12:5.85,13:5.96,14:6.06,15:6.15},
+            15: {2:3.01,3:3.67,4:4.08,5:4.37,6:4.60,7:4.78,8:4.94,9:5.08,10:5.20,11:5.31,12:5.42,13:5.51,14:5.60,15:5.69},
+            20: {2:2.95,3:3.58,4:3.96,5:4.23,6:4.45,7:4.62,8:4.77,9:4.90,10:5.01,11:5.11,12:5.21,13:5.30,14:5.38,15:5.46},
+            30: {2:2.89,3:3.49,4:3.85,5:4.10,6:4.30,7:4.46,8:4.60,9:4.72,10:4.82,11:4.92,12:5.00,13:5.08,14:5.15,15:5.22},
+            60: {2:2.83,3:3.40,4:3.73,5:3.98,6:4.16,7:4.31,8:4.44,9:4.55,10:4.65,11:4.73,12:4.81,13:4.88,14:4.95,15:5.01},
+            120: {2:2.80,3:3.36,4:3.68,5:3.92,6:4.10,7:4.24,8:4.36,9:4.47,10:4.56,11:4.64,12:4.71,13:4.78,14:4.84,15:4.90},
+            999: {2:2.77,3:3.31,4:3.63,5:3.86,6:4.03,7:4.17,8:4.29,9:4.39,10:4.47,11:4.55,12:4.62,13:4.68,14:4.74,15:4.80}
+        },
+        0.01: {
+            2: {2:14.04,3:19.02,4:22.29,5:24.72,6:26.63,7:28.20,8:29.53,9:30.68,10:31.69,11:32.59,12:33.40,13:34.13,14:34.81,15:35.43},
+            3: {2:8.26,3:10.62,4:12.17,5:13.32,6:14.24,7:15.00,8:15.64,9:16.20,10:16.69,11:17.13,12:17.53,13:17.89,14:18.22,15:18.52},
+            4: {2:6.51,3:8.12,4:9.17,5:9.96,6:10.58,7:11.10,8:11.54,9:11.93,10:12.26,11:12.57,12:12.84,13:13.09,14:13.32,15:13.53},
+            5: {2:5.70,3:6.98,4:7.80,5:8.42,6:8.91,7:9.32,8:9.67,9:9.97,10:10.24,11:10.48,12:10.70,13:10.89,14:11.08,15:11.24},
+            10: {2:4.48,3:5.43,4:6.09,5:6.57,6:6.96,7:7.28,8:7.55,9:7.78,10:7.99,11:8.18,12:8.35,13:8.51,14:8.66,15:8.79},
+            15: {2:4.17,3:5.02,4:5.59,5:6.02,6:6.37,7:6.65,8:6.89,9:7.09,10:7.28,11:7.45,12:7.60,13:7.74,14:7.87,15:8.00},
+            20: {2:4.02,3:4.82,4:5.35,5:5.75,6:6.08,7:6.34,8:6.57,9:6.77,10:6.94,11:7.10,12:7.25,13:7.38,14:7.51,15:7.62},
+            30: {2:3.89,3:4.63,4:5.13,5:5.50,6:5.80,7:6.04,8:6.25,9:6.43,10:6.59,11:6.74,12:6.87,13:6.99,14:7.10,15:7.21},
+            60: {2:3.76,3:4.45,4:4.91,5:5.26,6:5.53,7:5.75,8:5.94,9:6.10,10:6.24,11:6.37,12:6.49,13:6.60,14:6.70,15:6.79},
+            120: {2:3.70,3:4.36,4:4.80,5:5.14,6:5.40,7:5.61,8:5.79,9:5.94,10:6.08,11:6.20,12:6.31,13:6.41,14:6.51,15:6.60},
+            999: {2:3.64,3:4.28,4:4.70,5:5.03,6:5.27,7:5.48,8:5.65,9:5.80,10:5.93,11:6.05,12:6.15,13:6.25,14:6.34,15:6.43}
+        },
+        0.001: {
+            2: {2:44.69,3:60.42,4:70.77,5:78.43,6:84.48,7:89.46,8:93.66,9:97.30,10:100.5,11:103.35,12:105.91,13:108.24,14:110.37,15:112.33},
+            3: {2:18.28,3:23.31,4:26.64,5:29.13,6:31.10,7:32.74,8:34.12,9:35.33,10:36.39,11:37.34,12:38.20,13:38.98,14:39.69,15:40.35},
+            4: {2:12.18,3:14.98,4:16.84,5:18.23,6:19.34,7:20.26,8:21.04,9:21.72,10:22.33,11:22.87,12:23.36,13:23.80,14:24.21,15:24.59},
+            5: {2:9.68,3:11.7,4:12.8,5:13.7,6:14.4,7:14.9,8:15.4,9:15.8,10:16.2,11:16.5,12:16.8,13:17.1,14:17.3,15:17.5},
+            10: {2:6.76,3:8.25,4:9.17,5:9.84,6:10.4,7:10.8,8:11.2,9:11.5,10:11.8,11:12.1,12:12.3,13:12.5,14:12.7,15:12.9},
+            15: {2:5.92,3:7.14,4:7.93,5:8.51,6:8.97,7:9.35,8:9.68,9:9.96,10:10.2,11:10.4,12:10.7,13:10.8,14:11.0,15:11.2},
+            20: {2:5.51,3:6.60,4:7.31,5:7.83,6:8.25,7:8.59,8:8.89,9:9.15,10:9.39,11:9.59,12:9.78,13:9.96,14:10.1,15:10.3},
+            30: {2:5.13,3:6.09,4:6.72,5:7.19,6:7.56,7:7.87,8:8.14,9:8.37,10:8.58,11:8.76,12:8.93,13:9.09,14:9.24,15:9.37},
+            60: {2:4.78,3:5.63,4:6.19,5:6.60,6:6.94,7:7.21,8:7.44,9:7.65,10:7.83,11:7.99,12:8.14,13:8.28,14:8.40,15:8.52},
+            120: {2:4.62,3:5.42,4:5.94,5:6.33,6:6.64,7:6.90,8:7.11,9:7.30,10:7.47,11:7.62,12:7.75,13:7.88,14:8.00,15:8.11},
+            999: {2:4.47,3:5.23,4:5.71,5:6.08,6:6.37,7:6.61,8:6.81,9:6.98,10:7.14,11:7.28,12:7.41,13:7.53,14:7.64,15:7.74}
+        }
+    };
+    
+    // --- 修正後的 Tukey 查表函數 (支援 df 內插) ---
+    function getTukeyQ(df, k, alpha) {
+        const table = TUKEY_Q[alpha];
+        if (!table) return 999;
+        
+        // 1. 處理組數 (k) - Tukey 表格通常 k=2~15
+        // 如果 k 超出範圍，取最大值 (保守估計)
+        const maxK = 15; 
+        if (k > maxK) k = maxK;
+        if (k < 2) return 999;
+
+        const useK = k;
+
+        // 取得所有可用的 df 鍵值並排序
+        const availDfs = Object.keys(table).map(Number).sort((a,b)=>a-b);
+
+        // 2. 處理自由度 (df)
+        // A. 小於最小 df -> 用最小的
+        if (df <= availDfs[0]) return table[availDfs[0]][useK] || 999;
+        // B. 大於最大 df -> 用最大的
+        if (df >= availDfs[availDfs.length - 1]) return table[availDfs[availDfs.length - 1]][useK] || 999;
+
+        // C. 剛好有該 df -> 直接回傳
+        if (table[df] && table[df][useK]) return table[df][useK];
+
+        // D. 線性內插 (Linear Interpolation)
+        let lowerDf = availDfs[0];
+        let upperDf = availDfs[availDfs.length - 1];
+
+        for (let i = 0; i < availDfs.length - 1; i++) {
+            if (df > availDfs[i] && df < availDfs[i+1]) {
+                lowerDf = availDfs[i];
+                upperDf = availDfs[i+1];
+                break;
+            }
+        }
+
+        const qLow = table[lowerDf][useK];
+        const qHigh = table[upperDf][useK];
+
+        if (qLow === undefined || qHigh === undefined) return 999;
+
+        // 內插公式
+        const ratio = (df - lowerDf) / (upperDf - lowerDf);
+        return qLow + ratio * (qHigh - qLow);
+    }
+
+    // --- 支援線性內插 (Linear Interpolation) 的精準查表函數 ---
+    function getCriticalValue(table, k, df) {
+        // 1. 處理組數 (k)
+        const definedKs = Object.keys(table).map(Number).sort((a, b) => a - b);
+        let targetK = k;
+        if (k > definedKs[definedKs.length - 1]) targetK = definedKs[definedKs.length - 1];
+        else if (!table[k]) {
+            // 若 k 不在表中，找最近的 (通常 k 都是整數，這裡主要是防呆)
+            for (let i = 0; i < definedKs.length; i++) {
+                if (definedKs[i] >= k) { targetK = definedKs[i]; break; }
+            }
+        }
+        
+        const dfTable = table[targetK];
+        const definedDFs = Object.keys(dfTable).map(Number).sort((a, b) => a - b);
+        
+        // 2. 處理自由度 (df) - 線性內插核心邏輯
+        
+        // A. 如果 df 比表上最小還小，回傳最小值 (極端保守)
+        if (df <= definedDFs[0]) return dfTable[definedDFs[0]];
+        
+        // B. 如果 df 比表上最大還大，回傳最大值 (無限大)
+        if (df >= definedDFs[definedDFs.length - 1]) return dfTable[definedDFs[definedDFs.length - 1]];
+        
+        // C. 檢查是否有完全匹配的 df
+        if (dfTable[df]) return dfTable[df];
+
+        // D. 執行線性內插
+        // 找出 df 落在表上的哪兩個點之間 (lower 與 upper)
+        let lowerDF = definedDFs[0];
+        let upperDF = definedDFs[definedDFs.length - 1];
+        
+        for (let i = 0; i < definedDFs.length - 1; i++) {
+            if (df > definedDFs[i] && df < definedDFs[i+1]) {
+                lowerDF = definedDFs[i];
+                upperDF = definedDFs[i+1];
+                break;
+            }
+        }
+        
+        const lowerVal = dfTable[lowerDF];
+        const upperVal = dfTable[upperDF];
+        
+        // 內插公式: y = y1 + (x - x1) * (y2 - y1) / (x2 - x1)
+        // 注意：df 越大，critical value 越小，所以 slope 是負的
+        const interpolatedVal = lowerVal + (df - lowerDF) * (upperVal - lowerVal) / (upperDF - lowerDF);
+        
+        return interpolatedVal;
+    }
+
+    // --- 多語言設定 ---
+    let currentLang = 'zh'; 
+    const translations = {
+        'zh': {
+            title: "🧬 qPCR 相對定量分析工具 2^(-ΔΔCt)",
+            btnOffline: "下載離線版",
+            step1: "1. 初始設定",
+            initGeneCount: "初始基因數量：",
+            startBuild: "開始建立區塊",
+            loadDemo: "[載入範例數據]",
+            minGeneNote: "* 至少需要 2 個基因 (含內參與目標)",
+            step2: "2. 輸入數據與設定",
+            addBlock: "➕ 新增基因區塊",
+            clearBlocks: "🗑️ 清空所有",
+            dataInstr: "請輸入樣本名稱與 Ct 值。系統會自動計算<span style='color: #e74c3c; font-weight: bold;'>相同樣本名稱</span>的平均 Ct 值 <span style='color: #e74c3c; font-weight: bold;'>(技術重複)</span>。<br>若為<span style='color: #e74c3c; font-weight: bold;'>不同的獨立樣本 (生物重複)</span>，請務必使用不同名稱區分 (如 WT-1, WT-2)。<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>可建立多個「組別」以便管理。<br><b>設定內參：</b>請在基因名稱旁勾選 'Reference Gene'。<br><b>設定對照組：</b>請在組別上方勾選 'Set as Control Group'。",
+            btnCalculate: "開始計算 (Calculate)",
+            geneNameLabel: "基因名稱：",
+            isRefLabel: "設為內參基因 (Reference Gene)",
+            sampleLabel: "⬇️ 樣本名稱 (Sample)",
+            ctLabel: "⬇️ Ct 值 (輸入原始數值，自動取平均)",
+            addGroup: "➕ 新增組別 (Add Group)",
+            isControlLabel: "設為對照組 (Control Group)",
+            errorRowMsg: "⚠️ 行數不符，請檢查。",
+            step4: "3. 分析結果",
+            exportCSV: "📊 匯出 CSV (Excel)",
+            colGene: "基因",
+            colSample: "樣本",
+            step5: "4. 統計分析與作圖",
+            btnExportStats: "匯出當前基因統計",
+            btnExportAllStats: "匯出全部基因統計",
+            statNoteTitle: "💡 統計科學修正說明：",
+            statNoteBody: "為了符合常態分佈假設，<b>P 值計算採用 ΔCt 值</b>。<br>3 組以上執行 <b>One-way ANOVA + Dunnett's or Tukey's Test</b> (與 Control 比較 or 兩兩比較)。<br>僅 2 組時執行 <b>Welch's t-test</b> (不假設變異數相等)。",
+            statPanelTitle: "統計檢定結果 (基於 ΔCt)",
+            optDunnett: "Dunnett's (與對照組比較)",
+            optTukey: "Tukey's HSD (兩兩互相比較)",
+            plotGeneLabel: "選擇繪圖基因：",
+            alertMinGene: "錯誤：初始至少需要 2 個基因。",
+            alertConfirmClear: "確定要清空所有已生成的區塊嗎？",
+            alertBlockCount: "錯誤：目前只有 {n} 個區塊。至少需要 2 個。",
+            alertRowMismatch: "部分區塊的樣本與 Ct 值行數不一致，請檢查紅色錯誤。",
+            alertValidGene: "有效數據的基因數量不足 2 個。",
+            alertSelectRef: "請至少勾選一個內參基因 (Reference Gene)！",
+            alertNoControl: "找不到設定為 'Control Group' 的樣本數據，無法計算基準。",
+            warnMissingRef: "⚠️ <b>警告：</b>以下樣本因缺少選定內參基因 ({ref}) 的數據，已被排除在計算之外：<br>{samples}",
+            calibInfo: "ℹ️ 已使用 {n} 個對照組樣本 (Control Samples) 的平均 ΔCt 作為基準",
+            demoLoaded: "已載入範例 (GAPDH, IL6, IL17)！",
+            alertNoStats: "無統計數據可匯出",
+            anovaTitle: "單因子變異數分析 (One-way ANOVA)",
+            anovaSigMsg: "✅ P = {p} < 0.05 (組間有顯著差異)",
+            anovaNsMsg: "⚠️ P = {p} > 0.05 (組間無顯著差異)",
+            anovaNsHint: "由於 ANOVA 不顯著，統計上不建議進行個別組間比較 (Post-hoc test)。",
+            multiGroupNote: "⚠️ 檢測到多組比較 ({n} 組)。已應用 <b>Dunnett's Test</b>。",
+            groupDefault: "組別",
+            txtResult: "結果:",
+            txtMethod: "方法:"
+        },
+        'en': {
+            title: "🧬 qPCR Analysis Tool 2^(-ΔΔCt)",
+            btnOffline: "Download Offline",
+            step1: "1. Initial Setup",
+            initGeneCount: "Initial Gene Count:",
+            startBuild: "Generate Blocks",
+            loadDemo: "[Load Demo Data]",
+            minGeneNote: "* At least 2 genes required",
+            step2: "2. Data Entry & Setup",
+            addBlock: "➕ Add Gene Block",
+            clearBlocks: "🗑️ Clear All",
+            dataInstr: "Enter Sample Names and Ct Values. System auto-calculates mean Ct for <span style='color: #e74c3c; font-weight: bold;'>Same Sample Names</span> <span style='color: #e74c3c; font-weight: bold;'>(Technical Replicates)</span>.<br>For <span style='color: #e74c3c; font-weight: bold;'>Biological Replicates</span>, use unique names (e.g., WT-1, WT-2).<hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'>Use 'Groups' to organize.<br><b>Ref Gene:</b> Check 'Reference Gene'.<br><b>Control:</b> Check 'Set as Control Group'.",
+            btnCalculate: "Start Calculate",
+            geneNameLabel: "Gene Name:",
+            isRefLabel: "Set as Reference Gene",
+            sampleLabel: "⬇️ Sample Names",
+            ctLabel: "⬇️ Ct Values",
+            addGroup: "➕ Add Group",
+            isControlLabel: "Set as Control Group",
+            errorRowMsg: "⚠️ Row count mismatch.",
+            step4: "3. Results",
+            exportCSV: "📊 Export CSV",
+            colGene: "Gene",
+            colSample: "Sample",
+            step5: "4. Statistics & Plots",
+            btnExportStats: "Export Current Stats",
+            btnExportAllStats: "Export All Stats",
+            statNoteTitle: "💡 Statistics Note:",
+            statNoteBody: "<b>P-values are calculated using ΔCt</b>.<br><b>One-way ANOVA + Dunnett's or Tukey's Test</b> for 3+ groups.<br><b>Welch's t-test</b> for 2 groups.",
+            statPanelTitle: "Statistical Test (Based on ΔCt)",
+            optDunnett: "Dunnett's (vs Control)",
+            optTukey: "Tukey's HSD (All Pairs)",
+            plotGeneLabel: "Select Gene for Plot:",
+            alertMinGene: "Error: At least 2 genes required.",
+            alertConfirmClear: "Are you sure you want to clear all?",
+            alertBlockCount: "Error: Only {n} blocks found.",
+            alertRowMismatch: "Row count mismatch.",
+            alertValidGene: "Less than 2 valid genes.",
+            alertSelectRef: "Please select at least one Reference Gene!",
+            alertNoControl: "No 'Control Group' found. Please check the 'Set as Control' box for one of your groups.",
+            warnMissingRef: "⚠️ Warning: Missing ref data for: {samples}",
+            calibInfo: "ℹ️ Used {n} Control Samples as Calibrator",
+            demoLoaded: "Demo Loaded (GAPDH, IL6, IL17)!",
+            alertNoStats: "No stats available",
+            anovaTitle: "One-way ANOVA",
+            anovaSigMsg: "✅ P = {p} < 0.05 (Significant)",
+            anovaNsMsg: "⚠️ P = {p} > 0.05 (Not Significant)",
+            anovaNsHint: "ANOVA not significant, pairwise comparison not recommended.",
+            multiGroupNote: "⚠️ Multiple comparisons ({n} groups). <b>Dunnett's Test</b> applied.",
+            groupDefault: "Group",
+            txtResult: "Result:",
+            txtMethod: "Method:"
+        }
+    };
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        updateTexts();
+    }
+    function t(key) { return translations[currentLang][key] || key; }
+    function updateTexts() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if(translations[currentLang][key]) el.innerHTML = translations[currentLang][key]; 
+        });
+        document.getElementById('langText').innerText = currentLang === 'zh' ? 'English' : '中文';
+        
+        // Update Chart if visible to refresh text inside JS
+        if(!document.getElementById('statsSection').classList.contains('hidden')) {
+             updatePlot();
+        }
+        const calibInfo = document.getElementById('calibratorInfo');
+        const count = calibInfo.getAttribute('data-count');
+        if (count) {
+            calibInfo.innerText = t('calibInfo').replace('{n}', count);
+        }
+    }
+
+    // --- 核心變數 ---
+    let GLOBAL_DATA = {}; 
+    let GLOBAL_GROUP_ORDER = [];
+    let GENE_LIST = [];
+    let SAMPLE_LIST = new Set();
+    let FOLD_CHANGE_DATA = []; 
+    let CURRENT_STATS_EXPORT_DATA = []; 
+    let CURRENT_ANOVA_RESULT = null;
+    let geneBlockCounter = 0;
+
+    // --- 1. 介面生成與數據輸入 (UI Generation) ---
+
+    function generateGeneBlocks() {
+        const countInput = document.getElementById('geneCountInput');
+        let count = parseInt(countInput.value) || 0;
+        if (count < 2) { alert(t('alertMinGene')); return; }
+
+        const container = document.getElementById('geneBlocksContainer');
+        container.innerHTML = ''; 
+        geneBlockCounter = 0;
+
+        for (let i = 0; i < count; i++) { addSingleGeneBlock(); }
+        
+        // 顯示步驟 2
+        document.getElementById('dataEntrySection').classList.remove('hidden');
+        document.getElementById('resultSection').classList.add('hidden');
+        document.getElementById('statsSection').classList.add('hidden');
+        document.getElementById('dataEntrySection').scrollIntoView({behavior: "smooth"});
+    }
+
+    function addSingleGeneBlock() {
+        geneBlockCounter++;
+        const container = document.getElementById('geneBlocksContainer');
+        const geneId = `gene_${Date.now()}_${geneBlockCounter}`; 
+        const currentCount = container.children.length + 1;
+
+        const html = `
+            <div class="gene-block" id="${geneId}">
+                <button type="button" class="delete-gene-btn" onclick="removeBlock('${geneId}')" title="Delete">✕</button>
+                
+                <div class="gene-header">
+                    <label data-i18n="geneNameLabel">${t('geneNameLabel')}</label>
+                    <input type="text" class="gene-name-input" value="Gene ${currentCount}">
+                    
+                    <div class="ref-checkbox-wrapper">
+                        <input type="checkbox" class="ref-gene-checkbox" id="ref_cb_${geneId}">
+                        <label for="ref_cb_${geneId}" data-i18n="isRefLabel">${t('isRefLabel')}</label>
+                    </div>
+                </div>
+
+                <div class="groups-container" id="groups_${geneId}">
+                    </div>
+
+                <button class="btn-add-group" onclick="addGroupBlock('${geneId}')" data-i18n="addGroup">${t('addGroup')}</button>
+                <div class="error-msg" data-i18n="errorRowMsg" style="display:none;">${t('errorRowMsg')}</div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+        
+        // 預設新增一個組別 (修復 UX 問題)
+        addGroupBlock(geneId);
+        return geneId; // (修復 Demo Load 問題)
+    }
+
+    function addGroupBlock(geneId) {
+        const groupContainer = document.getElementById(`groups_${geneId}`);
+        const groupId = `grp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        
+        const html = `
+            <div class="group-block" id="${groupId}">
+                <div class="group-header">
+                    <div class="group-control-option">
+                        <input type="checkbox" class="is-control-checkbox" id="chk_${groupId}" onchange="toggleGroupStyle('${groupId}')">
+                        <label for="chk_${groupId}" data-i18n="isControlLabel">${t('isControlLabel')}</label>
+                    </div>
+                    <button class="btn-delete-group" onclick="removeBlock('${groupId}')">✕</button>
+                </div>
+                <div class="input-row">
+                    <div class="input-col">
+                        <label data-i18n="sampleLabel">${t('sampleLabel')}</label>
+                        <textarea class="samples-input" placeholder="WT-1\nWT-2..."></textarea>
+                    </div>
+                    <div class="input-col">
+                        <label data-i18n="ctLabel">${t('ctLabel')}</label>
+                        <textarea class="cts-input" placeholder="22.5\n22.8..."></textarea>
+                    </div>
+                </div>
+            </div>
+        `;
+        groupContainer.insertAdjacentHTML('beforeend', html);
+        return groupId;
+    }
+
+    function toggleGroupStyle(groupId) {
+        const block = document.getElementById(groupId);
+        const checkbox = block.querySelector('.is-control-checkbox');
+        if (checkbox.checked) {
+            block.classList.add('is-control');
+        } else {
+            block.classList.remove('is-control');
+        }
+    }
+
+    function removeBlock(id) { document.getElementById(id)?.remove(); }
+    function clearAllBlocks() {
+        if(confirm(t('alertConfirmClear'))) {
+            document.getElementById('geneBlocksContainer').innerHTML = '';
+            geneBlockCounter = 0; 
+        }
+    }
+
+    // --- 2. 數據處理與計算 (Process & Calculate) ---
+
+        function calculateResults() {
+        GLOBAL_DATA = {};
+        GLOBAL_GROUP_ORDER = [];
+        const allGeneBlocks = document.querySelectorAll('.gene-block');
+        allGeneBlocks.forEach(block => {
+            block.querySelectorAll('.group-block').forEach(grp => {
+                const txt = grp.querySelector('.samples-input').value.trim();
+                if (txt) {
+                    const firstSample = txt.split(/[\n\r]+/)[0].trim();
+                    if (firstSample) {
+                        const gName = getGroupName(firstSample);
+                        if (!GLOBAL_GROUP_ORDER.includes(gName)) {
+                            GLOBAL_GROUP_ORDER.push(gName);
+                        }
+                    }
+                }
+            });
+        });
+        GENE_LIST = [];
+        SAMPLE_LIST = new Set();
+        FOLD_CHANGE_DATA = [];
+        
+        let selectedRefs = [];
+        let controlSampleNames = new Set(); // 用來儲存被標記為 Control 的樣本名稱
+        let hasError = false;
+
+        const geneBlocks = document.querySelectorAll('.gene-block');
+        if (geneBlocks.length < 2) { alert(t('alertBlockCount').replace('{n}', geneBlocks.length)); return; }
+
+        // --- Step A: 解析 UI 數據 ---
+        geneBlocks.forEach(block => {
+            const geneName = block.querySelector('.gene-name-input').value.trim();
+            const isRef = block.querySelector('.ref-gene-checkbox').checked;
+            const errorMsg = block.querySelector('.error-msg');
+            
+            if (!geneName) return;
+            if (!GENE_LIST.includes(geneName)) GENE_LIST.push(geneName);
+            if (isRef) selectedRefs.push(geneName);
+
+            // 遍歷該基因下的所有 Group
+            const groups = block.querySelectorAll('.group-block');
+            let geneHasData = false;
+
+            groups.forEach(grp => {
+                const isControlGroup = grp.querySelector('.is-control-checkbox').checked;
+                const sampleText = grp.querySelector('.samples-input').value.trim();
+                const ctText = grp.querySelector('.cts-input').value.trim();
+
+                const samples = sampleText.split(/[\n\r]+/).map(s => s.trim()).filter(s => s);
+                const cts = ctText.split(/[\n\r]+/).map(c => c.trim()).filter(c => c);
+
+                if (samples.length !== cts.length) {
+                    hasError = true;
+                    // Highlight error
+                    return;
+                }
+
+                if (samples.length > 0) geneHasData = true;
+
+                for(let i=0; i<samples.length; i++) {
+                    const sName = samples[i];
+                    const ctVal = parseFloat(cts[i]);
+                    
+                    if (!isNaN(ctVal)) {
+                        SAMPLE_LIST.add(sName);
+                        if (!GLOBAL_DATA[sName]) GLOBAL_DATA[sName] = {};
+                        if (!GLOBAL_DATA[sName][geneName]) GLOBAL_DATA[sName][geneName] = [];
+                        
+                        GLOBAL_DATA[sName][geneName].push(ctVal);
+
+                        if (isControlGroup) {
+                            controlSampleNames.add(sName);
+                        }
+                    }
+                }
+            });
+
+            errorMsg.style.display = hasError ? 'block' : 'none';
+        });
+
+        if (hasError) { alert(t('alertRowMismatch')); return; }
+        if (GENE_LIST.length < 2) { alert(t('alertValidGene')); return; }
+        if (selectedRefs.length === 0) { alert(t('alertSelectRef')); return; }
+        if (controlSampleNames.size === 0) { alert(t('alertNoControl')); return; }
+
+        // --- Step B: 計算 Delta Ct ---
+        let sampleStats = {};
+        let missingRefSamples = [];
+
+        SAMPLE_LIST.forEach(sName => {
+            let refCts = [];
+            let isMissing = false;
+            
+            // 檢查是否擁有所有內參數據
+            for (let ref of selectedRefs) {
+                if (!GLOBAL_DATA[sName][ref] || GLOBAL_DATA[sName][ref].length === 0) {
+                    isMissing = true; break;
+                }
+                refCts.push(getMean(GLOBAL_DATA[sName][ref]));
+            }
+
+            if (isMissing) {
+                missingRefSamples.push(sName);
+                return;
+            }
+
+            const compositeRefCt = getMean(refCts); // 內參平均
+            sampleStats[sName] = {};
+
+            GENE_LIST.forEach(gName => {
+                if (GLOBAL_DATA[sName][gName]) {
+                    const targetMean = getMean(GLOBAL_DATA[sName][gName]);
+                    sampleStats[sName][gName] = { 
+                        meanCt: targetMean, 
+                        deltaCt: targetMean - compositeRefCt 
+                    };
+                }
+            });
+        });
+
+        // 顯示警告 (缺少內參)
+        const warningEl = document.getElementById('warningBox');
+        if (missingRefSamples.length > 0) {
+            warningEl.innerHTML = t('warnMissingRef')
+                .replace('{ref}', selectedRefs.join('+'))
+                .replace('{samples}', missingRefSamples.join(', '));
+            warningEl.style.display = 'block';
+        } else {
+            warningEl.style.display = 'none';
+        }
+
+        // --- Step C: 計算 Calibrator (Control Group Avg Delta Ct) ---
+        let calibrators = {}; 
+        let validControlCount = 0;
+
+        // 計算每個基因在 "Control Group Samples" 中的平均 Delta Ct
+        GENE_LIST.forEach(gName => {
+            let sumDelta = 0;
+            let count = 0;
+            controlSampleNames.forEach(sName => {
+                if (sampleStats[sName] && sampleStats[sName][gName]) {
+                    sumDelta += sampleStats[sName][gName].deltaCt;
+                    count++;
+                }
+            });
+            if (count > 0) {
+                calibrators[gName] = sumDelta / count;
+                // 這裡簡單記錄一下有效 Control 樣本數 (取第一個基因的即可，假設對齊)
+                if (validControlCount === 0) validControlCount = count;
+            }
+        });
+
+        // --- Step D: 計算 ddCt 與 Fold Change ---
+        const tbody = document.querySelector('#resultTable tbody');
+        tbody.innerHTML = '';
+        const sortedSamples = Array.from(SAMPLE_LIST).sort((a, b) => {
+            // 1. 優先權判斷：是否為對照組 (Control)
+            // controlSampleNames 是函數前面計算出來的 Set
+            const isCtrlA = controlSampleNames.has(a);
+            const isCtrlB = controlSampleNames.has(b);
+
+            // 如果 A 是 Control 但 B 不是，A 排前面 (-1)
+            if (isCtrlA && !isCtrlB) return -1;
+            // 如果 B 是 Control 但 A 不是，B 排前面 (1)
+            if (!isCtrlA && isCtrlB) return 1;
+
+            // 2. 組別順序判斷 (UI 由上而下)
+            const groupA = getGroupName(a);
+            const groupB = getGroupName(b);
+
+            if (groupA !== groupB) {
+                // 取得該組別在介面上的順序索引 (Global Order)
+                const indexA = GLOBAL_GROUP_ORDER.indexOf(groupA);
+                const indexB = GLOBAL_GROUP_ORDER.indexOf(groupB);
+                
+                // 如果都有找到索引，比較索引大小
+                if (indexA !== -1 && indexB !== -1) {
+                    return indexA - indexB;
+                }
+            }
+
+            // 3. 同組內，依照名稱自然排序 (例如 1, 2, 10)
+            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
+
+        let lastGene = "";
+        GENE_LIST.forEach(gName => {
+            const calibDelta = calibrators[gName];
+            
+            sortedSamples.forEach(sName => {
+                if (!sampleStats[sName] || !sampleStats[sName][gName]) return;
+
+                const stats = sampleStats[sName][gName];
+                let ddCt = null;
+                let foldChange = null;
+
+                if (calibDelta !== undefined) {
+                    ddCt = stats.deltaCt - calibDelta;
+                    foldChange = Math.pow(2, -ddCt);
+
+                    // 儲存數據供統計使用 (排除內參本身，除非使用者想看)
+                    if (!selectedRefs.includes(gName)) {
+                        FOLD_CHANGE_DATA.push({
+                            gene: gName,
+                            sample: sName,
+                            foldChange: foldChange,
+                            deltaCt: stats.deltaCt,
+                            isControl: controlSampleNames.has(sName) // 標記是否為 Control 樣本
+                        });
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                if (gName !== lastGene && lastGene !== "") tr.classList.add('gene-separator');
+                lastGene = gName;
+
+                tr.innerHTML = `
+                    <td style="font-weight:bold;">${gName}</td>
+                    <td>${sName}</td>
+                    <td>${stats.meanCt.toFixed(4)}</td>
+                    <td style="color:#666">${stats.deltaCt.toFixed(4)}</td>
+                    <td>${ddCt !== null ? ddCt.toFixed(4) : '-'}</td>
+                    <td style="font-weight:bold; color:${foldChange > 1.5 ? '#c0392b' : '#2c3e50'}">
+                        ${foldChange !== null ? foldChange.toFixed(4) : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+
+        // 更新資訊欄
+        const infoEl = document.getElementById('calibratorInfo');
+        infoEl.setAttribute('data-count', validControlCount);
+        infoEl.innerText = t('calibInfo').replace('{n}', validControlCount);
+
+        // 顯示結果區塊
+        document.getElementById('resultSection').classList.remove('hidden');
+        document.getElementById('statsSection').classList.remove('hidden');
+        initStatsSection();
+        document.getElementById('resultSection').scrollIntoView({behavior: "smooth"});
+    }
+
+    // --- 3. 統計與繪圖 (邏輯維持原樣) ---
+
+    function initStatsSection() {
+        const select = document.getElementById('plotGeneSelect');
+        const refs = document.querySelectorAll('.ref-gene-checkbox:checked');
+        const refNames = Array.from(refs).map(cb => cb.parentNode.previousElementSibling.value); 
+        
+        select.innerHTML = '';
+        GENE_LIST.forEach(g => {
+            if (!refNames.includes(g)) {
+                const opt = document.createElement('option');
+                opt.value = g; opt.innerText = g;
+                select.appendChild(opt);
+            }
+        });
+        updatePlot();
+    }
+
+    function getGroupName(sampleName) {
+        return sampleName.replace(/[-_ ]\d+$/, ''); 
+    }
+
+    function calculateGeneStats(targetGene) {
+        let groupsFC = {};     
+        let groupsDeltaCt = {}; 
+        let controlGroupName = null;
+        
+        FOLD_CHANGE_DATA.forEach(d => {
+            if (d.gene === targetGene) {
+                const grpName = getGroupName(d.sample);
+                if (!groupsFC[grpName]) groupsFC[grpName] = [];
+                groupsFC[grpName].push(d.foldChange);
+                
+                if (!groupsDeltaCt[grpName]) groupsDeltaCt[grpName] = [];
+                groupsDeltaCt[grpName].push(d.deltaCt);
+                
+                if (d.isControl) {
+                    controlGroupName = grpName;
+                }
+            }
+        });
+
+        // 整理組別順序
+        let groupNames = GLOBAL_GROUP_ORDER.filter(g => groupsFC[g]);
+        Object.keys(groupsFC).forEach(g => {
+            if (!groupNames.includes(g)) groupNames.push(g);
+        });
+        
+        if (!controlGroupName) return { error: t('alertNoControl') };
+
+        // 確保 Control 在第一個
+        groupNames = [controlGroupName, ...groupNames.filter(g => g !== controlGroupName)];
+
+        // ANOVA 計算
+        let anovaDataArrays = [];
+        groupNames.forEach(g => {
+            if(groupsDeltaCt[g] && groupsDeltaCt[g].length >= 2) anovaDataArrays.push(groupsDeltaCt[g]);
+        });
+        
+        let anovaP = null;
+        if (groupNames.length > 2 && anovaDataArrays.length === groupNames.length) {
+             try { anovaP = jStat.anovaftest(...anovaDataArrays); } catch(e) {}
+        }
+
+        let results = [];
+        let pairwiseSig = []; // 專門給繪圖用的結構
+        let mse = 0, dfError = 0;
+        
+        if (groupNames.length > 2) {
+             const mseData = calculateMSE(groupsDeltaCt);
+             mse = mseData.mse; dfError = mseData.dfError;
+        }
+
+        // --- 取得使用者選擇的方法 ---
+        const method = document.getElementById('posthocMethod') ? document.getElementById('posthocMethod').value : 'dunnett';
+
+        if (groupNames.length === 2) {
+            // 只有兩組，強制使用 t-test
+            const ctrlData = groupsDeltaCt[groupNames[0]];
+            const expData = groupsDeltaCt[groupNames[1]];
+            const pRaw = twoSampleTtest(expData, ctrlData);
+            
+            results.push({
+                comparison: `${groupNames[1]} vs ${groupNames[0]}`,
+                grp: groupNames[1],
+                nExp: expData.length, nCtrl: ctrlData.length,
+                meanFC: getMean(groupsFC[groupNames[1]]),
+                ctrlMeanFC: getMean(groupsFC[groupNames[0]]),
+                sig: getStars(pRaw), pAdj: pRaw.toFixed(4), method: "Welch's t-test"
+            });
+            // 繪圖用的
+            if(getStars(pRaw) !== 'ns') pairwiseSig.push({ i:0, j:1, star: getStars(pRaw) });
+
+        } else if (method === 'tukey') {
+            // === Tukey's HSD (All Pairs) ===
+            // 兩兩比較迴圈
+            for (let i = 0; i < groupNames.length; i++) {
+                for (let j = i + 1; j < groupNames.length; j++) {
+                    const g1 = groupNames[i];
+                    const g2 = groupNames[j];
+                    const data1 = groupsDeltaCt[g1];
+                    const data2 = groupsDeltaCt[g2];
+                    
+                    if (!data1 || !data2) continue;
+
+                    const m1 = getMean(data1);
+                    const m2 = getMean(data2);
+                    const n1 = data1.length;
+                    const n2 = data2.length;
+
+                    // Tukey-Kramer SE = sqrt((MSE/2) * (1/n1 + 1/n2))
+                    const se = Math.sqrt((mse / 2) * (1/n1 + 1/n2));
+                    const qCalc = Math.abs(m1 - m2) / se;
+
+                    // 查表 (這裡使用簡化邏輯，若有完整 wbnormal 表請改用完整查表)
+                    // 注意：這裡假設 TUKEY_Q 結構存在
+                    const kVal = groupNames.length;
+                    
+                    // 取得 Critical Value (使用 wbnormal 的 getTukeyQ 函數)
+                    const q05 = getTukeyQ(dfError, kVal, 0.05);
+                    const q01 = getTukeyQ(dfError, kVal, 0.01);
+                    const q001 = getTukeyQ(dfError, kVal, 0.001);
+
+                    let star = 'ns';
+                    let pTxt = '> 0.05';
+
+                    if (anovaP !== null && anovaP >= 0.05) {
+                         // ANOVA 不顯著，Post-hoc 也不做
+                         star = 'ns';
+                    } else {
+                        if (q001 !== 999 && qCalc > q001) { star = '***'; pTxt = '< 0.001'; }
+                        else if (q01 !== 999 && qCalc > q01) { star = '**'; pTxt = '< 0.01'; }
+                        else if (q05 !== 999 && qCalc > q05) { star = '*'; pTxt = '< 0.05'; }
+                    }
+
+                    // 加入結果列表 (只顯示顯著的，或是全部顯示)
+                    results.push({
+                        comparison: `${g2} vs ${g1}`,
+                        grp: g2, // 在列表中主要的顯示組別
+                        nExp: n2, nCtrl: n1,
+                        meanFC: getMean(groupsFC[g2]), // 這裡數值僅供參考，Tukey比較的是差異
+                        ctrlMeanFC: getMean(groupsFC[g1]),
+                        sig: star, pAdj: pTxt, method: "Tukey's HSD"
+                    });
+
+                    if (star !== 'ns') {
+                        pairwiseSig.push({ i: i, j: j, star: star });
+                    }
+                }
+            }
+        } else {
+            // === Dunnett's Test (vs Control) ===
+            const ctrlDeltaCtData = groupsDeltaCt[controlGroupName];
+            
+            groupNames.forEach((grp, idx) => {
+                if (grp === controlGroupName) return;
+                
+                const expDeltaCt = groupsDeltaCt[grp];
+                let statObj = {
+                    comparison: `${grp} vs ${controlGroupName}`,
+                    grp: grp,
+                    nExp: expDeltaCt ? expDeltaCt.length : 0,
+                    nCtrl: ctrlDeltaCtData ? ctrlDeltaCtData.length : 0,
+                    meanFC: getMean(groupsFC[grp]),
+                    ctrlMeanFC: getMean(groupsFC[controlGroupName]),
+                    sig: 'ns', pAdj: "ns", method: "Dunnett's Test"
+                };
+
+                if (ctrlDeltaCtData && expDeltaCt) {
+                    const diff = Math.abs(getMean(expDeltaCt) - getMean(ctrlDeltaCtData));
+                    const dVal_05 = getCriticalValue(DUNNETT_D_TABLE_05, groupNames.length, dfError);
+                    const dVal_01 = getCriticalValue(DUNNETT_D_TABLE_01, groupNames.length, dfError);
+                    const dVal_001 = getCriticalValue(DUNNETT_D_TABLE_001, groupNames.length, dfError);
+                    const stdErrDiff = Math.sqrt(mse * (1/statObj.nExp + 1/statObj.nCtrl));
+                    
+                    if (anovaP !== null && anovaP >= 0.05) {
+                        statObj.sig = 'ns';
+                    } else {
+                        if (diff > (dVal_001 * stdErrDiff)) { statObj.sig = '***'; statObj.pAdj = '< 0.001'; }
+                        else if (diff > (dVal_01 * stdErrDiff)) { statObj.sig = '**'; statObj.pAdj = '< 0.01'; }
+                        else if (diff > (dVal_05 * stdErrDiff)) { statObj.sig = '*'; statObj.pAdj = '< 0.05'; }
+                    }
+                }
+                
+                results.push(statObj);
+                if (statObj.sig !== 'ns') {
+                    // Dunnett 永遠是跟第 0 個 (Control) 比
+                    pairwiseSig.push({ i: 0, j: idx, star: statObj.sig });
+                }
+            });
+        }
+
+        return { results, groupsFC, groupNames, anovaP, controlGroupName, pairwiseSig };
+    }
+
+    function updatePlot() {
+        CURRENT_STATS_EXPORT_DATA = []; 
+
+        const targetGene = document.getElementById('plotGeneSelect').value;
+        if (!targetGene) return;
+
+        const analysis = calculateGeneStats(targetGene);
+        if (analysis.error) {
+            document.getElementById('statResultsContainer').innerHTML = `<div style="color:red;">${analysis.error}</div>`;
+            document.getElementById('plotlyChart').innerHTML = "";
+            return;
+        }
+
+        const { results, groupsFC, groupNames, anovaP, pairwiseSig } = analysis;
+        // --- 新增邏輯：只有大於 2 組時才顯示 Post-hoc 選單 ---
+        const phWrapper = document.getElementById('posthocWrapper');
+        if (phWrapper) {
+            // 如果組別大於 2，顯示(flex)；否則隱藏(none)
+            phWrapper.style.display = (groupNames.length > 2) ? 'flex' : 'none';
+        }
+        CURRENT_STATS_EXPORT_DATA = results.map(r => ({ ...r, targetGene, anovaP }));
+
+        // 1. Render Text Results
+        let html = "";
+        const method = document.getElementById('posthocMethod') ? document.getElementById('posthocMethod').value : 'dunnett';
+
+        if (anovaP !== null) {
+            const isSig = anovaP < 0.05;
+            const msg = isSig ? t('anovaSigMsg').replace('{p}', anovaP.toFixed(6)) : t('anovaNsMsg').replace('{p}', anovaP.toFixed(6));
+            html += `<div class="anova-result-box ${isSig?'anova-pass':'anova-fail'}"><strong>${t('anovaTitle')}</strong><br>${msg}</div>`;
+        }
+        
+        // 顯示使用的檢定方法
+        html += `<div style="margin-bottom:10px; font-weight:bold; color:#2c3e50;">Method: ${method === 'tukey' ? "Tukey's HSD" : "Dunnett's Test"}</div>`;
+
+        results.forEach(stat => {
+            if(stat.error) return;
+            // 對於 Tukey，只顯示有顯著差異的，避免列表過長 (可選)
+            // 這裡顯示全部
+            // 如果是 'ns' (無顯著) 設為原本的灰色(#555)，否則設為紅色(#e74c3c)
+            const resultColor = stat.sig === 'ns' ? '#555' : '#e74c3c';
+            const resultWeight = stat.sig === 'ns' ? 'normal' : 'bold'; // 這一行是為了加粗字體
+
+        html += `<div class="stat-item">
+            <div><b>${stat.comparison}</b></div>
+            <div style="font-size:0.9em; color:${resultColor}; font-weight:${resultWeight};">
+                ${stat.pAdj} (${stat.sig})
+            </div>
+        </div>`;
+        });
+        document.getElementById('statResultsContainer').innerHTML = html;
+
+        // 2. Prepare Plot Data
+        const xData = groupNames;
+        const yMean = groupNames.map(g => getMean(groupsFC[g]));
+        const yError = groupNames.map(g => calculateStandardError(groupsFC[g]));
+        const colorPalette = ['#ACE0CF', '#8EBCDB', '#A79FCE', '#FE9F69', '#FEC080', '#FF9F9F', '#C0C0C0', '#F0E68C', '#DDA0DD', '#90EE90', '#FFB6C1', '#ADD8E6', '#91D5C9', '#FFCB8F', '#A7BADC'];
+        
+        // 3. 計算圖表高度 (Max Y)
+        let maxY = 0;
+        yMean.forEach((m, i) => {
+            const err = yError[i] || 0;
+            if (m + err > maxY) maxY = m + err;
+        });
+
+        let graphTop = maxY * 1.15;
+        if (graphTop === 0) graphTop = 1;
+
+        let annotations = [];
+        let shapes = [];
+
+        // 4. 繪製括號或星號 (依據 Method)
+        if (method === 'tukey') {
+            // === Tukey 模式：繪製括號 ===
+            if (pairwiseSig.length > 0) {
+                const stepHeight = maxY * 0.12;
+                const baseHeight = maxY * 1.1;
+                
+                // 排序：短的括號先畫 (i, j 距離近的)
+                const sortedPairs = [...pairwiseSig].sort((a, b) => (Math.abs(a.j - a.i) - Math.abs(b.j - b.i)));
+                
+                // 紀錄每個 X 位置目前的最高高度
+                let currentYLevels = new Array(groupNames.length).fill(baseHeight);
+
+                sortedPairs.forEach(pair => {
+                    const idx1 = Math.min(pair.i, pair.j);
+                    const idx2 = Math.max(pair.i, pair.j);
+                    
+                    // 找出該區間目前的最高點
+                    let targetY = 0;
+                    for(let k = idx1; k <= idx2; k++) {
+                        if(currentYLevels[k] > targetY) targetY = currentYLevels[k];
+                    }
+                    
+                    const currentY = targetY;
+                    if(currentY + stepHeight > graphTop) graphTop = currentY + stepHeight * 1.2;
+
+                    // 畫線 (Bracket)
+                    shapes.push({
+                        type: 'path',
+                        path: `M ${idx1},${currentY - (maxY*0.02)} L ${idx1},${currentY} L ${idx2},${currentY} L ${idx2},${currentY - (maxY*0.02)}`,
+                        line: { color: '#444', width: 1.2 },
+                        xref: 'x', yref: 'y'
+                    });
+
+                    // 畫星號
+                    annotations.push({
+                        x: (idx1 + idx2) / 2,
+                        y: currentY,
+                        text: pair.star,
+                        xanchor: 'center', yanchor: 'bottom', showarrow: false,
+                        font: { size: 14, color: '#e74c3c', weight: 'bold' },
+                        bgcolor: 'rgba(255, 255, 255, 0.8)'
+                    });
+
+                    // 更新高度紀錄
+                    for(let k = idx1; k <= idx2; k++) {
+                        currentYLevels[k] = currentY + stepHeight;
+                    }
+                });
+            }
+
+        } else {
+            // === Dunnett 模式：星號在 Bar 上方 ===
+            pairwiseSig.forEach(pair => {
+                // Dunnett pair.i 永遠是 0 (Control), pair.j 是 Target
+                // 我們要把星號標在 Target (pair.j) 上
+                const idx = pair.j;
+                const barHeight = yMean[idx];
+                const errorHeight = yError[idx];
+                const starY = barHeight + errorHeight + (maxY * 0.05);
+                
+                if (starY > graphTop) graphTop = starY * 1.1;
+
+                annotations.push({
+                    x: xData[idx],
+                    y: starY,
+                    text: pair.star,
+                    xanchor: 'center', yanchor: 'bottom', showarrow: false,
+                    font: { size: 18, color: '#e74c3c', weight: 'bold' }
+                });
+            });
+        }
+
+        // 5. Plotly Layout
+        Plotly.newPlot('plotlyChart', [{
+            x: xData, 
+            y: yMean, 
+            type: 'bar',
+            error_y: { type: 'data', array: yError, visible: true, color: '#000', width: 4, thickness: 1.5 },
+            marker: { color: groupNames.map((_, i) => colorPalette[i % colorPalette.length]), line: { color: '#555', width: 1 } },
+            hovertemplate: '<b>%{x}</b><br>Mean: %{y:.3f}<br>SEM: %{error_y.array:.3f}<extra></extra>'
+        }], {
+            title: { text: `Relative Expression: ${targetGene}`, font: { size: 18 } },
+            yaxis: { title: 'Fold Change', zeroline: true, range: [0, graphTop], gridcolor: '#f0f0f0' },
+            xaxis: { tickangle: -15 },
+            annotations: annotations,
+            shapes: shapes,
+            margin: { t: 60, b: 60, l: 70, r: 20 },
+            plot_bgcolor: '#fff', paper_bgcolor: '#fff'
+        }, {
+            responsive: true, displaylogo: false,
+            toImageButtonOptions: { format: 'png', filename: `${targetGene}_Plot`, height: 600, width: 800, scale: 2 }
+        });
+    }
+
+    // --- Utils & Exports ---
+    function getMean(arr) { return arr && arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+    function calculateStandardError(values) {
+        if (!values || values.length < 2) return 0;
+        const mean = getMean(values);
+        const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (values.length - 1);
+        return Math.sqrt(variance) / Math.sqrt(values.length);
+    }
+    function calculateMSE(groupsData) {
+        let sse = 0, totalDF = 0;
+        for (let grp in groupsData) {
+            const vals = groupsData[grp];
+            if (vals.length < 2) continue;
+            const mean = getMean(vals);
+            sse += vals.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0);
+            totalDF += (vals.length - 1);
+        }
+        return { mse: totalDF ? sse / totalDF : 0, dfError: totalDF };
+    }
+
+    function twoSampleTtest(s1, s2) {
+        try {
+            const m1=jStat.mean(s1), m2=jStat.mean(s2);
+            const v1=jStat.variance(s1), v2=jStat.variance(s2);
+            const n1=s1.length, n2=s2.length;
+            const se = Math.sqrt(v1/n1 + v2/n2);
+            if(se===0) return 1;
+            const t = (m1-m2)/se;
+            const df = Math.pow(v1/n1 + v2/n2, 2) / (Math.pow(v1/n1,2)/(n1-1) + Math.pow(v2/n2,2)/(n2-1));
+            return (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2;
+        } catch(e) { return 1; }
+    }
+    function getStars(p) { return p < 0.001 ? '***' : p < 0.01 ? '**' : p < 0.05 ? '*' : 'ns'; }
+
+    function exportCSV() {
+        let csv = "\uFEFFGene,Sample,Raw Ct Values,Mean Ct,Delta Ct,ddCt,Fold Change\n";
+        document.querySelectorAll('#resultTable tbody tr').forEach(tr => {
+            const cells = tr.querySelectorAll('td');
+            if (cells.length < 6) return;
+            const gene = cells[0].innerText.replace(/"/g, '""');
+            const sample = cells[1].innerText.replace(/"/g, '""');
+            const raw = GLOBAL_DATA[cells[1].innerText] && GLOBAL_DATA[cells[1].innerText][cells[0].innerText] 
+                        ? GLOBAL_DATA[cells[1].innerText][cells[0].innerText].join(";") 
+                        : "";
+            
+            csv += [`"${gene}"`, `"${sample}"`, `"${raw}"`, cells[2].innerText, cells[3].innerText, cells[4].innerText, cells[5].innerText].join(",") + "\n";
+        });
+        downloadBlob(csv, "qpcr_results.csv");
+    }
+    
+    function exportStatsCSV() {
+        if (!CURRENT_STATS_EXPORT_DATA.length) { alert(t('alertNoStats')); return; }
+        let csv = "\uFEFFTarget_Gene,ANOVA_P,Comparison,N_Exp,N_Ctrl,Mean_FC,Ctrl_Mean,Sig,Method\n";
+        CURRENT_STATS_EXPORT_DATA.forEach(d => {
+            csv += [d.targetGene, d.anovaP, d.comparison, d.nExp, d.nCtrl, d.meanFC.toFixed(4), d.ctrlMeanFC.toFixed(4), d.sig, d.method].join(",") + "\n";
+        });
+        downloadBlob(csv, `stats_${CURRENT_STATS_EXPORT_DATA[0].targetGene}.csv`);
+    }
+
+    function exportAllStatsCSV() {
+        // 1. 取得目前的內參基因列表 (避免對內參進行統計)
+        const refs = document.querySelectorAll('.ref-gene-checkbox:checked');
+        const refNames = Array.from(refs).map(cb => cb.parentNode.previousElementSibling.value); 
+        
+        let allStats = [];
+        
+        // 檢查是否有數據
+        if (!GENE_LIST || GENE_LIST.length === 0) { 
+            alert(t('alertNoStats')); 
+            return; 
+        }
+
+        // 2. 遍歷所有基因進行計算
+        GENE_LIST.forEach(gene => {
+            // 跳過內參基因
+            if (refNames.includes(gene)) return;
+            
+            // 呼叫原本用於繪圖的計算函數
+            const analysis = calculateGeneStats(gene);
+            
+            if (!analysis.error) {
+                // 將該基因的統計結果加入總表 (附加 targetGene 與 anovaP 資訊)
+                const rows = analysis.results.map(r => ({
+                    ...r,
+                    targetGene: gene,
+                    anovaP: analysis.anovaP
+                }));
+                allStats = allStats.concat(rows);
+            }
+        });
+
+        if (allStats.length === 0) { 
+            alert(t('alertNoStats')); 
+            return; 
+        }
+        
+        // 3. 產生 CSV 內容
+        // 欄位: 目標基因, ANOVA P值, 比較組別, 實驗組N, 對照組N, 平均倍率, 對照組平均, 顯著性, 檢定方法
+        let csv = "\uFEFFTarget_Gene,ANOVA_P,Comparison,N_Exp,N_Ctrl,Mean_FC,Ctrl_Mean,Sig,Method\n";
+        
+        allStats.forEach(d => {
+            const anovaStr = d.anovaP !== null ? d.anovaP.toFixed(6) : "NA";
+            // 組合每一行數據
+            csv += [
+                `"${d.targetGene}"`, 
+                anovaStr, 
+                `"${d.comparison}"`, 
+                d.nExp, 
+                d.nCtrl, 
+                d.meanFC.toFixed(4), 
+                d.ctrlMeanFC.toFixed(4), 
+                `"${d.sig}"`, 
+                `"${d.method}"`
+            ].join(",") + "\n";
+        });
+        
+        // 4. 下載檔案
+        downloadBlob(csv, "qpcr_stats_ALL.csv");
+    }
+
+    function downloadBlob(content, filename) {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8;' }));
+        link.download = filename;
+        link.click();
+    }
+
+    function loadDemoData() {
+        // 1. Reset and Set Count to 3
+        document.getElementById('geneCountInput').value = 3;
+        const container = document.getElementById('geneBlocksContainer');
+        container.innerHTML = ''; 
+        geneBlockCounter = 0;
+
+        // 2. Generate 3 Genes (Using the correct function name)
+        const gIds = [];
+        for(let i=0; i<3; i++) {
+            // This function now returns ID and creates a default group
+            gIds.push(addSingleGeneBlock());
+        }
+
+        // 3. Show UI
+        document.getElementById('dataEntrySection').classList.remove('hidden');
+        document.getElementById('dataEntrySection').scrollIntoView({behavior: "smooth"});
+
+        setTimeout(() => {
+            // Helper to add extra groups
+            const addGroupsToGene = (id) => {
+                addGroupBlock(id); // Total 2
+                addGroupBlock(id); // Total 3
+            };
+
+            // Define Data
+            const demoData = [
+                {
+                    id: gIds[0], name: "GAPDH", isRef: true,
+                    groups: [
+                        { name: "WT-1\nWT-2\nWT-3", ct: "22.5\n22.4\n22.6", isCtrl: true },
+                        { name: "TreatA-1\nTreatA-2\nTreatA-3", ct: "22.5\n22.8\n22.7" },
+                        { name: "TreatB-1\nTreatB-2\nTreatB-3", ct: "22.6\n22.5\n22.8" }
+                    ]
+                },
+                {
+                    id: gIds[1], name: "IL6", isRef: false,
+                    groups: [
+                        { name: "WT-1\nWT-2\nWT-3", ct: "30.5\n30.4\n30.6", isCtrl: true },
+                        { name: "TreatA-1\nTreatA-2\nTreatA-3", ct: "27.5\n27.1\n27.9" },
+                        { name: "TreatB-1\nTreatB-2\nTreatB-3", ct: "28.5\n28.9\n28.2" }
+                    ]
+                },
+                {
+                    id: gIds[2], name: "IL17", isRef: false,
+                    groups: [
+                        { name: "WT-1\nWT-2\nWT-3", ct: "30.7\n30.2\n30.4", isCtrl: true },
+                        { name: "TreatA-1\nTreatA-2\nTreatA-3", ct: "28.5\n28.8\n28.2" },
+                        { name: "TreatB-1\nTreatB-2\nTreatB-3", ct: "29.1\n28.8\n28.3" }
+                    ]
+                }
+            ];
+
+            // Apply Data
+            demoData.forEach(gData => {
+                const gBlock = document.getElementById(gData.id);
+                gBlock.querySelector('.gene-name-input').value = gData.name;
+                if(gData.isRef) gBlock.querySelector('.ref-gene-checkbox').click();
+                
+                // Add needed group blocks (Already has 1, add 2 more)
+                addGroupBlock(gData.id);
+                addGroupBlock(gData.id);
+
+                const grpBlocks = gBlock.querySelectorAll('.group-block');
+                gData.groups.forEach((grpData, idx) => {
+                    const blk = grpBlocks[idx];
+                    blk.querySelector('.samples-input').value = grpData.name;
+                    blk.querySelector('.cts-input').value = grpData.ct;
+                    if(grpData.isCtrl) blk.querySelector('.is-control-checkbox').click();
+                });
+            });
+
+            alert(t('demoLoaded'));
+        }, 300);
+    }
+    updateTexts();
+</script>
+</body>
+</html>
