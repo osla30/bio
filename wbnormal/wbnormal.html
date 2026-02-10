@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WB 條帶相對定量標準化工具 / WB Band Relative Quantitation & Normalization Tool</title>
+    <script src="plotly.min.js"></script>
+    <script src="jstat.min.js"></script>
+    <script src="html2canvas.min.js"></script>
+
+    <style>
+        :root { --primary: #4f46e5; --bg: #f3f4f6; --card: #ffffff; --header-bg: #ffffff; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); padding: 0; margin: 0; color: #1f2937; }
+        
+        /* --- STICKY HEADER SECTION --- */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--header-bg);
+            box-shadow: 0 4px 10px -2px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .main-wrapper { max-width: 1300px; margin: 0 auto; }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .app-title { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            color: #111827; 
+            margin: 0; 
+            line-height: 1.2; 
+            flex: 1; 
+        }
+
+        .btn-download {
+            background: #2563eb;       /* 藍色背景，與深灰色的語言按鈕區隔 */
+            color: white;              /* 白色文字 */
+            font-size: 0.9em;
+            text-decoration: none;     /* 去除超連結底線 */
+            padding: 8px 12px;         /* 內距，讓它看起來有份量 */
+            border-radius: 6px;        /* 圓角 */
+            white-space: nowrap;       /* 強制不換行 */
+            display: inline-flex;      /* 讓內容置中 */
+            align-items: center;
+            transition: opacity 0.2s;
+            font-weight: normal;
+        }
+        .btn-download:hover {
+            opacity: 0.9;              /* 滑鼠懸停時的效果 */
+        }
+
+        .lang-btn { 
+            background: #374151; 
+            color: white; 
+            font-size: 0.9em; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            white-space: nowrap; 
+            flex-shrink: 0; 
+        }
+        
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .toolbar button { 
+            flex: 1 1 auto; 
+            min-width: 140px; 
+            padding: 10px 16px; 
+            font-size: 0.95rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: white;
+            transition: opacity 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .toolbar button:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .btn-add { background: #10b981; }
+        .btn-calc { background: var(--primary); }
+        .btn-csv { background: #ea580c; }
+
+        /* --- CONTENT SECTION --- */
+        .content-padding { padding: 20px; }
+        .container { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+        @media (max-width: 1000px) { .container { grid-template-columns: 1fr; } }
+
+        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 15px; border: 1px solid #e5e7eb; }
+        
+        h3 { 
+            margin-top: 0; 
+            padding-bottom: 10px; 
+            border-bottom: 2px solid #f3f4f6; 
+            color: #111827;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .warn-text { background: #fffbeb; color: #b45309; padding: 10px; border-radius: 6px; font-size: 0.85em; margin-bottom: 10px; border: 1px solid #fcd34d; }
+
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+        textarea { height: 80px; font-family: monospace; font-size: 0.9em; line-height: 1.4; }
+
+        .btn-del { background: #ef4444; padding: 4px 8px; font-size: 0.8em; border-radius: 4px; color: white; border: none; cursor: pointer; }
+
+        .chart-box { position: relative; height: 500px; width: 100%; border: 1px solid #f3f4f6; border-radius: 8px; overflow: hidden; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85em; }
+        th, td { padding: 8px 10px; border: 1px solid #e5e7eb; text-align: center; vertical-align: middle; }
+        th { background: #f9fafb; font-weight: 600; }
+        tr:hover { background-color: #f8fafc; }
+        
+        .tag { display: inline-flex; align-items: center; background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 99px; margin: 0 5px 5px 0; font-size: 0.85em; }
+        .tag span { margin-left: 6px; cursor: pointer; font-weight: bold; }
+        
+        .stat-details { 
+            font-size: 0.9em; 
+            color: #374151; 
+            background: #f8fafc; 
+            padding: 15px; 
+            border-radius: 6px; 
+            margin-top: 10px; 
+            border: 1px solid #e2e8f0; 
+        }
+        .param-box {
+            margin-top: 8px; 
+            border-top: 1px dashed #cbd5e1; 
+            padding-top: 8px; 
+            font-family: 'Menlo', 'Monaco', monospace; 
+            font-size: 0.85em; 
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .raw-data { font-family: monospace; color: #666; font-size: 0.9em; word-break: break-word; max-width: 180px; }
+
+        .example-link { font-size: 0.75em; color: #4f46e5; cursor: pointer; font-weight: normal; text-decoration: underline; }
+        .example-link:hover { color: #4338ca; }
+
+        /* --- MODE SWITCHER --- */
+        .mode-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            background: transparent;
+            padding: 0;
+        }
+        .mode-switch label {
+            flex: 1;
+            cursor: pointer;
+        }
+        .mode-switch input { display: none; }
+        .mode-switch span {
+            display: block;
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        /* Active State */
+        .mode-switch input:checked + span {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+            transform: translateY(-1px);
+        }
+        .mode-switch span:hover {
+            border-color: #9ca3af;
+        }
+        .mode-switch input:checked + span:hover {
+            border-color: var(--primary);
+            opacity: 0.95;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="sticky-header">
+    <div class="main-wrapper">
+        <div class="header-row">
+            <h1 class="app-title" data-i18n="app_title">Western Blot 條帶相對定量標準化工具</h1>
+            
+            <div style="display:flex; gap:10px; align-items:center;">
+                <a href="https://drive.google.com/file/d/1uPHM4LgY64EcgNQv_eQTj8q4e9m9Ku4P/view?usp=sharing" class="btn-download" target="_blank" data-i18n="btn_download">下載離線版</a>
+                
+                <button class="lang-btn" onclick="toggleLang()">EN / 中</button>
+            </div>
+            </div>
+        
+        <div class="toolbar">
+            <button class="btn-add" onclick="addProtein()" data-i18n="btn_add_protein">+ 新增蛋白 (Protein)</button>
+            <button class="btn-calc" onclick="calculate()" data-i18n="btn_calc">執行運算 (Calculate) 📊</button>
+            <button class="btn-csv" onclick="exportCSV()" data-i18n="btn_csv">匯出 CSV (Export) 📥</button>
+        </div>
+    </div>
+</div>
+
+<div class="main-wrapper content-padding">
+    <div class="container">
+        <div>
+            <div class="card">
+                <h3>
+                    <span data-i18n="design_title">實驗設計 (Design)</span>
+                    <span class="example-link" onclick="loadExample()" data-i18n="load_demo">[載入範例]</span>
+                </h3>
+                
+                <div class="mode-switch">
+                    <label>
+                        <input type="radio" name="mode" value="unpaired" checked onchange="updateModeInfo()">
+                        <span data-i18n="mode_unpaired">獨立樣本 (Unpaired)</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="mode" value="paired" onchange="updateModeInfo()">
+                        <span data-i18n="mode_paired">配對樣本 (Paired)</span>
+                    </label>
+                </div>
+
+                <div id="mode-warn" class="warn-text"></div>
+
+                <div id="posthoc-container" style="margin-bottom: 15px; border-top: 1px dashed #e5e7eb; padding-top: 10px;">
+                    <label data-i18n="posthoc_label" style="font-weight:600; font-size:0.9em; color:#374151; display:block; margin-bottom:5px;">
+                        Post-hoc Test (多重比較策略):
+                    </label>
+                    <select id="posthoc-method" onchange="calculate()">
+                        <option value="dunnett">Compare with Control (Dunnett's Test)</option>
+                        <option value="tukey">Compare All Pairs (Tukey's HSD)</option>
+                    </select>
+                </div>
+
+                <div id="group-tags"></div>
+                <div style="display:flex; gap:5px; margin-top:10px;">
+                    <input type="text" id="new-group" placeholder="新增組別 (e.g. Treat 3)">
+                    <button onclick="addGroup()" style="background:#4b5563; color:white; border:none; border-radius:6px; cursor:pointer;">+</button>
+                </div>
+                <p style="font-size:0.8em; color:#6b7280; margin-top:5px;" data-i18n="control_note">* 第 1 組為 Control。</p>
+            </div>
+            <div id="modules-container"></div>
+        </div>
+
+        <div id="results">
+            <div class="card" style="text-align:center; color:#9ca3af; padding:60px;" data-i18n="placeholder_res">
+                請輸入數據...<br>
+                支援 Unpaired/Paired t-test 與 ANOVA 詳細參數顯示
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const TRANS = {
+        'zh': {
+            'app_title': 'Western Blot 條帶相對定量標準化工具',
+            'btn_download': '下載離線版',
+            'design_title': '實驗設計 (Design)',
+            'load_demo': '[載入範例]', 
+            'demo_loaded': '範例數據已載入！',
+            'demo_mode_msg': '獨立樣本範例 (Unpaired Example)',
+            'mode_unpaired': '獨立樣本 (Unpaired)',
+            'mode_paired': '配對樣本 (Paired)',
+            'info_unpaired': 'ℹ️ <b>獨立模式 (Unpaired)：</b><br>適用於動物實驗或無配對關係的樣本。<br>計算方式：數值 ÷ <b>Control組平均值</b>。<br>Control 組將顯示 Error Bar (SEM)。',
+            'info_paired': '⚠️ <b>配對模式 (Paired)：</b><br>適用於同一批細胞處理或組織配對。<br>計算方式：數值 ÷ <b>對應的 Control 數值</b> (Row-by-Row)。<br>Control SEM 為 0。',
+            'control_note': '* 第 1 組為 Control。',
+            'btn_add_protein': '+ 新增蛋白 (Protein)',
+            'btn_calc': '執行運算 (Calculate) 📊',
+            'btn_csv': '匯出 CSV (Export) 📥',
+            'placeholder_res': '請輸入數據...<br>支援 Unpaired/Paired t-test 與 ANOVA',
+            'protein_name': '蛋白名稱',
+            'del': '刪除',
+            'hkp_label': 'HKP (內參)',
+            'alert_min_group': '至少需要保留一組',
+            'alert_select_hkp': '請選擇 HKP',
+            'err_data_mismatch': '樣本數不一致',
+            'err_hkp_zero': 'HKP 不能為 0',
+            'err_ctrl_empty': 'Control 組無數據',
+            'err_group_mismatch': '組別樣本數與 Control 不一致',
+            'stat_method': '統計方法',
+            'unpaired_t': 'Unpaired t-test (Welch\'s correction)', 
+            'paired_t': 'Paired t-test (Two-tailed)',
+            'anova_dunnett': "One-way ANOVA + Dunnett's Test",
+            'rm_anova_dunnett': "RM-ANOVA + Dunnett's Test", 
+            'anova_tukey': "One-way ANOVA + Tukey's Test",
+            'rm_anova_tukey': "RM-ANOVA + Tukey's Test",
+            'anova_ns': 'One-way ANOVA (Not Sig.)',
+            'rm_anova_ns': 'RM-ANOVA (Not Sig.)', 
+            'group_col': '組別',
+            'n_col': 'N',
+            'raw_col': '原始數據 (Fold)',
+            'sig_col': '顯著性',
+            'new_group_placeholder': '新增組別 (e.g. Treat 3)',
+            'posthoc_label': 'Post-hoc Test (多重比較策略):',
+            'err_group_name_empty': '組別名稱不能為空',
+            'err_hkp_missing': '以下組別缺少 HKP 數據',
+            'err_paired_mismatch': '配對模式下，所有組別的樣本數必須相同'
+        },
+        'en': {
+            'app_title': 'WB Band Relative Quantitation & Normalization Tool',
+            'btn_download': 'Download Offline Ver.',
+            'design_title': 'Experimental Design',
+            'load_demo': '[Load Example]',
+            'demo_loaded': 'Example data loaded!',
+            'demo_mode_msg': 'Unpaired Mode Example',
+            'mode_unpaired': 'Unpaired (Independent)',
+            'mode_paired': 'Paired (Matched)',
+            'info_unpaired': 'ℹ️ <b>Unpaired Mode:</b><br>For animals or independent samples.<br>Calc: Value ÷ <b>Mean of Control</b>.<br>Control group will show Error Bar (SEM).',
+            'info_paired': '⚠️ <b>Paired Mode:</b><br>For cell batches or matched tissues.<br>Calc: Value ÷ <b>Corresponding Control Value</b> (Row-by-Row).<br>Control SEM will be 0.',
+            'control_note': '* 1st Group is Control.',
+            'btn_add_protein': '+ Add Protein',
+            'btn_calc': 'Calculate 📊',
+            'btn_csv': 'Export CSV 📥',
+            'placeholder_res': 'Enter data...<br>Supports Unpaired/Paired t-test & ANOVA.',
+            'protein_name': 'Protein Name',
+            'del': 'Delete',
+            'hkp_label': 'HKP (Ref)',
+            'alert_min_group': 'Keep at least one group',
+            'alert_select_hkp': 'Please select an HKP',
+            'err_data_mismatch': 'Sample count mismatch',
+            'err_hkp_zero': 'HKP cannot be 0',
+            'err_ctrl_empty': 'Control group has no data',
+            'err_group_mismatch': 'Sample count mismatch with Control',
+            'stat_method': 'Method',
+            'unpaired_t': 'Unpaired t-test (Welch\'s correction)', 
+            'paired_t': 'Paired t-test (Two-tailed)',
+            'anova_dunnett': "One-way ANOVA + Dunnett's Test",
+            'rm_anova_dunnett': "RM-ANOVA + Dunnett's Test", 
+            'anova_tukey': "One-way ANOVA + Tukey's Test",
+            'rm_anova_tukey': "RM-ANOVA + Tukey's Test",
+            'anova_ns': 'One-way ANOVA (Not Sig.)',
+            'rm_anova_ns': 'RM-ANOVA (Not Sig.)', 
+            'group_col': 'Group',
+            'n_col': 'N',
+            'raw_col': 'Raw Data (Fold)',
+            'sig_col': 'Sig.',
+            'new_group_placeholder': 'Add Group (e.g. Treat 3)',
+            'posthoc_label': 'Post-hoc Test (Strategy):',
+            'err_group_name_empty': 'Group name cannot be empty',
+            'err_hkp_missing': 'HKP data missing for group',
+            'err_paired_mismatch': 'Paired mode requires equal sample size across all groups'
+        }
+    };
+
+    let curLang = 'zh';
+    function toggleLang() {
+        curLang = curLang === 'zh' ? 'en' : 'zh';
+        renderAll();
+        updateModeInfo();
+        
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if(TRANS[curLang][key]) el.innerHTML = TRANS[curLang][key];
+        });
+
+        document.getElementById('new-group').placeholder = t('new_group_placeholder');
+        if(window.lastCalcResults) calculate(); 
+    }
+
+    function t(key) { return TRANS[curLang][key] || key; }
+
+    function updateModeInfo() {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const div = document.getElementById('mode-warn');
+        if (mode === 'paired') {
+            div.innerHTML = t('info_paired');
+        } else {
+            div.innerHTML = t('info_unpaired');
+        }
+        div.className = 'warn-text'; 
+    }
+
+    // --- Dunnett's Critical Value Tables ---
+    const DUNNETT_D_TABLE_05 = {
+        2: { 2: 4.30, 3: 3.18, 4: 2.78, 5: 2.57, 10: 2.23, 15: 2.13, 20: 2.09, 30: 2.04, 60: 2.00, 120: 1.98, 999: 1.96 },
+        3: { 2: 5.43, 3: 3.88, 4: 3.36, 5: 3.03, 10: 2.57, 15: 2.44, 20: 2.38, 30: 2.32, 60: 2.27, 120: 2.24, 999: 2.21 },
+        4: { 2: 6.15, 3: 4.29, 4: 3.69, 5: 3.39, 10: 2.81, 15: 2.64, 20: 2.57, 30: 2.50, 60: 2.43, 120: 2.39, 999: 2.36 },
+        5: { 2: 6.68, 3: 4.58, 4: 3.92, 5: 3.66, 10: 2.97, 15: 2.79, 20: 2.70, 30: 2.62, 60: 2.55, 120: 2.51, 999: 2.47 },
+        6: { 2: 7.09, 3: 4.80, 4: 4.09, 5: 3.87, 10: 3.11, 15: 2.90, 20: 2.81, 30: 2.72, 60: 2.63, 120: 2.59, 999: 2.55 },
+        7: { 2: 7.42, 3: 4.98, 4: 4.23, 5: 4.05, 10: 3.22, 15: 2.99, 20: 2.89, 30: 2.80, 60: 2.71, 120: 2.66, 999: 2.62 },
+        8: { 2: 7.71, 3: 5.14, 4: 4.35, 5: 4.20, 10: 3.31, 15: 3.07, 20: 2.96, 30: 2.87, 60: 2.77, 120: 2.72, 999: 2.68 },
+        9: { 2: 7.96, 3: 5.27, 4: 4.45, 5: 4.33, 10: 3.39, 15: 3.14, 20: 3.03, 30: 2.93, 60: 2.83, 120: 2.78, 999: 2.73 },
+        10: { 2: 8.19, 3: 5.39, 4: 4.55, 5: 4.45, 10: 3.47, 15: 3.20, 20: 3.08, 30: 2.98, 60: 2.88, 120: 2.83, 999: 2.78 },
+        12: { 2: 8.58, 3: 5.53, 4: 4.66, 5: 4.65, 10: 3.59, 15: 3.30, 20: 3.18, 30: 3.07, 60: 2.96, 120: 2.91, 999: 2.86 },
+        15: { 2: 9.09, 3: 5.72, 4: 4.79, 5: 4.88, 10: 3.73, 15: 3.43, 20: 3.29, 30: 3.17, 60: 3.06, 120: 3.00, 999: 2.95 },
+        20: { 5: 5.17, 10: 3.91, 15: 3.59, 20: 3.43, 30: 3.30, 60: 3.19, 120: 3.12, 999: 3.07 },
+        30: { 5: 5.55, 10: 4.15, 15: 3.80, 20: 3.63, 30: 3.49, 60: 3.36, 120: 3.29, 999: 3.23 },
+        40: { 5: 5.80, 10: 4.30, 15: 3.94, 20: 3.76, 30: 3.60, 60: 3.47, 120: 3.39, 999: 3.33 }
+        }
+    const DUNNETT_D_TABLE_01 = {
+        2: { 2: 9.92, 3: 5.84, 4: 4.60, 5: 4.03, 10: 3.17, 15: 2.95, 20: 2.84, 30: 2.75, 60: 2.66, 120: 2.62, 999: 2.58 },
+        3: { 2: 13.0, 3: 7.45, 4: 5.76, 5: 4.63, 10: 3.56, 15: 3.29, 20: 3.15, 30: 3.03, 60: 2.92, 120: 2.86, 999: 2.81 },
+        4: { 2: 14.9, 3: 8.40, 4: 6.45, 5: 4.98, 10: 3.80, 15: 3.48, 20: 3.33, 30: 3.19, 60: 3.06, 120: 2.99, 999: 2.94 },
+        5: { 2: 16.3, 3: 9.05, 4: 6.92, 5: 5.22, 10: 3.96, 15: 3.62, 20: 3.46, 30: 3.31, 60: 3.16, 120: 3.09, 999: 3.04 },
+        6: { 2: 17.4, 3: 9.54, 4: 7.28, 5: 5.41, 10: 4.10, 15: 3.73, 20: 3.56, 30: 3.40, 60: 3.24, 120: 3.17, 999: 3.11 },
+        7: { 2: 18.3, 3: 9.93, 4: 7.56, 5: 5.56, 10: 4.21, 15: 3.82, 20: 3.64, 30: 3.48, 60: 3.31, 120: 3.23, 999: 3.18 },
+        8: { 2: 19.1, 3: 10.26, 4: 7.79, 5: 5.69, 10: 4.30, 15: 3.90, 20: 3.71, 30: 3.54, 60: 3.37, 120: 3.29, 999: 3.23 },
+        9: { 2: 19.8, 3: 10.54, 4: 7.99, 5: 5.80, 10: 4.39, 15: 3.97, 20: 3.77, 30: 3.59, 60: 3.42, 120: 3.33, 999: 3.28 },
+        10: { 2: 20.4, 3: 10.79, 4: 8.17, 5: 5.89, 10: 4.46, 15: 4.03, 20: 3.82, 30: 3.64, 60: 3.46, 120: 3.37, 999: 3.32 },
+        12: { 2: 21.5, 3: 11.22, 4: 8.48, 5: 6.04, 10: 4.57, 15: 4.12, 20: 3.91, 30: 3.73, 60: 3.54, 120: 3.44, 999: 3.39 },
+        15: { 2: 23.0, 3: 11.76, 4: 8.86, 5: 6.20, 10: 4.68, 15: 4.22, 20: 4.00, 30: 3.82, 60: 3.62, 120: 3.53, 999: 3.47 },
+        20: { 5: 6.39, 10: 4.82, 15: 4.35, 20: 4.12, 30: 3.94, 60: 3.74, 120: 3.64, 999: 3.58 },
+        30: { 5: 6.78, 10: 5.09, 15: 4.58, 20: 4.34, 30: 4.14, 60: 3.93, 120: 3.82, 999: 3.75 },
+        40: { 5: 7.05, 10: 5.28, 15: 4.75, 20: 4.49, 30: 4.28, 60: 4.07, 120: 3.95, 999: 3.87 }
+        }
+    const DUNNETT_D_TABLE_001 = {
+        2: { 2: 31.6, 3: 12.9, 4: 8.61, 5: 6.87, 10: 4.59, 15: 4.07, 20: 3.85, 30: 3.65, 60: 3.46, 120: 3.37, 999: 3.29 },
+        3: { 2: 39.0, 3: 15.5, 4: 10.2, 5: 7.60, 10: 5.06, 15: 4.48, 20: 4.22, 30: 3.99, 60: 3.77, 120: 3.67, 999: 3.48 },
+        4: { 2: 44.0, 3: 17.3, 4: 11.2, 5: 8.03, 10: 5.35, 15: 4.73, 20: 4.46, 30: 4.21, 60: 3.97, 120: 3.86, 999: 3.59 },
+        5: { 2: 47.0, 3: 18.5, 4: 12.0, 5: 8.34, 10: 5.56, 15: 4.92, 20: 4.63, 30: 4.37, 60: 4.12, 120: 4.00, 999: 3.67 },
+        6: { 2: 50.0, 3: 19.5, 4: 12.5, 5: 8.59, 10: 5.73, 15: 5.07, 20: 4.77, 30: 4.50, 60: 4.23, 120: 4.11, 999: 3.73 },
+        7: { 2: 52.0, 3: 20.2, 4: 13.0, 5: 8.79, 10: 5.87, 15: 5.19, 20: 4.89, 30: 4.61, 60: 4.33, 120: 4.20, 999: 3.78 },
+        8: { 2: 54.0, 3: 20.9, 4: 13.4, 5: 8.96, 10: 5.99, 15: 5.30, 20: 4.99, 30: 4.70, 60: 4.42, 120: 4.29, 999: 3.82 },
+        9: { 2: 56.0, 3: 21.5, 4: 13.7, 5: 9.11, 10: 6.09, 15: 5.39, 20: 5.08, 30: 4.78, 60: 4.49, 120: 4.36, 999: 3.86 },
+        10: { 2: 58.0, 3: 22.0, 4: 14.0, 5: 9.24, 10: 6.18, 15: 5.47, 20: 5.16, 30: 4.86, 60: 4.56, 120: 4.42, 999: 3.89 },
+        12: { 2: 61.5, 3: 23.0, 4: 14.6, 5: 9.46, 10: 6.34, 15: 5.61, 20: 5.29, 30: 4.98, 60: 4.68, 120: 4.53, 999: 3.95 },
+        15: { 2: 66.0, 3: 24.2, 4: 15.3, 5: 9.72, 10: 6.52, 15: 5.77, 20: 5.44, 30: 5.12, 60: 4.81, 120: 4.66, 999: 4.02 },
+        20: { 5: 10.05, 10: 6.75, 15: 5.98, 20: 5.63, 30: 5.30, 60: 4.98, 120: 4.82, 999: 4.11 }
+        };
+
+    // --- Tukey's Q Table (Studentized Range) Extended to k=15 ---
+    const TUKEY_Q = {
+        0.05: {
+            2: {2:6.08,3:8.33,4:9.80,5:10.88,6:11.73,7:12.43,8:13.03,9:13.54,10:13.99,11:14.39,12:14.75,13:15.08,14:15.37,15:15.65},
+            3: {2:4.50,3:5.91,4:6.82,5:7.50,6:8.04,7:8.48,8:8.85,9:9.18,10:9.46,11:9.72,12:9.95,13:10.15,14:10.35,15:10.52},
+            4: {2:3.93,3:5.04,4:5.76,5:6.29,6:6.71,7:7.05,8:7.35,9:7.60,10:7.83,11:8.03,12:8.21,13:8.37,14:8.52,15:8.66},
+            5: {2:3.64,3:4.60,4:5.22,5:5.67,6:6.03,7:6.33,8:6.58,9:6.80,10:6.99,11:7.17,12:7.32,13:7.47,14:7.60,15:7.72},
+            10: {2:3.15,3:3.88,4:4.33,5:4.65,6:4.91,7:5.12,8:5.30,9:5.46,10:5.60,11:5.73,12:5.85,13:5.96,14:6.06,15:6.15},
+            15: {2:3.01,3:3.67,4:4.08,5:4.37,6:4.60,7:4.78,8:4.94,9:5.08,10:5.20,11:5.31,12:5.42,13:5.51,14:5.60,15:5.69},
+            20: {2:2.95,3:3.58,4:3.96,5:4.23,6:4.45,7:4.62,8:4.77,9:4.90,10:5.01,11:5.11,12:5.21,13:5.30,14:5.38,15:5.46},
+            30: {2:2.89,3:3.49,4:3.85,5:4.10,6:4.30,7:4.46,8:4.60,9:4.72,10:4.82,11:4.92,12:5.00,13:5.08,14:5.15,15:5.22},
+            60: {2:2.83,3:3.40,4:3.73,5:3.98,6:4.16,7:4.31,8:4.44,9:4.55,10:4.65,11:4.73,12:4.81,13:4.88,14:4.95,15:5.01},
+            120: {2:2.80,3:3.36,4:3.68,5:3.92,6:4.10,7:4.24,8:4.36,9:4.47,10:4.56,11:4.64,12:4.71,13:4.78,14:4.84,15:4.90},
+            999: {2:2.77,3:3.31,4:3.63,5:3.86,6:4.03,7:4.17,8:4.29,9:4.39,10:4.47,11:4.55,12:4.62,13:4.68,14:4.74,15:4.80}
+        },
+        0.01: {
+            2: {2:14.04,3:19.02,4:22.29,5:24.72,6:26.63,7:28.20,8:29.53,9:30.68,10:31.69,11:32.59,12:33.40,13:34.13,14:34.81,15:35.43},
+            3: {2:8.26,3:10.62,4:12.17,5:13.32,6:14.24,7:15.00,8:15.64,9:16.20,10:16.69,11:17.13,12:17.53,13:17.89,14:18.22,15:18.52},
+            4: {2:6.51,3:8.12,4:9.17,5:9.96,6:10.58,7:11.10,8:11.54,9:11.93,10:12.26,11:12.57,12:12.84,13:13.09,14:13.32,15:13.53},
+            5: {2:5.70,3:6.98,4:7.80,5:8.42,6:8.91,7:9.32,8:9.67,9:9.97,10:10.24,11:10.48,12:10.70,13:10.89,14:11.08,15:11.24},
+            10: {2:4.48,3:5.43,4:6.09,5:6.57,6:6.96,7:7.28,8:7.55,9:7.78,10:7.99,11:8.18,12:8.35,13:8.51,14:8.66,15:8.79},
+            15: {2:4.17,3:5.02,4:5.59,5:6.02,6:6.37,7:6.65,8:6.89,9:7.09,10:7.28,11:7.45,12:7.60,13:7.74,14:7.87,15:8.00},
+            20: {2:4.02,3:4.82,4:5.35,5:5.75,6:6.08,7:6.34,8:6.57,9:6.77,10:6.94,11:7.10,12:7.25,13:7.38,14:7.51,15:7.62},
+            30: {2:3.89,3:4.63,4:5.13,5:5.50,6:5.80,7:6.04,8:6.25,9:6.43,10:6.59,11:6.74,12:6.87,13:6.99,14:7.10,15:7.21},
+            60: {2:3.76,3:4.45,4:4.91,5:5.26,6:5.53,7:5.75,8:5.94,9:6.10,10:6.24,11:6.37,12:6.49,13:6.60,14:6.70,15:6.79},
+            120: {2:3.70,3:4.36,4:4.80,5:5.14,6:5.40,7:5.61,8:5.79,9:5.94,10:6.08,11:6.20,12:6.31,13:6.41,14:6.51,15:6.60},
+            999: {2:3.64,3:4.28,4:4.70,5:5.03,6:5.27,7:5.48,8:5.65,9:5.80,10:5.93,11:6.05,12:6.15,13:6.25,14:6.34,15:6.43}
+        },
+        0.001: {
+            2: {2:44.69,3:60.42,4:70.77,5:78.43,6:84.48,7:89.46,8:93.66,9:97.30,10:100.5,11:103.35,12:105.91,13:108.24,14:110.37,15:112.33},
+            3: {2:18.28,3:23.31,4:26.64,5:29.13,6:31.10,7:32.74,8:34.12,9:35.33,10:36.39,11:37.34,12:38.20,13:38.98,14:39.69,15:40.35},
+            4: {2:12.18,3:14.98,4:16.84,5:18.23,6:19.34,7:20.26,8:21.04,9:21.72,10:22.33,11:22.87,12:23.36,13:23.80,14:24.21,15:24.59},
+            5: {2:9.68,3:11.7,4:12.8,5:13.7,6:14.4,7:14.9,8:15.4,9:15.8,10:16.2,11:16.5,12:16.8,13:17.1,14:17.3,15:17.5},
+            10: {2:6.76,3:8.25,4:9.17,5:9.84,6:10.4,7:10.8,8:11.2,9:11.5,10:11.8,11:12.1,12:12.3,13:12.5,14:12.7,15:12.9},
+            15: {2:5.92,3:7.14,4:7.93,5:8.51,6:8.97,7:9.35,8:9.68,9:9.96,10:10.2,11:10.4,12:10.7,13:10.8,14:11.0,15:11.2},
+            20: {2:5.51,3:6.60,4:7.31,5:7.83,6:8.25,7:8.59,8:8.89,9:9.15,10:9.39,11:9.59,12:9.78,13:9.96,14:10.1,15:10.3},
+            30: {2:5.13,3:6.09,4:6.72,5:7.19,6:7.56,7:7.87,8:8.14,9:8.37,10:8.58,11:8.76,12:8.93,13:9.09,14:9.24,15:9.37},
+            60: {2:4.78,3:5.63,4:6.19,5:6.60,6:6.94,7:7.21,8:7.44,9:7.65,10:7.83,11:7.99,12:8.14,13:8.28,14:8.40,15:8.52},
+            120: {2:4.62,3:5.42,4:5.94,5:6.33,6:6.64,7:6.90,8:7.11,9:7.30,10:7.47,11:7.62,12:7.75,13:7.88,14:8.00,15:8.11},
+            999: {2:4.47,3:5.23,4:5.71,5:6.08,6:6.37,7:6.61,8:6.81,9:6.98,10:7.14,11:7.28,12:7.41,13:7.53,14:7.64,15:7.74}
+        }
+    };
+
+    let state = {
+        groups: ['Control', 'Treat 1', 'Treat 2'],
+        proteins: [
+            { id: 1, name: 'GAPDH (HKP)', isHkp: true, data: {} },
+            { id: 2, name: 'Target Protein', isHkp: false, data: {} }
+        ],
+        nextId: 3
+    };
+
+    window.lastCalcResults = null;
+
+    window.onload = () => { 
+        renderAll(); 
+        document.getElementById('new-group').placeholder = t('new_group_placeholder');
+        updateModeInfo();
+    };
+
+    function loadExample() {
+        state.groups = ['Control', 'Treat 1', 'Treat 2'];
+        state.proteins = [
+            {
+                id: 1,
+                name: 'GAPDH (HKP)',
+                isHkp: true,
+                data: {
+                    'Control': "39845\n42299\n45136",
+                    'Treat 1': "35953\n35630\n35531",
+                    'Treat 2': "27605\n28204\n25736"
+                }
+            },
+            {
+                id: 2,
+                name: 'Caspase-3',
+                isHkp: false,
+                data: {
+                    'Control': "29631\n36603\n32855",
+                    'Treat 1': "38397\n40842\n36484",
+                    'Treat 2': "43866\n39678\n32007"
+                }
+            }
+        ];
+        state.nextId = 3; 
+        renderAll();
+        // Default example to Unpaired because the data has variation
+        document.querySelector('input[name="mode"][value="unpaired"]').checked = true;
+        updateModeInfo();
+        
+        alert(t('demo_loaded') + "\n" + t('demo_mode_msg'));
+    }
+
+    function addGroup() {
+        const name = document.getElementById('new-group').value.trim();
+        if (name && !state.groups.includes(name)) {
+            saveCurrentInputs(); state.groups.push(name);
+            document.getElementById('new-group').value = ''; renderAll();
+        }
+    }
+    function removeGroup(idx) {
+        if (state.groups.length <= 1) return alert(t('alert_min_group'));
+        saveCurrentInputs(); state.groups.splice(idx, 1); renderAll();
+    }
+    function addProtein() {
+        saveCurrentInputs();
+        state.proteins.push({ id: state.nextId++, name: '', isHkp: false, data: {} }); renderAll();
+    }
+    function removeProtein(id) {
+        saveCurrentInputs(); state.proteins = state.proteins.filter(p => p.id !== id); renderAll();
+    }
+    function updateHkp(id) {
+        saveCurrentInputs(); state.proteins.forEach(p => p.isHkp = (p.id === id)); renderAll();
+    }
+    function saveCurrentInputs() {
+        state.proteins.forEach(p => {
+            const el = document.getElementById(`name-${p.id}`);
+            if(el) p.name = el.value;
+            state.groups.forEach(g => {
+                const txt = document.getElementById(`txt-${p.id}-${g}`);
+                if(txt) p.data[g] = txt.value;
+            });
+        });
+    }
+
+    function renderAll() {
+        document.getElementById('group-tags').innerHTML = state.groups.map((g, i) => 
+            `<span class="tag">${g} <span onclick="removeGroup(${i})">×</span></span>`
+        ).join('');
+
+        const phContainer = document.getElementById('posthoc-container');
+        if (phContainer) {
+           if (state.groups.length > 2) {
+              phContainer.style.display = 'block'; // 超過兩組 -> 顯示
+           } else {
+              phContainer.style.display = 'none';  // 只有兩組 (或更少) -> 隱藏
+           }
+        }
+
+        const container = document.getElementById('modules-container');
+        container.innerHTML = '';
+        
+        state.proteins.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            if(p.isHkp) div.style.borderLeft = "4px solid #10b981";
+            
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <input id="name-${p.id}" value="${p.name}" placeholder="${t('protein_name')}" style="width:50%; font-weight:bold;">
+                    <label style="cursor:pointer; display:flex; align-items:center;">
+                        <input type="radio" name="hkp_select" ${p.isHkp ? 'checked' : ''} onchange="updateHkp(${p.id})">
+                        <span style="margin-left:5px; font-size:0.9em; font-weight:bold; color:${p.isHkp ? '#059669' : '#666'}">${t('hkp_label')}</span>
+                    </label>
+                    <button class="btn-del" onclick="removeProtein(${p.id})">${t('del')}</button>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:10px;">
+                    ${state.groups.map(g => `
+                        <div>
+                            <label style="font-size:0.8em; font-weight:600; display:block; margin-bottom:2px;">${g}</label>
+                            <textarea id="txt-${p.id}-${g}" placeholder="Data..." spellcheck="false">${p.data[g] || ''}</textarea>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function validateData(isPaired, parsed, hkpObj) {
+        // 1. Check Empty Group Names
+        state.groups.forEach(g => {
+            if (!g.trim()) throw new Error(t('err_group_name_empty'));
+        });
+
+        // 2. Check HKP Data Missing
+        state.groups.forEach(g => {
+             const hkpVals = hkpObj.data[g];
+             if (!hkpVals || !hkpVals.trim()) {
+                 throw new Error(`${t('err_hkp_missing')}: ${g}`);
+             }
+        });
+
+        // 3. Paired Mode Strict Check (All groups must have equal sample size)
+        if (isPaired) {
+            // Retrieve lengths from the parsed object to be safe, but we need to check RAW inputs first or during parsing.
+            // Let's do a quick pre-check based on line counts of HKP
+            const firstGroup = state.groups[0];
+            const firstLen = hkpObj.data[firstGroup].trim().split(/[\s,]+/).filter(n => n).length;
+            
+            state.groups.forEach(g => {
+                 const len = hkpObj.data[g].trim().split(/[\s,]+/).filter(n => n).length;
+                 if (len !== firstLen) {
+                     throw new Error(`${t('err_paired_mismatch')} (${g}: ${len} vs ${firstGroup}: ${firstLen})`);
+                 }
+            });
+        }
+    }
+
+    function calculate() {
+        saveCurrentInputs();
+        const resDiv = document.getElementById('results');
+        resDiv.innerHTML = '';
+        window.lastCalcResults = [];
+
+        // Check Mode
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const isPaired = (mode === 'paired');
+
+        const hkpObj = state.proteins.find(p => p.isHkp);
+        if (!hkpObj) return alert(t('alert_select_hkp'));
+
+        // --- VALIDATION STEP ---
+        try {
+             // We pass a dummy 'parsed' here or just use raw state for validation
+             validateData(isPaired, null, hkpObj);
+        } catch(e) {
+             return alert(e.message);
+        }
+
+        const parsed = {};
+        state.proteins.forEach(p => {
+            parsed[p.id] = { name: p.name || `Protein ${p.id}`, vals: {} };
+            state.groups.forEach(g => {
+                const raw = p.data[g] || "";
+                parsed[p.id].vals[g] = raw.trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+            });
+        });
+
+        const hkp = parsed[hkpObj.id];
+
+        state.proteins.forEach(p => {
+            if (p.isHkp) return;
+            const target = parsed[p.id];
+
+            try {
+                // 1. Calculate Raw Ratios (Target / HKP)
+                const rawRatios = {};
+                state.groups.forEach(g => {
+                    const tVal = target.vals[g];
+                    const hVal = hkp.vals[g];
+                    if (tVal.length !== hVal.length) throw new Error(`${target.name} [${g}]: ${t('err_data_mismatch')} (Target:${tVal.length} vs HKP:${hVal.length})`);
+                    rawRatios[g] = tVal.map((v, i) => {
+                        if (hVal[i] === 0) throw new Error(t('err_hkp_zero'));
+                        return v / hVal[i];
+                    });
+                });
+
+                // 2. Normalization Strategy
+                const ctrlG = state.groups[0];
+                const ctrlRawRatios = rawRatios[ctrlG];
+                if (ctrlRawRatios.length === 0) throw new Error(t('err_ctrl_empty'));
+
+                let ctrlMeanRaw = 0;
+                if (!isPaired) {
+                    ctrlMeanRaw = jStat.mean(ctrlRawRatios);
+                }
+
+                const stats = [];
+                let maxY = 0;
+
+                state.groups.forEach(g => {
+                    const currentRatios = rawRatios[g];
+                    
+                    if (isPaired && currentRatios.length !== ctrlRawRatios.length) {
+                        throw new Error(`[${g}] ${t('err_group_mismatch')} (Paired Mode requires equal N)`);
+                    }
+
+                    let norm;
+                    if (isPaired) {
+                        norm = currentRatios.map((val, index) => val / ctrlRawRatios[index]);
+                    } else {
+                        norm = currentRatios.map(val => val / ctrlMeanRaw);
+                    }
+                    
+                    const n = norm.length;
+                    const m = jStat.mean(norm);
+                    const s = jStat.stdev(norm, true);
+                    const sem = n > 1 ? s / Math.sqrt(n) : 0;
+                    
+                    if (m + sem > maxY) maxY = m + sem;
+                    
+                    stats.push({ 
+                        group: g, mean: m, sem: sem, n: n, vals: norm,
+                        rawStr: norm.map(v=>v.toFixed(9)).join(', '),
+                        rawInput: target.vals[g].join('; '),
+                        hkpRawInput: hkp.vals[g].join('; '), 
+                        pText: '-'
+                    });
+                });
+
+                // 3. Statistics
+                let stars = Array(state.groups.length).fill('');
+                let detailsHTML = "";
+                let pDisplay = "";
+                const allRawVals = state.groups.map(g => rawRatios[g]); 
+
+                // Note text logic
+                const noteText = "Note: Raw band intensities were normalized to housekeeping proteins (Target/HKP) for statistical analysis. Fold change relative to control was used only for data presentation.";
+                // Format Q values for display helper
+                const fmtQ = (v) => (typeof v === 'number' ? v.toFixed(2) : '-');
+
+                // Two Groups Logic
+                if (state.groups.length === 2) {
+                    const raw0 = rawRatios[state.groups[0]];
+                    const raw1 = rawRatios[state.groups[1]];
+                    let p;
+                    let methodStr = "";
+
+                    if (isPaired) {
+                        p = pairedTtest(raw0, raw1);
+                        methodStr = t('paired_t');
+                    } else {
+                        // Welch's t-test for Unpaired
+                        p = welchTtest(raw0, raw1);
+                        methodStr = t('unpaired_t');
+                    }
+
+                    stars[1] = getStar(p);
+                    pDisplay = formatP(p);
+                    stats[0].pText = 'Ref'; stats[1].pText = pDisplay;
+                    
+                    detailsHTML = `
+                        <b>${t('stat_method')}:</b> ${methodStr}<br>
+                        <b>P-value:</b> ${pDisplay}
+                        <div style="font-size:0.85em; color:#666; margin-top:5px;">${noteText}</div>
+                    `;
+                    window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars });
+                    renderCard(target.name, stats, stars, detailsHTML, resDiv, maxY, []);
+                
+                } else {
+                    // === Multi-group Logic (ANOVA) ===
+                    const postHocMethod = document.getElementById('posthoc-method').value; // 'dunnett' or 'tukey'
+                    let pairwiseSig = []; // For Tukey lines
+
+                    if (isPaired) {
+                        // RM-ANOVA for Paired Multi-group
+                        const k = state.groups.length; 
+                        const n = allRawVals[0].length; 
+                        
+                        // Check equal N
+                        for(let g of state.groups) {
+                            if(rawRatios[g].length !== n) throw new Error("RM-ANOVA requires equal sample size.");
+                        }
+
+                        // Calculate RM-ANOVA Stats
+                        let grandSum = 0;
+                        let grandN = 0;
+                        allRawVals.forEach(arr => arr.forEach(v => { grandSum += v; grandN++; }));
+                        const gm = grandSum / grandN;
+
+                        let ssTotal = 0;
+                        allRawVals.forEach(arr => arr.forEach(v => ssTotal += Math.pow(v - gm, 2)));
+
+                        let ssSubj = 0;
+                        for(let i=0; i<n; i++) {
+                            let subjSum = 0;
+                            for(let j=0; j<k; j++) subjSum += allRawVals[j][i];
+                            let subjMean = subjSum / k;
+                            ssSubj += k * Math.pow(subjMean - gm, 2);
+                        }
+
+                        let ssTreat = 0;
+                        for(let j=0; j<k; j++) {
+                            let treatMean = jStat.mean(allRawVals[j]);
+                            ssTreat += n * Math.pow(treatMean - gm, 2);
+                        }
+
+                        const ssError = ssTotal - ssSubj - ssTreat;
+                        
+                        const dfTreat = k - 1;
+                        const dfError = (n - 1) * (k - 1);
+                        
+                        const msTreat = ssTreat / dfTreat;
+                        const msError = ssError / dfError; 
+                        
+                        const fScore = msTreat / msError;
+                        const pAnova = 1 - jStat.centralF.cdf(fScore, dfTreat, dfError);
+                        
+                        pDisplay = formatP(pAnova);
+                        stats[0].pText = 'Ref';
+
+                        if (pAnova < 0.05) {
+                            const kVal = state.groups.length;
+
+                            if (postHocMethod === 'dunnett') {
+                                const q05 = getInterpolatedQ(dfError, kVal, 0.05);
+                                const q01 = getInterpolatedQ(dfError, kVal, 0.01);
+                                const q001 = getInterpolatedQ(dfError, kVal, 0.001);
+
+                                const ctrlRawMean = jStat.mean(allRawVals[0]);
+
+                                for (let i = 1; i < stats.length; i++) {
+                                    const treatRawMean = jStat.mean(allRawVals[i]);
+                                    const seDiff = Math.sqrt((2 * msError) / n);
+                                    const tVal = Math.abs(treatRawMean - ctrlRawMean) / seDiff;
+
+                                    if (q001 !== '-' && tVal > q001) { stars[i] = '***'; stats[i].pText = '< 0.001'; }
+                                    else if (q01 !== '-' && tVal > q01) { stars[i] = '**'; stats[i].pText = '< 0.01'; }
+                                    else if (q05 !== '-' && tVal > q05) { stars[i] = '*'; stats[i].pText = '< 0.05'; }
+                                    else { stars[i] = 'ns'; stats[i].pText = '> 0.05'; }
+                                }
+
+                                detailsHTML = `
+                                    <b>${t('stat_method')}:</b> ${t('rm_anova_dunnett')}<br>
+                                    <b>RM-ANOVA P-value:</b> ${pDisplay} <span style="color:#666">(F=${fScore.toFixed(2)})</span>
+                                    <div class="param-box">
+                                        [Parameters]<br>df(treat)=${dfTreat}, df(err)=${dfError}, MSE=${msError.toFixed(4)}<br>
+                                        q(0.05)=${fmtQ(q05)}, q(0.01)=${fmtQ(q01)}, q(0.001)=${fmtQ(q001)} (df=${dfError.toFixed(2)})<br>
+                                        <span style="color:#6b7280">${noteText}</span>
+                                    </div>
+                                `;
+                            } else {
+                                // === Paired Tukey ===
+                                const q05 = getTukeyQ(dfError, kVal, 0.05);
+                                const q01 = getTukeyQ(dfError, kVal, 0.01);
+                                const q001 = getTukeyQ(dfError, kVal, 0.001);
+
+                                for (let i = 0; i < kVal; i++) {
+                                    for (let j = i + 1; j < kVal; j++) {
+                                        const m1 = jStat.mean(allRawVals[i]);
+                                        const m2 = jStat.mean(allRawVals[j]);
+                                        // Tukey SE for RM = sqrt(MSE/n)
+                                        const se = Math.sqrt(msError / n); 
+                                        const qCalc = Math.abs(m1 - m2) / se;
+                                        
+                                        let star = '';
+                                        if (q001 !== '-' && qCalc > q001) star = '***';
+                                        else if (q01 !== '-' && qCalc > q01) star = '**';
+                                        else if (q05 !== '-' && qCalc > q05) star = '*';
+                                        
+                                        if (star) {
+                                            pairwiseSig.push({ i: i, j: j, star: star });
+                                            if(i===0) { stars[j] = star; stats[j].pText = star === '***' ? '< 0.001' : (star === '**' ? '< 0.01' : '< 0.05'); }
+                                        }
+                                    }
+                                }
+                                detailsHTML = `
+                                    <b>${t('stat_method')}:</b> ${t('rm_anova_tukey')}<br>
+                                    <b>RM-ANOVA P-value:</b> ${pDisplay} <span style="color:#666">(F=${fScore.toFixed(2)})</span>
+                                    <div class="param-box">
+                                        [Parameters]<br>df(treat)=${dfTreat}, df(err)=${dfError}, MSE=${msError.toFixed(4)}<br>
+                                        q(0.05)=${fmtQ(q05)}, q(0.01)=${fmtQ(q01)}, q(0.001)=${fmtQ(q001)} (df=${dfError.toFixed(2)})<br>
+                                        <span style="color:#6b7280">${noteText}</span>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            for(let i=1;i<stats.length;i++) { stars[i] = 'ns'; stats[i].pText = '> 0.05'; }
+                            detailsHTML = `
+                                <b>${t('stat_method')}:</b> ${t('rm_anova_ns')}<br>
+                                <b>P-value:</b> ${pDisplay}<br>
+                                <span style="font-size:0.85em; color:#666">${noteText}</span>
+                            `;
+                        }
+
+                    } else {
+                        // Unpaired: One-Way ANOVA
+                        const fScore = jStat.anovafscore(allRawVals);
+                        const df1 = state.groups.length - 1;
+                        const nTotal = stats.reduce((acc, s) => acc + s.n, 0);
+                        const df2 = nTotal - state.groups.length;
+                        const pAnova = 1 - jStat.centralF.cdf(fScore, df1, df2);
+                        pDisplay = formatP(pAnova);
+                        stats[0].pText = 'Ref';
+
+                        if (pAnova < 0.05) {
+                            let ssWithin = 0;
+                            allRawVals.forEach(vals => {
+                                 const m = jStat.mean(vals);
+                                 vals.forEach(v => ssWithin += Math.pow(v - m, 2));
+                            });
+                            const mse = ssWithin / df2;
+                            
+                            const kVal = Math.min(state.groups.length, 15);
+
+                            if (postHocMethod === 'dunnett') {
+                                const q05 = getInterpolatedQ(df2, kVal, 0.05);
+                                const q01 = getInterpolatedQ(df2, kVal, 0.01);
+                                const q001 = getInterpolatedQ(df2, kVal, 0.001);
+
+                                const ctrlRawMean = jStat.mean(allRawVals[0]); 
+
+                                for (let i = 1; i < stats.length; i++) {
+                                    const treatRawVals = allRawVals[i];
+                                    const treatRawMean = jStat.mean(treatRawVals);
+                                    
+                                    const nC = allRawVals[0].length;
+                                    const nT = treatRawVals.length;
+                                    const tVal = Math.abs(treatRawMean - ctrlRawMean) / Math.sqrt(mse * (1/nT + 1/nC));
+                                    
+                                    if (q001 !== '-' && tVal > q001) { stars[i] = '***'; stats[i].pText = '< 0.001'; }
+                                    else if (q01 !== '-' && tVal > q01) { stars[i] = '**'; stats[i].pText = '< 0.01'; }
+                                    else if (q05 !== '-' && tVal > q05) { stars[i] = '*'; stats[i].pText = '< 0.05'; }
+                                    else { stars[i] = 'ns'; stats[i].pText = '> 0.05'; }
+                                }
+                                
+                                detailsHTML = `
+                                    <b>${t('stat_method')}:</b> ${t('anova_dunnett')}<br>
+                                    <b>ANOVA P-value:</b> ${pDisplay} <span style="color:#666">(F=${fScore.toFixed(2)})</span>
+                                    <div class="param-box">
+                                        [Parameters]<br>df(err)=${df2}, k=${state.groups.length}, MSE=${mse.toFixed(4)}<br>
+                                        q(0.05)=${fmtQ(q05)}, q(0.01)=${fmtQ(q01)}, q(0.001)=${fmtQ(q001)} (df=${df2.toFixed(2)})<br>
+                                        <span style="color:#6b7280">${noteText}</span>
+                                    </div>
+                                `;
+                            } else {
+                                // === Unpaired Tukey ===
+                                const q05 = getTukeyQ(df2, kVal, 0.05);
+                                const q01 = getTukeyQ(df2, kVal, 0.01);
+                                const q001 = getTukeyQ(df2, kVal, 0.001);
+
+                                for (let i = 0; i < kVal; i++) {
+                                    for (let j = i + 1; j < kVal; j++) {
+                                        const m1 = jStat.mean(allRawVals[i]);
+                                        const m2 = jStat.mean(allRawVals[j]);
+                                        const n1 = allRawVals[i].length;
+                                        const n2 = allRawVals[j].length;
+                                        
+                                        // Tukey-Kramer SE = sqrt( (MSE/2) * (1/n1 + 1/n2) )
+                                        const se = Math.sqrt( (mse/2) * (1/n1 + 1/n2) );
+                                        const qCalc = Math.abs(m1 - m2) / se;
+
+                                        let star = '';
+                                        if (q001 !== '-' && qCalc > q001) star = '***';
+                                        else if (q01 !== '-' && qCalc > q01) star = '**';
+                                        else if (q05 !== '-' && qCalc > q05) star = '*';
+                                        
+                                        if (star) {
+                                            pairwiseSig.push({ i: i, j: j, star: star });
+                                            if(i===0) { stars[j] = star; stats[j].pText = star === '***' ? '< 0.001' : (star === '**' ? '< 0.01' : '< 0.05'); }
+                                        }
+                                    }
+                                }
+                                detailsHTML = `
+                                    <b>${t('stat_method')}:</b> ${t('anova_tukey')}<br>
+                                    <b>ANOVA P-value:</b> ${pDisplay} <span style="color:#666">(F=${fScore.toFixed(2)})</span>
+                                    <div class="param-box">
+                                        [Parameters]<br>df(err)=${df2}, k=${state.groups.length}, MSE=${mse.toFixed(4)}<br>
+                                        q(0.05)=${fmtQ(q05)}, q(0.01)=${fmtQ(q01)}, q(0.001)=${fmtQ(q001)} (df=${df2.toFixed(2)})<br>
+                                        <span style="color:#6b7280">${noteText}</span>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            for(let i=1;i<stats.length;i++) { stars[i] = 'ns'; stats[i].pText = '> 0.05'; }
+                            detailsHTML = `
+                                <b>${t('stat_method')}:</b> ${t('anova_ns')}<br>
+                                <b>P-value:</b> ${pDisplay}<br>
+                                <span style="font-size:0.85em; color:#666">${noteText}</span>
+                            `;
+                        }
+                    }
+
+                    window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars });
+                    renderCard(target.name, stats, stars, detailsHTML, resDiv, maxY, pairwiseSig);
+                }
+
+            } catch (err) { alert(err.message); console.error(err); }
+        });
+    }
+
+    // --- Linear Interpolation Function ---
+    function getInterpolatedQ(df, k, alpha) {
+        // 選擇對應的表
+        let table = null;
+        if (alpha === 0.05) table = DUNNETT_D_TABLE_05;
+        else if (alpha === 0.01) table = DUNNETT_D_TABLE_01;
+        else if (alpha === 0.001) table = DUNNETT_D_TABLE_001;
+        else return '-';
+
+        // 呼叫 ooo14 的核心內插邏輯
+        return getCriticalValue(table, k, df);
+    }
+
+    // --- ooo14 的核心內插邏輯 (完全移植) ---
+    function getCriticalValue(table, k, df) {
+        // 1. 處理組數 (k)
+        const definedKs = Object.keys(table).map(Number).sort((a, b) => a - b);
+        let targetK = k;
+        if (k > definedKs[definedKs.length - 1]) targetK = definedKs[definedKs.length - 1];
+        else if (!table[k]) {
+            for (let i = 0; i < definedKs.length; i++) {
+                if (definedKs[i] >= k) { targetK = definedKs[i]; break; }
+            }
+        }
+        
+        const dfTable = table[targetK];
+        const definedDFs = Object.keys(dfTable).map(Number).sort((a, b) => a - b);
+        
+        // 2. 處理自由度 (df) - 線性內插
+        if (df <= definedDFs[0]) return dfTable[definedDFs[0]];
+        if (df >= definedDFs[definedDFs.length - 1]) return dfTable[definedDFs[definedDFs.length - 1]];
+        if (dfTable[df]) return dfTable[df];
+
+        let lowerDF = definedDFs[0];
+        let upperDF = definedDFs[definedDFs.length - 1];
+        
+        for (let i = 0; i < definedDFs.length - 1; i++) {
+            if (df > definedDFs[i] && df < definedDFs[i+1]) {
+                lowerDF = definedDFs[i];
+                upperDF = definedDFs[i+1];
+                break;
+            }
+        }
+        
+        const lowerVal = dfTable[lowerDF];
+        const upperVal = dfTable[upperDF];
+        
+        // 內插公式
+        const interpolatedVal = lowerVal + (df - lowerDF) * (upperVal - lowerVal) / (upperDF - lowerDF);
+        return interpolatedVal;
+    }
+
+    // --- Tukey Interpolation Function ---
+    function getTukeyQ(df, k, alpha) {
+        const table = TUKEY_Q[alpha];
+        if (!table) return '-';
+        
+        // k must be mapped to table key. Table supports up to k=10 directly.
+        // For simple usage, we clamp k to available keys (or max key in sub-table)
+        // Note: Real Tukey tables are complex, here we assume k <= 10 or clamp to max for safety in this demo
+        const maxK = 15; 
+        
+        // Validation for k
+        if (k > maxK) return '-';
+
+        const useK = Math.min(k, maxK);
+
+        const availDfs = Object.keys(table).map(Number).sort((a,b)=>a-b);
+
+        if (df <= availDfs[0]) return table[availDfs[0]][useK] || '-';
+        if (df >= availDfs[availDfs.length - 1]) return table[availDfs[availDfs.length - 1]][useK] || '-';
+
+        let lowerDf = availDfs[0];
+        let upperDf = availDfs[availDfs.length - 1];
+
+        for (let i = 0; i < availDfs.length - 1; i++) {
+            if (df >= availDfs[i] && df <= availDfs[i+1]) {
+                lowerDf = availDfs[i];
+                upperDf = availDfs[i+1];
+                break;
+            }
+        }
+
+        const qLow = table[lowerDf][useK];
+        const qHigh = table[upperDf][useK];
+
+        if (qLow === undefined || qHigh === undefined) return '-';
+
+        const ratio = (df - lowerDf) / (upperDf - lowerDf);
+        return qLow + ratio * (qHigh - qLow);
+    }
+
+    // --- ENHANCED CSV EXPORT ---
+    function exportCSV() {
+        if (!window.lastCalcResults || window.lastCalcResults.length === 0) {
+            alert(curLang === 'zh' ? "請先執行運算" : "Please calculate first");
+            return;
+        }
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const modeStr = mode === 'paired' ? 'Paired' : 'Unpaired';
+        const hkpObj = state.proteins.find(p => p.isHkp);
+        const hkpName = hkpObj ? hkpObj.name : "HKP"; 
+
+        const rows = [];
+        rows.push(['Protein_Name', 'HKP_Name', 'Mode', 'Group', 'N', 'Mean', 'SEM', 'P_value', 'Significance', 'Normalized_Values_Fold', 'Target_Raw_Input', 'HKP_Raw_Input'].join(','));
+
+        window.lastCalcResults.forEach(item => {
+            item.stats.forEach((s, idx) => {
+                const safeNorm = `"${s.rawStr}"`; 
+                const safeRawInput = `"${s.rawInput}"`; 
+                const safeHkpInput = `"${s.hkpRawInput}"`; 
+                const star = item.stars[idx] || '';
+                const pVal = s.pText;
+                
+                rows.push([
+                    `"${item.protein}"`,
+                    `"${hkpName}"`,
+                    `"${modeStr}"`,
+                    `"${s.group}"`,
+                    s.n,
+                    s.mean.toFixed(4),
+                    s.sem.toFixed(4),
+                    `"${pVal}"`,
+                    star,
+                    safeNorm,
+                    safeRawInput,
+                    safeHkpInput
+                ].join(','));
+            });
+        });
+
+        const csvContent = "\uFEFF" + rows.join("\n"); 
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "WB_Statistics_Report.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function formatP(p) {
+        if(p<0.0001) return '< 0.0001'; if(p<0.001) return '< 0.001';
+        if(p<0.01) return '< 0.01'; if(p<0.05) return '< 0.05';
+        return p.toFixed(4);
+    }
+    function getStar(p) {
+        if(p<0.001) return '***'; if(p<0.01) return '**'; if(p<0.05) return '*'; return 'ns';
+    }
+    
+    function pairedTtest(arr1, arr2) {
+        const n = arr1.length;
+        if(n < 2) return 1; 
+        const diffs = arr1.map((v, i) => v - arr2[i]);
+        const meanDiff = jStat.mean(diffs);
+        const sdDiff = jStat.stdev(diffs, true); 
+        const se = sdDiff / Math.sqrt(n);
+        if(se === 0) return 1; 
+        const t = meanDiff / se;
+        const df = n - 1;
+        return (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2;
+    }
+
+    // New Welch's t-test
+    function welchTtest(arr1, arr2) {
+        const n1 = arr1.length;
+        const n2 = arr2.length;
+        if(n1 < 2 || n2 < 2) return 1;
+
+        const m1 = jStat.mean(arr1);
+        const m2 = jStat.mean(arr2);
+        const v1 = jStat.variance(arr1, true);
+        const v2 = jStat.variance(arr2, true);
+
+        const se = Math.sqrt(v1/n1 + v2/n2);
+        if(se === 0) return 1;
+        
+        const t = (m1 - m2) / se;
+        
+        // Welch-Satterthwaite equation for df
+        const num = Math.pow((v1/n1 + v2/n2), 2);
+        const den = (Math.pow(v1/n1, 2) / (n1-1)) + (Math.pow(v2/n2, 2) / (n2-1));
+        const df = num / den;
+
+        return (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2;
+    }
+
+    // --- Render Card using Plotly ---
+    // --- 優化後的 Render Card 函式 (支援智慧型 Tukey 括號分層) ---
+    function renderCard(title, stats, stars, details, container, maxY, pairwiseSig = []) {
+        const id = 'plot-' + Math.random().toString(36).substr(2);
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+            <h3>${title}
+                <button onclick="exportCardImage(this, '${title}')" style="font-size:0.8rem; background:#4b5563; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+            📸 匯出此區塊圖檔</button>
+            </h3>
+            <div id="${id}" class="chart-box"></div>
+            <div class="stat-details">${details}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>${t('group_col')}</th>
+                        <th>${t('n_col')}</th>
+                        <th>${t('raw_col')}</th>
+                        <th>Mean ± SEM</th>
+                        <th>P-value (vs Ctrl)</th>
+                        <th>${t('sig_col')}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                ${stats.map((s, i) => `
+                    <tr>
+                        <td>${s.group}</td>
+                        <td>${s.n}</td>
+                        <td class="raw-data">${s.rawStr}</td>
+                        <td>${s.mean.toFixed(2)} ± ${s.sem.toFixed(2)}</td>
+                        <td>${s.pText}</td>
+                        <td style="font-weight:bold; color:${stars[i].includes('*')?'#dc2626':'#9ca3af'}">${stars[i]}</td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+        `;
+        container.appendChild(div);
+
+        const xIds = stats.map((_, i) => "id_" + i); 
+        const xLabels = stats.map(s => s.group);     
+        const yValues = stats.map(s => s.mean);
+        const yErrors = stats.map(s => s.sem);
+        
+        const colorPalette = ['#ACE0CF', '#8EBCDB', '#A79FCE', '#FE9F69', '#FEC080', '#FF9F9F', '#C0C0C0', '#F0E68C', '#DDA0DD', '#90EE90', '#FFB6C1', '#ADD8E6', '#91D5C9', '#FFCB8F', '#A7BADC'];
+        const colors = stats.map((_, i) => colorPalette[i % colorPalette.length]);
+
+        const annotations = [];
+        const shapes = [];
+
+        // --- 智慧型動態高度與括號演算法 ---
+        let graphTop = maxY * 1.25; // 預設頂部高度
+
+        if (pairwiseSig.length === 0) {
+            // 1. Dunnett Mode: 星號標註在 Bar 正上方
+            stats.forEach((s, i) => {
+                if (stars[i] && stars[i] !== 'ns' && stars[i] !== '') {
+                    const yPos = s.mean + s.sem + (maxY * 0.05); 
+                    annotations.push({
+                        x: xIds[i], y: yPos, text: stars[i],
+                        xanchor: 'center', yanchor: 'bottom', showarrow: false,
+                        font: { size: 16, color: '#dc2626', weight: 'bold' }
+                    });
+                }
+            });
+        } else {
+            // 2. Tukey Mode: 智慧型分層括號
+            const stepHeight = maxY * 0.12; // 每一層的高度間距
+            const baseHeight = maxY * 1.1;  // 第一層括號的起始高度
+            
+            // 排序：區間短的優先畫（在下層），長的後畫（在上層）
+            const sortedPairs = [...pairwiseSig].sort((a, b) => (a.j - a.i) - (b.j - b.i));
+            
+            // 用來紀錄 x 軸各點位目前的最高佔用 Y 值
+            let currentYLevels = new Array(stats.length).fill(baseHeight);
+
+            sortedPairs.forEach((pair) => {
+                const idx1 = Math.min(pair.i, pair.j);
+                const idx2 = Math.max(pair.i, pair.j);
+                
+                // 找出該區間 [idx1, idx2] 內目前最高的 Y Level
+                let targetY = 0;
+                for (let k = idx1; k <= idx2; k++) {
+                    if (currentYLevels[k] > targetY) targetY = currentYLevels[k];
+                }
+
+                const currentY = targetY;
+
+                // 更新 graphTop 以確保不會超出畫布
+                if (currentY + stepHeight > graphTop) graphTop = currentY + stepHeight * 1.2;
+
+                // 繪製括號路徑 (M = 起點, L = 線條)
+                shapes.push({
+                    type: 'path',
+                    path: `M ${idx1},${currentY - (maxY*0.02)} L ${idx1},${currentY} L ${idx2},${currentY} L ${idx2},${currentY - (maxY*0.02)}`,
+                    line: { color: '#444', width: 1.2 },
+                    xref: 'x', yref: 'y'
+                });
+
+                // 標註顯著性星號
+                annotations.push({
+                    x: (idx1 + idx2) / 2, 
+                    y: currentY,
+                    text: pair.star,
+                    xanchor: 'center', yanchor: 'bottom', showarrow: false,
+                    font: { size: 13, color: '#dc2626', weight: 'bold' },
+                    bgcolor: 'rgba(255,255,255,0.75)' // 增加背景白暈，避免星號被括號線穿過
+                });
+
+                // 重要：更新該區間內所有點的高度紀錄，為下一層提供支撐高度
+                for (let k = idx1; k <= idx2; k++) {
+                    currentYLevels[k] = currentY + stepHeight;
+                }
+            });
+        }
+
+        const data = [{
+            x: xIds, 
+            y: yValues,
+            type: 'bar',
+            marker: { color: colors, line: { color: '#555', width: 0.5 } },
+            error_y: {
+                type: 'data',
+                array: yErrors,
+                visible: true,
+                color: '#000000', 
+                thickness: 1.2,
+                width: 4
+            },
+            hovertemplate: '<b>%{text}</b><br>Mean: %{y:.3f}<br>SEM: %{error_y.array:.3f}<extra></extra>',
+            text: xLabels, 
+            textposition: 'none'
+        }];
+
+        const layout = {
+            title: false,
+            yaxis: { 
+                title: 'Relative Fold Change', 
+                zeroline: true,
+                range: [0, graphTop],
+                gridcolor: '#f0f0f0'
+            },
+            xaxis: { 
+                type: 'category', 
+                tickvals: xIds,    
+                ticktext: xLabels, 
+                automargin: true 
+            }, 
+            margin: { t: 40, b: 50, l: 60, r: 20 },
+            showlegend: false,
+            annotations: annotations,
+            shapes: shapes,
+            template: 'plotly_white', 
+            bargap: 0.25
+        };
+
+        const config = {
+            responsive: true,
+            displaylogo: false,
+            modeBarButtonsToRemove: ['lasso2d', 'select2d', 'pan2d'], 
+            toImageButtonOptions: {
+                format: 'png',
+                filename: title + '_WB_Stats',
+                height: 500,
+                width: 700,
+                scale: 3 // 高解析度匯出
+            }
+        };
+
+        Plotly.newPlot(id, data, layout, config);
+    }
+    // --- 新增：匯出完整卡片圖檔功能 ---
+// --- 修改版：匯出完整卡片圖檔 (自動命名) ---
+function exportCardImage(btn, filename) {
+    const card = btn.closest('.card'); 
+    
+    // 暫時隱藏按鈕
+    btn.style.display = 'none';
+
+    html2canvas(card, {
+        backgroundColor: '#ffffff',
+        scale: 2 
+    }).then(canvas => {
+        // 復原按鈕
+        btn.style.display = 'inline-block';
+
+        // 處理檔名：去除前後空白，若有不合法字元可視需求處理，這裡簡單加上後綴
+        // 例如：Caspase-3 -> Caspase-3_Report.png
+        const safeName = (filename || 'WB_Result').trim();
+
+        const link = document.createElement('a');
+        link.download = safeName + '_Report.png'; 
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    });
+}
+</script>
+</body>
+</html>
