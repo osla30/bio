@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bradford / BCA Protein Assay | 蛋白質定量工具</title>
+    <link href="bootstrap.min.css" rel="stylesheet">
+    
+    <script src="bootstrap.bundle.min.js"></script>
+    
+    <script src="chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd; 
+            --bg-color: #f4f6f9;
+            --text-color: #333;
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-color);
+            padding-bottom: 50px;
+        }
+
+        /* --- 導覽列修改區塊 Start --- */
+        
+        /* 調整容器上邊距，預留更多空間給換行後的選單 (原 90px 改為 140px) */
+        .container { 
+            margin-top: 140px !important; 
+        }
+
+        .navbar {
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary-color);
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        /* 確保導覽列內的容器可以自動換行 */
+        .navbar-container-flex {
+            display: flex;
+            flex-wrap: wrap; /* 關鍵：允許換行 */
+            align-items: center;
+            justify-content: space-between; /* 標題靠左，按鈕區塊靠右 */
+            width: 100%;
+            gap: 10px; /* 區塊間距 */
+        }
+
+        /* 按鈕群組的容器設定 */
+        .nav-buttons-group {
+            display: flex;
+            flex-wrap: wrap; /* 關鍵：按鈕太多時自動換行 */
+            justify-content: flex-end; /* 預設靠右 */
+            gap: 5px;
+            align-items: center;
+        }
+
+        /* 小螢幕時讓按鈕群組置中 */
+        @media (max-width: 768px) {
+            .nav-buttons-group {
+                justify-content: center;
+                width: 100%;
+            }
+            .navbar-brand {
+                margin-bottom: 5px;
+            }
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+
+        .badge-engine {
+            font-size: 0.7rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: normal;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .lang-switch-btn {
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .lang-switch-btn:hover, .lang-switch-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .download-btn {
+            border: 1px solid #6c757d;
+            color: #6c757d;
+            background: transparent;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .download-btn:hover {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .nav-action-btn {
+            font-weight: 500;
+            border-radius: 20px;
+            padding: 5px 20px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            margin: 3px !important; /* 強制按鈕上下左右都有空隙 */
+        }
+
+        /* --- 導覽列修改區塊 End --- */
+
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            background-color: white;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            font-weight: bold;
+            color: var(--primary-color);
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start; 
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary-custom:hover { background-color: #0b5ed7; border-color: #0a58ca; color: white; }
+        
+        .btn-success-custom {
+            background-color: #198754;
+            border-color: #198754;
+            color: white;
+        }
+        .btn-success-custom:hover { background-color: #157347; border-color: #146c43; color: white; }
+
+        .btn-info-custom {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+            color: white;
+        }
+        .btn-info-custom:hover { background-color: #31d2f2; border-color: #25cff2; color: white; }
+
+        .bulk-input-container {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 5px;
+        }
+
+        .bulk-textarea {
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre;
+            overflow-x: auto;
+            resize: vertical;
+            border-color: #ced4da;
+        }
+        .bulk-textarea:focus {
+            background-color: #f8fbff;
+            border-color: var(--primary-color);
+        }
+
+        .column-header {
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 5px;
+            color: #555;
+            background-color: #f8f9fa;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .control-row {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .table-result th {
+            background-color: #f8f9fa;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .chart-container-wrapper {
+            position: relative;
+            height: 350px; 
+            width: 100%;
+        }
+
+        .equation-text {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            text-align: right;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .recipe-input-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 2px;
+        }
+        
+        .alert-mini {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .text-danger-bold {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-light fixed-top">
+        <div class="container-fluid px-4 navbar-container-flex">
+            
+            <a class="navbar-brand me-3" href="#" style="font-weight: bold; color: var(--primary-color); display: flex; align-items: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M2 12h5l3-9 4 18 4-9h4"></path></svg>
+                <span data-i18n="title">Bradford / BCA Protein Assay</span>
+                <span class="badge-engine d-none d-sm-inline-block">For Western Blot</span>
+            </a>
+
+            <div class="nav-buttons-group flex-grow-1">
+                
+                <div class="d-flex flex-wrap justify-content-center gap-1">
+                    <button class="btn btn-primary-custom nav-action-btn" onclick="calculate()" data-i18n="calculate_btn">Calculate Analysis</button>
+                    <button class="btn btn-success-custom nav-action-btn" onclick="exportExcel()" data-i18n="export_btn">Export CSV</button>
+                    <button class="btn btn-info-custom nav-action-btn" onclick="downloadChart()" data-i18n="download_chart_btn">Download Chart</button>
+                    <button class="btn btn-outline-secondary nav-action-btn" onclick="clearData()" data-i18n="clear_btn">Clear All</button>
+                </div>
+
+                <div style="width: 15px;"></div>
+
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
+                    <a href="https://drive.google.com/file/d/1HvgRn-5JxICnZJ10wXYT3qNzNu0GsoFE/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="download-btn" download>
+                        <span class="me-1">📥</span> 
+                        <span data-i18n="download_offline">Download Offline</span>
+                    </a>
+                    <div class="d-flex gap-1">
+                        <button class="lang-switch-btn" onclick="setLang('en')">English</button>
+                        <button class="lang-switch-btn" onclick="setLang('zh')">中文</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="card">
+                    <div class="card-header" data-i18n="settings_input">Settings & Input</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-i18n="regression_model">Regression Model:</label>
+                            <div class="p-2 bg-light border rounded text-primary fw-bold">
+                                Linear Regression (y = ax + b)
+                            </div>
+                            <div class="form-text text-muted mt-2" style="font-size: 0.85rem;" data-i18n="model_hint">
+                                Bradford：595nm / BCA：562nm
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0" data-i18n="standard_data">Standard Curve Data:</label>
+                                <button class="btn btn-sm btn-link p-0 text-decoration-none" onclick="loadDemoData()" data-i18n="load_demo">Load Demo</button>
+                            </div>
+                            
+                            <div class="control-row row g-2">
+                                <div class="col-12">
+                                    <label class="form-label mb-1 small" data-i18n="replicates">OD Replicates</label>
+                                    <select class="form-select form-select-sm" id="stdReplicates" onchange="renderStandardInputs()">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info alert-mini" data-i18n="input_hint">Tip: Ensure no empty lines to prevent misalignment.</div>
+                            <div class="alert alert-warning alert-mini" data-i18n="blank_hint">Important: Please include 0 conc and its OD.</div>
+                            
+                            <div id="stdDataContainer" class="bulk-input-container">
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold" data-i18n="sample_data">Sample Data (Name & ODs):</label>
+                            
+                            <div class="control-row row g-2">
+                                <div class="col-12">
+                                    <label class="form-label mb-1 small" data-i18n="replicates">OD Replicates</label>
+                                    <select class="form-select form-select-sm" id="sampleReplicates" onchange="renderSampleInputs()">
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info alert-mini" data-i18n="input_hint">Tip: Ensure no empty lines to prevent misalignment.</div>
+                            <div id="sampleDataContainer" class="bulk-input-container">
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-bold" data-i18n="dilution_factor">Dilution Factor:</label>
+                            <input type="number" class="form-control" id="dilutionFactor" value="1" min="1" step="0.1">
+                            <div class="form-text text-muted" data-i18n="dilution_hint">Result concentration will be multiplied by this factor.</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div> 
+            
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-header">
+                        <span data-i18n="standard_curve">Standard Curve</span>
+                        <div id="r2_score" class="equation-text"></div>
+                    </div>
+                    <div class="card-body">
+                        <div id="r2_warning_box" class="alert alert-warning py-1 px-2 mb-2" style="display:none; font-size:0.85rem;"></div>
+                        <div id="chart_range_warning" class="alert alert-secondary py-1 px-2 mb-2" style="display:none; font-size:0.85rem;"></div>
+                        <div class="chart-container-wrapper">
+                            <canvas id="elisaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" data-i18n="calculation_results">Calculation Results</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 400px;">
+                            <table class="table table-hover table-striped mb-0 table-result">
+                                <thead class="sticky-top bg-light" style="z-index: 5;">
+                                    <tr>
+                                        <th data-i18n="sample_name_col">Sample Name</th>
+                                        <th data-i18n="mean_od">Mean OD</th>
+                                        <th data-i18n="col_net_od">Net OD</th> <th data-i18n="calc_conc">Concentration</th>
+                                        <th data-i18n="status">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted p-4" data-i18n="no_result">No results yet. Click Calculate to start.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4 border-success" style="border-width: 2px;">
+                    <div class="card-header bg-success text-white">
+                        <span data-i18n="wb_title">Western Blot 樣本配製計算</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2 mb-3 bg-light p-3 rounded">
+                            <div class="col-md-3 recipe-input-group">
+                                <label data-i18n="target_protein">目標蛋白量 (µg)</label>
+                                <input type="number" class="form-control" id="wb_mass" value="20" min="0" oninput="if(this.value<0)this.value=0; calculateRecipe()">
+                            </div>
+                            <div class="col-md-3 recipe-input-group">
+                                <label data-i18n="target_vol">單孔目標體積 (µL)</label>
+                                <input type="number" class="form-control" id="wb_vol" value="20" min="0" oninput="if(this.value<0)this.value=0; calculateRecipe()">
+                            </div>
+                            <div class="col-md-3 recipe-input-group">
+                                <label data-i18n="buffer_x">Sample Buffer 倍數</label>
+                                <input type="number" class="form-control" id="wb_buffer" value="4" oninput="calculateRecipe()">
+                            </div>
+                            <div class="col-md-3 recipe-input-group">
+                                <label data-i18n="prep_n">配製份數 (n)</label>
+                                <input type="number" class="form-control" id="wb_n" value="2" min="0" oninput="if(this.value<0)this.value=0; calculateRecipe()">
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm text-center align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th data-i18n="sample_name_col">樣本名稱</th>
+                                        <th data-i18n="col_prot_vol">蛋白體積 (µL)</th>
+                                        <th data-i18n="col_water_vol">ddH2O (µL)</th>
+                                        <th data-i18n="col_buff_vol">Buffer (µL)</th>
+                                        <th data-i18n="col_total_vol">總體積 (µL)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recipeTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-muted py-3" data-i18n="no_result">
+                                            請先進行上方計算
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div> 
+        </div> 
+    </div> 
+    
+    <script>
+        const i18n = {
+            en: {
+                title: "Bradford / BCA Protein Assay",
+                settings_input: "Settings & Input",
+                regression_model: "Regression Model:",
+                standard_data: "Standard Curve Data:",
+                load_demo: "Load Demo",
+                sample_data: "Sample Data (Name & ODs):",
+                input_hint: "Tip: Ensure no empty lines between data to prevent misalignment.",
+                blank_hint: "Ensure you include <span class='text-danger-bold'>Concentration 0</span> and its <span class='text-danger-bold'>corresponding OD</span> (for Blank).",
+                replicates: "Replicates",
+                dilution_factor: "Dilution Factor:",
+                dilution_hint: "Result concentration will be multiplied by this factor. (Calculated based on standard)",
+                calculate_btn: "Calculate",
+                export_btn: "Export CSV (Excel)",
+                download_chart_btn: "Download Chart Image",
+                clear_btn: "Clear All",
+                standard_curve: "Standard Curve",
+                calculation_results: "Results",
+                calc_conc: "Conc. (μg/μL)",
+                status: "Note",
+                no_result: "No results yet. Click Calculate to start.",
+                model_hint: "Bradford: 595nm / BCA: 562nm",
+                conc_lbl: "Conc (μg/μL)",
+                od_lbl: "Absorbance (OD)",
+                od_net_lbl: "Blank-subtracted OD",
+                ph_col: "Paste column...",
+                no_calc_alert: "Please calculate first.",
+                sample_name_input: "Sample Name",
+                sample_name_col: "Sample Name",
+                sample_od: "Sample OD",
+                mean_od: "Mean OD",
+                col_net_od: "Blank-subtracted OD",
+                download_offline: "Download Offline",
+                wb_title: "Western Blot Recipe Calculator",
+                target_protein: "Target Mass (µg)",
+                target_vol: "Target Vol (per well, µL)",
+                buffer_x: "Sample Buffer Conc. (X)",
+                prep_n: "Replicates (n)",
+                col_prot_vol: "Protein Vol (µL)",
+                col_water_vol: "ddH2O Vol (µL)",
+                col_buff_vol: "Buffer Vol (µL)",
+                col_total_vol: "Total Vol (µL)",
+                r2_warning: "Warning: R² < 0.98. The linearity is poor, results may be inaccurate.",
+                note_high: "Above Std Range",
+                note_low: "Below Std Range",
+                note_neg: "Noise / Neg", 
+                err_buff_x: "Error: Buffer X ≤ 1", 
+                err_no_blank: "Error: No 'Concentration 0' point found!\n\nThe system requires a 0-concentration point to calculate the baseline (Blank).\nIf your instrument has already auto-subtracted the background, please manually add a row with '0' Concentration and '0' OD in the Standard Data."
+            },
+            zh: {
+                title: "Bradford / BCA 蛋白質定量工具",
+                settings_input: "設定與輸入",
+                regression_model: "回歸模型:",
+                standard_data: "標準品數據 (Standard):",
+                load_demo: "載入範例",
+                sample_data: "樣本數據 (Sample):",
+                input_hint: "提示：請確保數據間無空行，以免名稱與數值錯位。",
+                blank_hint: "請確保數值當中有<span class='text-danger-bold'>濃度為0的濃度</span>以及<span class='text-danger-bold'>相對應的OD值</span> (當作 Blank 扣除)。",
+                replicates: "OD重複數",
+                dilution_factor: "樣本稀釋倍數:",
+                dilution_hint: "計算出的濃度將會乘以輸入的倍數 (基於標準品回歸)。",
+                calculate_btn: "開始計算",
+                export_btn: "匯出 CSV (Excel)",
+                download_chart_btn: "下載圖表圖片",
+                clear_btn: "清除全部",
+                standard_curve: "標準曲線圖",
+                calculation_results: "計算結果",
+                calc_conc: "推算濃度 (μg/μL)",
+                status: "備註",
+                no_result: "尚無結果，請輸入數據後點擊計算。",
+                model_hint: "Bradford：595nm / BCA： 562nm",
+                conc_lbl: "濃度 (μg/μL)",
+                od_lbl: "吸光值 (OD)",
+                od_net_lbl: "扣除 Blank 之 OD",
+                ph_col: "請貼上整欄數據...",
+                no_calc_alert: "請先進行計算後再匯出。",
+                sample_name_input: "樣本名稱",
+                sample_name_col: "樣本名稱",
+                sample_od: "樣本 OD",
+                mean_od: "平均 OD",
+                col_net_od: "扣除 Blank 之 OD",
+                download_offline: "下載離線版",
+                wb_title: "Western Blot 樣本配製計算",
+                target_protein: "目標蛋白量 (µg)",
+                target_vol: "單孔目標體積 (µL)",
+                buffer_x: "Sample Buffer 倍數",
+                prep_n: "配製份數 (n)",
+                col_prot_vol: "蛋白體積 (µL)",
+                col_water_vol: "ddH2O體積 (µL)",
+                col_buff_vol: "Buffer體積 (µL)",
+                col_total_vol: "總體積 (µL)",
+                r2_warning: "警告：R² < 0.98，線性擬合度不佳，結果可能不準確。",
+                note_high: "高於標準曲線",
+                note_low: "低於標準曲線",
+                note_neg: "數值異常/雜訊", 
+                err_buff_x: "錯誤：Buffer倍數 ≤ 1", 
+                err_no_blank: "錯誤：未找到「濃度 0」的數據點！\n\n本工具需要 0 濃度的數據來計算背景值 (Blank)。\n若您的機器測量時已自動扣除背景 (Auto-zero)，請務必在標準品清單中手動加入一行「濃度 0」與「OD 0」的數據，以便程式運作。"
+            }
+        };
+
+        let currentLang = 'zh';
+        let globalStdData = [];
+        let globalSampleResults = [];
+        let globalFitResult = null;
+        let myChart = null;
+        let globalBlankOD = 0; 
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang][key]) el.innerHTML = i18n[lang][key];
+            });
+            document.querySelectorAll('.lang-switch-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(lang === 'en' ? 'English' : '中文')) btn.classList.add('active');
+            });
+            saveAndRenderAllInputs();
+            if (myChart) {
+                myChart.options.scales.x.title.text = i18n[lang].conc_lbl;
+                myChart.options.scales.y.title.text = i18n[lang].od_net_lbl; 
+                myChart.update();
+            }
+            if(globalSampleResults.length > 0) calculate(); 
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { setLang('zh'); });
+
+        function saveAndRenderAllInputs() {
+            let savedData = {
+                stdConc: document.getElementById('std_conc_input')?.value || '',
+                stdOds: [], 
+                sampleName: document.getElementById('sample_name_input')?.value || '',
+                sampleOds: []
+            };
+            
+            let stdReps = parseInt(document.getElementById('stdReplicates').value);
+            for(let r=1; r<=stdReps; r++) {
+                savedData.stdOds.push(document.getElementById(`std_od_input_${r}`)?.value || '');
+            }
+            
+            let sampleReps = parseInt(document.getElementById('sampleReplicates').value);
+            for(let r=1; r<=sampleReps; r++) {
+                savedData.sampleOds.push(document.getElementById(`sample_od_input_${r}`)?.value || '');
+            }
+
+            renderStandardInputs();
+            renderSampleInputs();
+
+            if(document.getElementById('std_conc_input')) document.getElementById('std_conc_input').value = savedData.stdConc;
+            
+            for(let r=1; r<=stdReps; r++) {
+                if(document.getElementById(`std_od_input_${r}`)) {
+                    document.getElementById(`std_od_input_${r}`).value = savedData.stdOds[r-1] || '';
+                }
+            }
+            
+            if(document.getElementById('sample_name_input')) document.getElementById('sample_name_input').value = savedData.sampleName;
+
+            for(let r=1; r<=sampleReps; r++) {
+                if(document.getElementById(`sample_od_input_${r}`)) {
+                    document.getElementById(`sample_od_input_${r}`).value = savedData.sampleOds[r-1] || '';
+                }
+            }
+        }
+
+        function renderStandardInputs() {
+            const reps = parseInt(document.getElementById('stdReplicates').value);
+            const count = 10; 
+            const container = document.getElementById('stdDataContainer');
+            let html = `<div class="d-flex gap-2">`;
+            html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].conc_lbl.replace('(μg/μL)', '<span class="text-danger">(μg/μL)</span>')}</div><textarea id="std_conc_input" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
+            for(let r=1; r<=reps; r++) {
+                html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].od_lbl} #${r}</div><textarea id="std_od_input_${r}" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
+            }
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function renderSampleInputs() {
+            const reps = parseInt(document.getElementById('sampleReplicates').value);
+            const count = 10;
+            const container = document.getElementById('sampleDataContainer');
+            let html = `<div class="d-flex gap-2">`;
+            html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].sample_name_input}</div><textarea id="sample_name_input" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
+            for(let r=1; r<=reps; r++) {
+                html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].sample_od} #${r}</div><textarea id="sample_od_input_${r}" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
+            }
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function parseBulkInput(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el || !el.value.trim()) return [];
+            let raw = el.value.trim();
+            return raw.split(/\r?\n/).map(v => parseFloat(v.trim()));
+        }
+
+        function parseStringInput(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el || !el.value.trim()) return [];
+            let raw = el.value.trim();
+            return raw.split(/\r?\n/).map(v => v.trim());
+        }
+
+        function getStandardData() {
+            const reps = parseInt(document.getElementById('stdReplicates').value);
+            let concArr = parseBulkInput('std_conc_input');
+            let odArrs = [];
+            for(let r=1; r<=reps; r++) odArrs.push(parseBulkInput(`std_od_input_${r}`));
+
+            let data = [];
+            for(let i=0; i<concArr.length; i++) {
+                if (isNaN(concArr[i])) continue;
+                let validOds = [];
+                for(let r=0; r<reps; r++) {
+                    if (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) validOds.push(odArrs[r][i]);
+                }
+                if (validOds.length > 0) {
+                    let avgOd = validOds.reduce((a,b)=>a+b, 0) / validOds.length;
+                    data.push({ x: concArr[i], y: avgOd, rawOds: validOds });
+                }
+            }
+            return data.sort((a, b) => a.x - b.x);
+        }
+
+        function getSampleData() {
+            const reps = parseInt(document.getElementById('sampleReplicates').value);
+            let odArrs = [];
+            for(let r=1; r<=reps; r++) odArrs.push(parseBulkInput(`sample_od_input_${r}`));
+            let nameArr = parseStringInput('sample_name_input');
+
+            let maxLen = 0;
+            odArrs.forEach(arr => { if(arr.length > maxLen) maxLen = arr.length; });
+            
+            let results = [];
+            for(let i=0; i<maxLen; i++) {
+                let validOds = [];
+                for(let r=0; r<reps; r++) {
+                    if (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) validOds.push(odArrs[r][i]);
+                }
+                if(validOds.length > 0) {
+                    let avgOd = validOds.reduce((a,b)=>a+b, 0) / validOds.length;
+                    let sName = (nameArr[i] && nameArr[i].trim() !== "") ? nameArr[i] : `S${i+1}`;
+                    results.push({ id: i+1, name: sName, od: avgOd, rawOds: validOds });
+                }
+            }
+            return results;
+        }
+
+        function fitLinear(data) {
+            let n = data.length, sX=0, sY=0, sXY=0, sXX=0;
+            data.forEach(p => { sX+=p.x; sY+=p.y; sXY+=p.x*p.y; sXX+=p.x*p.x; });
+            let slope = (n*sXY - sX*sY) / (n*sXX - sX*sX);
+            let intercept = (sY - slope*sX) / n;
+            
+            if (Math.abs(slope) < 1e-10) {
+                throw new Error("Standard Curve Slope is ≈ 0 (Flat Line). Cannot calculate concentration.");
+            }
+
+            let ssRes=0, ssTot=0, mY=sY/n;
+            data.forEach(p=>{ ssRes+=Math.pow(p.y-(slope*p.x+intercept),2); ssTot+=Math.pow(p.y-mY,2); });
+            let r2 = 1-(ssRes/ssTot);
+
+            let sign = intercept >= 0 ? "+" : "-";
+            let absB = Math.abs(intercept);
+            let equationStr = `y = ${slope.toFixed(5)}x ${sign} ${absB.toFixed(5)}`;
+
+            return { 
+                predict: x => slope*x + intercept, 
+                solve: y => (y - intercept) / slope, 
+                equation: equationStr, 
+                r2: r2, 
+                params: {slope, intercept} 
+            };
+        }
+
+        function getWBValues(conc, targetMass, targetVol, bufferX, prepN) {
+            if (typeof conc !== 'number' || isNaN(conc) || conc <= 0) {
+                return { valid: false, reason: "Invalid Conc", vals: null };
+            }
+            if (bufferX <= 1) {
+                return { valid: false, reason: "BuffX <= 1", vals: null };
+            }
+            let v_prot = (targetMass / conc) * prepN;
+            let v_buff = (targetVol / bufferX) * prepN;
+            let v_total = targetVol * prepN;
+            let v_water = v_total - v_prot - v_buff;
+            return { 
+                valid: true, 
+                reason: "OK", 
+                vals: { v_prot, v_water, v_buff, v_total }
+            };
+        }
+
+        function calculateRecipe() {
+            let targetMass = parseFloat(document.getElementById('wb_mass').value) || 0;
+            let targetVol = parseFloat(document.getElementById('wb_vol').value) || 0;
+            let bufferX = parseFloat(document.getElementById('wb_buffer').value) || 1;
+            let prepN = parseFloat(document.getElementById('wb_n').value) || 1;
+
+            let tbody = document.getElementById('recipeTableBody');
+            tbody.innerHTML = '';
+
+            if (globalSampleResults.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-muted py-3">${i18n[currentLang].no_result}</td></tr>`;
+                return;
+            }
+
+            globalSampleResults.forEach(res => {
+                let wbData = getWBValues(res.conc, targetMass, targetVol, bufferX, prepN);
+                let rowHtml = `<td>${res.name}</td>`;
+                if (wbData.valid) {
+                    let v = wbData.vals;
+                    let protClass = (v.v_prot < 0) ? "text-danger fw-bold" : "";
+                    let waterClass = (v.v_water < 0) ? "text-danger fw-bold" : "";
+                    let buffClass = (v.v_buff < 0) ? "text-danger fw-bold" : "";
+                    let totalClass = (v.v_total < 0) ? "text-danger fw-bold" : "";
+                    rowHtml += `
+                        <td class="${protClass}">${v.v_prot.toFixed(2)}</td>
+                        <td class="${waterClass}">${v.v_water.toFixed(2)}</td>
+                        <td class="${buffClass}">${v.v_buff.toFixed(2)}</td>
+                        <td class="${totalClass}">${v.v_total.toFixed(2)}</td>
+                    `;
+                } else {
+                    let msg = "---";
+                    if(wbData.reason === "BuffX <= 1") msg = `<span class="text-danger">${i18n[currentLang].err_buff_x}</span>`;
+                    rowHtml += `<td colspan="4" class="text-muted text-center align-middle">${msg}</td>`;
+                }
+                tbody.innerHTML += `<tr>${rowHtml}</tr>`;
+            });
+        }
+
+        function calculate() {
+            let checkStdConc = parseBulkInput('std_conc_input');
+            let checkStdOD1 = parseBulkInput('std_od_input_1');
+            
+            if (checkStdConc.length > 0 && checkStdConc.length !== checkStdOD1.length) {
+                let msg = (currentLang === 'zh') 
+                    ? `警告：標準品的「濃度行數 (${checkStdConc.length})」與「OD 行數 (${checkStdOD1.length})」不符！\n\n這可能導致數據錯位，是否仍要繼續？`
+                    : `Warning: Standard Row count mismatch! Conc: ${checkStdConc.length}, OD: ${checkStdOD1.length}.\nProceed anyway?`;
+                if (!confirm(msg)) return; 
+            }
+
+            let checkSampleNames = parseStringInput('sample_name_input');
+            let checkSampleOD1 = parseBulkInput('sample_od_input_1');
+
+            if (checkSampleNames.length > 0 && checkSampleNames.length !== checkSampleOD1.length) {
+                let msg = (currentLang === 'zh') 
+                    ? `警告：樣本的「名稱行數 (${checkSampleNames.length})」與「OD 行數 (${checkSampleOD1.length})」不符！\n\n請檢查是否漏複製或有多餘空行。\n是否仍要繼續？`
+                    : `Warning: Sample Row count mismatch! Names: ${checkSampleNames.length}, OD: ${checkSampleOD1.length}.\nProceed anyway?`;
+                if (!confirm(msg)) return; 
+            }
+
+            globalStdData = getStandardData();
+            let dilution = parseFloat(document.getElementById('dilutionFactor').value) || 1;
+            
+            if (globalStdData.length < 2) { alert(i18n[currentLang].no_result); return; }
+
+            let blankPoint = globalStdData.find(d => d.x === 0);
+            
+            if (!blankPoint) {
+                alert(i18n[currentLang].err_no_blank);
+                return;
+            }
+
+            globalBlankOD = blankPoint.y; 
+
+            let processedStdData = globalStdData.map(d => ({
+                x: d.x,
+                y: d.y - globalBlankOD, 
+                rawY: d.y,             
+                rawOds: d.rawOds
+            }));
+
+            let maxStdNetOD = Math.max(...processedStdData.map(d => d.y));
+            let nonZeroODs = processedStdData.filter(d => d.x > 0).map(d => d.y);
+            let minStdNetOD = Math.min(...nonZeroODs);
+
+            let fitModel;
+            try {
+                fitModel = fitLinear(processedStdData);
+            } catch(e) {
+                console.error(e);
+                alert("Calculation Failed: " + e.message); 
+                return;
+            }
+
+            globalFitResult = fitModel;
+            document.getElementById('r2_score').innerHTML = `${fitModel.equation} <br> <span class="badge bg-success" style="float:right;">R² = ${fitModel.r2.toFixed(5)}</span>`;
+
+            let warningBox = document.getElementById('r2_warning_box');
+            if(fitModel.r2 < 0.98) {
+                warningBox.textContent = i18n[currentLang].r2_warning;
+                warningBox.style.display = 'block';
+            } else {
+                warningBox.style.display = 'none';
+            }
+
+            let sampleList = getSampleData();
+            let results = [];
+            sampleList.forEach(item => {
+                let netOD = item.od - globalBlankOD; 
+                let conc = fitModel.solve(netOD);    
+                let note = "";
+                let statusType = "ok"; 
+
+                if (netOD < 0) {
+                    note = i18n[currentLang].note_neg; 
+                    statusType = "danger";
+                } else if (netOD < minStdNetOD) {
+                    note = i18n[currentLang].note_low;
+                    statusType = "gray";
+                } else if (netOD > maxStdNetOD) {
+                    note = i18n[currentLang].note_high;
+                    statusType = "warning";
+                }
+
+                let finalConc = isNaN(conc) ? NaN : conc * dilution;
+                results.push({ ...item, netOD: netOD, conc: finalConc, note: note, statusType: statusType });
+            });
+            globalSampleResults = results;
+
+            let tbody = document.getElementById('resultTableBody');
+            tbody.innerHTML = '';
+            results.forEach((res) => {
+                let valStr = "---";
+                if (typeof res.conc === 'number' && !isNaN(res.conc)) {
+                    valStr = res.conc.toFixed(4);
+                }
+                
+                let valClass = (res.conc < 0) ? "text-danger fw-bold" : "fw-bold text-primary";
+                
+                let badgeClass = "bg-success";
+                if(res.statusType === "warning") badgeClass = "bg-warning text-dark";
+                if(res.statusType === "danger") badgeClass = "bg-danger";
+                if(res.statusType === "gray") badgeClass = "bg-secondary";
+                
+                let statusBadge = res.note 
+                    ? `<span class="badge ${badgeClass}">${res.note}</span>` 
+                    : `<span class="badge bg-success">OK</span>`;
+
+                tbody.innerHTML += `<tr>
+                    <td>${res.name}</td>
+                    <td>${res.od.toFixed(4)}</td>
+                    <td class="text-muted">${res.netOD.toFixed(4)}</td> <td class="${valClass}">${valStr}</td>
+                    <td>${statusBadge}</td>
+                </tr>`;
+            });
+
+            if(typeof Chart !== 'undefined') {
+                drawChart(processedStdData, fitModel, results);
+            }
+            calculateRecipe(); 
+        }
+
+        function drawChart(stdData, fitModel, sampleResults) {
+    const ctx = document.getElementById('elisaChart').getContext('2d');
+    
+    // 1. 計算標準曲線的最大 X 值
+    let maxStdX = Math.max(...stdData.map(d => d.x));
+    
+    // 【修改核心】：直接將 X 軸最大值鎖定為標準品的最大濃度
+    // 我們不再去檢查 sampleResults，這樣即便稀釋倍數很大，圖表也不會被拉長
+    let maxX = maxStdX;
+
+    // 隱藏「超出範圍警告」，因為現在我們是故意不延伸圖表的
+    const chartWarningBox = document.getElementById('chart_range_warning');
+    if (chartWarningBox) {
+        chartWarningBox.style.display = 'none';
+    }
+
+    // 產生迴歸線的點 (只畫到標準品最大值的 1.1 倍，稍微延伸一點點即可，不畫到樣本濃度去)
+    let fitPoints = [];
+    for(let i=0; i<=100; i++) {
+        let x = (maxX * 1.1) * (i/100); 
+        let y = fitModel.predict(x);
+        fitPoints.push({x: x, y: y});
+    }
+
+    // --- 以下為原本的圖表繪製邏輯 (Plugin 與 Config) ---
+
+    const whiteBackgroundPlugin = {
+        id: 'customCanvasBackgroundColor',
+        beforeDraw: (chart) => {
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, chart.width, chart.height);
+            ctx.restore();
+        }
+    };
+
+    const textPlugin = {
+        id: 'equationAnnotation',
+        afterDraw: (chart) => {
+            const ctx = chart.ctx;
+            ctx.save();
+            ctx.font = 'bold 14px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+            ctx.fillStyle = '#0d6efd';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom'; 
+            const x = chart.chartArea.right - 10;
+            const y = chart.chartArea.bottom - 10;
+            ctx.fillText(`R² = ${fitModel.r2.toFixed(5)}`, x, y);
+            ctx.fillText(fitModel.equation, x, y - 20);
+            ctx.restore();
+        }
+    };
+
+    if(myChart) myChart.destroy();
+    
+    myChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                { label: 'Std Data (Blank-subtracted OD)', data: stdData, backgroundColor:'#0d6efd', pointRadius:5 },
+                { label: 'Linear Fit', data: fitPoints, type:'line', borderColor:'#0d6efd', borderWidth:2, pointRadius:0, borderDash:[5,5], fill:false, tension:0 },
+            ]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            scales: { 
+                x: {
+                    type: 'linear', 
+                    position:'bottom', 
+                    title:{display:true, text:i18n[currentLang].conc_lbl},
+                    min: 0,
+                    // 這裡不需強制設 max，Chart.js 會自動根據 fitPoints (只到 maxX * 1.1) 調整範圍
+                }, 
+                y: {
+                    title:{display:true, text:i18n[currentLang].od_net_lbl},
+                    suggestedMin: 0 
+                } 
+            },
+            plugins: {
+                legend: { }
+            }
+        },
+        plugins: [whiteBackgroundPlugin, textPlugin] 
+    });
+}
+
+        function loadDemoData() {
+            document.getElementById('stdReplicates').value = '2'; 
+            renderStandardInputs(); 
+            
+            const demoStdConc = "0\n0.125\n0.250\n0.500\n0.750\n1.000\n1.500\n2.000";
+            const demoStdOD1 = "0.0766\n0.192\n0.3083\n0.4956\n0.7318\n0.8822\n1.2053\n1.5869";
+            const demoStdOD2 = "0.0757\n0.2\n0.3279\n0.5099\n0.7336\n0.9543\n1.3201\n1.6808";
+            
+            document.getElementById('std_conc_input').value = demoStdConc;
+            document.getElementById('std_od_input_1').value = demoStdOD1;
+            document.getElementById('std_od_input_2').value = demoStdOD2;
+
+            document.getElementById('sampleReplicates').value = '2';
+            renderSampleInputs(); 
+            
+            const demoSampleName = "A\nB\nC";
+            const demoSampleOD1 = "0.2732\n0.2176\n0.2013"; 
+            const demoSampleOD2 = "0.2725\n0.2171\n0.202";
+
+            document.getElementById('sample_name_input').value = demoSampleName;
+            document.getElementById('sample_od_input_1').value = demoSampleOD1;
+            document.getElementById('sample_od_input_2').value = demoSampleOD2;
+        }
+
+        function clearData() {
+            renderStandardInputs(); 
+            renderSampleInputs(); 
+            document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted">${i18n[currentLang].no_result}</td></tr>`;
+            document.getElementById('recipeTableBody').innerHTML = `<tr><td colspan="5" class="text-muted py-3">${i18n[currentLang].no_result}</td></tr>`;
+            if(myChart) { myChart.destroy(); myChart = null; }
+            document.getElementById('r2_score').textContent = '';
+            document.getElementById('r2_warning_box').style.display = 'none';
+            globalStdData = []; globalSampleResults = []; globalBlankOD = 0;
+        }
+
+        function downloadChart() {
+            if (!myChart) {
+                alert(currentLang === 'zh' ? "請先進行計算以產生圖表。" : "Please calculate first to generate the chart.");
+                return;
+            }
+            const canvas = document.getElementById('elisaChart');
+            const link = document.createElement('a');
+            link.download = `Standard_Curve_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ==========================================
+        //  MODIFIED EXPORT FUNCTION (CSV METHOD)
+        // ==========================================
+        function exportExcel() {
+            if (globalSampleResults.length === 0) { alert(i18n[currentLang].no_calc_alert); return; }
+
+            let csvContent = "";
+            const now = new Date().toLocaleString();
+            let dilution = document.getElementById('dilutionFactor').value;
+            
+            // 修正數值 0 不顯示的問題
+            const row = (arr) => arr.map(x => `"${String((x === null || x === undefined) ? "" : x).replace(/"/g, '""')}"`).join(",") + "\n";
+
+            // --- PART 1: 參數與標頭 ---
+            csvContent += row(["Protein Quantification Report (Bradford/BCA)"]);
+            csvContent += row(["Date", now]);
+            csvContent += row(["Model", "Linear Regression (y=ax+b)"]);
+            csvContent += row(["Blank OD Used", globalBlankOD]);
+            csvContent += row(["Dilution Factor", dilution]);
+            
+            let cleanEquation = globalFitResult ? globalFitResult.equation.replace(/<[^>]*>/g, " ").trim() : "";
+            csvContent += row(["Equation", cleanEquation]);
+            csvContent += row(["R2", globalFitResult ? globalFitResult.r2.toFixed(6) : ""]);
+            csvContent += row([]); 
+
+            // --- PART 2: 標準曲線數據 (已移至最前) ---
+            let maxStdReps = 0;
+            globalStdData.forEach(pt => { if(pt.rawOds && pt.rawOds.length > maxStdReps) maxStdReps = pt.rawOds.length; });
+            
+            let stdHeader = ["Concentration (X) (µg/μL)"];
+            for(let i=1; i<=maxStdReps; i++) stdHeader.push(`OD #${i}`);
+            stdHeader.push("Mean OD (Y)", "Blank-subtracted OD");
+
+            csvContent += row(["--- Standard Curve Data ---"]);
+            csvContent += row(stdHeader);
+
+            globalStdData.forEach(pt => {
+                let r = [pt.x];
+                for(let i=0; i<maxStdReps; i++) r.push((pt.rawOds && pt.rawOds[i] !== undefined) ? pt.rawOds[i] : "");
+                r.push(pt.y.toFixed(4), (pt.y - globalBlankOD).toFixed(4));
+                csvContent += row(r);
+            });
+            csvContent += row([]); 
+
+            // --- PART 3: 定量結果 ---
+            let maxSampleReps = 0;
+            globalSampleResults.forEach(res => { if(res.rawOds && res.rawOds.length > maxSampleReps) maxSampleReps = res.rawOds.length; });
+
+            let sampleHeader = ["Sample Name"];
+            for(let i=1; i<=maxSampleReps; i++) sampleHeader.push(`OD #${i}`);
+            sampleHeader.push("Mean OD", "Blank-subtracted OD", "Conc (µg/μL)", "Status");
+            
+            csvContent += row(["--- Calculation Results ---"]);
+            csvContent += row(sampleHeader);
+
+            globalSampleResults.forEach(res => {
+                let r = [res.name];
+                for(let i=0; i<maxSampleReps; i++) r.push((res.rawOds && res.rawOds[i] !== undefined) ? res.rawOds[i] : "");
+                let concVal = (typeof res.conc==='number' && !isNaN(res.conc) ? res.conc.toFixed(4) : "NaN");
+                r.push(res.od.toFixed(4), res.netOD.toFixed(4), concVal, (res.note||"OK"));
+                csvContent += row(r);
+            });
+            csvContent += row([]); 
+
+            // --- PART 4: Western Blot Recipe ---
+            let targetMass = parseFloat(document.getElementById('wb_mass').value) || 0;
+            let targetVol = parseFloat(document.getElementById('wb_vol').value) || 0;
+            let bufferX = parseFloat(document.getElementById('wb_buffer').value) || 1;
+            let prepN = parseFloat(document.getElementById('wb_n').value) || 1;
+
+            csvContent += row(["--- Western Blot Recipe Calculation ---"]);
+            csvContent += row(["Target Mass (µg)", targetMass]);
+            csvContent += row(["Target Vol (µL)", targetVol]);
+            csvContent += row(["Buffer (X)", bufferX]);
+            csvContent += row(["Replicates (n)", prepN]);
+            
+            csvContent += row([]); // 新增空行
+
+            csvContent += row(["Sample Name", "Protein Vol (µL)", "ddH2O (µL)", "Buffer Vol (µL)", "Total Vol (µL)"]);
+
+            globalSampleResults.forEach(res => {
+                let wbData = getWBValues(res.conc, targetMass, targetVol, bufferX, prepN);
+                if (wbData.valid) {
+                    let v = wbData.vals;
+                    csvContent += row([
+                        res.name,
+                        v.v_prot.toFixed(2),
+                        v.v_water.toFixed(2),
+                        v.v_buff.toFixed(2),
+                        v.v_total.toFixed(2)
+                    ]);
+                } else {
+                     let errMsg = (wbData.reason === "BuffX <= 1") ? "Buffer X <= 1" : "Invalid";
+                     csvContent += row([res.name, errMsg, "---", "---", "---"]);
+                }
+            });
+
+            // 觸發下載
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", "Protein_Quant_Result.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
