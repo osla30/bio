@@ -35,7 +35,6 @@
             margin-bottom: 20px;
         }
 
-        /* 讓標題與按鈕並排的容器 */
         .header-with-buttons {
             display: flex;
             justify-content: space-between;
@@ -50,16 +49,15 @@
             color: var(--primary-color);
             margin: 0;
             padding: 0;
-            border-bottom: none; /* 移除原本 h1/h2 的底線，改用容器的底線 */
+            border-bottom: none;
         }
 
         .header-buttons {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap; /* 確保按鈕過多時也能換行 */
+            flex-wrap: wrap;
         }
 
-        /* 按鈕樣式 */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -79,7 +77,6 @@
             background-color: #2980b9;
         }
 
-        /* 空心按鈕樣式 (供離線版按鈕使用) */
         .btn-outline {
             background-color: transparent;
             color: var(--secondary-color);
@@ -102,10 +99,9 @@
         .calculator-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 30px;
         }
 
-        /* 響應式表格容器，讓手機版可以左右滑動 */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -123,26 +119,32 @@
                 gap: 15px;
             }
             .header-with-buttons h1 {
-                font-size: 1.5em; /* 在手機版稍微縮小標題 */
+                font-size: 1.5em;
             }
         }
 
         .input-group {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap; /* 手機版時標籤與輸入框自動換行 */
+            justify-content: space-between; /* 讓標籤和輸入框對齊更整齊 */
+            margin-bottom: 12px;
+            flex-wrap: wrap;
             gap: 10px;
+            background: #fdfdfd;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #eee;
         }
 
         .input-group label {
             font-weight: bold;
-            font-size: 1.1em;
+            font-size: 1.05em;
+            color: var(--primary-color);
         }
 
         .input-group input {
-            width: 100px;
-            padding: 8px 12px;
+            width: 80px;
+            padding: 6px 10px;
             font-size: 1.1em;
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -151,9 +153,12 @@
 
         .result-box {
             background-color: #e8f4f8;
-            padding: 15px;
-            border-radius: 6px;
+            padding: 20px;
+            border-radius: 8px;
             border-left: 5px solid var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .result-item {
@@ -164,7 +169,7 @@
         .result-item span.value {
             font-weight: bold;
             color: #d35400;
-            font-size: 1.2em;
+            font-size: 1.3em;
         }
 
         .notes {
@@ -180,7 +185,6 @@
             padding-left: 20px;
         }
 
-        /* 粗體紅字樣式 */
         .highlight-red {
             color: #e74c3c;
             font-weight: bold;
@@ -190,7 +194,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.95em;
-            min-width: 600px; /* 確保表格不會被過度壓縮 */
+            min-width: 600px;
         }
 
         th, td {
@@ -219,7 +223,7 @@
 <div class="container">
     <div class="card">
         <div class="header-with-buttons">
-            <h1>BCA Working Solution 體積計算 (兩重複)</h1>
+            <h1>BCA Working Solution 體積計算</h1>
             <div class="header-buttons">
                 <a href="https://drive.google.com/file/d/1FOC3EQC5yBFf7P2cT1w2KCMXdTiYunvV/view?usp=sharing" target="_blank" class="btn btn-outline">離線版</a>
             </div>
@@ -228,14 +232,25 @@
         <div class="calculator-grid">
             <div>
                 <div class="input-group">
-                    <label for="sampleCount">樣本數量？ (自動計算兩重複)</label>
+                    <label for="standardCount">Standard 數量</label>
+                    <input type="number" id="standardCount" min="0" value="8" oninput="calculateVolumes()">
+                </div>
+                <div class="input-group">
+                    <label for="standardReps">Standard 重複次數</label>
+                    <input type="number" id="standardReps" min="1" value="2" oninput="calculateVolumes()">
+                </div>
+                <div class="input-group" style="margin-top: 20px;">
+                    <label for="sampleCount">Sample 數量</label>
                     <input type="number" id="sampleCount" min="0" value="0" oninput="calculateVolumes()">
+                </div>
+                <div class="input-group">
+                    <label for="sampleReps">Sample 重複次數</label>
+                    <input type="number" id="sampleReps" min="1" value="2" oninput="calculateVolumes()">
                 </div>
                 
                 <div class="notes">
                     <strong>實驗提醒：</strong>
                     <ul>
-                        <li>已包含 8 管 BSA Standard 兩重複的基礎體積</li>
                         <li>蛋白樣本可稀釋所需倍數後再做測量</li>
                         <li><span class="highlight-red">160 μL</span> Working solution + <span class="highlight-red">20 μL</span> BSA & 蛋白</li>
                         <li><span class="highlight-red">37°C</span> incubate <span class="highlight-red">30 分鐘</span>，測 <span class="highlight-red">562nm</span> 或 540-590nm</li>
@@ -248,7 +263,7 @@
                     Working solution = <span class="value" id="valWS">3264</span> μL
                     <div style="font-size: 0.85em; color: #555;">(Reagent A + B)</div>
                 </div>
-                <hr style="border: 0; border-top: 1px solid #ccc; margin: 10px 0;">
+                <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
                 <div class="result-item">
                     Reagent A = <span class="value" id="valA">3200</span> μL
                     <div style="font-size: 0.85em; color: #555;">(大罐透明)</div>
@@ -324,21 +339,24 @@
 
 <script>
     function calculateVolumes() {
-        // 取得使用者輸入的 Sample 數量
-        let countInput = document.getElementById('sampleCount').value;
-        let count = parseFloat(countInput);
+        // 取得使用者輸入的各項數值，並加上防呆機制（轉為浮點數，若為 NaN 則帶入 0 或 1）
+        let stdCount = parseFloat(document.getElementById('standardCount').value) || 0;
+        let stdReps  = parseFloat(document.getElementById('standardReps').value) || 1;
+        let smpCount = parseFloat(document.getElementById('sampleCount').value) || 0;
+        let smpReps  = parseFloat(document.getElementById('sampleReps').value) || 1;
         
-        // 處理空值或負數的情況
-        if (isNaN(count) || count < 0) {
-            count = 0;
-        }
+        // 確保數值不為負數
+        if (stdCount < 0) stdCount = 0;
+        if (stdReps < 1) stdReps = 1; // 重複次數最少為 1
+        if (smpCount < 0) smpCount = 0;
+        if (smpReps < 1) smpReps = 1; // 重複次數最少為 1
 
-        // 總管數 = 8 管標準品 + Sample 數量
-        let totalTubes = count + 8;
+        // 計算總反應次數 (每一孔為一次反應)
+        let totalReactions = (stdCount * stdReps) + (smpCount * smpReps);
         
-        // 根據總管數計算
-        let reagentA = totalTubes * 400;
-        let reagentB = totalTubes * 8;
+        // 根據總反應次數計算 (單次需要 200 μL Reagent A)
+        let reagentA = totalReactions * 200;
+        let reagentB = reagentA / 50;
         let totalWS = reagentA + reagentB;
 
         // 更新畫面數值
