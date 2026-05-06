@@ -445,7 +445,7 @@
                                     <tr>
                                         <th data-i18n="sample_name_col">樣本名稱</th>
                                         <th data-i18n="col_prot_vol">蛋白體積 (µL)</th>
-                                        <th data-i18n="col_water_vol">ddH2O (µL)</th>
+                                        <th data-i18n="col_water_vol">稀釋液 (µL)</th>
                                         <th data-i18n="col_buff_vol">Buffer (µL)</th>
                                         <th data-i18n="col_total_vol">總體積 (µL)</th>
                                     </tr>
@@ -507,7 +507,7 @@
                 buffer_x: "Sample Buffer Conc. (X)",
                 prep_n: "Replicates (n)",
                 col_prot_vol: "Protein Vol (µL)",
-                col_water_vol: "ddH2O Vol (µL)",
+                col_water_vol: "Diluent Vol (µL)",
                 col_buff_vol: "Buffer Vol (µL)",
                 col_total_vol: "Total Vol (µL)",
                 r2_warning: "Warning: R² < 0.98. The linearity is poor, results may be inaccurate.",
@@ -556,7 +556,7 @@
                 buffer_x: "Sample Buffer 倍數",
                 prep_n: "配製份數 (n)",
                 col_prot_vol: "蛋白體積 (µL)",
-                col_water_vol: "ddH2O體積 (µL)",
+                col_water_vol: "稀釋液體積 (µL)",
                 col_buff_vol: "Buffer體積 (µL)",
                 col_total_vol: "總體積 (µL)",
                 r2_warning: "警告：R² < 0.98，線性擬合度不佳，結果可能不準確。",
@@ -1141,7 +1141,7 @@
             
             csvContent += row([]); // 新增空行
 
-            csvContent += row(["Sample Name", "Protein Vol (µL)", "ddH2O (µL)", "Buffer Vol (µL)", "Total Vol (µL)"]);
+            csvContent += row(["Sample Name", "Protein Vol (µL)", "Diluent (µL)", "Buffer Vol (µL)", "Total Vol (µL)"]);
 
             globalSampleResults.forEach(res => {
                 let wbData = getWBValues(res.conc, targetMass, targetVol, bufferX, prepN);
