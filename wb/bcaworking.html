@@ -142,13 +142,19 @@
             color: var(--primary-color);
         }
 
-        .input-group input {
+        /* 修改：讓下拉選單也套用原本輸入框的樣式 */
+        .input-group input,
+        .input-group select.short-select {
             width: 80px;
             padding: 6px 10px;
             font-size: 1.1em;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             text-align: center;
+        }
+        
+        .input-group select.short-select {
+            cursor: pointer;
         }
 
         .result-box {
@@ -237,7 +243,11 @@
                 </div>
                 <div class="input-group">
                     <label for="standardReps">Standard 重複次數</label>
-                    <input type="number" id="standardReps" min="1" value="2" oninput="calculateVolumes()">
+                    <select id="standardReps" class="short-select" onchange="calculateVolumes()">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                    </select>
                 </div>
                 <div class="input-group" style="margin-top: 20px;">
                     <label for="sampleCount">Sample 數量</label>
@@ -245,7 +255,11 @@
                 </div>
                 <div class="input-group">
                     <label for="sampleReps">Sample 重複次數</label>
-                    <input type="number" id="sampleReps" min="1" value="2" oninput="calculateVolumes()">
+                    <select id="sampleReps" class="short-select" onchange="calculateVolumes()">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                    </select>
                 </div>
 
                 <div class="input-group" style="margin-top: 20px; background-color: #f0f7ff; border-color: #cce5ff;">
@@ -263,6 +277,7 @@
                         <li>方案A：<span class="highlight-red">160 μL</span> Working sol. + <span class="highlight-red">20 μL</span> BSA & 蛋白</li>
                         <li>方案B：<span class="highlight-red">200 μL</span> Working sol. + <span class="highlight-red">25 μL</span> BSA & 蛋白</li>
                         <li><span class="highlight-red">37°C</span> incubate <span class="highlight-red">30 分鐘</span>，測 <span class="highlight-red">562nm</span> 或 540-590nm</li>
+                        <li>若進行 Enhanced 測微量，則 <span class="highlight-red">60°C</span> incubate <span class="highlight-red">30 分鐘</span></li>
                     </ul>
                 </div>
             </div>
