@@ -126,7 +126,7 @@
         .input-group {
             display: flex;
             align-items: center;
-            justify-content: space-between; /* 讓標籤和輸入框對齊更整齊 */
+            justify-content: space-between;
             margin-bottom: 12px;
             flex-wrap: wrap;
             gap: 10px;
@@ -247,12 +247,21 @@
                     <label for="sampleReps">Sample 重複次數</label>
                     <input type="number" id="sampleReps" min="1" value="2" oninput="calculateVolumes()">
                 </div>
+
+                <div class="input-group" style="margin-top: 20px; background-color: #f0f7ff; border-color: #cce5ff;">
+                    <label for="calcScheme">計算方案</label>
+                    <select id="calcScheme" onchange="calculateVolumes()" style="width: auto; padding: 6px 10px; font-size: 1.05em; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;">
+                        <option value="A">方案 A (160 μL Working sol. + 20 μL BSA & 蛋白)</option>
+                        <option value="B">方案 B (200 μL Working sol. + 25 μL BSA & 蛋白)</option>
+                    </select>
+                </div>
                 
                 <div class="notes">
                     <strong>實驗提醒：</strong>
                     <ul>
                         <li>蛋白樣本可稀釋所需倍數後再做測量</li>
-                        <li><span class="highlight-red">160 μL</span> Working solution + <span class="highlight-red">20 μL</span> BSA & 蛋白</li>
+                        <li>方案A：<span class="highlight-red">160 μL</span> Working sol. + <span class="highlight-red">20 μL</span> BSA & 蛋白</li>
+                        <li>方案B：<span class="highlight-red">200 μL</span> Working sol. + <span class="highlight-red">25 μL</span> BSA & 蛋白</li>
                         <li><span class="highlight-red">37°C</span> incubate <span class="highlight-red">30 分鐘</span>，測 <span class="highlight-red">562nm</span> 或 540-590nm</li>
                     </ul>
                 </div>
@@ -260,16 +269,16 @@
 
             <div class="result-box">
                 <div class="result-item">
-                    Working solution = <span class="value" id="valWS">3264</span> μL
+                    Working solution = <span class="value" id="valWS">0</span> μL
                     <div style="font-size: 0.85em; color: #555;">(Reagent A + B)</div>
                 </div>
                 <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
                 <div class="result-item">
-                    Reagent A = <span class="value" id="valA">3200</span> μL
+                    Reagent A = <span class="value" id="valA">0</span> μL
                     <div style="font-size: 0.85em; color: #555;">(大罐透明)</div>
                 </div>
                 <div class="result-item">
-                    Reagent B = <span class="value" id="valB">64</span> μL
+                    Reagent B = <span class="value" id="valB">0</span> μL
                     <div style="font-size: 0.85em; color: #555;">(小罐藍色)</div>
                 </div>
             </div>
@@ -339,23 +348,34 @@
 
 <script>
     function calculateVolumes() {
-        // 取得使用者輸入的各項數值，並加上防呆機制（轉為浮點數，若為 NaN 則帶入 0 或 1）
+        // 取得使用者輸入的各項數值
         let stdCount = parseFloat(document.getElementById('standardCount').value) || 0;
         let stdReps  = parseFloat(document.getElementById('standardReps').value) || 1;
         let smpCount = parseFloat(document.getElementById('sampleCount').value) || 0;
         let smpReps  = parseFloat(document.getElementById('sampleReps').value) || 1;
         
+        // 取得選擇的計算方案
+        let scheme = document.getElementById('calcScheme').value;
+        
         // 確保數值不為負數
         if (stdCount < 0) stdCount = 0;
-        if (stdReps < 1) stdReps = 1; // 重複次數最少為 1
+        if (stdReps < 1) stdReps = 1; 
         if (smpCount < 0) smpCount = 0;
-        if (smpReps < 1) smpReps = 1; // 重複次數最少為 1
+        if (smpReps < 1) smpReps = 1; 
 
         // 計算總反應次數 (每一孔為一次反應)
         let totalReactions = (stdCount * stdReps) + (smpCount * smpReps);
         
-        // 根據總反應次數計算 (單次需要 200 μL Reagent A)
-        let reagentA = totalReactions * 200;
+        let reagentA = 0;
+
+        // 根據選擇的方案決定 Reagent A 的基底用量
+        if (scheme === 'A') {
+            reagentA = totalReactions * 200;
+        } else if (scheme === 'B') {
+            reagentA = totalReactions * 250;
+        }
+
+        // Reagent B 統一維持 50:1 比例
         let reagentB = reagentA / 50;
         let totalWS = reagentA + reagentB;
 
