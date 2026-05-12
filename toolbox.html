@@ -59,10 +59,10 @@
 
     const COLORS = [
       "from-pink-200 to-pink-400",
-      "from-sky-200 to-sky-400",
-      "from-violet-200 to-violet-400",
+      "from-amber-200 to-amber-400",
       "from-emerald-200 to-emerald-400",
-      "from-amber-200 to-amber-400"
+      "from-sky-200 to-sky-400",
+      "from-violet-200 to-violet-400"
     ];
 
     function renderTools(list) {
@@ -70,7 +70,7 @@
       list.forEach((tool, i) => {
         const card = document.createElement("article");
         
-        // 顏色循環邏輯保持不變：第7個工具會自動使用第2種顏色 (Sky blue)
+        // 顏色循環邏輯保持不變
         const color = COLORS[i % COLORS.length];
         
         card.className = `relative bg-gradient-to-br ${color} p-5 rounded-2xl shadow-lg hover:-translate-y-1 hover:shadow-xl transition flex flex-col h-full`;
