@@ -772,7 +772,7 @@
 				</div>
 				<div class="result" id="wbcResult" style="display:none;"></div>
 				<div id="wbcVolumeCalc" style="display:none; margin-top: 20px;">
-					<h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積 → <span style="color: red;">(計算時，上面的計算務必切換單位為：個/µL)</span></h3>
+          <h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積</h3>
 					<div class="form-container">
 						<div class="form-row-inline">
 							<label data-text="目標細胞數量：">目標細胞數量：</label>
@@ -826,7 +826,7 @@
 				</div>
 				<div class="result" id="rbcResult" style="display:none;"></div>
 				<div id="rbcVolumeCalc" style="display:none; margin-top: 20px;">
-					<h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積 → <span style="color: red;">(計算時，上面的計算務必切換單位為：個/µL)</span></h3>
+          <h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積</h3>
 					<div class="form-container">
 						<div class="form-row-inline">
 							<label data-text="目標細胞數量：">目標細胞數量：</label>
@@ -1124,7 +1124,7 @@
         "科學記號表示：": "科學記號表示：",
         "cells/µL": "個/µL",
         "cells/mL": "個/mL",
-        "計算所需體積": "計算所需體積 → <span style='color: red;'>(計算時，上面的計算務必切換單位為：個/µL)</span>",
+        "計算所需體積": "計算所需體積",
         "目標細胞數量：": "目標細胞數量：",
         "基數": "基數",
         "次方": "次方",
@@ -1327,7 +1327,7 @@
         "科學記號表示：": "Scientific notation：",
         "cells/µL": "cells/µL",
         "cells/mL": "cells/mL",
-        "計算所需體積": "Calculate Required Volume → <span style='color: red;'>(When calculate, be sure to switch the unit to: cells/µL)</span>",
+        "計算所需體積": "Calculate Required Volume",
         "目標細胞數量：": "Target Cell Count：",
         "基數": "Base",
         "次方": "Exponent",
@@ -2205,8 +2205,15 @@
       }
 
       const unitText = document.getElementById("wbcUnit").selectedOptions[0].text;
-      const result = (count * dilution) / (squares * 0.1) * unit;
-      wbcConcentration = result;
+
+      // 1. 先固定算出 個/µL 的濃度
+      const baseResultUL = (count * dilution) / (squares * 0.1); 
+
+      // 2. 將全域變數永遠鎖定儲存 個/µL，給下一步計算體積用
+      wbcConcentration = baseResultUL; 
+
+      // 3. 顯示用的 result 再依照使用者選擇的 unit 放大
+      const result = baseResultUL * unit; 
       const sciNotation = result.toExponential(2);
       const sciParts = sciNotation.split('e');
       const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}<\/sup>`;
@@ -2310,8 +2317,15 @@
       }
 
       const unitText = document.getElementById("rbcUnit").selectedOptions[0].text;
-      const result = (count * dilution) / (squares * 0.04 * 0.1) * unit;
-      rbcConcentration = result;
+
+      // 1. 先固定算出 個/µL 的濃度
+      const baseResultUL = (count * dilution) / (squares * 0.04 * 0.1); 
+
+      // 2. 將全域變數永遠鎖定儲存 個/µL，給下一步計算體積用
+      rbcConcentration = baseResultUL; 
+
+      // 3. 顯示用的 result 再依照使用者選擇的 unit 放大
+      const result = baseResultUL * unit; 
       const sciNotation = result.toExponential(2);
       const sciParts = sciNotation.split('e');
       const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}<\/sup>`;
@@ -2595,18 +2609,38 @@
     }
 
     // 更新結果顯示
+    // 更新所有已顯示的結果文字
     function updateDisplayedResults() {
-        const massResult = document.getElementById('massResult'); if (massResult.style.display === 'block') calculateMass();
-        const dilutionResult = document.getElementById('dilutionResult'); if (dilutionResult.style.display === 'block') calculateDilution();
-        const acidBaseResult = document.getElementById('acidBaseResult'); if (acidBaseResult.style.display === 'block') calculateAcidBase();
-        const solprepResult = document.getElementById('solprepResult'); if (solprepResult.style.display === 'block') calculateSolPrep();
-        const animalResult = document.getElementById('animalResult'); if (animalResult.style.display === 'block') calculateAnimalDose();
-        const animalResult2 = document.getElementById('animalResult2'); if (animalResult2.style.display === 'block') calculateAnimalDose2();
-        const primerResult = document.getElementById('primerResult'); if (primerResult.style.display === 'block') calcPrimer();
-        const diluteResult = document.getElementById('diluteResult'); if (diluteResult.style.display === 'block') calcDilute();
-        const ligationResult = document.getElementById('ligationResult'); if (ligationResult.style.display === 'block') calculateLigation();
-        const wbcResult = document.getElementById('wbcResult'); if (wbcResult.style.display === 'block') calculateWBC();
-        const rbcResult = document.getElementById('rbcResult'); if (rbcResult.style.display === 'block') calculateRBC();
+    // 基礎計算分頁
+    const massResult = document.getElementById('massResult'); if (massResult.style.display === 'block') calculateMass();
+    const dilutionResult = document.getElementById('dilutionResult'); if (dilutionResult.style.display === 'block') calculateDilution();
+    const acidBaseResult = document.getElementById('acidBaseResult'); if (acidBaseResult.style.display === 'block') calculateAcidBase();
+    const solprepResult = document.getElementById('solprepResult'); if (solprepResult.style.display === 'block') calculateSolPrep();
+    const animalResult = document.getElementById('animalResult'); if (animalResult.style.display === 'block') calculateAnimalDose();
+    const animalResult2 = document.getElementById('animalResult2'); if (animalResult2.style.display === 'block') calculateAnimalDose2();
+    const primerResult = document.getElementById('primerResult'); if (primerResult.style.display === 'block') calcPrimer();
+    const diluteResult = document.getElementById('diluteResult'); if (diluteResult.style.display === 'block') calcDilute();
+    const ligationResult = document.getElementById('ligationResult'); if (ligationResult.style.display === 'block') calculateLigation();
+
+    // 細胞計數 - WBC 部分
+    const wbcResult = document.getElementById('wbcResult'); 
+    if (wbcResult.style.display === 'block') calculateWBC();
+    
+    const wbcVolRes = document.getElementById('wbcVolumeResult'); 
+    if (wbcVolRes.style.display === 'block') calculateWBCVolume();
+    
+    const wbcBatchRes = document.getElementById('wbcBatchResult'); 
+    if (wbcBatchRes.style.display === 'block') calcWBCBatch();
+
+    // 細胞計數 - RBC 部分
+    const rbcResult = document.getElementById('rbcResult'); 
+    if (rbcResult.style.display === 'block') calculateRBC();
+    
+    const rbcVolRes = document.getElementById('rbcVolumeResult'); 
+    if (rbcVolRes.style.display === 'block') calculateRBCVolume();
+    
+    const rbcBatchRes = document.getElementById('rbcBatchResult'); 
+    if (rbcBatchRes.style.display === 'block') calcRBCBatch();
     }
 
     // 初始化
