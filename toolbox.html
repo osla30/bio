@@ -1,113 +1,314 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>科科計算工具箱</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科科計算工具箱</title>
+    <style>
+        /* 基礎重置與字體設定 */
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        /* 頂部標題列 */
+        header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+        }
+        header p {
+            margin-top: 0.5rem;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        /* 主內容容器 */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        /* 網格佈局 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+        /* 卡片樣式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border-top: 5px solid #ccc;
+        }
+        .card:nth-child(1) { border-top-color: #ff9a9e; } /* 基礎計算 */
+        .card:nth-child(2) { border-top-color: #a18cd1; } /* 膠體電泳 */
+        .card:nth-child(3) { border-top-color: #fad0c4; } /* Western Blot */
+        .card:nth-child(4) { border-top-color: #fbc2eb; } /* 分子生物 */
+
+        .card h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #f1f2f6;
+            padding-bottom: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 工具項目列表 */
+        .tool-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .tool-item {
+            background: #fafbfc;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .tool-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+            border-color: #d1d5da;
+        }
+        .tool-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.4rem;
+        }
+        .tool-desc {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        .tool-desc .sub-text {
+            display: block;
+            margin-top: 0.4rem;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+        
+        /* 按鈕區域 */
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .btn-open {
+            background-color: #ebf4ff;
+            color: #3182ce;
+            border-color: #bee3f8;
+        }
+        .btn-open:hover {
+            background-color: #3182ce;
+            color: white;
+        }
+        .btn-copy {
+            background-color: #f7fafc;
+            color: #4a5568;
+            border-color: #e2e8f0;
+        }
+        .btn-copy:hover {
+            background-color: #e2e8f0;
+            color: #2d3748;
+        }
+
+        /* 頁尾 */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+            font-size: 0.95rem;
+            margin-top: 2rem;
+        }
+        footer a {
+            color: #3182ce;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-pink-100 via-sky-100 to-violet-200 p-6">
-  <div class="max-w-6xl mx-auto">
-    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-      <div>
-        <h1 class="text-4xl font-extrabold text-violet-700 drop-shadow">科科計算工具箱</h1>
-        <p class="text-sm text-slate-600">小編自製網頁工具</p>
-      </div>
+<body>
+
+    <header>
+        <h1>科科計算工具箱</h1>
+        <p>小編自製網頁工具</p>
     </header>
 
-    <section class="mb-4">
-      <div class="flex flex-col sm:flex-row gap-3">
-        <div class="relative flex-1">
-          <input id="search" oninput="filterTools()" placeholder="🔍 搜尋標題或說明..."
-            class="w-full bg-white border-2 border-sky-300 rounded-xl px-4 py-3 shadow-md focus:outline-none focus:ring-2 focus:ring-sky-400" />
-        </div>
-        <div class="flex gap-2 items-center">
-          <button onclick="resetFilter()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-400 to-sky-600 text-white shadow hover:opacity-90 transition">重置</button>
-          <div id="count" class="text-sm text-slate-700 font-medium"></div>
-        </div>
-      </div>
-    </section>
+    <div class="container">
+        <div class="grid">
+            
+            <div class="card">
+                <h2>🧮 基礎計算與分子量</h2>
+                <div class="tool-list">
+                    <div class="tool-item">
+                        <div class="tool-title">科科計算器</div>
+                        <div class="tool-desc">各類科學計算：莫耳濃度、稀釋、酸鹼、動物投藥、細胞計數等</div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/biocalculate" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/biocalculate')">複製連結</button>
+                        </div>
+                    </div>
+                    <div class="tool-item">
+                        <div class="tool-title">常用化學藥品分子量查詢工具</div>
+                        <div class="tool-desc">常用化學藥品分子量查詢</div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/mwtool" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/mwtool')">複製連結</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <main>
-      <div id="toolGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-      <div id="noResult" class="hidden mt-8 text-center text-slate-500">❌ 找不到符合條件的工具。</div>
-    </main>
+            <div class="card">
+                <h2>🧬 蛋白質電泳 (PAGE)</h2>
+                <div class="tool-list">
+                    <div class="tool-item">
+                        <div class="tool-title">TGOne 鑄膠計算器</div>
+                        <div class="tool-desc">
+                            TGOne Buffer 鑄膠計算 (SDS-PAGE用)
+                            <span class="sub-text">
+                                仿 Bio-Rad TGX 快速凝膠試劑：<br>2X TGOne Buffer<br><br>
+                                也可適用傳統 2X 上下膠 Buffer：<br>
+                                2X 上膠 Buffer (0.25M Tris, 0.2% SDS, pH6.8)<br>
+                                2X 下膠 Buffer (0.75M Tris, 0.2% SDS, pH8.8)
+                            </span>
+                        </div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/tgonecalculate" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/tgonecalculate')">複製連結</button>
+                        </div>
+                    </div>
+                    <div class="tool-item">
+                        <div class="tool-title">Bio-Rad TGX 鑄膠計算器</div>
+                        <div class="tool-desc">
+                            Bio-Rad TGX 鑄膠計算 (SDS-PAGE用)
+                            <span class="sub-text">Bio-Rad TGX 快速凝膠試劑組-介紹：<br><a href="https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" target="_blank">產品網址參考</a></span>
+                        </div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/tgxcalculate" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/tgxcalculate')">複製連結</button>
+                        </div>
+                    </div>
+                    <div class="tool-item">
+                        <div class="tool-title">經典SDS-PAGE 鑄膠計算器</div>
+                        <div class="tool-desc">
+                            傳統經典 鑄膠計算 (SDS-PAGE用)
+                            <span class="sub-text">
+                                適用傳統 4X 上下膠 Buffer：<br>
+                                4X 上膠 Buffer (0.5M Tris, pH6.8)<br>
+                                4X 下膠 Buffer (1.5M Tris, pH8.8)<br>
+                                10% SDS
+                            </span>
+                        </div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/classicpagecalculate" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/classicpagecalculate')">複製連結</button>
+                        </div>
+                    </div>
+                    <div class="tool-item">
+                        <div class="tool-title">TGOne 抄寫紙本</div>
+                        <div class="tool-desc">TGOne 計算後抄寫小紙條 (SDS-PAGE用)</div>
+                        <div class="actions">
+                            <a href="https://drive.google.com/file/d/1ImMVqoS0MFTVE7sP_CGpgBiLzuiv7_ox/view" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://drive.google.com/file/d/1ImMVqoS0MFTVE7sP_CGpgBiLzuiv7_ox/view')">複製連結</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <footer class="mt-10 text-sm text-slate-600 text-center">
-      若喜歡，可自由 <span class="text-pink-600 font-semibold">Donate</span> 支持：
-      <a href="https://pse.is/4524sw" target="_blank" class="text-sky-600 underline hover:text-violet-600">https://pse.is/4524sw</a>
+            <div class="card">
+                <h2>🔬 西方墨點法 (Western Blot)</h2>
+                <div class="tool-list">
+                    <div class="tool-item">
+                        <div class="tool-title">BCA Working Solution 體積計算器</div>
+                        <div class="tool-desc">BCA Working Solution 體積計算</div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/wb/bcaworking" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/bcaworking')">複製連結</button>
+                        </div>
+                    </div>
+                    <div class="tool-item">
+                        <div class="tool-title">Bradford/BCA 蛋白質定量工具</div>
+                        <div class="tool-desc">蛋白質定量計算、Western Blot 樣本配製計算</div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/wb/proteinassay" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/proteinassay')">複製連結</button>
+                        </div>
+                    </div>
+                    <div class="tool-item">
+                        <div class="tool-title">Western Blot 條帶相對定量標準化工具</div>
+                        <div class="tool-desc">輸入條帶灰度值，即可進行相對定量與標準化分析</div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/wb/wbnormal" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/wbnormal')">複製連結</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🧬 核酸分析 (PCR)</h2>
+                <div class="tool-list">
+                    <div class="tool-item">
+                        <div class="tool-title">qPCR 相對定量分析工具</div>
+                        <div class="tool-desc">以 2^(-ΔΔCt) 方法，進行 qPCR 相對定量分析</div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/q/qpcr" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/q/qpcr')">複製連結</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        若喜歡，可自由 Donate 支持：<a href="https://pse.is/4524sw" target="_blank">https://pse.is/4524sw</a><br>
     </footer>
-  </div>
 
-  <script>
-    const TOOLS = [
-      { title: "科科計算器", url: "https://osla30.github.io/bio/biocalculate", description: "各類科學計算：<br>莫耳濃度、稀釋、酸鹼、動物投藥、細胞計數等" },
-      { title: "常用化學藥品分子量查詢工具", url: "https://osla30.github.io/bio/mwtool", description: "常用化學藥品分子量查詢" },
-      { title: "TGOne 抄寫紙本", url: "https://drive.google.com/file/d/1ImMVqoS0MFTVE7sP_CGpgBiLzuiv7_ox/view", description: "TGOne 計算後抄寫小紙條 (SDS-PAGE用)" },
-      { title: "TGOne 鑄膠計算器", url: "https://osla30.github.io/bio/tgonecalculate", description: "TGOne Buffer 鑄膠計算 (SDS-PAGE用)<br><br>仿 Bio-Rad TGX 快速凝膠試劑：<br>2X TGOne Buffer<br><br>也可適用傳統 2X 上下膠 Buffer：<br>2X 上膠 Buffer (0.25M Tris, 0.2% SDS, pH6.8)<br>2X 下膠 Buffer (0.75M Tris, 0.2% SDS, pH8.8)" },
-      { title: "Bio-Rad TGX 鑄膠計算器", url: "https://osla30.github.io/bio/tgxcalculate", description: "Bio-Rad TGX 鑄膠計算 (SDS-PAGE用)<br><br>Bio-Rad TGX 快速凝膠試劑組-介紹：https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" },
-      { title: "經典SDS-PAGE 鑄膠計算器", url: "https://osla30.github.io/bio/classicpagecalculate", description: "傳統經典 鑄膠計算 (SDS-PAGE用)<br><br>適用傳統 4X 上下膠 Buffer：<br>4X 上膠 Buffer (0.5M Tris, pH6.8)<br>4X 下膠 Buffer (1.5M Tris, pH8.8)<br>10% SDS" },
-      { title: "BCA Working Solution 體積計算器", url: "https://osla30.github.io/bio/wb/bcaworking", description: "BCA Working Solution 體積計算" },
-      { title: "Bradford/BCA 蛋白質定量工具", url: "https://osla30.github.io/bio/wb/proteinassay", description: "蛋白質定量計算、Western Blot 樣本配製計算" },
-      { title: "Western Blot 條帶相對定量標準化工具", url: "https://osla30.github.io/bio/wb/wbnormal", description: "輸入條帶灰度值，即可進行相對定量與標準化分析<br><br><br><br><br>" },
-      { title: "qPCR 相對定量分析工具", url: "https://osla30.github.io/bio/q/qpcr", description: "以 2^(-ΔΔCt) 方法，進行 qPCR 相對定量分析<br><br><br><br><br>" }
-    ];
-
-    const toolGrid = document.getElementById("toolGrid");
-    const countEl = document.getElementById("count");
-    const noResult = document.getElementById("noResult");
-
-    const COLORS = [
-      "from-pink-200 to-pink-400",
-      "from-amber-200 to-amber-400",
-      "from-emerald-200 to-emerald-400",
-      "from-sky-200 to-sky-400",
-      "from-violet-200 to-violet-400"
-    ];
-
-    function renderTools(list) {
-      toolGrid.innerHTML = "";
-      list.forEach((tool, i) => {
-        const card = document.createElement("article");
-        
-        // 顏色循環邏輯保持不變
-        const color = COLORS[i % COLORS.length];
-        
-        card.className = `relative bg-gradient-to-br ${color} p-5 rounded-2xl shadow-lg hover:-translate-y-1 hover:shadow-xl transition flex flex-col h-full`;
-        card.innerHTML = `
-          <div class="flex-1">
-            <h2 class="font-bold text-xl text-slate-800 drop-shadow">${tool.title}</h2>
-            <p class="text-sm text-slate-700 mt-2">${tool.description}</p>
-          </div>
-          <div class="mt-4 flex justify-end gap-3 self-end">
-            <a href="${tool.url}" target="_blank" class="px-4 py-2 rounded-lg bg-white/80 text-sky-700 font-medium shadow hover:bg-white">開啟工具</a>
-            <button onclick="copyToClipboard('${tool.url}')" class="px-4 py-2 rounded-lg bg-white/80 text-pink-700 font-medium shadow hover:bg-white">複製連結</button>
-          </div>`;
-        toolGrid.appendChild(card);
-      });
-      countEl.textContent = `共 ${list.length} 個工具`;
-      noResult.classList.toggle("hidden", list.length > 0);
-    }
-
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        alert("已複製到剪貼簿：" + text);
-      });
-    }
-
-    function filterTools() {
-      const q = document.getElementById("search").value.trim().toLowerCase();
-      const filtered = TOOLS.filter(t => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q));
-      renderTools(filtered);
-    }
-
-    function resetFilter() {
-      document.getElementById("search").value = "";
-      renderTools(TOOLS);
-    }
-
-    // 初始化
-    renderTools(TOOLS);
-  </script>
+    <script>
+        function copyToClipboard(url) {
+            if (url === '#') {
+                alert('這個工具的網址尚未設定喔！');
+                return;
+            }
+            navigator.clipboard.writeText(url).then(function() {
+                alert('已成功複製連結：\n' + url);
+            }, function(err) {
+                alert('複製失敗，請手動複製網址。');
+            });
+        }
+    </script>
 </body>
 </html>
