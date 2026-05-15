@@ -138,7 +138,15 @@
             background-color: #e2e8f0;
             color: #2d3748;
         }
-
+        /* 工具描述內的連結樣式設定（包含未點擊與已點擊） */
+        .sub-text a, .sub-text a:visited {
+            color: #3182ce; /* 保持藍色 */
+            text-decoration: none; /* 預設不顯示底線，若想要底線可改為 underline */
+        }
+        
+        .sub-text a:hover {
+            text-decoration: underline; /* 滑鼠移過去時顯示底線 */
+        }
         /* 頁尾 */
         footer {
             text-align: center;
@@ -193,19 +201,19 @@
                 <h2>🧬 蛋白質電泳 (PAGE)</h2>
                 <div class="tool-list">
                     <div class="tool-item">
-                        <div class="tool-title">TGOne 鑄膠計算器</div>
+                        <div class="tool-title">經典SDS-PAGE 鑄膠計算器</div>
                         <div class="tool-desc">
-                            TGOne Buffer 鑄膠計算 (SDS-PAGE用)
+                            傳統經典 鑄膠計算 (SDS-PAGE用)
                             <span class="sub-text">
-                                仿 Bio-Rad TGX 快速凝膠試劑：<br>2X TGOne Buffer<br><br>
-                                也可適用傳統 2X 上下膠 Buffer：<br>
-                                2X 上膠 Buffer (0.25M Tris, 0.2% SDS, pH6.8)<br>
-                                2X 下膠 Buffer (0.75M Tris, 0.2% SDS, pH8.8)
+                                適用傳統 4X 上下膠 Buffer：<br>
+                                4X 上膠 Buffer (0.5M Tris, pH6.8)<br>
+                                4X 下膠 Buffer (1.5M Tris, pH8.8)<br>
+                                10% SDS
                             </span>
                         </div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/tgonecalculate" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/tgonecalculate')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/classicpagecalculate" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/classicpagecalculate')">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
@@ -220,19 +228,19 @@
                         </div>
                     </div>
                     <div class="tool-item">
-                        <div class="tool-title">經典SDS-PAGE 鑄膠計算器</div>
+                        <div class="tool-title">TGOne 鑄膠計算器</div>
                         <div class="tool-desc">
-                            傳統經典 鑄膠計算 (SDS-PAGE用)
+                            TGOne Buffer 鑄膠計算 (SDS-PAGE用)
                             <span class="sub-text">
-                                適用傳統 4X 上下膠 Buffer：<br>
-                                4X 上膠 Buffer (0.5M Tris, pH6.8)<br>
-                                4X 下膠 Buffer (1.5M Tris, pH8.8)<br>
-                                10% SDS
+                                仿 Bio-Rad TGX 快速凝膠試劑：<br>2X TGOne Buffer<br><br>
+                                也可適用傳統 2X 上下膠 Buffer：<br>
+                                2X 上膠 Buffer (0.25M Tris, 0.2% SDS, pH6.8)<br>
+                                2X 下膠 Buffer (0.75M Tris, 0.2% SDS, pH8.8)
                             </span>
                         </div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/classicpagecalculate" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/classicpagecalculate')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/tgonecalculate" target="_blank" class="btn btn-open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/tgonecalculate')">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
