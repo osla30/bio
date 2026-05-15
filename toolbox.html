@@ -35,12 +35,12 @@
         }
         /* 標題作者連結樣式設定 */
         header p a, header p a:visited {
-            color: inherit; /* 繼承父元素顏色，維持跟 "by" 一樣 */
-            text-decoration: none; /* 預設不顯示底線 */
+            color: inherit; 
+            text-decoration: none; 
         }
         
         header p a:hover {
-            text-decoration: underline; /* 滑鼠移過去時顯示底線 */
+            text-decoration: underline; 
         }
         /* 主內容容器 */
         .container {
@@ -51,10 +51,10 @@
         /* 網格佈局 */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
         }
-        /* 卡片樣式 */
+        /* 卡片樣式 - 加入極淡背景色 */
         .card {
             background: white;
             border-radius: 12px;
@@ -62,10 +62,14 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.04);
             border-top: 5px solid #ccc;
         }
-        .card:nth-child(1) { border-top-color: #ff9a9e; } /* 基礎計算 */
-        .card:nth-child(2) { border-top-color: #a18cd1; } /* 膠體電泳 */
-        .card:nth-child(3) { border-top-color: #fad0c4; } /* Western Blot */
-        .card:nth-child(4) { border-top-color: #fbc2eb; } /* 分子生物 */
+        /* 1. 基礎計算 - 藍色系 */
+        .card:nth-child(1) { border-top-color: #3498db; background-color: #f0f7ff; } 
+        /* 2. 蛋白質電泳 - 修改為綠色系背景與邊框 */
+        .card:nth-child(2) { border-top-color: #27ae60; background-color: #f0fff4; } 
+        /* 3. Western Blot - 淺橘背景 */
+        .card:nth-child(3) { border-top-color: #fad0c4; background-color: #fffaf0; } 
+        /* 4. 核酸分析 - 淺粉背景 */
+        .card:nth-child(4) { border-top-color: #fbc2eb; background-color: #fff9fe; } 
 
         .card h2 {
             margin-top: 0;
@@ -83,7 +87,7 @@
             gap: 1.5rem;
         }
         .tool-item {
-            background: #fafbfc;
+            background: white; 
             border: 1px solid #e1e4e8;
             border-radius: 8px;
             padding: 1rem;
@@ -147,14 +151,13 @@
             background-color: #e2e8f0;
             color: #2d3748;
         }
-        /* 工具描述內的連結樣式設定（包含未點擊與已點擊） */
         .sub-text a, .sub-text a:visited {
-            color: #3182ce; /* 保持藍色 */
-            text-decoration: none; /* 預設不顯示底線，若想要底線可改為 underline */
+            color: #3182ce; 
+            text-decoration: none; 
         }
         
         .sub-text a:hover {
-            text-decoration: underline; /* 滑鼠移過去時顯示底線 */
+            text-decoration: underline; 
         }
         /* 頁尾 */
         footer {
@@ -172,6 +175,30 @@
         footer a:hover {
             text-decoration: underline;
         }
+        /* 針對行動裝置的優化 */
+@media (max-width: 480px) {
+    /* 讓格線在極窄螢幕下也能適配 */
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* 讓按鈕在手機上水平鋪滿，方便單手點擊 */
+    .actions {
+        flex-direction: column; /* 按鈕改為上下堆疊 */
+        gap: 0.8rem;
+    }
+    
+    .btn {
+        text-align: center;
+        padding: 0.8rem; /* 增加高度，更好點 */
+        font-size: 1rem; /* 字體稍微放大一點點 */
+    }
+
+    /* 處理 TGOne 特殊的「抄寫紙本」按鈕 */
+    .actions .btn:first-child {
+        margin-right: 0 !important;
+    }
+}
     </style>
 </head>
 <body>
