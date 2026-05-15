@@ -33,6 +33,15 @@
             opacity: 0.9;
             font-size: 1.1rem;
         }
+        /* 標題作者連結樣式設定 */
+        header p a, header p a:visited {
+            color: inherit; /* 繼承父元素顏色，維持跟 "by" 一樣 */
+            text-decoration: none; /* 預設不顯示底線 */
+        }
+        
+        header p a:hover {
+            text-decoration: underline; /* 滑鼠移過去時顯示底線 */
+        }
         /* 主內容容器 */
         .container {
             max-width: 1200px;
@@ -169,7 +178,7 @@
 
     <header>
         <h1>科科計算工具箱</h1>
-        <p>by <a href="https://www.youtube.com/@GrandpaCan" target="_blank" class="btn btn-open">我阿公都會</a></p>
+        <p>by <a href="https://www.youtube.com/@GrandpaCan" target="_blank">我阿公都會</a></p>
     </header>
 
     <div class="container">
