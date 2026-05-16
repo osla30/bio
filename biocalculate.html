@@ -1789,7 +1789,7 @@
         d = d / 10;
       }
 
-      showResult('animalResult2', `${translations[currentLanguage]['投藥量：']}${d.toFixed(3)} mL`);
+      showResult('animalResult2', `${translations[currentLanguage]['投藥量：']}${d.toFixed(5)} mL (${(d * 1000).toFixed(2)} μL)`);
     }
 
     function clearAnimal2() {
