@@ -1100,17 +1100,49 @@
         const hkpName = hkpObj ? hkpObj.name : "HKP"; 
 
         const rows = [];
-        rows.push(['Protein_Name', 'HKP_Name', 'Mode', 'Group', 'N', 'Mean', 'SEM', 'P_value', 'Significance', 'Normalized_Values_Fold', 'Target_Raw_Input', 'HKP_Raw_Input'].join(','));
 
+        // 1. 找出所有數據中最大的樣本數 (Max N)，用來決定要展開多少個欄位
+        let maxN = 0;
+        window.lastCalcResults.forEach(item => {
+            item.stats.forEach(s => {
+                if (s.n > maxN) maxN = s.n;
+            });
+        });
+
+        // 2. 建立固定的基礎標題
+        const baseHeaders = ['Protein_Name', 'HKP_Name', 'Mode', 'Group', 'N', 'Mean', 'SEM', 'P_value', 'Significance'];
+        
+        // 3. 動態產生展開的標題 (例如: Norm_Value_1, Norm_Value_2...)
+        const normHeaders = [];
+        const targetHeaders = [];
+        const hkpHeaders = [];
+        for (let i = 1; i <= maxN; i++) {
+            normHeaders.push(`Norm_Value_Fold_${i}`);
+            targetHeaders.push(`Target_Raw_${i}`);
+            hkpHeaders.push(`HKP_Raw_${i}`);
+        }
+
+        // 組合所有標題並加入第一列
+        const allHeaders = [...baseHeaders, ...normHeaders, ...targetHeaders, ...hkpHeaders];
+        rows.push(allHeaders.join(','));
+
+        // 4. 填寫每一筆資料
         window.lastCalcResults.forEach(item => {
             item.stats.forEach((s, idx) => {
-                const safeNorm = `"${s.rawStr}"`; 
-                const safeRawInput = `"${s.rawInput}"`; 
-                const safeHkpInput = `"${s.hkpRawInput}"`; 
                 const star = item.stars[idx] || '';
                 const pVal = s.pText;
                 
-                rows.push([
+                // 將原本合併的字串拆解回陣列
+                const normArr = s.rawStr ? s.rawStr.split(', ') : [];
+                const targetArr = s.rawInput ? s.rawInput.split('; ') : [];
+                const hkpArr = s.hkpRawInput ? s.hkpRawInput.split('; ') : [];
+
+                // 為了確保 CSV 格式對齊，若該組樣本數小於 maxN，則補上空字串
+                const paddedNorm = Array.from({length: maxN}, (_, i) => normArr[i] || "");
+                const paddedTarget = Array.from({length: maxN}, (_, i) => targetArr[i] || "");
+                const paddedHkp = Array.from({length: maxN}, (_, i) => hkpArr[i] || "");
+
+                const rowData = [
                     `"${item.protein}"`,
                     `"${hkpName}"`,
                     `"${modeStr}"`,
@@ -1119,11 +1151,13 @@
                     s.mean.toFixed(4),
                     s.sem.toFixed(4),
                     `"${pVal}"`,
-                    star,
-                    safeNorm,
-                    safeRawInput,
-                    safeHkpInput
-                ].join(','));
+                    `"${star}"`,
+                    ...paddedNorm,
+                    ...paddedTarget,
+                    ...paddedHkp
+                ];
+
+                rows.push(rowData.join(','));
             });
         });
 
