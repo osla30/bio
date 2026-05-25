@@ -43,21 +43,19 @@
         }
 
         .btn-download {
-            background: #2563eb;       /* 藍色背景，與深灰色的語言按鈕區隔 */
-            color: white;              /* 白色文字 */
+            background: #2563eb;
+            color: white;
             font-size: 0.9em;
-            text-decoration: none;     /* 去除超連結底線 */
-            padding: 8px 12px;         /* 內距，讓它看起來有份量 */
-            border-radius: 6px;        /* 圓角 */
-            white-space: nowrap;       /* 強制不換行 */
-            display: inline-flex;      /* 讓內容置中 */
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            display: inline-flex;
             align-items: center;
             transition: opacity 0.2s;
             font-weight: normal;
         }
-        .btn-download:hover {
-            opacity: 0.9;              /* 滑鼠懸停時的效果 */
-        }
+        .btn-download:hover { opacity: 0.9; }
 
         .lang-btn { 
             background: #374151; 
@@ -175,7 +173,6 @@
             color: #374151;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
-        /* Active State */
         .mode-switch input:checked + span {
             background: var(--primary);
             color: white;
@@ -183,14 +180,8 @@
             box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
             transform: translateY(-1px);
         }
-        .mode-switch span:hover {
-            border-color: #9ca3af;
-        }
-        .mode-switch input:checked + span:hover {
-            border-color: var(--primary);
-            opacity: 0.95;
-        }
-
+        .mode-switch span:hover { border-color: #9ca3af; }
+        .mode-switch input:checked + span:hover { border-color: var(--primary); opacity: 0.95; }
     </style>
 </head>
 <body>
@@ -202,10 +193,9 @@
             
             <div style="display:flex; gap:10px; align-items:center;">
                 <a href="https://drive.google.com/file/d/1uPHM4LgY64EcgNQv_eQTj8q4e9m9Ku4P/view?usp=sharing" class="btn-download" target="_blank" data-i18n="btn_download">下載離線版</a>
-                
                 <button class="lang-btn" onclick="toggleLang()">EN / 中</button>
             </div>
-            </div>
+        </div>
         
         <div class="toolbar">
             <button class="btn-add" onclick="addProtein()" data-i18n="btn_add_protein">+ 新增蛋白 (Protein)</button>
@@ -310,7 +300,11 @@
             'posthoc_label': 'Post-hoc Test (多重比較策略):',
             'err_group_name_empty': '組別名稱不能為空',
             'err_hkp_missing': '以下組別缺少 HKP 數據',
-            'err_paired_mismatch': '配對模式下，所有組別的樣本數必須相同'
+            'err_paired_mismatch': '配對模式下，所有組別的樣本數必須相同',
+            'warn_paired_title': '進階統計提示',
+            'warn_paired_msg': '您正在使用多組配對 (Paired, n≥3) 模式。本工具的 RM-ANOVA 未進行 Mauchly\'s 球狀性檢定 (Sphericity) 校正，且多重比較策略較為保守。若需發表高影響因子期刊，建議使用 GraphPad Prism 進行完整驗證。',
+            'warn_unpaired_title': '多重比較邊緣數值提示 (Multiple Comparisons Note)',
+            'warn_unpaired_msg': '本工具之 ANOVA 事後檢定 (Post-hoc) 採用保守的線性內插法。在特定樣本數下，給星門檻會略高於 GraphPad Prism。若您的 P-value 處於邊緣且判定為 ns (不顯著)，使用專業軟體驗證或許有機會達到顯著。'
         },
         'en': {
             'app_title': 'WB Band Relative Quantitation & Normalization Tool',
@@ -354,7 +348,11 @@
             'posthoc_label': 'Post-hoc Test (Strategy):',
             'err_group_name_empty': 'Group name cannot be empty',
             'err_hkp_missing': 'HKP data missing for group',
-            'err_paired_mismatch': 'Paired mode requires equal sample size across all groups'
+            'err_paired_mismatch': 'Paired mode requires equal sample size across all groups',
+            'warn_paired_title': 'Advanced Statistics Note',
+            'warn_paired_msg': 'You are using Paired mode with multiple groups (n≥3). The RM-ANOVA here does not apply Mauchly\'s sphericity test/corrections, and the post-hoc strategy is conservative. For high-impact publications, verification with GraphPad Prism is recommended.',
+            'warn_unpaired_title': 'Multiple Comparisons Note',
+            'warn_unpaired_msg': 'The post-hoc test employs a conservative linear interpolation method. For certain sample sizes, the critical thresholds are slightly stricter than GraphPad Prism. If your result is marginally non-significant (ns), verification with specialized software might yield significance.'
         }
     };
 
@@ -520,7 +518,6 @@
         ];
         state.nextId = 3; 
         renderAll();
-        // Default example to Unpaired because the data has variation
         document.querySelector('input[name="mode"][value="unpaired"]').checked = true;
         updateModeInfo();
         
@@ -567,9 +564,9 @@
         const phContainer = document.getElementById('posthoc-container');
         if (phContainer) {
            if (state.groups.length > 2) {
-              phContainer.style.display = 'block'; // 超過兩組 -> 顯示
+              phContainer.style.display = 'block'; 
            } else {
-              phContainer.style.display = 'none';  // 只有兩組 (或更少) -> 隱藏
+              phContainer.style.display = 'none';  
            }
         }
 
@@ -604,12 +601,10 @@
     }
 
     function validateData(isPaired, parsed, hkpObj) {
-        // 1. Check Empty Group Names
         state.groups.forEach(g => {
             if (!g.trim()) throw new Error(t('err_group_name_empty'));
         });
 
-        // 2. Check HKP Data Missing
         state.groups.forEach(g => {
              const hkpVals = hkpObj.data[g];
              if (!hkpVals || !hkpVals.trim()) {
@@ -617,10 +612,7 @@
              }
         });
 
-        // 3. Paired Mode Strict Check (All groups must have equal sample size)
         if (isPaired) {
-            // Retrieve lengths from the parsed object to be safe, but we need to check RAW inputs first or during parsing.
-            // Let's do a quick pre-check based on line counts of HKP
             const firstGroup = state.groups[0];
             const firstLen = hkpObj.data[firstGroup].trim().split(/[\s,]+/).filter(n => n).length;
             
@@ -639,19 +631,53 @@
         resDiv.innerHTML = '';
         window.lastCalcResults = [];
 
-        // Check Mode
         const mode = document.querySelector('input[name="mode"]:checked').value;
         const isPaired = (mode === 'paired');
 
         const hkpObj = state.proteins.find(p => p.isHkp);
         if (!hkpObj) return alert(t('alert_select_hkp'));
 
-        // --- VALIDATION STEP ---
         try {
-             // We pass a dummy 'parsed' here or just use raw state for validation
              validateData(isPaired, null, hkpObj);
         } catch(e) {
              return alert(e.message);
+        }
+
+        // --- DYNAMIC WARNING UI (Groups >= 3) ---
+        if (state.groups.length >= 3) {
+            let warnTitle = '';
+            let warnMsg = '';
+            let borderColor = '';
+            let icon = '';
+
+            if (isPaired) {
+                // Paired 模式：嚴厲警告 (橘紅色)
+                warnTitle = t('warn_paired_title');
+                warnMsg = t('warn_paired_msg');
+                borderColor = '#f59e0b';
+                icon = '⚠️';
+            } else {
+                // Unpaired 模式：溫和提示 (藍色)
+                warnTitle = t('warn_unpaired_title');
+                warnMsg = t('warn_unpaired_msg');
+                borderColor = '#3b82f6';
+                icon = 'ℹ️';
+            }
+
+            const warnHtml = `
+                <div style="background-color: #f8fafc; border-left: 4px solid ${borderColor}; padding: 15px; margin-bottom: 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="display: flex; align-items: flex-start;">
+                        <span style="font-size: 1.3em; margin-right: 12px; line-height: 1.2;">${icon}</span>
+                        <div>
+                            <strong style="color: #1e293b;">${warnTitle}</strong>
+                            <p style="margin: 5px 0 0; font-size: 0.9em; color: #475569; line-height: 1.5;">
+                                ${warnMsg}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            resDiv.innerHTML += warnHtml;
         }
 
         const parsed = {};
@@ -670,7 +696,6 @@
             const target = parsed[p.id];
 
             try {
-                // 1. Calculate Raw Ratios (Target / HKP)
                 const rawRatios = {};
                 state.groups.forEach(g => {
                     const tVal = target.vals[g];
@@ -682,7 +707,6 @@
                     });
                 });
 
-                // 2. Normalization Strategy
                 const ctrlG = state.groups[0];
                 const ctrlRawRatios = rawRatios[ctrlG];
                 if (ctrlRawRatios.length === 0) throw new Error(t('err_ctrl_empty'));
@@ -725,18 +749,14 @@
                     });
                 });
 
-                // 3. Statistics
                 let stars = Array(state.groups.length).fill('');
                 let detailsHTML = "";
                 let pDisplay = "";
                 const allRawVals = state.groups.map(g => rawRatios[g]); 
 
-                // Note text logic
                 const noteText = "Note: Raw band intensities were normalized to housekeeping proteins (Target/HKP) for statistical analysis. Fold change relative to control was used only for data presentation.";
-                // Format Q values for display helper
                 const fmtQ = (v) => (typeof v === 'number' ? v.toFixed(2) : '-');
 
-                // Two Groups Logic
                 if (state.groups.length === 2) {
                     const raw0 = rawRatios[state.groups[0]];
                     const raw1 = rawRatios[state.groups[1]];
@@ -747,7 +767,6 @@
                         p = pairedTtest(raw0, raw1);
                         methodStr = t('paired_t');
                     } else {
-                        // Welch's t-test for Unpaired
                         p = welchTtest(raw0, raw1);
                         methodStr = t('unpaired_t');
                     }
@@ -765,21 +784,17 @@
                     renderCard(target.name, stats, stars, detailsHTML, resDiv, maxY, []);
                 
                 } else {
-                    // === Multi-group Logic (ANOVA) ===
-                    const postHocMethod = document.getElementById('posthoc-method').value; // 'dunnett' or 'tukey'
-                    let pairwiseSig = []; // For Tukey lines
+                    const postHocMethod = document.getElementById('posthoc-method').value; 
+                    let pairwiseSig = []; 
 
                     if (isPaired) {
-                        // RM-ANOVA for Paired Multi-group
                         const k = state.groups.length; 
                         const n = allRawVals[0].length; 
                         
-                        // Check equal N
                         for(let g of state.groups) {
                             if(rawRatios[g].length !== n) throw new Error("RM-ANOVA requires equal sample size.");
                         }
 
-                        // Calculate RM-ANOVA Stats
                         let grandSum = 0;
                         let grandN = 0;
                         allRawVals.forEach(arr => arr.forEach(v => { grandSum += v; grandN++; }));
@@ -847,7 +862,6 @@
                                     </div>
                                 `;
                             } else {
-                                // === Paired Tukey ===
                                 const q05 = getTukeyQ(dfError, kVal, 0.05);
                                 const q01 = getTukeyQ(dfError, kVal, 0.01);
                                 const q001 = getTukeyQ(dfError, kVal, 0.001);
@@ -856,7 +870,6 @@
                                     for (let j = i + 1; j < kVal; j++) {
                                         const m1 = jStat.mean(allRawVals[i]);
                                         const m2 = jStat.mean(allRawVals[j]);
-                                        // Tukey SE for RM = sqrt(MSE/n)
                                         const se = Math.sqrt(msError / n); 
                                         const qCalc = Math.abs(m1 - m2) / se;
                                         
@@ -891,7 +904,6 @@
                         }
 
                     } else {
-                        // Unpaired: One-Way ANOVA
                         const fScore = jStat.anovafscore(allRawVals);
                         const df1 = state.groups.length - 1;
                         const nTotal = stats.reduce((acc, s) => acc + s.n, 0);
@@ -941,7 +953,6 @@
                                     </div>
                                 `;
                             } else {
-                                // === Unpaired Tukey ===
                                 const q05 = getTukeyQ(df2, kVal, 0.05);
                                 const q01 = getTukeyQ(df2, kVal, 0.01);
                                 const q001 = getTukeyQ(df2, kVal, 0.001);
@@ -953,7 +964,6 @@
                                         const n1 = allRawVals[i].length;
                                         const n2 = allRawVals[j].length;
                                         
-                                        // Tukey-Kramer SE = sqrt( (MSE/2) * (1/n1 + 1/n2) )
                                         const se = Math.sqrt( (mse/2) * (1/n1 + 1/n2) );
                                         const qCalc = Math.abs(m1 - m2) / se;
 
@@ -996,22 +1006,36 @@
         });
     }
 
-    // --- Linear Interpolation Function ---
+    // --- Linear Interpolation (最保守安全的直線內插法) ---
+    function getLinearInterpolatedValue(x, xVals, yVals) {
+        if (!xVals || xVals.length === 0) return 0;
+        if (x <= xVals[0]) return yVals[0];
+        if (x >= xVals[xVals.length - 1]) return yVals[yVals.length - 1];
+        
+        const exactIdx = xVals.indexOf(x);
+        if (exactIdx !== -1) return yVals[exactIdx];
+
+        for (let i = 0; i < xVals.length - 1; i++) {
+            if (x > xVals[i] && x < xVals[i+1]) {
+                const ratio = (x - xVals[i]) / (xVals[i+1] - xVals[i]);
+                return yVals[i] + ratio * (yVals[i+1] - yVals[i]);
+            }
+        }
+        return yVals[yVals.length - 1];
+    }
+
+    // --- Dunnett Interpolation Function ---
     function getInterpolatedQ(df, k, alpha) {
-        // 選擇對應的表
         let table = null;
         if (alpha === 0.05) table = DUNNETT_D_TABLE_05;
         else if (alpha === 0.01) table = DUNNETT_D_TABLE_01;
         else if (alpha === 0.001) table = DUNNETT_D_TABLE_001;
         else return '-';
 
-        // 呼叫 ooo14 的核心內插邏輯
         return getCriticalValue(table, k, df);
     }
 
-    // --- ooo14 的核心內插邏輯 (完全移植) ---
     function getCriticalValue(table, k, df) {
-        // 1. 處理組數 (k)
         const definedKs = Object.keys(table).map(Number).sort((a, b) => a - b);
         let targetK = k;
         if (k > definedKs[definedKs.length - 1]) targetK = definedKs[definedKs.length - 1];
@@ -1022,70 +1046,34 @@
         }
         
         const dfTable = table[targetK];
-        const definedDFs = Object.keys(dfTable).map(Number).sort((a, b) => a - b);
+        if (!dfTable) return 999; // 極端防呆
+        const xVals = Object.keys(dfTable).map(Number).sort((a, b) => a - b);
+        const yVals = xVals.map(x => dfTable[x]);
         
-        // 2. 處理自由度 (df) - 線性內插
-        if (df <= definedDFs[0]) return dfTable[definedDFs[0]];
-        if (df >= definedDFs[definedDFs.length - 1]) return dfTable[definedDFs[definedDFs.length - 1]];
-        if (dfTable[df]) return dfTable[df];
-
-        let lowerDF = definedDFs[0];
-        let upperDF = definedDFs[definedDFs.length - 1];
-        
-        for (let i = 0; i < definedDFs.length - 1; i++) {
-            if (df > definedDFs[i] && df < definedDFs[i+1]) {
-                lowerDF = definedDFs[i];
-                upperDF = definedDFs[i+1];
-                break;
-            }
-        }
-        
-        const lowerVal = dfTable[lowerDF];
-        const upperVal = dfTable[upperDF];
-        
-        // 內插公式
-        const interpolatedVal = lowerVal + (df - lowerDF) * (upperVal - lowerVal) / (upperDF - lowerDF);
-        return interpolatedVal;
+        // 回歸最安全的直線內插
+        return getLinearInterpolatedValue(df, xVals, yVals);
     }
 
     // --- Tukey Interpolation Function ---
     function getTukeyQ(df, k, alpha) {
         const table = TUKEY_Q[alpha];
+        // 如果表不存在，或者可用數據不足，直接回傳 '-'
         if (!table) return '-';
         
-        // k must be mapped to table key. Table supports up to k=10 directly.
-        // For simple usage, we clamp k to available keys (or max key in sub-table)
-        // Note: Real Tukey tables are complex, here we assume k <= 10 or clamp to max for safety in this demo
         const maxK = 15; 
-        
-        // Validation for k
         if (k > maxK) return '-';
-
         const useK = Math.min(k, maxK);
 
-        const availDfs = Object.keys(table).map(Number).sort((a,b)=>a-b);
+        const rawXVals = Object.keys(table).map(Number).sort((a,b)=>a-b);
+        const validPairs = rawXVals.map(x => ({ x: x, y: table[x][useK] })).filter(p => p.y !== undefined);
+        
+        if (validPairs.length < 2) return '-';
 
-        if (df <= availDfs[0]) return table[availDfs[0]][useK] || '-';
-        if (df >= availDfs[availDfs.length - 1]) return table[availDfs[availDfs.length - 1]][useK] || '-';
+        const xVals = validPairs.map(p => p.x);
+        const yVals = validPairs.map(p => p.y);
 
-        let lowerDf = availDfs[0];
-        let upperDf = availDfs[availDfs.length - 1];
-
-        for (let i = 0; i < availDfs.length - 1; i++) {
-            if (df >= availDfs[i] && df <= availDfs[i+1]) {
-                lowerDf = availDfs[i];
-                upperDf = availDfs[i+1];
-                break;
-            }
-        }
-
-        const qLow = table[lowerDf][useK];
-        const qHigh = table[upperDf][useK];
-
-        if (qLow === undefined || qHigh === undefined) return '-';
-
-        const ratio = (df - lowerDf) / (upperDf - lowerDf);
-        return qLow + ratio * (qHigh - qLow);
+        // 回歸最安全的直線內插
+        return getLinearInterpolatedValue(df, xVals, yVals);
     }
 
     // --- ENHANCED CSV EXPORT ---
@@ -1094,25 +1082,20 @@
             alert(curLang === 'zh' ? "請先執行運算" : "Please calculate first");
             return;
         }
+        
         const mode = document.querySelector('input[name="mode"]:checked').value;
         const modeStr = mode === 'paired' ? 'Paired' : 'Unpaired';
         const hkpObj = state.proteins.find(p => p.isHkp);
         const hkpName = hkpObj ? hkpObj.name : "HKP"; 
 
         const rows = [];
-
-        // 1. 找出所有數據中最大的樣本數 (Max N)，用來決定要展開多少個欄位
         let maxN = 0;
         window.lastCalcResults.forEach(item => {
-            item.stats.forEach(s => {
-                if (s.n > maxN) maxN = s.n;
-            });
+            item.stats.forEach(s => { if (s.n > maxN) maxN = s.n; });
         });
 
-        // 2. 建立固定的基礎標題
         const baseHeaders = ['Protein_Name', 'HKP_Name', 'Mode', 'Group', 'N', 'Mean', 'SEM', 'P_value', 'Significance'];
         
-        // 3. 動態產生展開的標題 (例如: Norm_Value_1, Norm_Value_2...)
         const normHeaders = [];
         const targetHeaders = [];
         const hkpHeaders = [];
@@ -1122,26 +1105,29 @@
             hkpHeaders.push(`HKP_Raw_${i}`);
         }
 
-        // 組合所有標題並加入第一列
-        const allHeaders = [...baseHeaders, ...normHeaders, ...targetHeaders, ...hkpHeaders];
+        // --- 修正點 1: 使用 ... 展開 ---
+        const allHeaders = [
+            ...baseHeaders,
+            ...normHeaders,
+            ...targetHeaders,
+            ...hkpHeaders
+        ];
         rows.push(allHeaders.join(','));
 
-        // 4. 填寫每一筆資料
         window.lastCalcResults.forEach(item => {
             item.stats.forEach((s, idx) => {
                 const star = item.stars[idx] || '';
                 const pVal = s.pText;
                 
-                // 將原本合併的字串拆解回陣列
                 const normArr = s.rawStr ? s.rawStr.split(', ') : [];
                 const targetArr = s.rawInput ? s.rawInput.split('; ') : [];
                 const hkpArr = s.hkpRawInput ? s.hkpRawInput.split('; ') : [];
 
-                // 為了確保 CSV 格式對齊，若該組樣本數小於 maxN，則補上空字串
                 const paddedNorm = Array.from({length: maxN}, (_, i) => normArr[i] || "");
                 const paddedTarget = Array.from({length: maxN}, (_, i) => targetArr[i] || "");
                 const paddedHkp = Array.from({length: maxN}, (_, i) => hkpArr[i] || "");
 
+                // --- 修正點 2: 使用 ... 展開 ---
                 const rowData = [
                     `"${item.protein}"`,
                     `"${hkpName}"`,
@@ -1188,13 +1174,12 @@
         const meanDiff = jStat.mean(diffs);
         const sdDiff = jStat.stdev(diffs, true); 
         const se = sdDiff / Math.sqrt(n);
-        if(se === 0) return 1; 
+        if(se === 0) return (meanDiff === 0) ? 1 : 0;
         const t = meanDiff / se;
         const df = n - 1;
         return (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2;
     }
 
-    // New Welch's t-test
     function welchTtest(arr1, arr2) {
         const n1 = arr1.length;
         const n2 = arr2.length;
@@ -1206,11 +1191,10 @@
         const v2 = jStat.variance(arr2, true);
 
         const se = Math.sqrt(v1/n1 + v2/n2);
-        if(se === 0) return 1;
+        if(se === 0) return (m1 === m2) ? 1 : 0;
         
         const t = (m1 - m2) / se;
         
-        // Welch-Satterthwaite equation for df
         const num = Math.pow((v1/n1 + v2/n2), 2);
         const den = (Math.pow(v1/n1, 2) / (n1-1)) + (Math.pow(v2/n2, 2) / (n2-1));
         const df = num / den;
@@ -1218,8 +1202,6 @@
         return (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2;
     }
 
-    // --- Render Card using Plotly ---
-    // --- 優化後的 Render Card 函式 (支援智慧型 Tukey 括號分層) ---
     function renderCard(title, stats, stars, details, container, maxY, pairwiseSig = []) {
         const id = 'plot-' + Math.random().toString(36).substr(2);
         const div = document.createElement('div');
@@ -1269,11 +1251,9 @@
         const annotations = [];
         const shapes = [];
 
-        // --- 智慧型動態高度與括號演算法 ---
-        let graphTop = maxY * 1.25; // 預設頂部高度
+        let graphTop = maxY * 1.25; 
 
         if (pairwiseSig.length === 0) {
-            // 1. Dunnett Mode: 星號標註在 Bar 正上方
             stats.forEach((s, i) => {
                 if (stars[i] && stars[i] !== 'ns' && stars[i] !== '') {
                     const yPos = s.mean + s.sem + (maxY * 0.05); 
@@ -1285,21 +1265,16 @@
                 }
             });
         } else {
-            // 2. Tukey Mode: 智慧型分層括號
-            const stepHeight = maxY * 0.12; // 每一層的高度間距
-            const baseHeight = maxY * 1.1;  // 第一層括號的起始高度
+            const stepHeight = maxY * 0.12; 
+            const baseHeight = maxY * 1.1;  
             
-            // 排序：區間短的優先畫（在下層），長的後畫（在上層）
             const sortedPairs = [...pairwiseSig].sort((a, b) => (a.j - a.i) - (b.j - b.i));
-            
-            // 用來紀錄 x 軸各點位目前的最高佔用 Y 值
             let currentYLevels = new Array(stats.length).fill(baseHeight);
 
             sortedPairs.forEach((pair) => {
                 const idx1 = Math.min(pair.i, pair.j);
                 const idx2 = Math.max(pair.i, pair.j);
                 
-                // 找出該區間 [idx1, idx2] 內目前最高的 Y Level
                 let targetY = 0;
                 for (let k = idx1; k <= idx2; k++) {
                     if (currentYLevels[k] > targetY) targetY = currentYLevels[k];
@@ -1307,10 +1282,8 @@
 
                 const currentY = targetY;
 
-                // 更新 graphTop 以確保不會超出畫布
                 if (currentY + stepHeight > graphTop) graphTop = currentY + stepHeight * 1.2;
 
-                // 繪製括號路徑 (M = 起點, L = 線條)
                 shapes.push({
                     type: 'path',
                     path: `M ${idx1},${currentY - (maxY*0.02)} L ${idx1},${currentY} L ${idx2},${currentY} L ${idx2},${currentY - (maxY*0.02)}`,
@@ -1318,17 +1291,15 @@
                     xref: 'x', yref: 'y'
                 });
 
-                // 標註顯著性星號
                 annotations.push({
                     x: (idx1 + idx2) / 2, 
                     y: currentY,
                     text: pair.star,
                     xanchor: 'center', yanchor: 'bottom', showarrow: false,
                     font: { size: 13, color: '#dc2626', weight: 'bold' },
-                    bgcolor: 'rgba(255,255,255,0.75)' // 增加背景白暈，避免星號被括號線穿過
+                    bgcolor: 'rgba(255,255,255,0.75)' 
                 });
 
-                // 重要：更新該區間內所有點的高度紀錄，為下一層提供支撐高度
                 for (let k = idx1; k <= idx2; k++) {
                     currentYLevels[k] = currentY + stepHeight;
                 }
@@ -1384,31 +1355,23 @@
                 filename: title + '_WB_Stats',
                 height: 500,
                 width: 700,
-                scale: 3 // 高解析度匯出
+                scale: 3 
             }
         };
 
         Plotly.newPlot(id, data, layout, config);
     }
-    // --- 新增：匯出完整卡片圖檔功能 ---
-// --- 修改版：匯出完整卡片圖檔 (自動命名) ---
+
 function exportCardImage(btn, filename) {
     const card = btn.closest('.card'); 
-    
-    // 暫時隱藏按鈕
     btn.style.display = 'none';
 
     html2canvas(card, {
         backgroundColor: '#ffffff',
         scale: 2 
     }).then(canvas => {
-        // 復原按鈕
         btn.style.display = 'inline-block';
-
-        // 處理檔名：去除前後空白，若有不合法字元可視需求處理，這裡簡單加上後綴
-        // 例如：Caspase-3 -> Caspase-3_Report.png
         const safeName = (filename || 'WB_Result').trim();
-
         const link = document.createElement('a');
         link.download = safeName + '_Report.png'; 
         link.href = canvas.toDataURL("image/png");
