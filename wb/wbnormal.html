@@ -237,6 +237,13 @@
                     </select>
                 </div>
 
+                <div style="margin-bottom: 15px; border-top: 1px dashed #e5e7eb; padding-top: 12px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="log-transform" onchange="calculate()" style="width: auto; cursor: pointer;">
+                    <label for="log-transform" style="font-weight:600; font-size:0.9em; color:#374151; cursor: pointer;" data-i18n="log_transform_label">
+                        使用 Log2 轉換進行統計檢定 (推薦用於變異大之樣本)
+                    </label>
+                </div>
+
                 <div id="group-tags"></div>
                 <div style="display:flex; gap:5px; margin-top:10px;">
                     <input type="text" id="new-group" placeholder="新增組別 (e.g. Treat 3)">
@@ -277,7 +284,7 @@
             'protein_name': '蛋白名稱',
             'del': '刪除',
             'hkp_label': 'HKP (內參)',
-            'alert_min_group': '至少需要保留一組',
+            'alert_min_group': '至少需要保留兩組',
             'alert_select_hkp': '請選擇 HKP',
             'err_data_mismatch': '樣本數不一致',
             'err_hkp_zero': 'HKP 不能為 0',
@@ -298,6 +305,7 @@
             'sig_col': '顯著性',
             'new_group_placeholder': '新增組別 (e.g. Treat 3)',
             'posthoc_label': 'Post-hoc Test (多重比較策略):',
+            'log_transform_label': '使用 Log2 轉換進行統計檢定 (推薦用於變異大之樣本)',
             'err_group_name_empty': '組別名稱不能為空',
             'err_hkp_missing': '以下組別缺少 HKP 數據',
             'err_paired_mismatch': '配對模式下，所有組別的樣本數必須相同',
@@ -325,7 +333,7 @@
             'protein_name': 'Protein Name',
             'del': 'Delete',
             'hkp_label': 'HKP (Ref)',
-            'alert_min_group': 'Keep at least one group',
+            'alert_min_group': 'Keep at least two groups',
             'alert_select_hkp': 'Please select an HKP',
             'err_data_mismatch': 'Sample count mismatch',
             'err_hkp_zero': 'HKP cannot be 0',
@@ -346,6 +354,7 @@
             'sig_col': 'Sig.',
             'new_group_placeholder': 'Add Group (e.g. Treat 3)',
             'posthoc_label': 'Post-hoc Test (Strategy):',
+            'log_transform_label': 'Use Log2 Transform for Statistical Tests (Recommended for high variance)',
             'err_group_name_empty': 'Group name cannot be empty',
             'err_hkp_missing': 'HKP data missing for group',
             'err_paired_mismatch': 'Paired mode requires equal sample size across all groups',
@@ -430,7 +439,7 @@
         12: { 2: 61.5, 3: 23.0, 4: 14.6, 5: 9.46, 10: 6.34, 15: 5.61, 20: 5.29, 30: 4.98, 60: 4.68, 120: 4.53, 999: 3.95 },
         15: { 2: 66.0, 3: 24.2, 4: 15.3, 5: 9.72, 10: 6.52, 15: 5.77, 20: 5.44, 30: 5.12, 60: 4.81, 120: 4.66, 999: 4.02 },
         20: { 5: 10.05, 10: 6.75, 15: 5.98, 20: 5.63, 30: 5.30, 60: 4.98, 120: 4.82, 999: 4.11 }
-        };
+        }
 
     // --- Tukey's Q Table (Studentized Range) Extended to k=15 ---
     const TUKEY_Q = {
@@ -532,7 +541,7 @@
         }
     }
     function removeGroup(idx) {
-        if (state.groups.length <= 1) return alert(t('alert_min_group'));
+        if (state.groups.length <= 2) return alert(t('alert_min_group'));
         saveCurrentInputs(); state.groups.splice(idx, 1); renderAll();
     }
     function addProtein() {
@@ -651,13 +660,11 @@
             let icon = '';
 
             if (isPaired) {
-                // Paired 模式：嚴厲警告 (橘紅色)
                 warnTitle = t('warn_paired_title');
                 warnMsg = t('warn_paired_msg');
                 borderColor = '#f59e0b';
                 icon = '⚠️';
             } else {
-                // Unpaired 模式：溫和提示 (藍色)
                 warnTitle = t('warn_unpaired_title');
                 warnMsg = t('warn_unpaired_msg');
                 borderColor = '#3b82f6';
@@ -685,7 +692,7 @@
             parsed[p.id] = { name: p.name || `Protein ${p.id}`, vals: {} };
             state.groups.forEach(g => {
                 const raw = p.data[g] || "";
-                parsed[p.id].vals[g] = raw.trim().split(/[\s,]+/).map(Number).filter(n => !isNaN(n));
+                parsed[p.id].vals[g] = raw.trim().split(/[\s,]+/).filter(s => s !== '').map(Number).filter(n => !isNaN(n));
             });
         });
 
@@ -752,14 +759,31 @@
                 let stars = Array(state.groups.length).fill('');
                 let detailsHTML = "";
                 let pDisplay = "";
-                const allRawVals = state.groups.map(g => rawRatios[g]); 
+
+                // --- NEW: LOG2 TRANSFORMATION BACKEND ENGINE ---
+                const useLog2 = document.getElementById('log-transform').checked;
+                let allRawVals = state.groups.map(g => rawRatios[g]); 
+                if (useLog2) {
+                    allRawVals = allRawVals.map(arr => arr.map(v => {
+                        if (v <= 0) {
+                            throw new Error(curLang === 'zh' ? 
+                                `[${target.name}] Log2 轉換失敗：條帶比例 (Target/HKP) 必須大於 0。請檢查是否有無效數據。` : 
+                                `[${target.name}] Log2 transformation failed: Ratios (Target/HKP) must be greater than 0.`);
+                        }
+                        return Math.log2(v);
+                    }));
+                }
 
                 const noteText = "Note: Raw band intensities were normalized to housekeeping proteins (Target/HKP) for statistical analysis. Fold change relative to control was used only for data presentation.";
+                const logNoteText = useLog2 ? (curLang === 'zh' ? 
+                    "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ 已啟用 Log2 轉換：統計檢定與 P 值皆基於 Log2 尺度計算，圖表與表格數據則維持原始 Fold Change 呈現。</span>" : 
+                    "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ Log2 Transform Enabled: Statistical tests and P-values are calculated on the Log2 scale, while charts and means retain raw Fold Change.</span>") : "";
+                
                 const fmtQ = (v) => (typeof v === 'number' ? v.toFixed(2) : '-');
 
                 if (state.groups.length === 2) {
-                    const raw0 = rawRatios[state.groups[0]];
-                    const raw1 = rawRatios[state.groups[1]];
+                    const raw0 = allRawVals[0];
+                    const raw1 = allRawVals[1];
                     let p;
                     let methodStr = "";
 
@@ -770,6 +794,7 @@
                         p = welchTtest(raw0, raw1);
                         methodStr = t('unpaired_t');
                     }
+                    if (useLog2) methodStr += " (Log2 Transformed)";
 
                     stars[1] = getStar(p);
                     pDisplay = formatP(p);
@@ -778,7 +803,7 @@
                     detailsHTML = `
                         <b>${t('stat_method')}:</b> ${methodStr}<br>
                         <b>P-value:</b> ${pDisplay}
-                        <div style="font-size:0.85em; color:#666; margin-top:5px;">${noteText}</div>
+                        <div style="font-size:0.85em; color:#666; margin-top:5px;">${noteText}${logNoteText}</div>
                     `;
                     window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars });
                     renderCard(target.name, stats, stars, detailsHTML, resDiv, maxY, []);
@@ -858,13 +883,15 @@
                                     <div class="param-box">
                                         [Parameters]<br>df(treat)=${dfTreat}, df(err)=${dfError}, MSE=${msError.toFixed(4)}<br>
                                         q(0.05)=${fmtQ(q05)}, q(0.01)=${fmtQ(q01)}, q(0.001)=${fmtQ(q001)} (df=${dfError.toFixed(2)})<br>
-                                        <span style="color:#6b7280">${noteText}</span>
+                                        <span style="color:#6b7280">${noteText}${logNoteText}</span>
                                     </div>
                                 `;
                             } else {
                                 const q05 = getTukeyQ(dfError, kVal, 0.05);
                                 const q01 = getTukeyQ(dfError, kVal, 0.01);
                                 const q001 = getTukeyQ(dfError, kVal, 0.001);
+
+                                for(let i=1; i<stats.length; i++) { stars[i] = 'ns'; stats[i].pText = '> 0.05'; }
 
                                 for (let i = 0; i < kVal; i++) {
                                     for (let j = i + 1; j < kVal; j++) {
@@ -890,7 +917,7 @@
                                     <div class="param-box">
                                         [Parameters]<br>df(treat)=${dfTreat}, df(err)=${dfError}, MSE=${msError.toFixed(4)}<br>
                                         q(0.05)=${fmtQ(q05)}, q(0.01)=${fmtQ(q01)}, q(0.001)=${fmtQ(q001)} (df=${dfError.toFixed(2)})<br>
-                                        <span style="color:#6b7280">${noteText}</span>
+                                        <span style="color:#6b7280">${noteText}${logNoteText}</span>
                                     </div>
                                 `;
                             }
@@ -899,7 +926,7 @@
                             detailsHTML = `
                                 <b>${t('stat_method')}:</b> ${t('rm_anova_ns')}<br>
                                 <b>P-value:</b> ${pDisplay}<br>
-                                <span style="font-size:0.85em; color:#666">${noteText}</span>
+                                <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
                             `;
                         }
 
@@ -949,13 +976,15 @@
                                     <div class="param-box">
                                         [Parameters]<br>df(err)=${df2}, k=${state.groups.length}, MSE=${mse.toFixed(4)}<br>
                                         q(0.05)=${fmtQ(q05)}, q(0.01)=${fmtQ(q01)}, q(0.001)=${fmtQ(q001)} (df=${df2.toFixed(2)})<br>
-                                        <span style="color:#6b7280">${noteText}</span>
+                                        <span style="color:#6b7280">${noteText}${logNoteText}</span>
                                     </div>
                                 `;
                             } else {
                                 const q05 = getTukeyQ(df2, kVal, 0.05);
                                 const q01 = getTukeyQ(df2, kVal, 0.01);
                                 const q001 = getTukeyQ(df2, kVal, 0.001);
+
+                                for(let i=1; i<stats.length; i++) { stars[i] = 'ns'; stats[i].pText = '> 0.05'; }
 
                                 for (let i = 0; i < kVal; i++) {
                                     for (let j = i + 1; j < kVal; j++) {
@@ -984,7 +1013,7 @@
                                     <div class="param-box">
                                         [Parameters]<br>df(err)=${df2}, k=${state.groups.length}, MSE=${mse.toFixed(4)}<br>
                                         q(0.05)=${fmtQ(q05)}, q(0.01)=${fmtQ(q01)}, q(0.001)=${fmtQ(q001)} (df=${df2.toFixed(2)})<br>
-                                        <span style="color:#6b7280">${noteText}</span>
+                                        <span style="color:#6b7280">${noteText}${logNoteText}</span>
                                     </div>
                                 `;
                             }
@@ -993,7 +1022,7 @@
                             detailsHTML = `
                                 <b>${t('stat_method')}:</b> ${t('anova_ns')}<br>
                                 <b>P-value:</b> ${pDisplay}<br>
-                                <span style="font-size:0.85em; color:#666">${noteText}</span>
+                                <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
                             `;
                         }
                     }
@@ -1006,7 +1035,7 @@
         });
     }
 
-    // --- Linear Interpolation (最保守安全的直線內插法) ---
+    // --- Linear Interpolation ---
     function getLinearInterpolatedValue(x, xVals, yVals) {
         if (!xVals || xVals.length === 0) return 0;
         if (x <= xVals[0]) return yVals[0];
@@ -1046,18 +1075,16 @@
         }
         
         const dfTable = table[targetK];
-        if (!dfTable) return 999; // 極端防呆
+        if (!dfTable) return 999;
         const xVals = Object.keys(dfTable).map(Number).sort((a, b) => a - b);
         const yVals = xVals.map(x => dfTable[x]);
         
-        // 回歸最安全的直線內插
         return getLinearInterpolatedValue(df, xVals, yVals);
     }
 
     // --- Tukey Interpolation Function ---
     function getTukeyQ(df, k, alpha) {
         const table = TUKEY_Q[alpha];
-        // 如果表不存在，或者可用數據不足，直接回傳 '-'
         if (!table) return '-';
         
         const maxK = 15; 
@@ -1072,7 +1099,6 @@
         const xVals = validPairs.map(p => p.x);
         const yVals = validPairs.map(p => p.y);
 
-        // 回歸最安全的直線內插
         return getLinearInterpolatedValue(df, xVals, yVals);
     }
 
@@ -1084,7 +1110,8 @@
         }
         
         const mode = document.querySelector('input[name="mode"]:checked').value;
-        const modeStr = mode === 'paired' ? 'Paired' : 'Unpaired';
+        const useLog2 = document.getElementById('log-transform').checked;
+        const modeStr = (mode === 'paired' ? 'Paired' : 'Unpaired') + (useLog2 ? ' (+Log2Stats)' : '');
         const hkpObj = state.proteins.find(p => p.isHkp);
         const hkpName = hkpObj ? hkpObj.name : "HKP"; 
 
@@ -1105,7 +1132,6 @@
             hkpHeaders.push(`HKP_Raw_${i}`);
         }
 
-        // --- 修正點 1: 使用 ... 展開 ---
         const allHeaders = [
             ...baseHeaders,
             ...normHeaders,
@@ -1127,7 +1153,6 @@
                 const paddedTarget = Array.from({length: maxN}, (_, i) => targetArr[i] || "");
                 const paddedHkp = Array.from({length: maxN}, (_, i) => hkpArr[i] || "");
 
-                // --- 修正點 2: 使用 ... 展開 ---
                 const rowData = [
                     `"${item.protein}"`,
                     `"${hkpName}"`,
@@ -1376,6 +1401,10 @@ function exportCardImage(btn, filename) {
         link.download = safeName + '_Report.png'; 
         link.href = canvas.toDataURL("image/png");
         link.click();
+    }).catch(err => {
+        console.error("Image export failed:", err);
+        btn.style.display = 'inline-block'; 
+        alert("圖片匯出失敗");
     });
 }
 </script>
