@@ -233,7 +233,7 @@
                     </label>
                     <select id="posthoc-method" onchange="calculate()">
                         <option value="dunnett">Compare with Control (Dunnett's Test)</option>
-                        <option value="tukey">Compare All Pairs (Tukey's HSD)</option>
+                        <option value="tukey">Compare All Pairs (Tukey-Kramer Test)</option>
                     </select>
                 </div>
 
@@ -312,7 +312,8 @@
             'warn_paired_title': '進階統計提示',
             'warn_paired_msg': '您正在使用多組配對 (Paired, n≥3) 模式。本工具的 RM-ANOVA 未進行 Mauchly\'s 球狀性檢定 (Sphericity) 校正，且多重比較策略較為保守。若需發表高影響因子期刊，建議使用 GraphPad Prism 進行完整驗證。',
             'warn_unpaired_title': '多重比較邊緣數值提示 (Multiple Comparisons Note)',
-            'warn_unpaired_msg': '本工具之 ANOVA 事後檢定 (Post-hoc) 採用保守的線性內插法。在特定樣本數下，給星門檻會略高於 GraphPad Prism。若您的 P-value 處於邊緣且判定為 ns (不顯著)，使用專業軟體驗證或許有機會達到顯著。'
+            'warn_unpaired_msg': '本工具之 ANOVA 事後檢定 (Post-hoc) 採用保守的線性內插法。在特定樣本數下，給星門檻會略高於 GraphPad Prism。若您的 P-value 處於邊緣且判定為 ns (不顯著)，使用專業軟體驗證或許有機會達到顯著。',
+            'alert_max_group': '此工具目前最多支援 15 個組別，超過上限將無法進行完整的事後檢定。'
         },
         'en': {
             'app_title': 'WB Band Relative Quantitation & Normalization Tool',
@@ -361,7 +362,8 @@
             'warn_paired_title': 'Advanced Statistics Note',
             'warn_paired_msg': 'You are using Paired mode with multiple groups (n≥3). The RM-ANOVA here does not apply Mauchly\'s sphericity test/corrections, and the post-hoc strategy is conservative. For high-impact publications, verification with GraphPad Prism is recommended.',
             'warn_unpaired_title': 'Multiple Comparisons Note',
-            'warn_unpaired_msg': 'The post-hoc test employs a conservative linear interpolation method. For certain sample sizes, the critical thresholds are slightly stricter than GraphPad Prism. If your result is marginally non-significant (ns), verification with specialized software might yield significance.'
+            'warn_unpaired_msg': 'The post-hoc test employs a conservative linear interpolation method. For certain sample sizes, the critical thresholds are slightly stricter than GraphPad Prism. If your result is marginally non-significant (ns), verification with specialized software might yield significance.',
+            'alert_max_group': 'This tool supports a maximum of 15 groups. Full post-hoc tests cannot be performed beyond this limit.'
         }
     };
 
@@ -406,10 +408,11 @@
         10: { 2: 8.19, 3: 5.39, 4: 4.55, 5: 4.45, 10: 3.47, 15: 3.20, 20: 3.08, 30: 2.98, 60: 2.88, 120: 2.83, 999: 2.78 },
         12: { 2: 8.58, 3: 5.53, 4: 4.66, 5: 4.65, 10: 3.59, 15: 3.30, 20: 3.18, 30: 3.07, 60: 2.96, 120: 2.91, 999: 2.86 },
         15: { 2: 9.09, 3: 5.72, 4: 4.79, 5: 4.88, 10: 3.73, 15: 3.43, 20: 3.29, 30: 3.17, 60: 3.06, 120: 3.00, 999: 2.95 },
-        20: { 5: 5.17, 10: 3.91, 15: 3.59, 20: 3.43, 30: 3.30, 60: 3.19, 120: 3.12, 999: 3.07 },
-        30: { 5: 5.55, 10: 4.15, 15: 3.80, 20: 3.63, 30: 3.49, 60: 3.36, 120: 3.29, 999: 3.23 },
-        40: { 5: 5.80, 10: 4.30, 15: 3.94, 20: 3.76, 30: 3.60, 60: 3.47, 120: 3.39, 999: 3.33 }
-        }
+        20: { 2: 10.50, 3: 6.20, 4: 5.50, 5: 5.17, 10: 3.91, 15: 3.59, 20: 3.43, 30: 3.30, 60: 3.19, 120: 3.12, 999: 3.07 },
+        30: { 2: 11.20, 3: 6.60, 4: 5.90, 5: 5.55, 10: 4.15, 15: 3.80, 20: 3.63, 30: 3.49, 60: 3.36, 120: 3.29, 999: 3.23 },
+        40: { 2: 11.80, 3: 7.00, 4: 6.20, 5: 5.80, 10: 4.30, 15: 3.94, 20: 3.76, 30: 3.60, 60: 3.47, 120: 3.39, 999: 3.33 }
+    };
+
     const DUNNETT_D_TABLE_01 = {
         2: { 2: 9.92, 3: 5.84, 4: 4.60, 5: 4.03, 10: 3.17, 15: 2.95, 20: 2.84, 30: 2.75, 60: 2.66, 120: 2.62, 999: 2.58 },
         3: { 2: 13.0, 3: 7.45, 4: 5.76, 5: 4.63, 10: 3.56, 15: 3.29, 20: 3.15, 30: 3.03, 60: 2.92, 120: 2.86, 999: 2.81 },
@@ -422,10 +425,11 @@
         10: { 2: 20.4, 3: 10.79, 4: 8.17, 5: 5.89, 10: 4.46, 15: 4.03, 20: 3.82, 30: 3.64, 60: 3.46, 120: 3.37, 999: 3.32 },
         12: { 2: 21.5, 3: 11.22, 4: 8.48, 5: 6.04, 10: 4.57, 15: 4.12, 20: 3.91, 30: 3.73, 60: 3.54, 120: 3.44, 999: 3.39 },
         15: { 2: 23.0, 3: 11.76, 4: 8.86, 5: 6.20, 10: 4.68, 15: 4.22, 20: 4.00, 30: 3.82, 60: 3.62, 120: 3.53, 999: 3.47 },
-        20: { 5: 6.39, 10: 4.82, 15: 4.35, 20: 4.12, 30: 3.94, 60: 3.74, 120: 3.64, 999: 3.58 },
-        30: { 5: 6.78, 10: 5.09, 15: 4.58, 20: 4.34, 30: 4.14, 60: 3.93, 120: 3.82, 999: 3.75 },
-        40: { 5: 7.05, 10: 5.28, 15: 4.75, 20: 4.49, 30: 4.28, 60: 4.07, 120: 3.95, 999: 3.87 }
-        }
+        20: { 2: 25.0, 3: 13.0, 4: 9.80, 5: 6.39, 10: 4.82, 15: 4.35, 20: 4.12, 30: 3.94, 60: 3.74, 120: 3.64, 999: 3.58 },
+        30: { 2: 27.5, 3: 14.5, 4: 10.5, 5: 6.78, 10: 5.09, 15: 4.58, 20: 4.34, 30: 4.14, 60: 3.93, 120: 3.82, 999: 3.75 },
+        40: { 2: 29.0, 3: 15.5, 4: 11.0, 5: 7.05, 10: 5.28, 15: 4.75, 20: 4.49, 30: 4.28, 60: 4.07, 120: 3.95, 999: 3.87 }
+    };
+
     const DUNNETT_D_TABLE_001 = {
         2: { 2: 31.6, 3: 12.9, 4: 8.61, 5: 6.87, 10: 4.59, 15: 4.07, 20: 3.85, 30: 3.65, 60: 3.46, 120: 3.37, 999: 3.29 },
         3: { 2: 39.0, 3: 15.5, 4: 10.2, 5: 7.60, 10: 5.06, 15: 4.48, 20: 4.22, 30: 3.99, 60: 3.77, 120: 3.67, 999: 3.48 },
@@ -438,8 +442,10 @@
         10: { 2: 58.0, 3: 22.0, 4: 14.0, 5: 9.24, 10: 6.18, 15: 5.47, 20: 5.16, 30: 4.86, 60: 4.56, 120: 4.42, 999: 3.89 },
         12: { 2: 61.5, 3: 23.0, 4: 14.6, 5: 9.46, 10: 6.34, 15: 5.61, 20: 5.29, 30: 4.98, 60: 4.68, 120: 4.53, 999: 3.95 },
         15: { 2: 66.0, 3: 24.2, 4: 15.3, 5: 9.72, 10: 6.52, 15: 5.77, 20: 5.44, 30: 5.12, 60: 4.81, 120: 4.66, 999: 4.02 },
-        20: { 5: 10.05, 10: 6.75, 15: 5.98, 20: 5.63, 30: 5.30, 60: 4.98, 120: 4.82, 999: 4.11 }
-        }
+        20: { 2: 72.0, 3: 26.5, 4: 17.5, 5: 10.05, 10: 6.75, 15: 5.98, 20: 5.63, 30: 5.30, 60: 4.98, 120: 4.82, 999: 4.11 },
+        30: { 2: 78.0, 3: 28.5, 4: 18.8, 5: 10.80, 10: 7.10, 15: 6.20, 20: 5.85, 30: 5.50, 60: 5.15, 120: 4.95, 999: 4.25 },
+        40: { 2: 82.0, 3: 30.0, 4: 19.8, 5: 11.40, 10: 7.35, 15: 6.45, 20: 6.05, 30: 5.70, 60: 5.35, 120: 5.10, 999: 4.35 }
+    };
 
     // --- Tukey's Q Table (Studentized Range) Extended to k=15 ---
     const TUKEY_Q = {
@@ -542,7 +548,16 @@
     }
     function removeGroup(idx) {
         if (state.groups.length <= 2) return alert(t('alert_min_group'));
-        saveCurrentInputs(); state.groups.splice(idx, 1); renderAll();
+        saveCurrentInputs(); 
+        
+        const groupNameToRemove = state.groups[idx];
+        state.proteins.forEach(p => {
+            if (p.data[groupNameToRemove] !== undefined) {
+                delete p.data[groupNameToRemove];
+            }
+        });
+        
+        state.groups.splice(idx, 1); renderAll();
     }
     function addProtein() {
         saveCurrentInputs();
@@ -609,29 +624,61 @@
         });
     }
 
-    function validateData(isPaired, parsed, hkpObj) {
+    function validateAndParseData(isPaired, hkpObj, targetProteins) {
         state.groups.forEach(g => {
             if (!g.trim()) throw new Error(t('err_group_name_empty'));
         });
 
-        state.groups.forEach(g => {
-             const hkpVals = hkpObj.data[g];
-             if (!hkpVals || !hkpVals.trim()) {
-                 throw new Error(`${t('err_hkp_missing')}: ${g}`);
-             }
+        const parsedData = {}; 
+
+        const parseStringToArray = (str) => {
+            return str.trim()
+                .split(/[\s,]+/)
+                .filter(s => s !== '')
+                .map(Number)
+                .filter(n => !isNaN(n)); 
+        };
+
+        state.proteins.forEach(p => {
+            parsedData[p.id] = { name: p.name || `Protein ${p.id}`, vals: {} };
+            
+            state.groups.forEach(g => {
+                const rawStr = p.data[g] || "";
+                const validNums = parseStringToArray(rawStr);
+                
+                if (validNums.length < 2) {
+                    const errMsg = curLang === 'zh' 
+                        ? `[${parsedData[p.id].name}] 的 "${g}" 組有效樣本數不足 (N=${validNums.length})。統計分析每組至少需要 2 個數值。`
+                        : `[${parsedData[p.id].name}] - "${g}" has insufficient data (N=${validNums.length}). Statistical analysis requires at least 2 values per group.`;
+                    throw new Error(errMsg);
+                }
+                
+                parsedData[p.id].vals[g] = validNums;
+            });
         });
 
         if (isPaired) {
             const firstGroup = state.groups[0];
-            const firstLen = hkpObj.data[firstGroup].trim().split(/[\s,]+/).filter(n => n).length;
-            
+            const baseHkpLen = parsedData[hkpObj.id].vals[firstGroup].length;
+
             state.groups.forEach(g => {
-                 const len = hkpObj.data[g].trim().split(/[\s,]+/).filter(n => n).length;
-                 if (len !== firstLen) {
-                     throw new Error(`${t('err_paired_mismatch')} (${g}: ${len} vs ${firstGroup}: ${firstLen})`);
-                 }
+                const len = parsedData[hkpObj.id].vals[g].length;
+                if (len !== baseHkpLen) {
+                    throw new Error(`${t('err_paired_mismatch')} (${hkpObj.name} - ${g}: ${len} vs ${firstGroup}: ${baseHkpLen})`);
+                }
+            });
+
+            targetProteins.forEach(tp => {
+                state.groups.forEach(g => {
+                    const len = parsedData[tp.id].vals[g].length;
+                    if (len !== baseHkpLen) {
+                        throw new Error(`${t('err_paired_mismatch')} (${tp.name} - ${g}: ${len} vs Base: ${baseHkpLen})`);
+                    }
+                });
             });
         }
+
+        return parsedData;
     }
 
     function calculate() {
@@ -643,16 +690,22 @@
         const mode = document.querySelector('input[name="mode"]:checked').value;
         const isPaired = (mode === 'paired');
 
+        if (state.groups.length > 15) {
+            return alert(t('alert_max_group'));
+        }
+
         const hkpObj = state.proteins.find(p => p.isHkp);
         if (!hkpObj) return alert(t('alert_select_hkp'));
 
+        const targetProteins = state.proteins.filter(p => !p.isHkp);
+
+        let parsed;
         try {
-             validateData(isPaired, null, hkpObj);
+             parsed = validateAndParseData(isPaired, hkpObj, targetProteins);
         } catch(e) {
              return alert(e.message);
         }
 
-        // --- DYNAMIC WARNING UI (Groups >= 3) ---
         if (state.groups.length >= 3) {
             let warnTitle = '';
             let warnMsg = '';
@@ -686,15 +739,6 @@
             `;
             resDiv.innerHTML += warnHtml;
         }
-
-        const parsed = {};
-        state.proteins.forEach(p => {
-            parsed[p.id] = { name: p.name || `Protein ${p.id}`, vals: {} };
-            state.groups.forEach(g => {
-                const raw = p.data[g] || "";
-                parsed[p.id].vals[g] = raw.trim().split(/[\s,]+/).filter(s => s !== '').map(Number).filter(n => !isNaN(n));
-            });
-        });
 
         const hkp = parsed[hkpObj.id];
 
@@ -741,15 +785,21 @@
                     }
                     
                     const n = norm.length;
-                    const m = jStat.mean(norm);
-                    const s = jStat.stdev(norm, true);
-                    const sem = n > 1 ? s / Math.sqrt(n) : 0;
                     
-                    if (m + sem > maxY) maxY = m + sem;
+                    const rawMean = jStat.mean(norm);
+                    const rawSEM = n > 1 ? jStat.stdev(norm, true) / Math.sqrt(n) : 0;
+                    
+                    if (rawMean + rawSEM > maxY) maxY = rawMean + rawSEM;
                     
                     stats.push({ 
-                        group: g, mean: m, sem: sem, n: n, vals: norm,
-                        rawStr: norm.map(v=>v.toFixed(9)).join(', '),
+                        group: g, 
+                        mean: rawMean, 
+                        sem: rawSEM, 
+                        rawMean: rawMean, 
+                        rawSEM: rawSEM,
+                        n: n, 
+                        vals: norm,
+                        rawStr: norm.map(v=>v.toFixed(3)).join(', '),
                         rawInput: target.vals[g].join('; '),
                         hkpRawInput: hkp.vals[g].join('; '), 
                         pText: '-'
@@ -760,7 +810,6 @@
                 let detailsHTML = "";
                 let pDisplay = "";
 
-                // --- NEW: LOG2 TRANSFORMATION BACKEND ENGINE ---
                 const useLog2 = document.getElementById('log-transform').checked;
                 let allRawVals = state.groups.map(g => rawRatios[g]); 
                 if (useLog2) {
@@ -776,8 +825,8 @@
 
                 const noteText = "Note: Raw band intensities were normalized to housekeeping proteins (Target/HKP) for statistical analysis. Fold change relative to control was used only for data presentation.";
                 const logNoteText = useLog2 ? (curLang === 'zh' ? 
-                    "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ 已啟用 Log2 轉換：統計檢定與 P 值皆基於 Log2 尺度計算，圖表與表格數據則維持原始 Fold Change 呈現。</span>" : 
-                    "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ Log2 Transform Enabled: Statistical tests and P-values are calculated on the Log2 scale, while charts and means retain raw Fold Change.</span>") : "";
+                    "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ 已啟用 Log2 轉換：統計檢定與 P 值皆基於 Log2 尺度計算。圖表維持線性尺度呈現。</span>" : 
+                    "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ Log2 Transform Enabled: Statistical tests and P-values are calculated on the Log2 scale. Plots remain linear.</span>") : "";
                 
                 const fmtQ = (v) => (typeof v === 'number' ? v.toFixed(2) : '-');
 
@@ -811,6 +860,30 @@
                 } else {
                     const postHocMethod = document.getElementById('posthoc-method').value; 
                     let pairwiseSig = []; 
+                    let localWarning = "";
+
+                    if (!isPaired && state.groups.length > 2 && !useLog2) {
+                        let variances = allRawVals.map(arr => jStat.variance(arr, true));
+                        let maxV = Math.max(...variances);
+                        let minV = Math.min(...variances);
+                        if (minV > 0 && (maxV / minV) > 4) {
+                            const warnTitle = curLang === 'zh' ? 
+                                '⚠️ 統計假設警告 (Assumption Warning)' : 
+                                '⚠️ Assumption Warning';
+                            
+                            const warnMsg = curLang === 'zh' ? 
+                                `各組樣本的變異數差異過大（最大變異數是最小的 ${(maxV/minV).toFixed(1)} 倍）。傳統 ANOVA 假設變異數同質，這可能會導致假陽性。強烈建議勾選上方 <b>「使用 Log2 轉換」</b>。` : 
+                                `Large variance difference detected (max is ${(maxV/minV).toFixed(1)}x the min). Traditional ANOVA assumes equal variances; violating this causes false positives. Strongly recommend checking <b>"Use Log2 Transform"</b>.`;
+
+                            // 改為優雅的小區塊，不再直接寫入 resDiv
+                            localWarning = `
+                                <div style="margin-top:12px; padding:10px 12px; background:#fef2f2; border-left:4px solid #ef4444; border-radius:4px; font-size:0.9em; color:#991b1b; line-height:1.4;">
+                                    <strong>${warnTitle}</strong><br>
+                                    ${warnMsg}
+                                </div>
+                            `;
+                        }
+                    }
 
                     if (isPaired) {
                         const k = state.groups.length; 
@@ -1027,6 +1100,10 @@
                         }
                     }
 
+                    if (localWarning) {
+                        detailsHTML += localWarning;
+                    }
+
                     window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars });
                     renderCard(target.name, stats, stars, detailsHTML, resDiv, maxY, pairwiseSig);
                 }
@@ -1035,7 +1112,6 @@
         });
     }
 
-    // --- Linear Interpolation ---
     function getLinearInterpolatedValue(x, xVals, yVals) {
         if (!xVals || xVals.length === 0) return 0;
         if (x <= xVals[0]) return yVals[0];
@@ -1053,7 +1129,6 @@
         return yVals[yVals.length - 1];
     }
 
-    // --- Dunnett Interpolation Function ---
     function getInterpolatedQ(df, k, alpha) {
         let table = null;
         if (alpha === 0.05) table = DUNNETT_D_TABLE_05;
@@ -1082,7 +1157,6 @@
         return getLinearInterpolatedValue(df, xVals, yVals);
     }
 
-    // --- Tukey Interpolation Function ---
     function getTukeyQ(df, k, alpha) {
         const table = TUKEY_Q[alpha];
         if (!table) return '-';
@@ -1102,7 +1176,6 @@
         return getLinearInterpolatedValue(df, xVals, yVals);
     }
 
-    // --- ENHANCED CSV EXPORT ---
     function exportCSV() {
         if (!window.lastCalcResults || window.lastCalcResults.length === 0) {
             alert(curLang === 'zh' ? "請先執行運算" : "Please calculate first");
@@ -1140,6 +1213,11 @@
         ];
         rows.push(allHeaders.join(','));
 
+        const safeCSV = (str) => {
+            if (str === null || str === undefined) return '""';
+            return '"' + String(str).replace(/"/g, '""') + '"';
+        };
+
         window.lastCalcResults.forEach(item => {
             item.stats.forEach((s, idx) => {
                 const star = item.stars[idx] || '';
@@ -1154,15 +1232,15 @@
                 const paddedHkp = Array.from({length: maxN}, (_, i) => hkpArr[i] || "");
 
                 const rowData = [
-                    `"${item.protein}"`,
-                    `"${hkpName}"`,
-                    `"${modeStr}"`,
-                    `"${s.group}"`,
+                    safeCSV(item.protein),
+                    safeCSV(hkpName),
+                    safeCSV(modeStr),
+                    safeCSV(s.group),
                     s.n,
-                    s.mean.toFixed(4),
-                    s.sem.toFixed(4),
-                    `"${pVal}"`,
-                    `"${star}"`,
+                    (s.rawMean !== undefined ? s.rawMean : s.mean).toFixed(4),
+                    (s.rawSEM !== undefined ? s.rawSEM : s.sem).toFixed(4),
+                    safeCSV(pVal),
+                    safeCSV(star),
                     ...paddedNorm,
                     ...paddedTarget,
                     ...paddedHkp
@@ -1184,12 +1262,18 @@
     }
 
     function formatP(p) {
-        if(p<0.0001) return '< 0.0001'; if(p<0.001) return '< 0.001';
-        if(p<0.01) return '< 0.01'; if(p<0.05) return '< 0.05';
+        if(p < 0.0001) return '< 0.0001'; 
+        if(p < 0.001) return '< 0.001';
+        if(p < 0.01) return '< 0.01'; 
+        if(p < 0.05) return '< 0.05';
         return p.toFixed(4);
     }
+    
     function getStar(p) {
-        if(p<0.001) return '***'; if(p<0.01) return '**'; if(p<0.05) return '*'; return 'ns';
+        if(p < 0.001) return '***'; 
+        if(p < 0.01) return '**'; 
+        if(p < 0.05) return '*'; 
+        return 'ns';
     }
     
     function pairedTtest(arr1, arr2) {
@@ -1250,16 +1334,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                ${stats.map((s, i) => `
+                ${stats.map((s, i) => {
+                    const starColor = stars[i].includes('*') ? '#dc2626' : '#9ca3af';
+                    return `
                     <tr>
                         <td>${s.group}</td>
                         <td>${s.n}</td>
                         <td class="raw-data">${s.rawStr}</td>
-                        <td>${s.mean.toFixed(2)} ± ${s.sem.toFixed(2)}</td>
+                        <td>${s.rawMean.toFixed(2)} ± ${s.rawSEM.toFixed(2)}</td>
                         <td>${s.pText}</td>
-                        <td style="font-weight:bold; color:${stars[i].includes('*')?'#dc2626':'#9ca3af'}">${stars[i]}</td>
+                        <td style="font-weight:bold; color:${starColor}">${stars[i]}</td>
                     </tr>
-                `).join('')}
+                    `;
+                }).join('')}
                 </tbody>
             </table>
         `;
@@ -1276,7 +1363,7 @@
         const annotations = [];
         const shapes = [];
 
-        let graphTop = maxY * 1.25; 
+        let graphTop = maxY * 1.35; // 基礎頂部留白增加至 1.35 倍 
 
         if (pairwiseSig.length === 0) {
             stats.forEach((s, i) => {
@@ -1307,7 +1394,8 @@
 
                 const currentY = targetY;
 
-                if (currentY + stepHeight > graphTop) graphTop = currentY + stepHeight * 1.2;
+                // 針對 Tukey 連線堆疊的情況，加大留白
+                if (currentY + stepHeight > graphTop) graphTop = currentY + stepHeight * 1.35;
 
                 shapes.push({
                     type: 'path',
@@ -1352,7 +1440,7 @@
         const layout = {
             title: false,
             yaxis: { 
-                title: 'Relative Fold Change', 
+                title: 'Relative Fold Change',
                 zeroline: true,
                 range: [0, graphTop],
                 gridcolor: '#f0f0f0'
