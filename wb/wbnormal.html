@@ -650,6 +650,11 @@
                         ? `【資料格式錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現非法字元: "${token}"。請確認皆為純數字，勿夾雜英文或特殊符號。`
                         : `[Data Error] Invalid character "${token}" found in Protein [${proteinName}], Group "${groupName}". Please ensure all inputs are numbers.`);
                 }
+                if (num < 0) {
+                throw new Error(curLang === 'zh' 
+                ? `【數值錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現負值: "${token}"。Western Blot 定量數值不應小於 0。`
+                : `[Data Error] Negative value "${token}" found in Protein [${proteinName}], Group "${groupName}". Western Blot intensity cannot be less than 0.`);
+        }
                 validNums.push(num);
             }
             return validNums;
@@ -806,6 +811,20 @@
                 const stats = [];
                 let maxY = 0;
                 let ctrlMeanRawLinear = jStat.mean(rawRatios[ctrlG]);
+
+                // ====== 新增：Control 組除以零與零值防呆機制 ======
+                if (ctrlMeanRawLinear === 0) {
+                    throw new Error(curLang === 'zh' 
+                        ? `【計算錯誤】Control 組的平均比例為 0，無法作為分母進行 Fold Change 標準化。` 
+                        : `[Calculation Error] The mean of the Control group is 0, which cannot be used as a denominator for Fold Change normalization.`);
+                }
+
+                if (isPaired && ctrlRawRatios.some(val => val === 0)) {
+                    throw new Error(curLang === 'zh'
+                        ? `【計算錯誤】配對模式下，Control 組中包含數值 0，這會導致個別樣本對齊計算時除以零。`
+                        : `[Calculation Error] In Paired mode, the Control group contains a 0, leading to a division by zero error.`);
+                }
+                // ===============================================
 
                 state.groups.forEach((g, gIdx) => {
                     const currentRatios = rawRatios[g];
