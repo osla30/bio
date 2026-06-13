@@ -159,12 +159,43 @@
             /* 統一設定所有圖表的高度，確保桌面版大小一致 */
             height: 300px; 
         }
+        /* 推薦連結區塊樣式 */
+        .links-container {
+            width: 100%;
+            height: 300px; /* 與圖表區塊高度對齊 */
+            overflow-y: auto; /* 若內容過多可滾動 */
+            text-align: left;
+            color: #444;
+        }
+        .links-container h4 {
+            color: #2c3e50;
+            margin: 10px 0 5px 0;
+            font-size: 15px;
+            border-bottom: 2px solid #f4f6f8;
+            padding-bottom: 5px;
+        }
+        .links-container ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .links-container a {
+            color: #3498db;
+            text-decoration: none;
+            transition: color 0.2s, background-color 0.2s;
+        }
+        .links-container a:hover {
+            color: #e74c3c;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 
     <h1>🎨 學術科研配色</h1>
-    <p class="subtitle">收錄 163 款學術科研配色方案  (2026/6/14 更新)</p>
+    <p class="subtitle">目前收錄163款學術科研配色方案  (2026/6/14 更新)</p>
     
     <div class="sticky-header">
         <div class="control-panel">
@@ -208,6 +239,25 @@
             <h3>雷達圖 (Radar Chart)</h3>
             <div class="canvas-wrapper">
                 <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+
+            <div class="links-container">
+                <h3>推薦： 🎨配色網站 🌈漸層配色網站</h3>
+                <ul>
+                    <li><a href="https://www.sessions.edu/color-calculator" target="_blank" rel="noopener noreferrer">🎨 Sessions College for Design Color Calculator</a></li>
+                    <li><a href="https://color.adobe.com/zh/create/color-wheel" target="_blank" rel="noopener noreferrer">🎨 Adobe Color</a></li>
+                    <li><a href="http://colorbrewer2.org" target="_blank" rel="noopener noreferrer">🎨 ColorBrewer</a></li>
+                    <li><a href="https://colors.dopely.top" target="_blank" rel="noopener noreferrer">🎨 Dopely Colors</a></li>
+                    <li><a href="https://brandcolors.net" target="_blank" rel="noopener noreferrer">🎨 BrandColors</a></li>
+                    <li><a href="http://zhongguose.com" target="_blank" rel="noopener noreferrer">🎨 Chinese colors</a></li>
+                    <li><a href="https://webgradients.com" target="_blank" rel="noopener noreferrer">🌈 WebGradients</a></li>
+                    <li><a href="https://culrs.com" target="_blank" rel="noopener noreferrer">🌈 Culrs</a></li>
+                    <li><a href="https://colordrop.io" target="_blank" rel="noopener noreferrer">🌈 ColorDrop</a></li>
+                    <li><a href="https://uigradients.com" target="_blank" rel="noopener noreferrer">🌈 UiGradients</a></li>
+                </ul>
             </div>
         </div>
 
