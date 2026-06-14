@@ -45,7 +45,7 @@
             padding: 15px 20px;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            max-width: 500px;
+            max-width: 550px;
             margin: 0 auto 20px auto;
         }
         select {
@@ -57,6 +57,20 @@
             outline: none;
             min-width: 250px;
         }
+        
+        /* 選項控制區 (並排顯示) */
+        .options-container {
+            font-size: 14px; 
+            color: #555; 
+            border-top: 1px dashed #eee; 
+            padding-top: 12px; 
+            margin-top: 12px; 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 20px;
+        }
+
         .palette-container {
             display: flex;
             justify-content: center;
@@ -68,10 +82,9 @@
             flex-direction: column;
             align-items: center;
             width: 100px;
-            cursor: pointer; /* 讓滑鼠變成手指圖示，提示可點擊 */
+            cursor: pointer;
         }
 
-        /* 點擊時顏色方塊稍微縮小，增加回饋感 */
         .color-box:active .color-swatch {
             transform: scale(0.95);
         }
@@ -103,7 +116,13 @@
             margin-bottom: 40px;
         }
         
-        /* 進階手機版優化 (單欄排列、縮小選單與色塊) */
+        /* 灰階檢驗模式 (動態切換用) */
+        .print-preview-mode {
+            filter: grayscale(100%) !important;
+            transition: filter 0.3s ease;
+        }
+
+        /* 進階手機版優化 */
         @media (max-width: 768px) {
             .charts-grid {
                 grid-template-columns: 1fr;
@@ -133,7 +152,12 @@
                 padding: 2px 4px;
             }
             .canvas-wrapper {
-                height: 250px; /* 手機版圖表高度稍微降低 */
+                height: 250px;
+            }
+            .options-container {
+                gap: 10px;
+                flex-direction: column;
+                align-items: center;
             }
         }
 
@@ -156,14 +180,14 @@
         .canvas-wrapper {
             width: 100%;
             position: relative;
-            /* 統一設定所有圖表的高度，確保桌面版大小一致 */
             height: 300px; 
         }
+        
         /* 推薦連結區塊樣式 */
         .links-container {
             width: 100%;
-            height: 300px; /* 與圖表區塊高度對齊 */
-            overflow-y: auto; /* 若內容過多可滾動 */
+            height: 300px; 
+            overflow-y: auto; 
             text-align: left;
             color: #444;
         }
@@ -190,6 +214,23 @@
             color: #e74c3c;
             text-decoration: underline;
         }
+
+        /* 當使用者真正執行列印 (Ctrl + P) 時才會觸發的樣式 */
+        @media print {
+            .sticky-header, .links-container, h1, p.subtitle {
+                display: none !important;
+            }
+            .charts-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 15px !important;
+                filter: grayscale(100%) !important; 
+            }
+            .chart-card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                page-break-inside: avoid; 
+            }
+        }
     </style>
 </head>
 <body>
@@ -203,11 +244,19 @@
                 <label for="paletteSelect" style="font-size: 16px; margin-right: 10px;"><strong>選擇配色方案：</strong></label>
                 <select id="paletteSelect" onchange="updatePalette()"></select>
             </div>
-            <div style="font-size: 14px; color: #555; border-top: 1px dashed #eee; padding-top: 8px; margin-top: 8px;">
-                <input type="checkbox" id="colorblindFilter" onchange="renderSelectOptions()" style="cursor: pointer; transform: scale(1.1); margin-right: 5px;">
-                <label for="colorblindFilter" style="cursor: pointer; user-select: none; font-weight: bold; color: #2980b9;">
-                    👁️ 只顯示色盲友善配色 (Colorblind-Safe)
-                </label>
+            <div class="options-container">
+                <div>
+                    <input type="checkbox" id="colorblindFilter" onchange="renderSelectOptions()" style="cursor: pointer; transform: scale(1.1); margin-right: 5px;">
+                    <label for="colorblindFilter" style="cursor: pointer; user-select: none; font-weight: bold; color: #2980b9;">
+                        👁️ 只顯示色盲友善配色
+                    </label>
+                </div>
+                <div>
+                    <input type="checkbox" id="grayscaleFilter" onchange="toggleGrayscale()" style="cursor: pointer; transform: scale(1.1); margin-right: 5px;">
+                    <label for="grayscaleFilter" style="cursor: pointer; user-select: none; font-weight: bold; color: #7f8c8d;">
+                        🖨️ 模擬黑白列印 (Grayscale View)
+                    </label>
+                </div>
             </div>
         </div>
         <div class="palette-container" id="colorDisplay"></div>
@@ -250,8 +299,7 @@
             </div>
         </div>
 
-        <div class="chart-card">
-
+        <div class="chart-card links-container-wrapper">
             <div class="links-container">
                 <h3>推薦： 🎨 配色網站 🌈 漸層配色網站</h3>
                 <ul>
@@ -273,7 +321,6 @@
     </div>
 
     <script>
-        // 💡 修改位置：完整的配色資料庫，已為色盲友善方案打上 colorblindSafe: true 標籤
         const palettes = [
             { name: 'Nature NPG Classic', colors: ['#E64B35', '#4DBBD5', '#00A087', '#3C5488', '#F39B7F'] },
             { name: 'Science AAAS', colors: ['#3B4992', '#EE0000', '#008B45', '#631879', '#008280'] },
@@ -440,69 +487,71 @@
             { name: '碧空雲影(四色)', colors: ['#BCC6DD', '#98A3CA', '#8092C4', '#455D99'] }
         ];
 
-        // 💡 修改位置：引進「影子資料庫」機制的 JavaScript 邏輯
-
-        // 儲存所有圖表實例
         const chartInstances = {};
-        // 全局變數：用來儲存目前選單中「真正顯示」的配色方案
         let filteredPalettes = [];
 
         window.onload = () => {
-            // 網頁載入時，先執行一次選單渲染
             renderSelectOptions();
         };
 
-        // 核心優化：動態渲染選單選項的函式
-        function renderSelectOptions() {
-    const select = document.getElementById('paletteSelect');
-    const filterCheckbox = document.getElementById('colorblindFilter');
-    
-    // 記錄切換前使用者選了哪一個方案的名字，以便切換後儘量維持選中狀態
-    const prevSelectedName = select.value !== "" && filteredPalettes[select.value] ? filteredPalettes[select.value].name : "";
-    
-    select.innerHTML = '';
-    
-    if (filterCheckbox.checked) {
-        filteredPalettes = palettes.filter(p => p.colorblindSafe === true);
-    } else {
-        filteredPalettes = [...palettes];
-    }
-    
-    let defaultIndex = 0;
-    filteredPalettes.forEach((palette, index) => {
-        const option = document.createElement('option');
-        option.value = index; 
-        
-        const displayName = palette.colorblindSafe ? `${palette.name} 👁️` : palette.name;
-        option.textContent = displayName;
-        
-        // 如果切換前選的名字跟現在這個一樣，就把它設為預設
-        if (palette.name === prevSelectedName) {
-            defaultIndex = index;
+        function toggleGrayscale() {
+            const grayscaleCheckbox = document.getElementById('grayscaleFilter');
+            const chartsGrid = document.querySelector('.charts-grid');
+            const colorDisplay = document.getElementById('colorDisplay');
+            
+            if (grayscaleCheckbox.checked) {
+                chartsGrid.classList.add('print-preview-mode');
+                colorDisplay.classList.add('print-preview-mode');
+            } else {
+                chartsGrid.classList.remove('print-preview-mode');
+                colorDisplay.classList.remove('print-preview-mode');
+            }
         }
-        
-        select.appendChild(option);
-    });
-    
-    // 恢復選取狀態
-    if (filteredPalettes.length > 0) {
-        select.value = defaultIndex;
-    }
-    
-    updatePalette();
-}
+
+        function renderSelectOptions() {
+            const select = document.getElementById('paletteSelect');
+            const filterCheckbox = document.getElementById('colorblindFilter');
+            
+            const prevSelectedName = select.value !== "" && filteredPalettes[select.value] ? filteredPalettes[select.value].name : "";
+            
+            select.innerHTML = '';
+            
+            if (filterCheckbox.checked) {
+                filteredPalettes = palettes.filter(p => p.colorblindSafe === true);
+            } else {
+                filteredPalettes = [...palettes];
+            }
+            
+            let defaultIndex = 0;
+            filteredPalettes.forEach((palette, index) => {
+                const option = document.createElement('option');
+                option.value = index; 
+                
+                const displayName = palette.colorblindSafe ? `${palette.name} 👁️` : palette.name;
+                option.textContent = displayName;
+                
+                if (palette.name === prevSelectedName) {
+                    defaultIndex = index;
+                }
+                
+                select.appendChild(option);
+            });
+            
+            if (filteredPalettes.length > 0) {
+                select.value = defaultIndex;
+            }
+            
+            updatePalette();
+        }
 
         function updatePalette() {
             const select = document.getElementById('paletteSelect');
             
-            // 防呆機制
             if (select.value === "" || filteredPalettes.length === 0) return;
             
-            // 對應「影子資料庫」抓取配色
             const selectedPalette = filteredPalettes[select.value];
             const colors = selectedPalette.colors;
 
-            // 1. 更新色塊展示區
             const display = document.getElementById('colorDisplay');
             display.innerHTML = ''; 
             colors.forEach(color => {
@@ -534,11 +583,9 @@
                 display.appendChild(box);
             });
 
-            // 2. 更新所有圖表
             updateAllCharts(colors, selectedPalette.name);
         }
 
-        // 💡 完美修復版：處理圖表切換時顏色數量不一致的 Bug
         function updateAllCharts(colors, paletteName) {
             const dataCount = colors.length;
             const labels = Array.from({length: dataCount}, (_, i) => `Group ${String.fromCharCode(65 + i)}`);
@@ -550,7 +597,6 @@
                 animation: { duration: 800, easing: 'easeOutQuart' }
             };
 
-            // ================= Bar Chart =================
             if (chartInstances.bar) {
                 chartInstances.bar.data.labels = labels;
                 chartInstances.bar.data.datasets[0].data = baseData;
@@ -567,7 +613,6 @@
                 });
             }
 
-            // ================= Doughnut Chart =================
             if (chartInstances.doughnut) {
                 chartInstances.doughnut.data.labels = labels;
                 chartInstances.doughnut.data.datasets[0].data = baseData;
@@ -584,7 +629,6 @@
                 });
             }
 
-            // ================= Scatter Chart =================
             const scatterDatasets = colors.map((color, idx) => {
                 const points = Array.from({length: 25}, () => ({
                     x: (Math.random() * 40) + (idx * 15), 
@@ -601,7 +645,6 @@
                 };
             });
 
-            // 💡 散佈圖資料結構較複雜，數量變更時直接銷毀重做最安全
             if (chartInstances.scatter) {
                 chartInstances.scatter.destroy();
             }
@@ -618,7 +661,6 @@
                 }
             });
 
-            // ================= Line/Area Chart =================
             const lineMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月'];
             const lineDatasets = [];
             
@@ -633,7 +675,6 @@
                 });
             }
 
-            // 💡 修正：如果線條數量變了，必須銷毀舊圖表，否則 Chart.js 會因為找不到殘留線條的索引而噴錯卡死
             if (chartInstances.line) {
                 chartInstances.line.destroy();
             }
@@ -647,7 +688,6 @@
                 }
             });
 
-            // ================= Radar Chart =================
             const radarDatasets = colors.map((color, idx) => {
                 return {
                     label: `Group ${String.fromCharCode(65 + idx)}`,
@@ -658,7 +698,6 @@
                 };
             });
 
-            // 💡 修正：雷達圖的維度（Labels 數量）跟著顏色走，數量變更時必須銷毀重建，否則圖表形狀會錯亂
             if (chartInstances.radar) {
                 chartInstances.radar.destroy();
             }
