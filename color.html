@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>學術科研配色</title>
+    <title>學術科研配色 / Academic Color Palettes</title>
     <script src="chart.js"></script>
     <style>
         body {
@@ -18,6 +18,7 @@
             text-align: center;
             color: #2c3e50;
             margin-bottom: 5px;
+            margin-top: 40px; /* 留空間給語言切換按鈕 */
         }
         p.subtitle {
             text-align: center;
@@ -25,6 +26,33 @@
             margin-bottom: 20px;
         }
         
+        /* 語言切換按鈕樣式 */
+        .language-switcher {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+            z-index: 2000;
+        }
+        .lang-btn {
+            padding: 5px 10px;
+            border: 1px solid #888;
+            background: #f0f0f0;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #222;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .lang-btn:hover { background: #e0e0e0; }
+        .lang-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
         /* 置頂控制台容器 (毛玻璃效果) */
         .sticky-header {
             position: sticky;
@@ -159,6 +187,13 @@
                 flex-direction: column;
                 align-items: center;
             }
+            .language-switcher {
+                position: static;
+                justify-content: center;
+                margin-bottom: 10px;
+                margin-top: 10px;
+            }
+            h1 { margin-top: 10px; }
         }
 
         .chart-card {
@@ -217,7 +252,7 @@
 
         /* 當使用者真正執行列印 (Ctrl + P) 時才會觸發的樣式 */
         @media print {
-            .sticky-header, .links-container, h1, p.subtitle {
+            .sticky-header, .links-container, h1, p.subtitle, .language-switcher {
                 display: none !important;
             }
             .charts-grid {
@@ -235,26 +270,31 @@
 </head>
 <body>
 
-    <h1>🎨 學術科研配色</h1>
-    <p class="subtitle">目前收錄163款配色方案 (2026/6/14)</p>
+    <div class="language-switcher">
+        <button class="lang-btn active" id="lang-zh" onclick="switchLanguage('zh')">中文</button>
+        <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">English</button>
+    </div>
+
+    <h1 data-text="title">🎨 學術科研配色</h1>
+    <p class="subtitle" data-text="subtitle">目前收錄163款配色方案 (2026/6/14)</p>
     
     <div class="sticky-header">
         <div class="control-panel">
             <div style="margin-bottom: 8px;">
-                <label for="paletteSelect" style="font-size: 16px; margin-right: 10px;"><strong>選擇配色方案：</strong></label>
+                <label for="paletteSelect" style="font-size: 16px; margin-right: 10px;"><strong data-text="select-label">選擇配色方案：</strong></label>
                 <select id="paletteSelect" onchange="updatePalette()"></select>
             </div>
             <div class="options-container">
                 <div>
                     <input type="checkbox" id="colorblindFilter" onchange="renderSelectOptions()" style="cursor: pointer; transform: scale(1.1); margin-right: 5px;">
-                    <label for="colorblindFilter" style="cursor: pointer; user-select: none; font-weight: bold; color: #2980b9;">
+                    <label for="colorblindFilter" style="cursor: pointer; user-select: none; font-weight: bold; color: #2980b9;" data-text="filter-colorblind">
                         👁️ 只顯示色盲友善配色
                     </label>
                 </div>
                 <div>
                     <input type="checkbox" id="grayscaleFilter" onchange="toggleGrayscale()" style="cursor: pointer; transform: scale(1.1); margin-right: 5px;">
-                    <label for="grayscaleFilter" style="cursor: pointer; user-select: none; font-weight: bold; color: #7f8c8d;">
-                        🖨️ 模擬黑白列印 (Grayscale View)
+                    <label for="grayscaleFilter" style="cursor: pointer; user-select: none; font-weight: bold; color: #7f8c8d;" data-text="filter-grayscale">
+                        🖨️ 模擬黑白列印
                     </label>
                 </div>
             </div>
@@ -265,35 +305,35 @@
     <div class="charts-grid">
         
         <div class="chart-card">
-            <h3>長條圖 (Bar Chart)</h3>
+            <h3 data-text="chart-bar">長條圖 (Bar Chart)</h3>
             <div class="canvas-wrapper">
                 <canvas id="barChart"></canvas>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>甜甜圈圖 (Doughnut Chart)</h3>
+            <h3 data-text="chart-doughnut">甜甜圈圖 (Doughnut Chart)</h3>
             <div class="canvas-wrapper">
                 <canvas id="doughnutChart"></canvas>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>散佈相關性圖 (Scatter Correlation)</h3>
+            <h3 data-text="chart-scatter">散佈相關性圖 (Scatter Correlation)</h3>
             <div class="canvas-wrapper">
                 <canvas id="scatterChart"></canvas>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>折線與面積圖 (Line & Area)</h3>
+            <h3 data-text="chart-line">折線與面積圖 (Line & Area)</h3>
             <div class="canvas-wrapper">
                 <canvas id="lineChart"></canvas>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>雷達圖 (Radar Chart)</h3>
+            <h3 data-text="chart-radar">雷達圖 (Radar Chart)</h3>
             <div class="canvas-wrapper">
                 <canvas id="radarChart"></canvas>
             </div>
@@ -301,7 +341,7 @@
 
         <div class="chart-card links-container-wrapper">
             <div class="links-container">
-                <h3>🎨 配色網站 🌈 漸層配色網站</h3>
+                <h3 data-text="links-title">🎨 配色網站 🌈 漸層配色網站</h3>
                 <ul>
                     <li><a href="https://www.ysdaima.com/palettes/academic/" target="_blank" rel="noopener noreferrer">🎨 顏色代碼表</a></li>
                     <li><a href="https://www.sessions.edu/color-calculator" target="_blank" rel="noopener noreferrer">🎨 Sessions College Color Calculator</a></li>
@@ -321,6 +361,50 @@
     </div>
 
     <script>
+        // 語言字典配置
+        const translations = {
+            zh: {
+                "title": "🎨 學術科研配色",
+                "subtitle": "目前收錄163款配色方案 (2026/6/14)",
+                "select-label": "選擇配色方案：",
+                "filter-colorblind": "👁️ 只顯示色盲友善配色",
+                "filter-grayscale": "🖨️ 模擬黑白列印",
+                "chart-bar": "長條圖 (Bar Chart)",
+                "chart-doughnut": "甜甜圈圖 (Doughnut Chart)",
+                "chart-scatter": "散佈相關性圖 (Scatter Correlation)",
+                "chart-line": "折線與面積圖 (Line & Area)",
+                "chart-radar": "雷達圖 (Radar Chart)",
+                "links-title": "🎨 配色網站 🌈 漸層配色網站",
+                "chart-data-dist": "數據分佈",
+                "chart-var-x": "變數 X",
+                "chart-var-y": "變數 Y",
+                "month-1": "1月", "month-2": "2月", "month-3": "3月", "month-4": "4月", "month-5": "5月", "month-6": "6月", "month-7": "7月",
+                "copied": "已複製!",
+                "copy-hint": "點擊複製色碼"
+            },
+            en: {
+                "title": "🎨 Academic Color Palettes",
+                "subtitle": "Currently featuring 163 color palettes (2026/6/14)",
+                "select-label": "Select Palette:",
+                "filter-colorblind": "👁️ Colorblind Safe Only",
+                "filter-grayscale": "🖨️ Grayscale Preview",
+                "chart-bar": "Bar Chart",
+                "chart-doughnut": "Doughnut Chart",
+                "chart-scatter": "Scatter Correlation",
+                "chart-line": "Line & Area Chart",
+                "chart-radar": "Radar Chart",
+                "links-title": "🎨 Color Palette 🌈 Gradient Websites",
+                "chart-data-dist": "Data Distribution",
+                "chart-var-x": "Variable X",
+                "chart-var-y": "Variable Y",
+                "month-1": "Jan", "month-2": "Feb", "month-3": "Mar", "month-4": "Apr", "month-5": "May", "month-6": "Jun", "month-7": "Jul",
+                "copied": "Copied!",
+                "copy-hint": "Click to copy HEX"
+            }
+        };
+
+        let currentLanguage = 'zh';
+
         const palettes = [
             { name: 'Nature NPG Classic', colors: ['#E64B35', '#4DBBD5', '#00A087', '#3C5488', '#F39B7F'] },
             { name: 'Science AAAS', colors: ['#3B4992', '#EE0000', '#008B45', '#631879', '#008280'] },
@@ -494,6 +578,37 @@
             renderSelectOptions();
         };
 
+        // 語言切換核心邏輯
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // 更新按鈕樣式
+            document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            
+            // 更新帶有 data-text 的 HTML 元素
+            document.querySelectorAll('[data-text]').forEach(el => {
+                const key = el.getAttribute('data-text');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+
+            // 重新渲染下拉選單及圖表（為了讓圖表標籤和清單名字更新）
+            renderSelectOptions();
+        }
+
+        // 翻譯陣列中帶有括號說明的文字，省去手動翻譯 163 個陣列
+        function getTranslatedPaletteName(name, lang) {
+            if (lang === 'zh') return name;
+            return name
+                .replace('色盲友善', 'Colorblind Safe')
+                .replace('離散', 'Discrete')
+                .replace('連續', 'Continuous')
+                .replace('黑白列印友善', 'Grayscale Friendly')
+                .replace('四色', '4-Color');
+        }
+
         function toggleGrayscale() {
             const grayscaleCheckbox = document.getElementById('grayscaleFilter');
             const chartsGrid = document.querySelector('.charts-grid');
@@ -512,7 +627,12 @@
             const select = document.getElementById('paletteSelect');
             const filterCheckbox = document.getElementById('colorblindFilter');
             
-            const prevSelectedName = select.value !== "" && filteredPalettes[select.value] ? filteredPalettes[select.value].name : "";
+            // 記錄原本選中的 index 以便還原選擇
+            const prevSelectedVal = select.value;
+            let currentOriginalName = "";
+            if (prevSelectedVal !== "" && filteredPalettes[prevSelectedVal]) {
+                currentOriginalName = filteredPalettes[prevSelectedVal].name;
+            }
             
             select.innerHTML = '';
             
@@ -527,10 +647,11 @@
                 const option = document.createElement('option');
                 option.value = index; 
                 
-                const displayName = palette.colorblindSafe ? `${palette.name} 👁️` : palette.name;
+                const baseName = getTranslatedPaletteName(palette.name, currentLanguage);
+                const displayName = palette.colorblindSafe ? `${baseName} 👁️` : baseName;
                 option.textContent = displayName;
                 
-                if (palette.name === prevSelectedName) {
+                if (palette.name === currentOriginalName) {
                     defaultIndex = index;
                 }
                 
@@ -557,7 +678,7 @@
             colors.forEach(color => {
                 const box = document.createElement('div');
                 box.className = 'color-box';
-                box.title = "點擊複製色碼"; 
+                box.title = translations[currentLanguage]['copy-hint']; 
                 box.innerHTML = `
                     <div class="color-swatch" style="background-color: ${color};"></div>
                     <div class="color-hex">${color}</div>
@@ -566,7 +687,7 @@
                 box.addEventListener('click', () => {
                     navigator.clipboard.writeText(color).then(() => {
                         const hexDisplay = box.querySelector('.color-hex');
-                        hexDisplay.textContent = '已複製!';
+                        hexDisplay.textContent = translations[currentLanguage]['copied'];
                         hexDisplay.style.backgroundColor = '#d4edda'; 
                         hexDisplay.style.color = '#155724';           
                         
@@ -587,87 +708,97 @@
         }
 
         function updateAllCharts(colors, paletteName) {
-    const dataCount = colors.length;
-    const labels = Array.from({length: dataCount}, (_, i) => `Group ${String.fromCharCode(65 + i)}`);
-    const baseData = Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20);
+            const dataCount = colors.length;
+            const labels = Array.from({length: dataCount}, (_, i) => `Group ${String.fromCharCode(65 + i)}`);
+            const baseData = Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20);
 
-    // 1. 修改設定：將 animation 設為 false，徹底捨棄動畫以求穩定
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false 
-    };
+            // 1. 修改設定：將 animation 設為 false，徹底捨棄動畫以求穩定
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false 
+            };
 
-    // 2. 無條件銷毀：只要圖表實例存在，就直接 destroy()
-    if (chartInstances.bar) chartInstances.bar.destroy();
-    if (chartInstances.doughnut) chartInstances.doughnut.destroy();
-    if (chartInstances.scatter) chartInstances.scatter.destroy();
-    if (chartInstances.line) chartInstances.line.destroy();
-    if (chartInstances.radar) chartInstances.radar.destroy();
+            // 2. 無條件銷毀：只要圖表實例存在，就直接 destroy()
+            if (chartInstances.bar) chartInstances.bar.destroy();
+            if (chartInstances.doughnut) chartInstances.doughnut.destroy();
+            if (chartInstances.scatter) chartInstances.scatter.destroy();
+            if (chartInstances.line) chartInstances.line.destroy();
+            if (chartInstances.radar) chartInstances.radar.destroy();
 
-    // ==========================================
-    // 1. 長條圖 (Bar Chart)
-    // ==========================================
-    chartInstances.bar = new Chart(document.getElementById('barChart'), {
-        type: 'bar',
-        data: { labels: labels, datasets: [{ label: '數據分佈', data: baseData, backgroundColor: colors, borderRadius: 4 }] },
-        options: { ...commonOptions, plugins: { legend: { display: false } } }
-    });
+            // 取得當前語言的標籤文字
+            const t = translations[currentLanguage];
 
-    // ==========================================
-    // 2. 甜甜圈圖 (Doughnut Chart)
-    // ==========================================
-    chartInstances.doughnut = new Chart(document.getElementById('doughnutChart'), {
-        type: 'doughnut',
-        data: { labels: labels, datasets: [{ data: baseData, backgroundColor: colors, borderWidth: 2 }] },
-        options: { ...commonOptions, plugins: { legend: { position: 'right' } } }
-    });
+            // ==========================================
+            // 1. 長條圖 (Bar Chart)
+            // ==========================================
+            chartInstances.bar = new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: t['chart-data-dist'], data: baseData, backgroundColor: colors, borderRadius: 4 }] },
+                options: { ...commonOptions, plugins: { legend: { display: false } } }
+            });
 
-    // ==========================================
-    // 3. 散佈相關性圖 (Scatter Chart)
-    // ==========================================
-    const scatterDatasets = colors.map((color, idx) => {
-        return {
-            label: `Group ${String.fromCharCode(65 + idx)}`,
-            data: Array.from({length: 25}, () => ({ x: (Math.random() * 40) + (idx * 15), y: (Math.random() * 40) + (idx * 10) })),
-            backgroundColor: color + 'B3', borderColor: color, borderWidth: 1, pointRadius: 6, pointHoverRadius: 8
-        };
-    });
-    chartInstances.scatter = new Chart(document.getElementById('scatterChart'), {
-        type: 'scatter', data: { datasets: scatterDatasets },
-        options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { x: { title: { display: true, text: '變數 X' } }, y: { title: { display: true, text: '變數 Y' } } } }
-    });
+            // ==========================================
+            // 2. 甜甜圈圖 (Doughnut Chart)
+            // ==========================================
+            chartInstances.doughnut = new Chart(document.getElementById('doughnutChart'), {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: baseData, backgroundColor: colors, borderWidth: 2 }] },
+                options: { ...commonOptions, plugins: { legend: { position: 'right' } } }
+            });
 
-    // ==========================================
-    // 4. 折線與面積圖 (Line Chart)
-    // ==========================================
-    const lineMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月'];
-    const lineDatasets = [];
-    for(let i=0; i<dataCount; i++){
-        lineDatasets.push({
-            label: `Group ${i+1}`, data: Array.from({length: 7}, () => Math.floor(Math.random() * 100)),
-            borderColor: colors[i], backgroundColor: colors[i] + '33', fill: true, tension: 0.4
-        });
-    }
-    chartInstances.line = new Chart(document.getElementById('lineChart'), {
-        type: 'line', data: { labels: lineMonths, datasets: lineDatasets },
-        options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
-    });
+            // ==========================================
+            // 3. 散佈相關性圖 (Scatter Chart)
+            // ==========================================
+            const scatterDatasets = colors.map((color, idx) => {
+                return {
+                    label: `Group ${String.fromCharCode(65 + idx)}`,
+                    data: Array.from({length: 25}, () => ({ x: (Math.random() * 40) + (idx * 15), y: (Math.random() * 40) + (idx * 10) })),
+                    backgroundColor: color + 'B3', borderColor: color, borderWidth: 1, pointRadius: 6, pointHoverRadius: 8
+                };
+            });
+            chartInstances.scatter = new Chart(document.getElementById('scatterChart'), {
+                type: 'scatter', data: { datasets: scatterDatasets },
+                options: { 
+                    ...commonOptions, 
+                    plugins: { legend: { position: 'top' } }, 
+                    scales: { 
+                        x: { title: { display: true, text: t['chart-var-x'] } }, 
+                        y: { title: { display: true, text: t['chart-var-y'] } } 
+                    } 
+                }
+            });
 
-    // ==========================================
-    // 5. 雷達圖 (Radar Chart)
-    // ==========================================
-    const radarDatasets = colors.map((color, idx) => {
-        return {
-            label: `Group ${String.fromCharCode(65 + idx)}`, data: Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20),
-            backgroundColor: color + '40', borderColor: color, borderWidth: 2
-        };
-    });
-    chartInstances.radar = new Chart(document.getElementById('radarChart'), {
-        type: 'radar', data: { labels: labels, datasets: radarDatasets },
-        options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { r: { ticks: { display: false } } } }
-    });
-}
+            // ==========================================
+            // 4. 折線與面積圖 (Line Chart)
+            // ==========================================
+            const lineMonths = [t['month-1'], t['month-2'], t['month-3'], t['month-4'], t['month-5'], t['month-6'], t['month-7']];
+            const lineDatasets = [];
+            for(let i=0; i<dataCount; i++){
+                lineDatasets.push({
+                    label: `Group ${i+1}`, data: Array.from({length: 7}, () => Math.floor(Math.random() * 100)),
+                    borderColor: colors[i], backgroundColor: colors[i] + '33', fill: true, tension: 0.4
+                });
+            }
+            chartInstances.line = new Chart(document.getElementById('lineChart'), {
+                type: 'line', data: { labels: lineMonths, datasets: lineDatasets },
+                options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+            });
+
+            // ==========================================
+            // 5. 雷達圖 (Radar Chart)
+            // ==========================================
+            const radarDatasets = colors.map((color, idx) => {
+                return {
+                    label: `Group ${String.fromCharCode(65 + idx)}`, data: Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20),
+                    backgroundColor: color + '40', borderColor: color, borderWidth: 2
+                };
+            });
+            chartInstances.radar = new Chart(document.getElementById('radarChart'), {
+                type: 'radar', data: { labels: labels, datasets: radarDatasets },
+                options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { r: { ticks: { display: false } } } }
+            });
+        }
     </script>
 </body>
 </html>
