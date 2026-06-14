@@ -199,8 +199,16 @@
     
     <div class="sticky-header">
         <div class="control-panel">
-            <label for="paletteSelect" style="font-size: 16px; margin-right: 10px;"><strong>選擇配色方案：</strong></label>
-            <select id="paletteSelect" onchange="updatePalette()"></select>
+            <div style="margin-bottom: 8px;">
+                <label for="paletteSelect" style="font-size: 16px; margin-right: 10px;"><strong>選擇配色方案：</strong></label>
+                <select id="paletteSelect" onchange="updatePalette()"></select>
+            </div>
+            <div style="font-size: 14px; color: #555; border-top: 1px dashed #eee; padding-top: 8px; margin-top: 8px;">
+                <input type="checkbox" id="colorblindFilter" onchange="renderSelectOptions()" style="cursor: pointer; transform: scale(1.1); margin-right: 5px;">
+                <label for="colorblindFilter" style="cursor: pointer; user-select: none; font-weight: bold; color: #2980b9;">
+                    👁️ 只顯示色盲友善配色 (Colorblind-Safe)
+                </label>
+            </div>
         </div>
         <div class="palette-container" id="colorDisplay"></div>
     </div>
@@ -247,6 +255,7 @@
             <div class="links-container">
                 <h3>推薦： 🎨 配色網站 🌈 漸層配色網站</h3>
                 <ul>
+                    <li><a href="https://www.ysdaima.com/palettes/academic/" target="_blank" rel="noopener noreferrer">🎨 顏色代碼表</a></li>
                     <li><a href="https://www.sessions.edu/color-calculator" target="_blank" rel="noopener noreferrer">🎨 Sessions College Color Calculator</a></li>
                     <li><a href="https://color.adobe.com/zh/create/color-wheel" target="_blank" rel="noopener noreferrer">🎨 Adobe Color</a></li>
                     <li><a href="http://colorbrewer2.org" target="_blank" rel="noopener noreferrer">🎨 ColorBrewer</a></li>
@@ -264,7 +273,7 @@
     </div>
 
     <script>
-        // 完整的配色資料庫
+        // 💡 修改位置：完整的配色資料庫，已為色盲友善方案打上 colorblindSafe: true 標籤
         const palettes = [
             { name: 'Nature NPG Classic', colors: ['#E64B35', '#4DBBD5', '#00A087', '#3C5488', '#F39B7F'] },
             { name: 'Science AAAS', colors: ['#3B4992', '#EE0000', '#008B45', '#631879', '#008280'] },
@@ -276,27 +285,27 @@
             { name: 'IGV Genomic', colors: ['#505050', '#CE3D32', '#749B58', '#F0E685', '#466983'] },
             { name: 'UCSC Genome', colors: ['#ff0000', '#ff9900', '#00ff00', '#0000ff', '#800080'] },
             { name: 'BMJ Clinical', colors: ['#002F6C', '#E05206', '#A10050', '#FFC20E', '#009877'] },
-            { name: 'Viridis Heatmap', colors: ['#440154', '#3b528b', '#21908c', '#5dc863', '#fde725'] },
-            { name: 'Plasma High-Vis', colors: ['#0d0887', '#7e03a8', '#cc4678', '#f89441', '#f0f921'] },
-            { name: 'Magma Dark', colors: ['#000004', '#3b0f70', '#8c2981', '#de4968', '#fecf92'] },
-            { name: 'Inferno Intense', colors: ['#000004', '#420a68', '#932667', '#dd513a', '#fca50a'] },
-            { name: 'Cividis Safe', colors: ['#00204c', '#414d6b', '#7c7b78', '#b9ac70', '#fde725'] },
+            { name: 'Nature Reviews Soft', colors: ['#E3DAC9', '#A0B0C0', '#D88C9A', '#8FBC94', '#6D8A96'] },
+            { name: 'Okabe-Ito Soft(色盲友善/離散)', colors: ['#E69F00', '#56B4E9', '#009E73', '#F0E442', '#CC79A7'], colorblindSafe: true },
+            { name: 'Dark2 Data(色盲友善/離散)', colors: ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'], colorblindSafe: true },
+            { name: 'Brewer Set2(色盲友善/離散)', colors: ['#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854'], colorblindSafe: true },
+            { name: 'Cividis Safe(色盲友善/黑白列印友善/連續)', colors: ['#00204c', '#414d6b', '#7c7b78', '#b9ac70', '#fde725'], colorblindSafe: true },
+            { name: 'Viridis Heatmap(色盲友善/連續)', colors: ['#440154', '#3b528b', '#21908c', '#5dc863', '#fde725'], colorblindSafe: true },
+            { name: 'Plasma High-Vis(色盲友善/連續)', colors: ['#0d0887', '#7e03a8', '#cc4678', '#f89441', '#f0f921'], colorblindSafe: true },
+            { name: 'Magma Dark(色盲友善/連續)', colors: ['#000004', '#3b0f70', '#8c2981', '#de4968', '#fecf92'], colorblindSafe: true },
+            { name: 'Inferno Intense(色盲友善/連續)', colors: ['#000004', '#420a68', '#932667', '#dd513a', '#fca50a'], colorblindSafe: true },
+            { name: 'Spectral(色盲友善/離散)', colors: ['#d53e4f', '#fc8d59', '#fee08b', '#e6f598', '#99d594'], colorblindSafe: true },
+            { name: 'Brewer Set3', colors: ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3'] },
             { name: 'Ocean Depth', colors: ['#ffffd9', '#c7e9b4', '#41b6c4', '#225ea8', '#081d58'] },
             { name: 'Geology Strata', colors: ['#8c510a', '#d8b365', '#f6e8c3', '#c7eae5', '#5ab4ac'] },
             { name: 'Protein Structure', colors: ['#cb4c4e', '#4e88c7', '#5fb07e', '#edc555', '#8560a8'] },
             { name: 'Botany Flora', colors: ['#4e7a3a', '#8fae5f', '#d3e094', '#f7e8a4', '#c27b5f'] },
             { name: 'Set1 Contrast', colors: ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00'] },
-            { name: 'Dark2 Data', colors: ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'] },
             { name: 'Paired Compare', colors: ['#a6cee3', '#1f78b4', '#b2df8a', '#33a02c', '#fb9a99'] },
             { name: 'Pastel Soft', colors: ['#fbb4ae', '#b3cde3', '#ccebc5', '#decbe4', '#fed9a6'] },
-            { name: 'Spectral', colors: ['#d53e4f', '#fc8d59', '#fee08b', '#e6f598', '#99d594'] },
-            { name: 'Brewer Set2', colors: ['#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854'] },
-            { name: 'Brewer Set3', colors: ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3'] },
-            { name: 'Okabe-Ito Soft', colors: ['#E69F00', '#56B4E9', '#009E73', '#F0E442', '#CC79A7'] },
             { name: 'Pastel 2', colors: ['#b3e2cd', '#fdcdac', '#cbd5e8', '#f4cae4', '#e6f5c9'] },
             { name: 'Accent Soft', colors: ['#7fc97f', '#beaed4', '#fdc086', '#ffff99', '#386cb0'] },
             { name: 'Table Row Pastels', colors: ['#f2f2f2', '#e6f7ff', '#f0f9eb', '#fff7e6', '#fff0f6'] },
-            { name: 'Nature Reviews Soft', colors: ['#E3DAC9', '#A0B0C0', '#D88C9A', '#8FBC94', '#6D8A96'] },
             { name: 'Flat UI Muted', colors: ['#1abc9c', '#3498db', '#9b59b6', '#e67e22', '#95a5a6'] },
             { name: 'Solarized Light', colors: ['#b58900', '#cb4b16', '#2aa198', '#859900', '#6c71c4'] },
             { name: 'Dusty Diagram', colors: ['#ddbea9', '#ffe8d6', '#b7b7a4', '#a5a58d', '#6b705c'] },
@@ -384,18 +393,18 @@
             { name: '幽谷森林', colors: ['#2d6a4f', '#588157', '#a7c957', '#f2e8cf', '#9c6644'] },
             { name: '石墨斷章', colors: ['#343a40', '#005f73', '#ae2012', '#adb5bd', '#f8f9fa'] },
             { name: '冰原之詩', colors: ['#5e81ac', '#bf616a', '#a3be8c', '#ebcb8b', '#b48ead'] },
-            { name: '溫差之變', colors: ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'] },
+            { name: '溫差之變(色盲友善/離散)', colors: ['#2166ac', '#67a9cf', '#f7f7f7', '#ef8a62', '#b2182b'], colorblindSafe: true },
             { name: '大地之息', colors: ['#556b2f', '#8fbc8f', '#f5deb3', '#cd853f', '#8b4513'] },
             { name: '靜夜沉思', colors: ['#4a4e69', '#9a8c98', '#c9ada7', '#f2e9e4', '#22223b'] },
             { name: '落日熔金', colors: ['#fef0d9', '#fdcc8a', '#fc8d59', '#e34a33', '#b30000'] },
             { name: '復古浪潮', colors: ['#00a0b0', '#6a4a3c', '#cc333f', '#eb6841', '#edc951'] },
             { name: '夏日花園', colors: ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F'] },
             { name: '藍靛遞進', colors: ['#e0e1f3', '#b9bce3', '#9095d2', '#696ec1', '#4247b0'] },
-            { name: '棕青分野', colors: ['#8c510a', '#d8b365', '#f6e8c3', '#80cdc1', '#01665e'] },
+            { name: '棕青分野(色盲友善/離散)', colors: ['#8c510a', '#d8b365', '#f6e8c3', '#80cdc1', '#01665e'], colorblindSafe: true },
             { name: '遠山黛', colors: ['#f8f9fa', '#dee2e6', '#adb5bd', '#6c757d', '#343a40'] },
             { name: '秋日田野', colors: ['#e9c46a', '#f4a261', '#e76f51', '#2a9d8f', '#264653'] },
             { name: '柔和晨霧', colors: ['#a8dadc', '#f1faee', '#457b9d', '#1d3557', '#e63946'] },
-            { name: '深海熱泉', colors: ['#fde725', '#5dc863', '#21908d', '#3b528b', '#440154'] },
+            { name: '深海熱泉(色盲友善/連續)', colors: ['#fde725', '#5dc863', '#21908d', '#3b528b', '#440154'], colorblindSafe: true },
             { name: '莓果甜點', colors: ['#ffc5d9', '#f4acb7', '#d68ba2', '#9e627b', '#583d47'] },
             { name: '赤砂熱風', colors: ['#fff2d9', '#ffcc8f', '#ff955c', '#e95d3d', '#c0392b'] },
             { name: '海岸線', colors: ['#03045e', '#0077b6', '#00b4d8', '#90e0ef', '#caf0f8'] },
@@ -404,7 +413,7 @@
             { name: '生長之綠', colors: ['#f7fcf5', '#c7e9c0', '#74c476', '#238b45', '#00441b'] },
             { name: '優雅灰階', colors: ['#1b1b1e', '#474747', '#8a8a8a', '#c2c2c2', '#e1dde4'] },
             { name: '粉紅紫極光', colors: ['#f15bb5', '#fee440', '#00bbf9', '#00f5d4', '#9b5de5'] },
-            { name: '光譜偏移', colors: ['#d7191c', '#fdae61', '#ffffbf', '#abd9e9', '#2c7bb6'] },
+            { name: '光譜偏移(色盲友善/離散)', colors: ['#d7191c', '#fdae61', '#ffffbf', '#abd9e9', '#2c7bb6'], colorblindSafe: true },
             { name: '蜜桃烏龍', colors: ['#ffdab9', '#f08080', '#cd5c5c', '#8b4513', '#f5f5dc'] },
             { name: '經濟藍圖', colors: ['#277da1', '#577590', '#4d908e', '#43aa8b', '#f9c74f'] },
             { name: '青巒疊翠(四色)', colors: ['#85A982', '#C7D5C3', '#35704A', '#8FA18E'] },
@@ -431,23 +440,66 @@
             { name: '碧空雲影(四色)', colors: ['#BCC6DD', '#98A3CA', '#8092C4', '#455D99'] }
         ];
 
+        // 💡 修改位置：引進「影子資料庫」機制的 JavaScript 邏輯
+
         // 儲存所有圖表實例
         const chartInstances = {};
+        // 全局變數：用來儲存目前選單中「真正顯示」的配色方案
+        let filteredPalettes = [];
 
         window.onload = () => {
-            const select = document.getElementById('paletteSelect');
-            palettes.forEach((palette, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = palette.name;
-                select.appendChild(option);
-            });
-            updatePalette();
+            // 網頁載入時，先執行一次選單渲染
+            renderSelectOptions();
         };
+
+        // 核心優化：動態渲染選單選項的函式
+        function renderSelectOptions() {
+    const select = document.getElementById('paletteSelect');
+    const filterCheckbox = document.getElementById('colorblindFilter');
+    
+    // 記錄切換前使用者選了哪一個方案的名字，以便切換後儘量維持選中狀態
+    const prevSelectedName = select.value !== "" && filteredPalettes[select.value] ? filteredPalettes[select.value].name : "";
+    
+    select.innerHTML = '';
+    
+    if (filterCheckbox.checked) {
+        filteredPalettes = palettes.filter(p => p.colorblindSafe === true);
+    } else {
+        filteredPalettes = [...palettes];
+    }
+    
+    let defaultIndex = 0;
+    filteredPalettes.forEach((palette, index) => {
+        const option = document.createElement('option');
+        option.value = index; 
+        
+        const displayName = palette.colorblindSafe ? `${palette.name} 👁️` : palette.name;
+        option.textContent = displayName;
+        
+        // 如果切換前選的名字跟現在這個一樣，就把它設為預設
+        if (palette.name === prevSelectedName) {
+            defaultIndex = index;
+        }
+        
+        select.appendChild(option);
+    });
+    
+    // 恢復選取狀態
+    if (filteredPalettes.length > 0) {
+        select.value = defaultIndex;
+    }
+    
+    updatePalette();
+}
 
         function updatePalette() {
             const select = document.getElementById('paletteSelect');
-            const selectedPalette = palettes[select.value];
+            
+            // 防呆機制
+            if (select.value === "" || filteredPalettes.length === 0) return;
+            
+            // 對應「影子資料庫」抓取配色
+            const selectedPalette = filteredPalettes[select.value];
             const colors = selectedPalette.colors;
 
             // 1. 更新色塊展示區
@@ -456,33 +508,26 @@
             colors.forEach(color => {
                 const box = document.createElement('div');
                 box.className = 'color-box';
-                box.title = "點擊複製色碼"; // 滑鼠停靠時的提示文字
+                box.title = "點擊複製色碼"; 
                 box.innerHTML = `
                     <div class="color-swatch" style="background-color: ${color};"></div>
                     <div class="color-hex">${color}</div>
                 `;
                 
-                // 加入點擊複製事件
                 box.addEventListener('click', () => {
-                    // 使用 Clipboard API 複製色碼
                     navigator.clipboard.writeText(color).then(() => {
-                        // 取得顯示色碼的 div
                         const hexDisplay = box.querySelector('.color-hex');
-                        
-                        // 改變文字與背景顏色給予成功提示
                         hexDisplay.textContent = '已複製!';
-                        hexDisplay.style.backgroundColor = '#d4edda'; // 淺綠色背景
-                        hexDisplay.style.color = '#155724';           // 深綠色文字
+                        hexDisplay.style.backgroundColor = '#d4edda'; 
+                        hexDisplay.style.color = '#155724';           
                         
-                        // 設定 1 秒後恢復原本的色碼顯示
                         setTimeout(() => {
                             hexDisplay.textContent = color;
-                            hexDisplay.style.backgroundColor = ''; // 清除行內樣式，恢復預設
+                            hexDisplay.style.backgroundColor = ''; 
                             hexDisplay.style.color = '';
                         }, 1000);
                     }).catch(err => {
                         console.error('複製失敗:', err);
-                        alert('複製失敗，您的瀏覽器可能不支援此功能。');
                     });
                 });
 
@@ -493,19 +538,19 @@
             updateAllCharts(colors, selectedPalette.name);
         }
 
+        // 💡 完美修復版：處理圖表切換時顏色數量不一致的 Bug
         function updateAllCharts(colors, paletteName) {
             const dataCount = colors.length;
-            const labels = Array.from({length: dataCount}, (_, i) => `項目 ${String.fromCharCode(65 + i)}`);
+            const labels = Array.from({length: dataCount}, (_, i) => `Group ${String.fromCharCode(65 + i)}`);
             const baseData = Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20);
 
-            // 通用的動畫與外觀設定
             const commonOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: { duration: 800, easing: 'easeOutQuart' }
             };
 
-            // ================= 1. Bar Chart =================
+            // ================= Bar Chart =================
             if (chartInstances.bar) {
                 chartInstances.bar.data.labels = labels;
                 chartInstances.bar.data.datasets[0].data = baseData;
@@ -522,7 +567,7 @@
                 });
             }
 
-            // ================= 2. Doughnut Chart =================
+            // ================= Doughnut Chart =================
             if (chartInstances.doughnut) {
                 chartInstances.doughnut.data.labels = labels;
                 chartInstances.doughnut.data.datasets[0].data = baseData;
@@ -539,14 +584,14 @@
                 });
             }
 
-            // ================= 3. Scatter Chart =================
+            // ================= Scatter Chart =================
             const scatterDatasets = colors.map((color, idx) => {
                 const points = Array.from({length: 25}, () => ({
                     x: (Math.random() * 40) + (idx * 15), 
                     y: (Math.random() * 40) + (idx * 10)  
                 }));
                 return {
-                    label: `群組 ${String.fromCharCode(65 + idx)}`,
+                    label: `Group ${String.fromCharCode(65 + idx)}`,
                     data: points,
                     backgroundColor: color + 'B3', 
                     borderColor: color,
@@ -556,32 +601,30 @@
                 };
             });
 
+            // 💡 散佈圖資料結構較複雜，數量變更時直接銷毀重做最安全
             if (chartInstances.scatter) {
-                chartInstances.scatter.data.datasets = scatterDatasets;
-                chartInstances.scatter.update();
-            } else {
-                chartInstances.scatter = new Chart(document.getElementById('scatterChart'), {
-                    type: 'scatter',
-                    data: { datasets: scatterDatasets },
-                    options: { 
-                        ...commonOptions, 
-                        plugins: { legend: { position: 'top' } },
-                        scales: {
-                            x: { title: { display: true, text: '變數 X' } },
-                            y: { title: { display: true, text: '變數 Y' } }
-                        }
-                    }
-                });
+                chartInstances.scatter.destroy();
             }
+            chartInstances.scatter = new Chart(document.getElementById('scatterChart'), {
+                type: 'scatter',
+                data: { datasets: scatterDatasets },
+                options: { 
+                    ...commonOptions, 
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        x: { title: { display: true, text: '變數 X' } },
+                        y: { title: { display: true, text: '變數 Y' } }
+                    }
+                }
+            });
 
-            // ================= 4. Line/Area Chart =================
+            // ================= Line/Area Chart =================
             const lineMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月'];
             const lineDatasets = [];
-            const linesToShow = colors.length;
             
-            for(let i=0; i<linesToShow; i++){
+            for(let i=0; i<dataCount; i++){
                 lineDatasets.push({
-                    label: `數據流 ${i+1}`,
+                    label: `Group ${i+1}`,
                     data: Array.from({length: 7}, () => Math.floor(Math.random() * 100)),
                     borderColor: colors[i],
                     backgroundColor: colors[i] + '33',
@@ -590,51 +633,47 @@
                 });
             }
 
+            // 💡 修正：如果線條數量變了，必須銷毀舊圖表，否則 Chart.js 會因為找不到殘留線條的索引而噴錯卡死
             if (chartInstances.line) {
-                chartInstances.line.data.datasets = lineDatasets;
-                chartInstances.line.update();
-            } else {
-                chartInstances.line = new Chart(document.getElementById('lineChart'), {
-                    type: 'line',
-                    data: { labels: lineMonths, datasets: lineDatasets },
-                    options: { 
-                        ...commonOptions, 
-                        plugins: { legend: { position: 'top' } },
-                        scales: { y: { beginAtZero: true } }
-                    }
-                });
+                chartInstances.line.destroy();
             }
+            chartInstances.line = new Chart(document.getElementById('lineChart'), {
+                type: 'line',
+                data: { labels: lineMonths, datasets: lineDatasets },
+                options: { 
+                    ...commonOptions, 
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
 
-// ================= 5. Radar Chart =================
-            // 動態為每個顏色產生一個資料集
+            // ================= Radar Chart =================
             const radarDatasets = colors.map((color, idx) => {
                 return {
-                    label: `指標 ${String.fromCharCode(65 + idx)}`,
+                    label: `Group ${String.fromCharCode(65 + idx)}`,
                     data: Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20),
-                    backgroundColor: color + '40', // 加入 25% 透明度
+                    backgroundColor: color + '40', 
                     borderColor: color,
                     borderWidth: 2
                 };
             });
 
+            // 💡 修正：雷達圖的維度（Labels 數量）跟著顏色走，數量變更時必須銷毀重建，否則圖表形狀會錯亂
             if (chartInstances.radar) {
-                chartInstances.radar.data.labels = labels;
-                chartInstances.radar.data.datasets = radarDatasets;
-                chartInstances.radar.update();
-            } else {
-                chartInstances.radar = new Chart(document.getElementById('radarChart'), {
-                    type: 'radar',
-                    data: {
-                        labels: labels,
-                        datasets: radarDatasets
-                    },
-                    options: { 
-                        ...commonOptions, 
-                        plugins: { legend: { position: 'top' } }, 
-                        scales: { r: { ticks: { display: false } } } 
-                    }
-                });
+                chartInstances.radar.destroy();
             }
+            chartInstances.radar = new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: radarDatasets
+                },
+                options: { 
+                    ...commonOptions, 
+                    plugins: { legend: { position: 'top' } }, 
+                    scales: { r: { ticks: { display: false } } } 
+                }
+            });
         }
     </script>
 </body>
