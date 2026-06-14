@@ -586,146 +586,88 @@
             updateAllCharts(colors, selectedPalette.name);
         }
 
-function updateAllCharts(colors, paletteName) {
-            const dataCount = colors.length;
-            const labels = Array.from({length: dataCount}, (_, i) => `Group ${String.fromCharCode(65 + i)}`);
-            const baseData = Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20);
+        function updateAllCharts(colors, paletteName) {
+    const dataCount = colors.length;
+    const labels = Array.from({length: dataCount}, (_, i) => `Group ${String.fromCharCode(65 + i)}`);
+    const baseData = Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20);
 
-            const commonOptions = {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: { duration: 800, easing: 'easeOutQuart' }
-            };
+    // 1. 修改設定：將 animation 設為 false，徹底捨棄動畫以求穩定
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false 
+    };
 
-            // ==========================================
-            // 💡 智慧分流判斷：檢查是否需要打掉重練
-            // ==========================================
-            // 如果原本的圖表存在，但「顏色數量不同」(例如 5色 切換成 4色)，就必須銷毀重建以防 Bug。
-            const shouldReset = chartInstances.bar && chartInstances.bar.data.labels.length !== dataCount;
+    // 2. 無條件銷毀：只要圖表實例存在，就直接 destroy()
+    if (chartInstances.bar) chartInstances.bar.destroy();
+    if (chartInstances.doughnut) chartInstances.doughnut.destroy();
+    if (chartInstances.scatter) chartInstances.scatter.destroy();
+    if (chartInstances.line) chartInstances.line.destroy();
+    if (chartInstances.radar) chartInstances.radar.destroy();
 
-            if (shouldReset) {
-                if (chartInstances.bar) chartInstances.bar.destroy();
-                if (chartInstances.doughnut) chartInstances.doughnut.destroy();
-                if (chartInstances.scatter) chartInstances.scatter.destroy();
-                if (chartInstances.line) chartInstances.line.destroy();
-                if (chartInstances.radar) chartInstances.radar.destroy();
-                
-                // 清空物件參考，讓下方的邏輯知道要重新 new Chart()
-                chartInstances.bar = null;
-                chartInstances.doughnut = null;
-                chartInstances.scatter = null;
-                chartInstances.line = null;
-                chartInstances.radar = null;
-            }
+    // ==========================================
+    // 1. 長條圖 (Bar Chart)
+    // ==========================================
+    chartInstances.bar = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: '數據分佈', data: baseData, backgroundColor: colors, borderRadius: 4 }] },
+        options: { ...commonOptions, plugins: { legend: { display: false } } }
+    });
 
-            // ==========================================
-            // 1. 長條圖 (Bar Chart)
-            // ==========================================
-            if (chartInstances.bar) {
-                // 安全更新：直接修改現有 datasets 內的屬性，完美觸發伸縮動畫
-                chartInstances.bar.data.labels = labels;
-                chartInstances.bar.data.datasets[0].data = baseData;
-                chartInstances.bar.data.datasets[0].backgroundColor = colors;
-                chartInstances.bar.update();
-            } else {
-                chartInstances.bar = new Chart(document.getElementById('barChart'), {
-                    type: 'bar',
-                    data: { labels: labels, datasets: [{ label: '數據分佈', data: baseData, backgroundColor: colors, borderRadius: 4 }] },
-                    options: { ...commonOptions, plugins: { legend: { display: false } } }
-                });
-            }
+    // ==========================================
+    // 2. 甜甜圈圖 (Doughnut Chart)
+    // ==========================================
+    chartInstances.doughnut = new Chart(document.getElementById('doughnutChart'), {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: baseData, backgroundColor: colors, borderWidth: 2 }] },
+        options: { ...commonOptions, plugins: { legend: { position: 'right' } } }
+    });
 
-            // ==========================================
-            // 2. 甜甜圈圖 (Doughnut Chart)
-            // ==========================================
-            if (chartInstances.doughnut) {
-                chartInstances.doughnut.data.labels = labels;
-                chartInstances.doughnut.data.datasets[0].data = baseData;
-                chartInstances.doughnut.data.datasets[0].backgroundColor = colors;
-                chartInstances.doughnut.update();
-            } else {
-                chartInstances.doughnut = new Chart(document.getElementById('doughnutChart'), {
-                    type: 'doughnut',
-                    data: { labels: labels, datasets: [{ data: baseData, backgroundColor: colors, borderWidth: 2 }] },
-                    options: { ...commonOptions, plugins: { legend: { position: 'right' } } }
-                });
-            }
+    // ==========================================
+    // 3. 散佈相關性圖 (Scatter Chart)
+    // ==========================================
+    const scatterDatasets = colors.map((color, idx) => {
+        return {
+            label: `Group ${String.fromCharCode(65 + idx)}`,
+            data: Array.from({length: 25}, () => ({ x: (Math.random() * 40) + (idx * 15), y: (Math.random() * 40) + (idx * 10) })),
+            backgroundColor: color + 'B3', borderColor: color, borderWidth: 1, pointRadius: 6, pointHoverRadius: 8
+        };
+    });
+    chartInstances.scatter = new Chart(document.getElementById('scatterChart'), {
+        type: 'scatter', data: { datasets: scatterDatasets },
+        options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { x: { title: { display: true, text: '變數 X' } }, y: { title: { display: true, text: '變數 Y' } } } }
+    });
 
-            // ==========================================
-            // 3. 散佈相關性圖 (Scatter Chart)
-            // ==========================================
-            if (chartInstances.scatter) {
-                // 安全更新：迴圈跑每一個 group，更新點位與顏色，保留 Chart.js 內部動畫連結
-                colors.forEach((color, idx) => {
-                    const points = Array.from({length: 25}, () => ({ x: (Math.random() * 40) + (idx * 15), y: (Math.random() * 40) + (idx * 10) }));
-                    chartInstances.scatter.data.datasets[idx].data = points;
-                    chartInstances.scatter.data.datasets[idx].backgroundColor = color + 'B3';
-                    chartInstances.scatter.data.datasets[idx].borderColor = color;
-                });
-                chartInstances.scatter.update();
-            } else {
-                const scatterDatasets = colors.map((color, idx) => {
-                    return {
-                        label: `Group ${String.fromCharCode(65 + idx)}`,
-                        data: Array.from({length: 25}, () => ({ x: (Math.random() * 40) + (idx * 15), y: (Math.random() * 40) + (idx * 10) })),
-                        backgroundColor: color + 'B3', borderColor: color, borderWidth: 1, pointRadius: 6, pointHoverRadius: 8
-                    };
-                });
-                chartInstances.scatter = new Chart(document.getElementById('scatterChart'), {
-                    type: 'scatter', data: { datasets: scatterDatasets },
-                    options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { x: { title: { display: true, text: '變數 X' } }, y: { title: { display: true, text: '變數 Y' } } } }
-                });
-            }
+    // ==========================================
+    // 4. 折線與面積圖 (Line Chart)
+    // ==========================================
+    const lineMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月'];
+    const lineDatasets = [];
+    for(let i=0; i<dataCount; i++){
+        lineDatasets.push({
+            label: `Group ${i+1}`, data: Array.from({length: 7}, () => Math.floor(Math.random() * 100)),
+            borderColor: colors[i], backgroundColor: colors[i] + '33', fill: true, tension: 0.4
+        });
+    }
+    chartInstances.line = new Chart(document.getElementById('lineChart'), {
+        type: 'line', data: { labels: lineMonths, datasets: lineDatasets },
+        options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+    });
 
-            // ==========================================
-            // 4. 折線與面積圖 (Line Chart)
-            // ==========================================
-            const lineMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月'];
-            if (chartInstances.line) {
-                colors.forEach((color, idx) => {
-                    chartInstances.line.data.datasets[idx].data = Array.from({length: 7}, () => Math.floor(Math.random() * 100));
-                    chartInstances.line.data.datasets[idx].borderColor = color;
-                    chartInstances.line.data.datasets[idx].backgroundColor = color + '33';
-                });
-                chartInstances.line.update();
-            } else {
-                const lineDatasets = [];
-                for(let i=0; i<dataCount; i++){
-                    lineDatasets.push({
-                        label: `Group ${i+1}`, data: Array.from({length: 7}, () => Math.floor(Math.random() * 100)),
-                        borderColor: colors[i], backgroundColor: colors[i] + '33', fill: true, tension: 0.4
-                    });
-                }
-                chartInstances.line = new Chart(document.getElementById('lineChart'), {
-                    type: 'line', data: { labels: lineMonths, datasets: lineDatasets },
-                    options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
-                });
-            }
-
-            // ==========================================
-            // 5. 雷達圖 (Radar Chart)
-            // ==========================================
-            if (chartInstances.radar) {
-                chartInstances.radar.data.labels = labels;
-                colors.forEach((color, idx) => {
-                    chartInstances.radar.data.datasets[idx].data = Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20);
-                    chartInstances.radar.data.datasets[idx].backgroundColor = color + '40';
-                    chartInstances.radar.data.datasets[idx].borderColor = color;
-                });
-                chartInstances.radar.update();
-            } else {
-                const radarDatasets = colors.map((color, idx) => {
-                    return {
-                        label: `Group ${String.fromCharCode(65 + idx)}`, data: Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20),
-                        backgroundColor: color + '40', borderColor: color, borderWidth: 2
-                    };
-                });
-                chartInstances.radar = new Chart(document.getElementById('radarChart'), {
-                    type: 'radar', data: { labels: labels, datasets: radarDatasets },
-                    options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { r: { ticks: { display: false } } } }
-                });
-            }
-        }
+    // ==========================================
+    // 5. 雷達圖 (Radar Chart)
+    // ==========================================
+    const radarDatasets = colors.map((color, idx) => {
+        return {
+            label: `Group ${String.fromCharCode(65 + idx)}`, data: Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20),
+            backgroundColor: color + '40', borderColor: color, borderWidth: 2
+        };
+    });
+    chartInstances.radar = new Chart(document.getElementById('radarChart'), {
+        type: 'radar', data: { labels: labels, datasets: radarDatasets },
+        options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { r: { ticks: { display: false } } } }
+    });
+}
     </script>
 </body>
 </html>
