@@ -301,7 +301,7 @@
 
         <div class="chart-card links-container-wrapper">
             <div class="links-container">
-                <h3>推薦： 🎨 配色網站 🌈 漸層配色網站</h3>
+                <h3>🎨 配色網站 🌈 漸層配色網站</h3>
                 <ul>
                     <li><a href="https://www.ysdaima.com/palettes/academic/" target="_blank" rel="noopener noreferrer">🎨 顏色代碼表</a></li>
                     <li><a href="https://www.sessions.edu/color-calculator" target="_blank" rel="noopener noreferrer">🎨 Sessions College Color Calculator</a></li>
@@ -337,7 +337,7 @@
             { name: 'Dark2 Data(色盲友善/離散)', colors: ['#1b9e77', '#d95f02', '#7570b3', '#e7298a', '#66a61e'], colorblindSafe: true },
             { name: 'Brewer Set2(色盲友善/離散)', colors: ['#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854'], colorblindSafe: true },
             { name: 'Cividis Safe(色盲友善/黑白列印友善/連續)', colors: ['#00204c', '#414d6b', '#7c7b78', '#b9ac70', '#fde725'], colorblindSafe: true },
-            { name: 'Viridis Heatmap(色盲友善/連續)', colors: ['#440154', '#3b528b', '#21908c', '#5dc863', '#fde725'], colorblindSafe: true },
+            { name: 'Viridis Heatmap(色盲友善/黑白列印友善/連續)', colors: ['#440154', '#3b528b', '#21908c', '#5dc863', '#fde725'], colorblindSafe: true },
             { name: 'Plasma High-Vis(色盲友善/連續)', colors: ['#0d0887', '#7e03a8', '#cc4678', '#f89441', '#f0f921'], colorblindSafe: true },
             { name: 'Magma Dark(色盲友善/連續)', colors: ['#000004', '#3b0f70', '#8c2981', '#de4968', '#fecf92'], colorblindSafe: true },
             { name: 'Inferno Intense(色盲友善/連續)', colors: ['#000004', '#420a68', '#932667', '#dd513a', '#fca50a'], colorblindSafe: true },
@@ -586,7 +586,7 @@
             updateAllCharts(colors, selectedPalette.name);
         }
 
-        function updateAllCharts(colors, paletteName) {
+function updateAllCharts(colors, paletteName) {
             const dataCount = colors.length;
             const labels = Array.from({length: dataCount}, (_, i) => `Group ${String.fromCharCode(65 + i)}`);
             const baseData = Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20);
@@ -597,7 +597,32 @@
                 animation: { duration: 800, easing: 'easeOutQuart' }
             };
 
+            // ==========================================
+            // 💡 智慧分流判斷：檢查是否需要打掉重練
+            // ==========================================
+            // 如果原本的圖表存在，但「顏色數量不同」(例如 5色 切換成 4色)，就必須銷毀重建以防 Bug。
+            const shouldReset = chartInstances.bar && chartInstances.bar.data.labels.length !== dataCount;
+
+            if (shouldReset) {
+                if (chartInstances.bar) chartInstances.bar.destroy();
+                if (chartInstances.doughnut) chartInstances.doughnut.destroy();
+                if (chartInstances.scatter) chartInstances.scatter.destroy();
+                if (chartInstances.line) chartInstances.line.destroy();
+                if (chartInstances.radar) chartInstances.radar.destroy();
+                
+                // 清空物件參考，讓下方的邏輯知道要重新 new Chart()
+                chartInstances.bar = null;
+                chartInstances.doughnut = null;
+                chartInstances.scatter = null;
+                chartInstances.line = null;
+                chartInstances.radar = null;
+            }
+
+            // ==========================================
+            // 1. 長條圖 (Bar Chart)
+            // ==========================================
             if (chartInstances.bar) {
+                // 安全更新：直接修改現有 datasets 內的屬性，完美觸發伸縮動畫
                 chartInstances.bar.data.labels = labels;
                 chartInstances.bar.data.datasets[0].data = baseData;
                 chartInstances.bar.data.datasets[0].backgroundColor = colors;
@@ -605,14 +630,14 @@
             } else {
                 chartInstances.bar = new Chart(document.getElementById('barChart'), {
                     type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{ label: '數據分佈', data: baseData, backgroundColor: colors, borderRadius: 4 }]
-                    },
+                    data: { labels: labels, datasets: [{ label: '數據分佈', data: baseData, backgroundColor: colors, borderRadius: 4 }] },
                     options: { ...commonOptions, plugins: { legend: { display: false } } }
                 });
             }
 
+            // ==========================================
+            // 2. 甜甜圈圖 (Doughnut Chart)
+            // ==========================================
             if (chartInstances.doughnut) {
                 chartInstances.doughnut.data.labels = labels;
                 chartInstances.doughnut.data.datasets[0].data = baseData;
@@ -621,98 +646,85 @@
             } else {
                 chartInstances.doughnut = new Chart(document.getElementById('doughnutChart'), {
                     type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{ data: baseData, backgroundColor: colors, borderWidth: 2 }]
-                    },
+                    data: { labels: labels, datasets: [{ data: baseData, backgroundColor: colors, borderWidth: 2 }] },
                     options: { ...commonOptions, plugins: { legend: { position: 'right' } } }
                 });
             }
 
-            const scatterDatasets = colors.map((color, idx) => {
-                const points = Array.from({length: 25}, () => ({
-                    x: (Math.random() * 40) + (idx * 15), 
-                    y: (Math.random() * 40) + (idx * 10)  
-                }));
-                return {
-                    label: `Group ${String.fromCharCode(65 + idx)}`,
-                    data: points,
-                    backgroundColor: color + 'B3', 
-                    borderColor: color,
-                    borderWidth: 1,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                };
-            });
-
+            // ==========================================
+            // 3. 散佈相關性圖 (Scatter Chart)
+            // ==========================================
             if (chartInstances.scatter) {
-                chartInstances.scatter.destroy();
-            }
-            chartInstances.scatter = new Chart(document.getElementById('scatterChart'), {
-                type: 'scatter',
-                data: { datasets: scatterDatasets },
-                options: { 
-                    ...commonOptions, 
-                    plugins: { legend: { position: 'top' } },
-                    scales: {
-                        x: { title: { display: true, text: '變數 X' } },
-                        y: { title: { display: true, text: '變數 Y' } }
-                    }
-                }
-            });
-
-            const lineMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月'];
-            const lineDatasets = [];
-            
-            for(let i=0; i<dataCount; i++){
-                lineDatasets.push({
-                    label: `Group ${i+1}`,
-                    data: Array.from({length: 7}, () => Math.floor(Math.random() * 100)),
-                    borderColor: colors[i],
-                    backgroundColor: colors[i] + '33',
-                    fill: true,
-                    tension: 0.4
+                // 安全更新：迴圈跑每一個 group，更新點位與顏色，保留 Chart.js 內部動畫連結
+                colors.forEach((color, idx) => {
+                    const points = Array.from({length: 25}, () => ({ x: (Math.random() * 40) + (idx * 15), y: (Math.random() * 40) + (idx * 10) }));
+                    chartInstances.scatter.data.datasets[idx].data = points;
+                    chartInstances.scatter.data.datasets[idx].backgroundColor = color + 'B3';
+                    chartInstances.scatter.data.datasets[idx].borderColor = color;
+                });
+                chartInstances.scatter.update();
+            } else {
+                const scatterDatasets = colors.map((color, idx) => {
+                    return {
+                        label: `Group ${String.fromCharCode(65 + idx)}`,
+                        data: Array.from({length: 25}, () => ({ x: (Math.random() * 40) + (idx * 15), y: (Math.random() * 40) + (idx * 10) })),
+                        backgroundColor: color + 'B3', borderColor: color, borderWidth: 1, pointRadius: 6, pointHoverRadius: 8
+                    };
+                });
+                chartInstances.scatter = new Chart(document.getElementById('scatterChart'), {
+                    type: 'scatter', data: { datasets: scatterDatasets },
+                    options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { x: { title: { display: true, text: '變數 X' } }, y: { title: { display: true, text: '變數 Y' } } } }
                 });
             }
 
+            // ==========================================
+            // 4. 折線與面積圖 (Line Chart)
+            // ==========================================
+            const lineMonths = ['1月', '2月', '3月', '4月', '5月', '6月', '7月'];
             if (chartInstances.line) {
-                chartInstances.line.destroy();
-            }
-            chartInstances.line = new Chart(document.getElementById('lineChart'), {
-                type: 'line',
-                data: { labels: lineMonths, datasets: lineDatasets },
-                options: { 
-                    ...commonOptions, 
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true } }
+                colors.forEach((color, idx) => {
+                    chartInstances.line.data.datasets[idx].data = Array.from({length: 7}, () => Math.floor(Math.random() * 100));
+                    chartInstances.line.data.datasets[idx].borderColor = color;
+                    chartInstances.line.data.datasets[idx].backgroundColor = color + '33';
+                });
+                chartInstances.line.update();
+            } else {
+                const lineDatasets = [];
+                for(let i=0; i<dataCount; i++){
+                    lineDatasets.push({
+                        label: `Group ${i+1}`, data: Array.from({length: 7}, () => Math.floor(Math.random() * 100)),
+                        borderColor: colors[i], backgroundColor: colors[i] + '33', fill: true, tension: 0.4
+                    });
                 }
-            });
+                chartInstances.line = new Chart(document.getElementById('lineChart'), {
+                    type: 'line', data: { labels: lineMonths, datasets: lineDatasets },
+                    options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
 
-            const radarDatasets = colors.map((color, idx) => {
-                return {
-                    label: `Group ${String.fromCharCode(65 + idx)}`,
-                    data: Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20),
-                    backgroundColor: color + '40', 
-                    borderColor: color,
-                    borderWidth: 2
-                };
-            });
-
+            // ==========================================
+            // 5. 雷達圖 (Radar Chart)
+            // ==========================================
             if (chartInstances.radar) {
-                chartInstances.radar.destroy();
+                chartInstances.radar.data.labels = labels;
+                colors.forEach((color, idx) => {
+                    chartInstances.radar.data.datasets[idx].data = Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20);
+                    chartInstances.radar.data.datasets[idx].backgroundColor = color + '40';
+                    chartInstances.radar.data.datasets[idx].borderColor = color;
+                });
+                chartInstances.radar.update();
+            } else {
+                const radarDatasets = colors.map((color, idx) => {
+                    return {
+                        label: `Group ${String.fromCharCode(65 + idx)}`, data: Array.from({length: dataCount}, () => Math.floor(Math.random() * 80) + 20),
+                        backgroundColor: color + '40', borderColor: color, borderWidth: 2
+                    };
+                });
+                chartInstances.radar = new Chart(document.getElementById('radarChart'), {
+                    type: 'radar', data: { labels: labels, datasets: radarDatasets },
+                    options: { ...commonOptions, plugins: { legend: { position: 'top' } }, scales: { r: { ticks: { display: false } } } }
+                });
             }
-            chartInstances.radar = new Chart(document.getElementById('radarChart'), {
-                type: 'radar',
-                data: {
-                    labels: labels,
-                    datasets: radarDatasets
-                },
-                options: { 
-                    ...commonOptions, 
-                    plugins: { legend: { position: 'top' } }, 
-                    scales: { r: { ticks: { display: false } } } 
-                }
-            });
         }
     </script>
 </body>
