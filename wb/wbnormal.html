@@ -311,7 +311,8 @@
             'warn_paired_msg': '您正在使用多組配對 (Paired, n≥3) 模式。本工具的 RM-ANOVA 未進行 Mauchly\'s 球狀性檢定 (Sphericity) 校正，且多重比較策略較為保守。若需發表高影響因子期刊，建議使用 GraphPad Prism 進行完整驗證。',
             'warn_unpaired_title': '多重比較邊緣數值提示 (Multiple Comparisons Note)',
             'warn_unpaired_msg': '本工具之 ANOVA 事後檢定 (Post-hoc) 採用保守的線性內插法。在特定樣本數下，給星門檻會略高於 GraphPad Prism。若您的 P-value 處於邊緣且判定為 ns (不顯著)，使用專業軟體驗證或許有機會達到顯著。',
-            'alert_max_group': '此工具目前最多支援 15 個組別，超過上限將無法進行完整的事後檢定。'
+            'alert_max_group': '此工具目前最多支援 15 個組別，超過上限將無法進行完整的事後檢定。',
+            'batch_note': '💡 <b>批次校正 (Batch Correction)：</b>若有不同批次（獨立轉膜）的數據，請在文字框內使用 <code>---</code> 換行分隔。工具將自動各別對齊該批次的 Control。'
         },
         'en': {
             'app_title': 'WB Band Relative Quantitation & Normalization Tool',
@@ -360,7 +361,8 @@
             'warn_paired_msg': 'You are using Paired mode with multiple groups (n≥3). The RM-ANOVA here does not apply Mauchly\'s sphericity test/corrections, and the post-hoc strategy is conservative. For high-impact publications, verification with GraphPad Prism is recommended.',
             'warn_unpaired_title': 'Multiple Comparisons Note',
             'warn_unpaired_msg': 'The post-hoc test employs a conservative linear interpolation method. For certain sample sizes, the critical thresholds are slightly stricter than GraphPad Prism. If your result is marginally non-significant (ns), verification with specialized software might yield significance.',
-            'alert_max_group': 'This tool supports a maximum of 15 groups. Full post-hoc tests cannot be performed beyond this limit.'
+            'alert_max_group': 'This tool supports a maximum of 15 groups. Full post-hoc tests cannot be performed beyond this limit.',
+            'batch_note': '💡 <b>Batch Correction:</b> For data from independent blots/batches, separate them using <code>---</code>. The tool will normalize each batch to its own Control.'
         }
     };
 
@@ -586,7 +588,7 @@
         });
     }
 
-    function renderAll() {
+function renderAll() {
         document.getElementById('group-tags').innerHTML = state.groups.map((g, i) => 
             `<span class="tag">${g} <span onclick="removeGroup(${i})">×</span></span>`
         ).join('');
@@ -602,6 +604,12 @@
 
         const container = document.getElementById('modules-container');
         container.innerHTML = '';
+        
+        // 新增：批次校正使用提示
+        const noteDiv = document.createElement('div');
+        noteDiv.style.cssText = "background: #e0e7ff; color: #3730a3; padding: 10px 15px; border-radius: 6px; font-size: 0.9em; margin-bottom: 15px; border: 1px solid #c7d2fe; line-height: 1.5;";
+        noteDiv.innerHTML = t('batch_note');
+        container.appendChild(noteDiv);
         
         state.proteins.forEach(p => {
             const div = document.createElement('div');
@@ -621,7 +629,7 @@
                     ${state.groups.map(g => `
                         <div>
                             <label style="font-size:0.8em; font-weight:600; display:block; margin-bottom:2px;">${g}</label>
-                            <textarea id="txt-${p.id}-${g}" placeholder="Data..." spellcheck="false">${p.data[g] || ''}</textarea>
+                            <textarea id="txt-${p.id}-${g}" placeholder="Data...\n---\nData..." spellcheck="false">${p.data[g] || ''}</textarea>
                         </div>
                     `).join('')}
                 </div>
@@ -630,72 +638,73 @@
         });
     }
 
-    function validateAndParseData(isPaired, hkpObj, targetProteins) {
+function validateAndParseData(isPaired, hkpObj, targetProteins) {
         state.groups.forEach(g => {
             if (!g.trim()) throw new Error(t('err_group_name_empty'));
         });
 
-        const parsedData = {}; 
-
         const parseStringToArray = (str, proteinName, groupName) => {
-            const tokens = str.replace(/　/g, " ").trim().split(/[\s,]+/);
-            const validNums = [];
+            // 用 --- 分割批次
+            const batchStrs = str.split(/---/);
+            const batches = [];
             
-            for (let token of tokens) {
-                if (token === '') continue; 
-                const num = Number(token);
-                
-                if (isNaN(num)) {
-                    throw new Error(curLang === 'zh' 
-                        ? `【資料格式錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現非法字元: "${token}"。請確認皆為純數字，勿夾雜英文或特殊符號。`
-                        : `[Data Error] Invalid character "${token}" found in Protein [${proteinName}], Group "${groupName}". Please ensure all inputs are numbers.`);
+            for (let bStr of batchStrs) {
+                const tokens = bStr.replace(/ /g, " ").trim().split(/[\s,]+/);
+                const validNums = [];
+                for (let token of tokens) {
+                    if (token === '') continue; 
+                    const num = Number(token);
+                    if (isNaN(num)) {
+                        throw new Error(`【資料格式錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現非法字元: "${token}"。`);
+                    }
+                    if (num < 0) {
+                        throw new Error(`【數值錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現負值: "${token}"。`);
+                    }
+                    validNums.push(num);
                 }
-                if (num < 0) {
-                throw new Error(curLang === 'zh' 
-                ? `【數值錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現負值: "${token}"。Western Blot 定量數值不應小於 0。`
-                : `[Data Error] Negative value "${token}" found in Protein [${proteinName}], Group "${groupName}". Western Blot intensity cannot be less than 0.`);
-        }
-                validNums.push(num);
+                // 即使該批次是空的也推入陣列，以便後續檢查格式對齊
+                batches.push(validNums);
             }
-            return validNums;
+            return batches;
         };
+
+        const parsedData = {}; 
+        let globalNumBatches = -1;
 
         state.proteins.forEach(p => {
             parsedData[p.id] = { name: p.name || `Protein ${p.id}`, vals: {} };
             
             state.groups.forEach(g => {
                 const rawStr = p.data[g] || "";
-                const validNums = parseStringToArray(rawStr, parsedData[p.id].name, g); 
+                const batches = parseStringToArray(rawStr, parsedData[p.id].name, g); 
                 
-                if (validNums.length < 2) {
-                    const errMsg = curLang === 'zh' 
-                        ? `[${parsedData[p.id].name}] 的 "${g}" 組有效樣本數不足 (N=${validNums.length})。統計分析每組至少需要 2 個數值。`
-                        : `[${parsedData[p.id].name}] - "${g}" has insufficient data (N=${validNums.length}). Statistical analysis requires at least 2 values per group.`;
-                    throw new Error(errMsg);
+                // 確保所有框框裡的 --- 數量（批次數量）一致
+                if (globalNumBatches === -1) globalNumBatches = batches.length;
+                if (batches.length !== globalNumBatches) {
+                    throw new Error(`【批次格式錯誤】各組別的批次數量不一致！請確認所有組別使用的 \`---\` 分隔數量皆相同。`);
                 }
-                parsedData[p.id].vals[g] = validNums;
+
+                batches.forEach((bVals, bIdx) => {
+                    if (bVals.length < 1) {
+                        throw new Error(`[${parsedData[p.id].name}] 的 "${g}" 組，在第 ${bIdx + 1} 批次中缺乏有效數據。`);
+                    }
+                });
+                
+                parsedData[p.id].vals[g] = batches;
             });
         });
 
+        // 配對模式下，同一個批次內的樣本數必須相同
         if (isPaired) {
             const firstGroup = state.groups[0];
-            const baseHkpLen = parsedData[hkpObj.id].vals[firstGroup].length;
-
-            state.groups.forEach(g => {
-                const len = parsedData[hkpObj.id].vals[g].length;
-                if (len !== baseHkpLen) {
-                    throw new Error(`${t('err_paired_mismatch')} (${hkpObj.name} - ${g}: ${len} vs ${firstGroup}: ${baseHkpLen})`);
-                }
-            });
-
-            targetProteins.forEach(tp => {
+            for (let b = 0; b < globalNumBatches; b++) {
+                const baseHkpLen = parsedData[hkpObj.id].vals[firstGroup][b].length;
                 state.groups.forEach(g => {
-                    const len = parsedData[tp.id].vals[g].length;
-                    if (len !== baseHkpLen) {
-                        throw new Error(`${t('err_paired_mismatch')} (${tp.name} - ${g}: ${len} vs Base: ${baseHkpLen})`);
+                    if (parsedData[hkpObj.id].vals[g][b].length !== baseHkpLen) {
+                        throw new Error(`批次 ${b+1}: ${t('err_paired_mismatch')}`);
                     }
                 });
-            });
+            }
         }
 
         return parsedData;
@@ -767,118 +776,141 @@
             const target = parsed[p.id];
 
             try {
-                // 1. 先計算好每組的原始比值 (Target/HKP)
-                const rawRatios = {};
-                state.groups.forEach(g => {
-                    const tVal = target.vals[g];
-                    const hVal = hkp.vals[g];
-                    if (tVal.length !== hVal.length) throw new Error(`${target.name} [${g}]: ${t('err_data_mismatch')} (Target:${tVal.length} vs HKP:${hVal.length})`);
-                    rawRatios[g] = tVal.map((v, i) => {
-                        if (hVal[i] === 0) throw new Error(t('err_hkp_zero'));
-                        return v / hVal[i];
-                    });
-                });
-
-                const ctrlG = state.groups[0];
-                const ctrlRawRatios = rawRatios[ctrlG];
-                if (ctrlRawRatios.length === 0) throw new Error(t('err_ctrl_empty'));
-
-                const useLog2 = document.getElementById('log-transform').checked;
                 
-                // 2. 建立完全獨立的統計矩陣 (allRawVals 用於做 t-test/ANOVA)
-                let allRawVals = [];
-                if (useLog2) {
-                    state.groups.forEach(g => {
-                        rawRatios[g].forEach(v => {
-                            if (v <= 0) throw new Error(curLang === 'zh' ? `[${target.name}] Log2 轉換失敗：條帶比例 (Target/HKP) 必須大於 0。請檢查是否有無效數據。` : `[${target.name}] Log2 transformation failed: Ratios (Target/HKP) must be greater than 0.`);
+                        const rawRatios = {};
+                        let hasMultipleBatches = target.vals[state.groups[0]].length > 1;
+        
+                        // 1. 分批次計算原始比值 (Target/HKP)
+                        state.groups.forEach(g => {
+                            rawRatios[g] = [];
+                            const tBatches = target.vals[g];
+                            const hBatches = hkp.vals[g];
+                            
+                            for (let b = 0; b < tBatches.length; b++) {
+                                if (tBatches[b].length !== hBatches[b].length) throw new Error(`${target.name} [${g}]: Target與HKP樣本數不一致`);
+                                rawRatios[g].push(tBatches[b].map((v, i) => {
+                                    if (hBatches[b][i] === 0) throw new Error(t('err_hkp_zero'));
+                                    return v / hBatches[b][i];
+                                }));
+                            }
                         });
-                    });
-
-                    // Log2 模式下：直接取 Target/HKP 值的 Log2 進行統計檢定。
-                    // 不需要 (也不可以) 再次去減 Control 組的平均值，否則會破壞變異數分析矩陣
-                    state.groups.forEach(g => {
-                        allRawVals.push(rawRatios[g].map(v => Math.log2(v)));
-                    });
-                } else {
-                    // 修正：統計檢定必須基於原始的 Target/HKP 比例，不能先除以 Control
-                    // 這樣才能保留 Control 組原有的變異數(Variance)，避免 Paired ANOVA 失真
-                    state.groups.forEach(g => {
-                        allRawVals.push(rawRatios[g]);
-                    });
-                }
-
-                // 3. 接下來建立用於前端表格呈現的 stats 陣列
-                const stats = [];
-                let maxY = 0;
-                let ctrlMeanRawLinear = jStat.mean(rawRatios[ctrlG]);
-
-                // ====== 新增：Control 組除以零與零值防呆機制 ======
-                if (ctrlMeanRawLinear === 0) {
-                    throw new Error(curLang === 'zh' 
-                        ? `【計算錯誤】Control 組的平均比例為 0，無法作為分母進行 Fold Change 標準化。` 
-                        : `[Calculation Error] The mean of the Control group is 0, which cannot be used as a denominator for Fold Change normalization.`);
-                }
-
-                if (isPaired && ctrlRawRatios.some(val => val === 0)) {
-                    throw new Error(curLang === 'zh'
-                        ? `【計算錯誤】配對模式下，Control 組中包含數值 0，這會導致個別樣本對齊計算時除以零。`
-                        : `[Calculation Error] In Paired mode, the Control group contains a 0, leading to a division by zero error.`);
-                }
-                // ===============================================
-
-                state.groups.forEach((g, gIdx) => {
-                    const currentRatios = rawRatios[g];
-                    
-                    if (isPaired && currentRatios.length !== ctrlRawRatios.length) {
-                        throw new Error(`[${g}] ${t('err_group_mismatch')} (Paired Mode requires equal N)`);
-                    }
-
-                    // 繪圖與基本顯示永遠用線性 Fold Change
-                    let linearNorm = isPaired
-                        ? currentRatios.map((val, index) => val / ctrlRawRatios[index])
-                        : currentRatios.map(val => val / ctrlMeanRawLinear);
-
-                    const n = linearNorm.length;
-                    const rawMean = jStat.mean(linearNorm);
-                    const rawSEM = n > 1 ? jStat.stdev(linearNorm, true) / Math.sqrt(n) : 0;
-
-                    if (rawMean + rawSEM > maxY) maxY = rawMean + rawSEM;
-
-                    // 額外計算 Log2 Fold Change 尺度下的描述統計（表格內小字備查，便於使用者直觀閱讀）
-                    const currentLog2Vals = useLog2
-                        ? (isPaired
-                            ? rawRatios[g].map((val, index) => Math.log2(val / ctrlRawRatios[index]))
-                            : rawRatios[g].map(val => Math.log2(val / ctrlMeanRawLinear)))
-                        : linearNorm.map(v => (v > 0 ? Math.log2(v) : 0));
+        
+                        const ctrlG = state.groups[0];
+                        const useLog2 = document.getElementById('log-transform').checked;
                         
-                    const log2Mean = jStat.mean(currentLog2Vals);
-                    const log2SEM = n > 1 ? jStat.stdev(currentLog2Vals, true) / Math.sqrt(n) : 0;
+                        // 2. 進行批次常態化 (Batch Normalization) 並打平陣列
+                        const flattenedLinearNorm = {};
+                        const flattenedLog2Norm = {};
+        
+                        state.groups.forEach(g => {
+                            flattenedLinearNorm[g] = [];
+                            flattenedLog2Norm[g] = [];
+        
+                            for (let b = 0; b < rawRatios[g].length; b++) {
+    const currentBatchRatios = rawRatios[g][b];
+    const ctrlBatchRatios = rawRatios[ctrlG][b];
+    const ctrlMeanRawLinear = jStat.mean(ctrlBatchRatios);
 
-                    stats.push({ 
-                        group: g, 
-                        mean: rawMean, 
-                        sem: rawSEM, 
-                        rawMean: rawMean, 
-                        rawSEM: rawSEM,
-                        log2Mean: log2Mean, 
-                        log2SEM: log2SEM,   
-                        n: n, 
-                        vals: linearNorm,
-                        rawStr: linearNorm.map(v=>v.toFixed(3)).join(', '),
-                        rawInput: target.vals[g].join('; '),
-                        hkpRawInput: hkp.vals[g].join('; '), 
-                        pText: '-'
-                    });
-                });
+    // 防呆 1：Control 平均值為 0
+    if (ctrlMeanRawLinear === 0) throw new Error(`批次 ${b+1} 的 Control 平均值為 0，無法標準化。`);
+    
+    // 防呆 2：配對模式下 Control 組內含有 0
+    if (isPaired && ctrlBatchRatios.some(val => val === 0)) {
+        throw new Error(`批次 ${b+1} 在配對模式下，Control 組包含數值 0，無法作為分母進行一對一對齊。`);
+    }
 
-                let stars = Array(state.groups.length).fill('');
-                let detailsHTML = "";
-                let pDisplay = "";
+    let batchLinearNorm = isPaired
+        ? currentBatchRatios.map((val, i) => val / ctrlBatchRatios[i])
+        : currentBatchRatios.map(val => val / ctrlMeanRawLinear);
 
-                const noteText = "Note: Raw band intensities were normalized to housekeeping proteins (Target/HKP) for statistical analysis. Fold change relative to control was used only for data presentation.";
-                const logNoteText = useLog2 ? (curLang === 'zh' ? 
-                    "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ 已啟用 Log2 轉換：統計檢定與 P 值皆基於 Log2 尺度計算。圖表維持線性尺度呈現。</span>" : 
-                    "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ Log2 Transform Enabled: Statistical tests and P-values are calculated on the Log2 scale. Plots remain linear.</span>") : "";
+    flattenedLinearNorm[g].push(...batchLinearNorm);
+
+    // 防呆 3：Log2 遇到 0 或負數會當機的保護機制
+    let batchLog2Norm = [];
+    if (useLog2) {
+        batchLog2Norm = isPaired
+            ? currentBatchRatios.map((val, i) => {
+                if (val <= 0) throw new Error(`[Log2 錯誤] 批次 ${b+1} 發現數值 ≤ 0。Log2 轉換無法處理 0 或負數，請檢查原始數據。`);
+                return Math.log2(val / ctrlBatchRatios[i]);
+              })
+            : currentBatchRatios.map(val => {
+                if (val <= 0) throw new Error(`[Log2 錯誤] 批次 ${b+1} 發現數值 ≤ 0。Log2 轉換無法處理 0 或負數，請檢查原始數據。`);
+                return Math.log2(val / ctrlMeanRawLinear);
+              });
+    } else {
+        batchLog2Norm = batchLinearNorm.map(v => (v > 0 ? Math.log2(v) : 0));
+    }
+
+    flattenedLog2Norm[g].push(...batchLog2Norm);
+}
+                        });
+        
+                        // 3. 建立用於統計檢定的 allRawVals
+                        let allRawVals = [];
+                        state.groups.forEach(g => {
+                            if (hasMultipleBatches) {
+                                // 如果有批次校正，統計檢定必須基於「已校正的倍數」進行，以消除 Baseline 差異
+                                allRawVals.push(useLog2 ? flattenedLog2Norm[g] : flattenedLinearNorm[g]);
+                            } else {
+                                // 如果單一批次，維持原邏輯，利用原始 Ratio 進行檢定保留最佳變異數分析
+                                let flatRaw = [];
+                                rawRatios[g].forEach(b => flatRaw.push(...b));
+                                allRawVals.push(useLog2 ? flatRaw.map(v => Math.log2(v)) : flatRaw);
+                            }
+                        });
+        
+                        // 4. 建立前端呈現用的 stats 陣列
+                        const stats = [];
+                        let maxY = 0;
+        
+                        state.groups.forEach((g, gIdx) => {
+                            const linearNorm = flattenedLinearNorm[g];
+                            const n = linearNorm.length;
+                            const rawMean = jStat.mean(linearNorm);
+                            const rawSEM = n > 1 ? jStat.stdev(linearNorm, true) / Math.sqrt(n) : 0;
+        
+                            if (rawMean + rawSEM > maxY) maxY = rawMean + rawSEM;
+        
+                            const currentLog2Vals = flattenedLog2Norm[g];
+                            const log2Mean = jStat.mean(currentLog2Vals);
+                            const log2SEM = n > 1 ? jStat.stdev(currentLog2Vals, true) / Math.sqrt(n) : 0;
+        
+                            // 記錄原始數據用於 CSV 匯出 (直接拍平用逗號分隔)
+                            let rawInputFlat = target.vals[g].flat().join(', ');
+                            let hkpRawInputFlat = hkp.vals[g].flat().join(', ');
+        
+                            stats.push({ 
+                                group: g, 
+                                mean: rawMean, 
+                                sem: rawSEM, 
+                                rawMean: rawMean, 
+                                rawSEM: rawSEM,
+                                log2Mean: log2Mean, 
+                                log2SEM: log2SEM,   
+                                n: n, 
+                                vals: linearNorm,
+                                rawStr: linearNorm.map(v=>v.toFixed(5)).join(', '),
+                                rawInput: rawInputFlat,
+                                hkpRawInput: hkpRawInputFlat, 
+                                pText: '-'
+                            });
+                        });
+        
+                        let stars = Array(state.groups.length).fill('');
+                        let detailsHTML = "";
+                        let pDisplay = "";
+        
+                        // 動態產生統計附註說明
+                        let noteText = "Note: Raw band intensities were normalized to housekeeping proteins (Target/HKP) for statistical analysis. Fold change relative to control was used only for data presentation.";
+                        if (hasMultipleBatches) {
+                            noteText = curLang === 'zh' 
+                                ? "<b>【批次校正已啟用】</b> 相對表現倍數是依據各批次內的 Control 獨立標準化。為消除批次間 Baseline 差異，統計檢定是基於校正後的 Fold Change 數值進行匯總分析。" 
+                                : "<b>[Batch Correction Applied]</b> Fold changes were normalized to the internal control of each batch. Statistics were performed on the pooled batch-normalized values.";
+                        }
+                        
+                        const logNoteText = useLog2 ? (curLang === 'zh' ? 
+                            "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ 已啟用 Log2 轉換：統計檢定與 P 值皆基於 Log2 尺度計算。圖表維持線性尺度呈現。</span>" : 
+                            "<br><span style='color:#ea580c; font-weight:bold;'>ℹ️ Log2 Transform Enabled: Statistical tests and P-values are calculated on the Log2 scale. Plots remain linear.</span>") : "";
                 
                 const fmtQ = (v) => (typeof v === 'number' ? v.toFixed(2) : '-');
 
@@ -1296,8 +1328,8 @@
                 const pVal = s.pText;
                 
                 const normArr = s.rawStr ? s.rawStr.split(', ') : [];
-                const targetArr = s.rawInput ? s.rawInput.split('; ') : [];
-                const hkpArr = s.hkpRawInput ? s.hkpRawInput.split('; ') : [];
+                const targetArr = s.rawInput ? s.rawInput.split(', ') : [];
+                const hkpArr = s.hkpRawInput ? s.hkpRawInput.split(', ') : [];
 
                 const paddedNorm = Array.from({length: maxN}, (_, i) => normArr[i] || "");
                 const paddedTarget = Array.from({length: maxN}, (_, i) => targetArr[i] || "");
@@ -1420,8 +1452,8 @@
                         <td>${s.n}</td>
                         <td class="raw-data">${s.rawStr}</td>
                         <td>
-                            ${s.rawMean.toFixed(2)} ± ${s.rawSEM.toFixed(2)}
-                            ${useLog2 ? `<br><small style="color:#ea580c; font-weight:600;">[Log2: ${s.log2Mean.toFixed(2)} ± ${s.log2SEM.toFixed(2)}]</small>` : ''}
+                            ${s.rawMean.toFixed(5)} ± ${s.rawSEM.toFixed(5)}
+                            ${useLog2 ? `<br><small style="color:#ea580c; font-weight:600;">[Log2: ${s.log2Mean.toFixed(5)} ± ${s.log2SEM.toFixed(5)}]</small>` : ''}
                         </td>
                         <td>${s.pText}</td>
                         <td style="font-weight:bold; color:${starColor}">${stars[i]}</td>
@@ -1512,7 +1544,7 @@
                 thickness: 1.2,
                 width: 4
             },
-            hovertemplate: '<b>%{text}</b><br>Mean: %{y:.3f}<br>SEM: %{error_y.array:.3f}<extra></extra>',
+            hovertemplate: '<b>%{text}</b><br>Mean: %{y:.5f}<br>SEM: %{error_y.array:.3f}<extra></extra>',
             text: xLabels, 
             textposition: 'none'
         }];
