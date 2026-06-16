@@ -549,6 +549,8 @@
         }
     }
     function removeGroup(idx) {
+        // 修正：嚴格阻斷刪除 Index 0 (Control 組)，避免正規化分母基準線錯亂
+        if (idx === 0) return alert(curLang === 'zh' ? '❌ Control 組為數據標準化之分母基準，不可刪除！' : '❌ Control group cannot be deleted as it is the critical baseline for normalization!');
         if (state.groups.length <= 2) return alert(t('alert_min_group'));
         saveCurrentInputs(); 
         
@@ -735,17 +737,18 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
         // ==========================================
         // 🚨 新增：多批次 + Unpaired 未勾選 Log2 的強烈警告
         // ==========================================
-const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
+        const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
         const isLog2Checked = document.getElementById('log-transform').checked;
 
-        if (!isPaired && isMultiBatch && !isLog2Checked) {
+        // 修正：不論獨立 (Unpaired) 或配對 (Paired)，多批次未轉 Log2 皆跳出強烈警告以修正乘法批次效應
+        if (isMultiBatch && !isLog2Checked) {
             const batchWarnTitle = curLang === 'zh' 
                 ? '強烈統計警告 (Multi-Batch & Log2 Warning)' 
                 : 'Strong Statistical Warning (Multi-Batch & Log2)';
             
             const batchWarnMsg = curLang === 'zh'
-                ? '偵測到多批次數據合併。為符合統計學常態分佈假設並避免線性校正誤差，多批次合併時強烈建議勾選上方 <b>「使用 Log2 轉換進行統計檢定」</b>。'
-                : 'Multi-batch data merging detected. To meet the assumption of normal distribution and avoid linear correction artifacts, it is strongly recommended to check <b>"Use Log2 Transform for Statistical Tests"</b> above when pooling multiple batches.';
+                ? '偵測到多批次數據合併。為符合統計學常態分佈假設並消除跨轉膜的乘法批次誤差 (Multiplicative Batch Effect)，多批次合併時強烈建議勾選上方 <b>「使用 Log2 轉換進行統計檢定」</b>。'
+                : 'Multi-batch data merging detected. To meet the assumption of normal distribution and correct for multiplicative blot-to-blot batch effects, it is strongly recommended to check <b>"Use Log2 Transform for Statistical Tests"</b> above when pooling multiple batches.';
 
             const batchLog2WarnHtml = `
                 <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin-bottom: 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); animation: pulseWarn 2s infinite;">
@@ -859,15 +862,15 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                         if (useLog2) {
                             batchLog2Norm = isPaired
                                 ? currentBatchRatios.map((val, i) => {
-                                    if (val <= 0) throw new Error(`[Log2 錯誤] 批次 ${b+1} 發現數值 ≤ 0。`);
+                                    if (val <= 0) throw new Error(`【數值錯誤】在第 ${b+1} 批次發現 Target 數值為 0。Log2 轉換無法處理 0 (數學上為負無限大)。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`);
                                     return Math.log2(val / ctrlBatchRatios[i]);
                                   })
                                 : currentBatchRatios.map(val => {
-                                    if (val <= 0) throw new Error(`[Log2 錯誤] 批次 ${b+1} 發現數值 ≤ 0。`);
+                                    if (val <= 0) throw new Error(`【數值錯誤】在第 ${b+1} 批次發現 Target 數值為 0。Log2 轉換無法處理 0 (數學上為負無限大)。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`);
                                     return Math.log2(val / ctrlMeanRawLinear);
                                   });
                         } else {
-                            batchLog2Norm = batchLinearNorm.map(v => (v > 0 ? Math.log2(v) : 0));
+                            batchLog2Norm = batchLinearNorm.map(v => (v > 0 ? Math.log2(v) : NaN));
                         }
                         flattenedLog2Norm[g].push(...batchLog2Norm);
                     }
@@ -875,13 +878,19 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
 
                 // 3. 建立用於「統計檢定」的 allRawVals (統計學嚴謹修正版)
                 let allRawVals = [];
+                // 新增：安全的 Log2 轉換函數
+                const safeLog2 = (val, modeContext) => {
+                    if (val <= 0) throw new Error(`【數值錯誤】在 ${modeContext} 發現數值為 0。Log2 轉換無法處理 0 (數學上為負無限大)。\n💡 建議：若為 Knockout/無表現實驗，請取消勾選「使用 Log2 轉換」。`);
+                    return Math.log2(val);
+                };
 
                 if (isPaired) {
-                    // 配對模式：統計檢定必須使用原始 Target/HKP Ratio 進行配對檢定，不應使用 Fold Change 以免消滅 Control 變異
+                    // 配對模式
                     state.groups.forEach(g => {
                         let flatRaw = [];
                         rawRatios[g].forEach(b => flatRaw.push(...b));
-                        allRawVals.push(useLog2 ? flatRaw.map(v => Math.log2(v)) : flatRaw);
+                        // 修改：替換掉原本的 Math.log2(v)
+                        allRawVals.push(useLog2 ? flatRaw.map(v => safeLog2(v, g)) : flatRaw);
                     });
                 } else {
                     // 獨立模式
@@ -905,7 +914,7 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                                     const normVal = v / ctrlMean;
                                     
                                     if (useLog2) {
-                                        if (normVal <= 0) throw new Error(`[Log2 錯誤] 批次 ${b+1} 發現計算後數值 ≤ 0。`);
+                                        if (normVal <= 0) throw new Error(`【數值錯誤】在第 ${b+1} 批次發現計算後數值為 0 或負數。Log2 轉換無法處理 0 (數學上為負無限大)。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`);
                                         adjustedRatios[g].push(Math.log2(normVal));
                                     } else {
                                         adjustedRatios[g].push(normVal);
@@ -919,11 +928,11 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                         state.groups.forEach(g => {
                             let flatRaw = [];
                             rawRatios[g].forEach(b => flatRaw.push(...b));
-                            allRawVals.push(useLog2 ? flatRaw.map(v => Math.log2(v)) : flatRaw);
+                            // 修改：替換掉原本的 Math.log2(v)
+                            allRawVals.push(useLog2 ? flatRaw.map(v => safeLog2(v, g)) : flatRaw);
                         });
                     }
                 }
-
                 // 4. 建立前端呈現用的 stats 陣列 (基於 Fold Change 供視覺呈現)
                 const stats = [];
                 let maxY = 0;
@@ -989,27 +998,40 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                 if (state.groups.length === 2) {
                     const raw0 = allRawVals[0];
                     const raw1 = allRawVals[1];
-                    let p;
-                    let methodStr = "";
-
-                    if (isPaired) {
-                        p = pairedTtest(raw0, raw1);
-                        methodStr = t('paired_t');
-                    } else {
-                        p = welchTtest(raw0, raw1);
-                        methodStr = t('unpaired_t');
-                    }
-                    if (useLog2) methodStr += " (Log2 Transformed)";
-
-                    stars[1] = getStar(p);
-                    pDisplay = formatP(p);
-                    stats[0].pText = 'Ref'; stats[1].pText = pDisplay;
                     
-                    detailsHTML = `
-                        <b>${t('stat_method')}:</b> ${methodStr}<br>
-                        <b>P-value:</b> ${pDisplay}
-                        <div style="font-size:0.85em; color:#666; margin-top:5px;">${noteText}${logNoteText}</div>
-                    `;
+                    // 新增防呆：攔截 2 組模式下的 N < 2 情況，避免 T-test 偷偷回傳 p=1
+                    if (raw0.length < 2 || raw1.length < 2) {
+                        stars[1] = 'ns'; stats[1].pText = '> 0.05';
+                        stats[0].pText = 'Ref';
+                        detailsHTML = `
+                            <b>${t('stat_method')}:</b> T-test (Not Sig.)<br>
+                            <span style="color:#dc2626; font-weight:bold;">⚠️ 統計失敗：樣本數不足 (需 N ≥ 2) 無法計算標準誤與進行 T-test。</span><br>
+                            <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
+                        `;
+                    } else {
+                        let p;
+                        let methodStr = "";
+
+                        if (isPaired) {
+                            p = pairedTtest(raw0, raw1);
+                            methodStr = t('paired_t');
+                        } else {
+                            p = welchTtest(raw0, raw1);
+                            methodStr = t('unpaired_t');
+                        }
+                        if (useLog2) methodStr += " (Log2 Transformed)";
+
+                        stars[1] = getStar(p);
+                        pDisplay = formatP(p);
+                        stats[0].pText = 'Ref'; stats[1].pText = pDisplay;
+                        
+                        detailsHTML = `
+                            <b>${t('stat_method')}:</b> ${methodStr}<br>
+                            <b>P-value:</b> ${pDisplay}
+                            <div style="font-size:0.85em; color:#666; margin-top:5px;">${noteText}${logNoteText}</div>
+                        `;
+                    }
+                    
                     window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars });
                     renderCard(target.name, stats, stars, detailsHTML, resDiv, maxY, []);
                 
@@ -1022,14 +1044,20 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                         let variances = allRawVals.map(arr => jStat.variance(arr, true));
                         let maxV = Math.max(...variances);
                         let minV = Math.min(...variances);
-                        if (minV > 0 && (maxV / minV) > 4) {
+                        
+                        // 修正：同時精準攔截 minV === 0（數據完全相同導致無法相除）的異質變異數極端情況
+                        if (maxV > 0 && (minV === 0 || (maxV / minV) > 4)) {
                             const warnTitle = curLang === 'zh' ? 
                                 '⚠️ 統計假設警告 (Assumption Warning)' : 
                                 '⚠️ Assumption Warning';
                             
                             const warnMsg = curLang === 'zh' ? 
-                                `各組樣本的變異數差異過大（最大變異數是最小的 ${(maxV/minV).toFixed(1)} 倍）。傳統 ANOVA 假設變異數同質，這可能會導致假陽性。強烈建議勾選上方 <b>「使用 Log2 轉換」</b>。` : 
-                                `Large variance difference detected (max is ${(maxV/minV).toFixed(1)}x the min). Traditional ANOVA assumes equal variances; violating this causes false positives. Strongly recommend checking <b>"Use Log2 Transform"</b>.`;
+                                (minV === 0 
+                                    ? `偵測到有組別的變異數為 0，組間變異數極度不均質。傳統 ANOVA 假設變異數同質，這會導致假陽性。強烈建議勾選上方 <b>「使用 Log2 轉換」</b>。`
+                                    : `各組樣本的變異數差異過大（最大變異數是最小的 ${(maxV/minV).toFixed(1)} 倍）。傳統 ANOVA 假設變異數同質，這可能會導致假陽性。強烈建議勾選上方 <b>「使用 Log2 轉換」</b>。`) : 
+                                (minV === 0
+                                    ? `Zero variance detected in some groups, violating equal variance assumptions. Traditional ANOVA assumes equal variances; violating this causes false positives. Strongly recommend checking <b>"Use Log2 Transform"</b>.`
+                                    : `Large variance difference detected (max is ${(maxV/minV).toFixed(1)}x the min). Traditional ANOVA assumes equal variances; violating this causes false positives. Strongly recommend checking <b>"Use Log2 Transform"</b>.`);
 
                             localWarning = `
                                 <div style="margin-top:12px; padding:10px 12px; background:#fef2f2; border-left:4px solid #ef4444; border-radius:4px; font-size:0.9em; color:#991b1b; line-height:1.4;">
@@ -1044,11 +1072,21 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                         const k = state.groups.length; 
                         const n = allRawVals[0].length; 
                         
-                        for(let gIdx=0; gIdx<state.groups.length; gIdx++) {
-                            if(allRawVals[gIdx].length !== n) throw new Error("RM-ANOVA requires equal sample size.");
-                        }
+                        // 新增防呆：配對樣本數不足 N < 2 時攔截，避免自由度為 0 造成分母除以 0 崩潰
+                        if (n < 2) {
+                            for(let i=1; i<stats.length; i++) { stars[i] = 'ns'; stats[i].pText = '> 0.05'; }
+                            pDisplay = '-';
+                            detailsHTML = `
+                                <b>${t('stat_method')}:</b> RM-ANOVA (Not Sig.)<br>
+                                <span style="color:#dc2626; font-weight:bold;">⚠️ 統計失敗：配對樣本數不足 (需 N ≥ 2) 無法計算殘差自由度。</span><br>
+                                <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
+                            `;
+                        } else {
+                            for(let gIdx=0; gIdx<state.groups.length; gIdx++) {
+                                if(allRawVals[gIdx].length !== n) throw new Error("RM-ANOVA requires equal sample size.");
+                            }
 
-                        let grandSum = 0;
+                            let grandSum = 0;
                         let grandN = 0;
                         allRawVals.forEach(arr => arr.forEach(v => { grandSum += v; grandN++; }));
                         const gm = grandSum / grandN;
@@ -1160,17 +1198,30 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                                 <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
                             `;
                         }
-
+                    }
                     } else {
-                        const fScore = jStat.anovafscore(allRawVals);
-                        const df1 = state.groups.length - 1;
                         const nTotal = stats.reduce((acc, s) => acc + s.n, 0);
+                        const df1 = state.groups.length - 1;
                         const df2 = nTotal - state.groups.length;
-                        const pAnova = 1 - jStat.centralF.cdf(fScore, df1, df2);
-                        pDisplay = formatP(pAnova);
-                        stats[0].pText = 'Ref';
+                        
+                        // 新增防呆：若有任一組別 N < 2 或總自由度 df2 <= 0，無法估算組內均方誤差 (MSE)
+                        const hasInsufficientN = stats.some(s => s.n < 2) || df2 <= 0;
 
-                        if (pAnova < 0.05) {
+                        if (hasInsufficientN) {
+                            for(let i=1; i<stats.length; i++) { stars[i] = 'ns'; stats[i].pText = '> 0.05'; }
+                            pDisplay = '-';
+                            detailsHTML = `
+                                <b>${t('stat_method')}:</b> ${t('anova_ns')}<br>
+                                <span style="color:#dc2626; font-weight:bold;">⚠️ 統計失敗：樣本數不足 (每組均需 N ≥ 2) 無法計算組內變異數。</span><br>
+                                <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
+                            `;
+                        } else {
+                            const fScore = jStat.anovafscore(allRawVals);
+                            const pAnova = 1 - jStat.centralF.cdf(fScore, df1, df2);
+                            pDisplay = formatP(pAnova);
+                            stats[0].pText = 'Ref';
+
+                            if (pAnova < 0.05) {
                             let ssWithin = 0;
                             allRawVals.forEach(vals => {
                                  const m = jStat.mean(vals);
@@ -1257,6 +1308,7 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                                 <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
                             `;
                         }
+                      }
                     }
 
                     if (localWarning) {
@@ -1355,7 +1407,9 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
             item.stats.forEach(s => { if (s.n > maxN) maxN = s.n; });
         });
 
-        const baseHeaders = ['Protein_Name', 'HKP_Name', 'Mode', 'Group', 'N', 'Mean', 'SEM', 'P_value', 'Significance'];
+        const baseHeaders = useLog2 
+            ? ['Protein_Name', 'HKP_Name', 'Mode', 'Group', 'N', 'Linear_Mean', 'Linear_SEM', 'Log2_Mean', 'Log2_SEM', 'P_value', 'Significance']
+            : ['Protein_Name', 'HKP_Name', 'Mode', 'Group', 'N', 'Mean', 'SEM', 'P_value', 'Significance'];
         
         const normHeaders = [];
         const targetHeaders = [];
@@ -1393,14 +1447,23 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                 const paddedTarget = Array.from({length: maxN}, (_, i) => targetArr[i] || "");
                 const paddedHkp = Array.from({length: maxN}, (_, i) => hkpArr[i] || "");
 
-                const rowData = [
+                const baseData = [
                     safeCSV(item.protein),
                     safeCSV(hkpName),
                     safeCSV(modeStr),
                     safeCSV(s.group),
                     s.n,
                     (s.rawMean !== undefined ? s.rawMean : s.mean).toFixed(4),
-                    (s.rawSEM !== undefined ? s.rawSEM : s.sem).toFixed(4),
+                    (s.rawSEM !== undefined ? s.rawSEM : s.sem).toFixed(4)
+                ];
+
+                if (useLog2) {
+                    baseData.push(isNaN(s.log2Mean) ? 'NaN' : s.log2Mean.toFixed(4));
+                    baseData.push(isNaN(s.log2SEM) ? 'NaN' : s.log2SEM.toFixed(4));
+                }
+
+                const rowData = [
+                    ...baseData,
                     safeCSV(pVal),
                     safeCSV(star),
                     ...paddedNorm,
@@ -1511,7 +1574,7 @@ const isMultiBatch = parsed[hkpObj.id].vals[state.groups[0]].length > 1;
                         <td class="raw-data">${s.rawStr}</td>
                         <td>
                             ${s.rawMean.toFixed(5)} ± ${s.rawSEM.toFixed(5)}
-                            ${useLog2 ? `<br><small style="color:#ea580c; font-weight:600;">[Log2: ${s.log2Mean.toFixed(5)} ± ${s.log2SEM.toFixed(5)}]</small>` : ''}
+                            ${useLog2 ? `<br><small style="color:#ea580c; font-weight:600;">[Log2: ${isNaN(s.log2Mean) ? 'N/A' : s.log2Mean.toFixed(5)} ± ${isNaN(s.log2SEM) ? 'N/A' : s.log2SEM.toFixed(5)}]</small>` : ''}
                         </td>
                         <td>${s.pText}</td>
                         <td style="font-weight:bold; color:${starColor}">${stars[i]}</td>
