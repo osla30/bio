@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BCA Working Solution 體積計算工具</title>
+    <title>BCA Working Solution 體積計算工具 / BCA Working Sol. Calculator</title>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -56,6 +56,7 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .btn {
@@ -71,6 +72,8 @@
             font-weight: bold;
             transition: all 0.3s ease;
             white-space: nowrap;
+            cursor: pointer;
+            border: none;
         }
 
         .btn:hover {
@@ -142,7 +145,6 @@
             color: var(--primary-color);
         }
 
-        /* 修改：讓下拉選單也套用原本輸入框的樣式 */
         .input-group input,
         .input-group select.short-select {
             width: 80px;
@@ -229,20 +231,21 @@
 <div class="container">
     <div class="card">
         <div class="header-with-buttons">
-            <h1>BCA Working Solution 體積計算</h1>
+            <h1 data-i18n="titleMain">BCA Working Solution 體積計算</h1>
             <div class="header-buttons">
-                <a href="https://drive.google.com/file/d/1FOC3EQC5yBFf7P2cT1w2KCMXdTiYunvV/view?usp=sharing" target="_blank" class="btn btn-outline">離線版</a>
+                <a href="https://drive.google.com/file/d/1FOC3EQC5yBFf7P2cT1w2KCMXdTiYunvV/view?usp=sharing" target="_blank" class="btn btn-outline" data-i18n="btnOffline">離線版</a>
+                <button id="langBtn" class="btn btn-outline" onclick="toggleLanguage()">EN / 中文</button>
             </div>
         </div>
         
         <div class="calculator-grid">
             <div>
                 <div class="input-group">
-                    <label for="standardCount">Standard 數量</label>
+                    <label for="standardCount" data-i18n="lblStdCount">Standard 數量</label>
                     <input type="number" id="standardCount" min="0" value="8" oninput="calculateVolumes()">
                 </div>
                 <div class="input-group">
-                    <label for="standardReps">Standard 重複次數</label>
+                    <label for="standardReps" data-i18n="lblStdReps">Standard 重複次數</label>
                     <select id="standardReps" class="short-select" onchange="calculateVolumes()">
                         <option value="1">1</option>
                         <option value="2" selected>2</option>
@@ -250,11 +253,11 @@
                     </select>
                 </div>
                 <div class="input-group" style="margin-top: 20px;">
-                    <label for="sampleCount">Sample 數量</label>
+                    <label for="sampleCount" data-i18n="lblSmpCount">Sample 數量</label>
                     <input type="number" id="sampleCount" min="0" value="0" oninput="calculateVolumes()">
                 </div>
                 <div class="input-group">
-                    <label for="sampleReps">Sample 重複次數</label>
+                    <label for="sampleReps" data-i18n="lblSmpReps">Sample 重複次數</label>
                     <select id="sampleReps" class="short-select" onchange="calculateVolumes()">
                         <option value="1">1</option>
                         <option value="2" selected>2</option>
@@ -263,21 +266,21 @@
                 </div>
 
                 <div class="input-group" style="margin-top: 20px; background-color: #f0f7ff; border-color: #cce5ff;">
-                    <label for="calcScheme">計算方案</label>
+                    <label for="calcScheme" data-i18n="lblScheme">計算方案</label>
                     <select id="calcScheme" onchange="calculateVolumes()" style="width: auto; padding: 6px 10px; font-size: 1.05em; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;">
-                        <option value="A">方案 A</option>
-                        <option value="B">方案 B</option>
+                        <option value="A" data-i18n="optSchemeA">方案 A</option>
+                        <option value="B" data-i18n="optSchemeB">方案 B</option>
                     </select>
                 </div>
                 
                 <div class="notes">
-                    <strong>實驗提醒：</strong>
+                    <strong data-i18n="noteTitle">實驗提醒：</strong>
                     <ul>
-                        <li>蛋白樣本可稀釋所需倍數後再做測量</li>
-                        <li>方案A：<span class="highlight-red">160 μL</span> Working sol. + <span class="highlight-red">20 μL</span> BSA & 蛋白</li>
-                        <li>方案B：<span class="highlight-red">200 μL</span> Working sol. + <span class="highlight-red">25 μL</span> BSA & 蛋白</li>
-                        <li><span class="highlight-red">37°C</span> incubate <span class="highlight-red">30 分鐘</span>，測 <span class="highlight-red">562nm</span> 或 540-590nm</li>
-                        <li>若進行 Enhanced 測微量，<span class="highlight-red">60°C</span> incubate <span class="highlight-red">30 分鐘</span></li>
+                        <li data-i18n="note1">蛋白樣本可稀釋所需倍數後再做測量</li>
+                        <li data-i18n="note2">方案A：<span class="highlight-red">160 μL</span> Working sol. + <span class="highlight-red">20 μL</span> BSA & 蛋白</li>
+                        <li data-i18n="note3">方案B：<span class="highlight-red">200 μL</span> Working sol. + <span class="highlight-red">25 μL</span> BSA & 蛋白</li>
+                        <li data-i18n="note4"><span class="highlight-red">37°C</span> incubate <span class="highlight-red">30 分鐘</span>，測 <span class="highlight-red">562nm</span> 或 540-590nm</li>
+                        <li data-i18n="note5">若進行 Enhanced 測微量，<span class="highlight-red">60°C</span> incubate <span class="highlight-red">30 分鐘</span></li>
                     </ul>
                 </div>
             </div>
@@ -285,16 +288,16 @@
             <div class="result-box">
                 <div class="result-item">
                     Working solution = <span class="value" id="valWS">0</span> μL
-                    <div style="font-size: 0.85em; color: #555;">(Reagent A + B)</div>
+                    <div style="font-size: 0.85em; color: #555;" data-i18n="hintWS">(Reagent A + B)</div>
                 </div>
                 <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
                 <div class="result-item">
                     Reagent A = <span class="value" id="valA">0</span> μL
-                    <div style="font-size: 0.85em; color: #555;">(大罐透明)</div>
+                    <div style="font-size: 0.85em; color: #555;" data-i18n="hintA">(大罐透明)</div>
                 </div>
                 <div class="result-item">
                     Reagent B = <span class="value" id="valB">0</span> μL
-                    <div style="font-size: 0.85em; color: #555;">(小罐藍色)</div>
+                    <div style="font-size: 0.85em; color: #555;" data-i18n="hintB">(小罐藍色)</div>
                 </div>
             </div>
         </div>
@@ -304,8 +307,8 @@
         <div class="header-with-buttons">
             <h2>Preparation of diluted BSA standards</h2>
             <div class="header-buttons">
-                <a href="https://drive.google.com/file/d/1wR8iNXpjt2Kp63dtjPOaTlQB_VHbVXxF/view?usp=sharing" target="_blank" class="btn">慧眾BCA說明書</a>
-                <a href="https://osla30.github.io/bio/wb/proteinassay" target="_blank" class="btn">蛋白質定量工具</a>
+                <a href="https://drive.google.com/file/d/1wR8iNXpjt2Kp63dtjPOaTlQB_VHbVXxF/view?usp=sharing" target="_blank" class="btn" data-i18n="btnManual">慧眾BCA說明書</a>
+                <a href="https://osla30.github.io/bio/wb/proteinassay" target="_blank" class="btn" data-i18n="btnTool">蛋白質定量工具</a>
             </div>
         </div>
         
@@ -362,45 +365,102 @@
 </div>
 
 <script>
+    // 翻譯內容字典
+    const translations = {
+        zh: {
+            titleMain: "BCA Working Solution 體積計算",
+            btnOffline: "離線版",
+            lblStdCount: "Standard 數量",
+            lblStdReps: "Standard 重複次數",
+            lblSmpCount: "Sample 數量",
+            lblSmpReps: "Sample 重複次數",
+            lblScheme: "計算方案",
+            optSchemeA: "方案 A",
+            optSchemeB: "方案 B",
+            noteTitle: "實驗提醒：",
+            note1: "蛋白樣本可稀釋所需倍數後再做測量",
+            note2: "方案A：<span class='highlight-red'>160 μL</span> Working sol. + <span class='highlight-red'>20 μL</span> BSA & 蛋白",
+            note3: "方案B：<span class='highlight-red'>200 μL</span> Working sol. + <span class='highlight-red'>25 μL</span> BSA & 蛋白",
+            note4: "<span class='highlight-red'>37°C</span> incubate <span class='highlight-red'>30 分鐘</span>，測 <span class='highlight-red'>562nm</span> 或 540-590nm",
+            note5: "若進行 Enhanced 測微量，<span class='highlight-red'>60°C</span> incubate <span class='highlight-red'>30 分鐘</span>",
+            hintWS: "(Reagent A + B)",
+            hintA: "(大罐透明)",
+            hintB: "(小罐藍色)",
+            btnManual: "慧眾BCA說明書",
+            btnTool: "蛋白質定量工具"
+        },
+        en: {
+            titleMain: "BCA Working Sol. Volume Calculator",
+            btnOffline: "Offline Version",
+            lblStdCount: "Standard Count",
+            lblStdReps: "Standard Replicates",
+            lblSmpCount: "Sample Count",
+            lblSmpReps: "Sample Replicates",
+            lblScheme: "Calculation Scheme",
+            optSchemeA: "Scheme A",
+            optSchemeB: "Scheme B",
+            noteTitle: "Experimental Notes:",
+            note1: "Protein samples can be diluted to the required fold before measurement.",
+            note2: "Scheme A: <span class='highlight-red'>160 μL</span> Working sol. + <span class='highlight-red'>20 μL</span> BSA & Protein",
+            note3: "Scheme B: <span class='highlight-red'>200 μL</span> Working sol. + <span class='highlight-red'>25 μL</span> BSA & Protein",
+            note4: "Incubate at <span class='highlight-red'>37°C</span> for <span class='highlight-red'>30 mins</span>, measure at <span class='highlight-red'>562nm</span> (or 540-590nm).",
+            note5: "For Enhanced micro-measurement, incubate at <span class='highlight-red'>60°C</span> for <span class='highlight-red'>30 mins</span>.",
+            hintWS: "(Reagent A + B)",
+            hintA: "(Large Clear Bottle)",
+            hintB: "(Small Blue Bottle)",
+            btnManual: "BCA Manual",
+            btnTool: "Protein Quant Tool"
+        }
+    };
+
+    let currentLang = 'zh';
+
+    // 切換語言功能
+    function toggleLanguage() {
+        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        
+        // 更新按鈕文字狀態
+        document.getElementById('langBtn').textContent = currentLang === 'zh' ? 'EN / 中文' : '中文 / EN';
+        
+        // 抓取所有有 data-i18n 屬性的元素進行替換
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[currentLang][key]) {
+                el.innerHTML = translations[currentLang][key];
+            }
+        });
+    }
+
+    // 計算體積功能
     function calculateVolumes() {
-        // 取得使用者輸入的各項數值
         let stdCount = parseFloat(document.getElementById('standardCount').value) || 0;
         let stdReps  = parseFloat(document.getElementById('standardReps').value) || 1;
         let smpCount = parseFloat(document.getElementById('sampleCount').value) || 0;
         let smpReps  = parseFloat(document.getElementById('sampleReps').value) || 1;
-        
-        // 取得選擇的計算方案
         let scheme = document.getElementById('calcScheme').value;
         
-        // 確保數值不為負數
         if (stdCount < 0) stdCount = 0;
         if (stdReps < 1) stdReps = 1; 
         if (smpCount < 0) smpCount = 0;
         if (smpReps < 1) smpReps = 1; 
 
-        // 計算總反應次數 (每一孔為一次反應)
         let totalReactions = (stdCount * stdReps) + (smpCount * smpReps);
-        
         let reagentA = 0;
 
-        // 根據選擇的方案決定 Reagent A 的基底用量
         if (scheme === 'A') {
             reagentA = totalReactions * 200;
         } else if (scheme === 'B') {
             reagentA = totalReactions * 250;
         }
 
-        // Reagent B 統一維持 50:1 比例
         let reagentB = reagentA / 50;
         let totalWS = reagentA + reagentB;
 
-        // 更新畫面數值
         document.getElementById('valA').textContent = reagentA;
         document.getElementById('valB').textContent = reagentB;
         document.getElementById('valWS').textContent = totalWS;
     }
 
-    // 頁面載入時先執行一次計算確保數值同步
     window.onload = calculateVolumes;
 </script>
 
