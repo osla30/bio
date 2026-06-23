@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>細胞培養實用數據 (Cell Culture Useful Numbers)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background-color: #34495e;
+            color: #ffffff;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th:first-child {
+            border-top-left-radius: 8px;
+        }
+        th:last-child {
+            border-top-right-radius: 8px;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fbfb;
+        }
+        tr:hover {
+            background-color: #f1f2f6;
+            transition: background-color 0.3s ease;
+        }
+        .group-header {
+            background-color: #ecf0f1 !important;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: left;
+        }
+        .notes {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 20px;
+            background: #eef2f5;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+            border-radius: 4px;
+        }
+        
+        /* 超連結樣式：確保按過與沒按過顏色一致 */
+        .notes a:link, .notes a:visited {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .notes a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>各尺寸培養皿與培養瓶之細胞培養實用數據</h1>
+    <p class="subtitle">Useful cell culture numbers for various sizes of dishes and flasks</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>培養容器 (Culture Vessel)</th>
+                <th>表面積 (cm²)<br>Surface area</th>
+                <th>接種密度*<br>Seeding density</th>
+                <th>達滿度時細胞數†<br>Cells at confluency</th>
+                <th>Trypsin (0.05% trypsin, 0.53mM EDTA) 體積 (mL)</th>
+                <th>生長培養基體積 (mL)<br>Growth medium</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="group-header">
+                <td colspan="6">培養皿 (Dishes)</td>
+            </tr>
+            <tr>
+                <td>35 mm</td>
+                <td>8.8</td>
+                <td>3 &times; 10<sup>5</sup></td>
+                <td>1.2 &times; 10<sup>6</sup></td>
+                <td>1</td>
+                <td>2</td>
+            </tr>
+            <tr>
+                <td>60 mm</td>
+                <td>21.5</td>
+                <td>8 &times; 10<sup>5</sup></td>
+                <td>3.2 &times; 10<sup>6</sup></td>
+                <td>3</td>
+                <td>5</td>
+            </tr>
+            <tr>
+                <td>100 mm</td>
+                <td>56.7</td>
+                <td>2.2 &times; 10<sup>6</sup></td>
+                <td>8.8 &times; 10<sup>6</sup></td>
+                <td>5</td>
+                <td>12</td>
+            </tr>
+            <tr>
+                <td>150 mm</td>
+                <td>145</td>
+                <td>5 &times; 10<sup>6</sup></td>
+                <td>2 &times; 10<sup>7</sup></td>
+                <td>10</td>
+                <td>30</td>
+            </tr>
+
+            <tr class="group-header">
+                <td colspan="6">培養板 (Culture plates)</td>
+            </tr>
+            <tr>
+                <td>6-well</td>
+                <td>9.6</td>
+                <td>3 &times; 10<sup>5</sup></td>
+                <td>1.2 &times; 10<sup>6</sup></td>
+                <td>1</td>
+                <td>1 to 3</td>
+            </tr>
+            <tr>
+                <td>12-well</td>
+                <td>3.5</td>
+                <td>1 &times; 10<sup>5</sup></td>
+                <td>5 &times; 10<sup>5</sup></td>
+                <td>0.4 to 1</td>
+                <td>1 to 2</td>
+            </tr>
+            <tr>
+                <td>24-well</td>
+                <td>1.9</td>
+                <td>5 &times; 10<sup>4</sup></td>
+                <td>2.4 &times; 10<sup>5</sup></td>
+                <td>0.2 to 0.3</td>
+                <td>0.5 to 1.0</td>
+            </tr>
+            <tr>
+                <td>48-well</td>
+                <td>1.1</td>
+                <td>3 &times; 10<sup>4</sup></td>
+                <td>1.2 &times; 10<sup>5</sup></td>
+                <td>0.1 to 0.2</td>
+                <td>0.2 to 0.4</td>
+            </tr>
+            <tr>
+                <td>96-well</td>
+                <td>0.32</td>
+                <td>1 &times; 10<sup>4</sup></td>
+                <td>4 &times; 10<sup>4</sup></td>
+                <td>0.05 to 0.1</td>
+                <td>0.1 to 0.2</td>
+            </tr>
+            <tr>
+                <td>384-well</td>
+                <td>0.084</td>
+                <td>1.8 &times; 10<sup>3</sup></td>
+                <td>7.2 &times; 10<sup>3</sup></td>
+                <td>0.015</td>
+                <td>0.08</td>
+            </tr>
+            <tr>
+                <td>1536-well</td>
+                <td>0.03</td>
+                <td>9 &times; 10<sup>2</sup></td>
+                <td>3.6 &times; 10<sup>3</sup></td>
+                <td>0.003</td>
+                <td>0.01</td>
+            </tr>
+
+            <tr class="group-header">
+                <td colspan="6">培養瓶 (Flasks)</td>
+            </tr>
+            <tr>
+                <td>T-25</td>
+                <td>25</td>
+                <td>7 &times; 10<sup>5</sup></td>
+                <td>2.8 &times; 10<sup>6</sup></td>
+                <td>3</td>
+                <td>3 to 5</td>
+            </tr>
+            <tr>
+                <td>T-75</td>
+                <td>75</td>
+                <td>2.1 &times; 10<sup>6</sup></td>
+                <td>8.4 &times; 10<sup>6</sup></td>
+                <td>5</td>
+                <td>8 to 15</td>
+            </tr>
+            <tr>
+                <td>T-175</td>
+                <td>175</td>
+                <td>4.9 &times; 10<sup>6</sup></td>
+                <td>2.33 &times; 10<sup>7</sup></td>
+                <td>17</td>
+                <td>35 to 53</td>
+            </tr>
+            <tr>
+                <td>T-225</td>
+                <td>225</td>
+                <td>6.3 &times; 10<sup>6</sup></td>
+                <td>3 &times; 10<sup>7</sup></td>
+                <td>22</td>
+                <td>45 to 68</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="notes">
+        <p><strong>* 接種密度 (Seeding density):</strong> 培養皿與培養瓶為「每容器細胞數 (Cells per vessel)」；培養板為「每孔細胞數 (Cells per well)」。</p>
+        <p><strong>† 達滿度時細胞數 (Cells at confluency):</strong> 培養板、培養皿或培養瓶達滿度時的細胞數會因細胞類型而異。此表格使用的是 HeLa 細胞。</p>
+        <p><em>資料來源: <a href="https://www.thermofisher.com/tw/zt/home/references/gibco-cell-culture-basics/cell-culture-protocols/cell-culture-useful-numbers.html" target="_blank">Thermo Fisher Scientific (Gibco Cell Culture Basics)</a></em></p>
+    </div>
+</div>
+
+</body>
+</html>
