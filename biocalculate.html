@@ -5,382 +5,438 @@
 	<meta content="width=device-width, initial-scale=1.0" name="viewport">
 	<title>科科計算器 / BioCalculator</title>
 	<style>
-	      * { box-sizing: border-box; }
-	      
-	      body {
-	        font-family: Arial, sans-serif;
-	        max-width: 1200px;
-	        margin: 10px auto;
-	        background: #f9f9f9;
-	        padding: 15px;
-	        border-radius: 8px;
-	        font-size: 14px;
-	      }
-	      
-	      /* 語言切換按鈕樣式 */
-	      .language-switcher {
-	        position: absolute;
-	        top: 15px;
-	        right: 15px;
-	        display: flex;
-	        gap: 5px;
-	        z-index: 1000;
-	      }
-	      
-	      .lang-btn {
-	        padding: 5px 10px;
-	        border: 1px solid #888;
-	        background: #f0f0f0;
-	        cursor: pointer;
-	        border-radius: 4px;
-	        font-size: 12px;
-	        color: #222;
-	        transition: all 0.2s;
-	        text-decoration: none;
-	      }
-	      
-	      .lang-btn:hover { background: #e0e0e0; }
-	      
-	      .lang-btn.active {
-	        background: #2563eb;
-	        color: white;
-	        border-color: #2563eb;
-	      }
-	      
-	      h1 {
-	        text-align: center;
-	        color: #2563eb;
-	        font-size: 1.8em;
-	        margin-bottom: 15px;
-	        display: flex;
-	        align-items: center;
-	        justify-content: center;
-	        flex-wrap: wrap;
-	        gap: 10px;
-	        margin-top: 40px;
-	      }
-	      
-	      h2 { 
-	        display: flex; 
-	        align-items: center;
-	        font-size: 1.2em;
-	        margin-bottom: 15px;
-	      }
-	      
-	      #download-btn {
-	        font-size: 12px;
-	        padding: 4px 12px;
-	        border-radius: 5px;
-	        border: 1px solid #888;
-	        background: #f0f0f0;
-	        cursor: pointer;
-	        text-decoration: none;
-	        color: #222;
-	        transition: background 0.2s;
-	        white-space: nowrap;
-	      }
-	      
-	      #download-btn:hover { background: #e0e0e0; }
-	      
-	      .tabs {
-	        display: flex;
-	        justify-content: center;
-	        margin-bottom: 20px;
-	        flex-wrap: wrap;
-	        gap: 5px;
-	      }
-	      
-	      .tab {
-	        padding: 8px 12px;
-	        border-radius: 4px;
-	        background: #ccc;
-	        color: #000;
-	        cursor: pointer;
-	        user-select: none;
-	        white-space: nowrap;
-	        font-size: 13px;
-	        text-align: center;
-	        min-width: 80px;
-	      }
-	      
-	      .tab.active {
-	        background: #2563eb;
-	        color: white;
-	      }
-	      
-	      /* 表單布局 */
-	      .form-container {
-	        display: grid;
-	        gap: 12px;
-	        margin-bottom: 20px;
-	      }
-	      
-	      .form-row {
-	        display: flex;
-	        flex-direction: column;
-	        gap: 5px;
-	      }
-	      
-	      .form-row-inline {
-	        display: flex;
-	        align-items: center;
-	        gap: 10px;
-	        flex-wrap: wrap;
-	      }
-	      
-	      label {
-	        font-weight: bold;
-	        color: #333;
-	        min-width: 120px;
-	      }
-	      
-	      input, select, textarea {
-	        padding: 8px;
-	        border: 1px solid #ddd;
-	        border-radius: 4px;
-	        font-size: 14px;
-	        width: 100%;
-	      }
+	      :root {
+  /* 顏色定義 */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --bg-color: #f1f5f9;
+  --card-bg: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --danger-bg: #fef2f2;
+  --success: #10b981;
+  --success-hover: #059669;
+  
+  /* 圓角與陰影 */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
 
-          input, select { max-width: 200px; }
+* { 
+  box-sizing: border-box; 
+}
 
-          textarea {
-              font-family: 'Courier New', monospace;
-              resize: vertical;
-              min-height: 80px;
-          }
-          
-          /* Special overrides for Tm Calculator inputs */
-          .seq-input {
-              width: 100% !important; 
-              max-width: 100% !important;
-              padding: 8px;
-              font-family: 'Consolas', monospace; 
-              font-size: 14px;
-              border: 1px solid #ccc; 
-              border-radius: 4px;
-              text-transform: uppercase; 
-              box-sizing: border-box;
-          }
-	      
-	      .input-group {
-	        display: flex;
-	        gap: 5px;
-	        align-items: center;
-	        flex-wrap: wrap;
-	      }
-	      
-	      .input-group input { flex: 1; min-width: 100px; }
-	      .input-group select { min-width: 80px; flex-shrink: 0; }
-	      
-	      button {
-	        padding: 10px 16px;
-	        margin: 5px 5px 5px 0;
-	        cursor: pointer;
-	        border: none;
-	        border-radius: 4px;
-	        background: #2563eb;
-	        color: white;
-	        font-weight: bold;
-	        font-size: 14px;
-	        transition: background 0.2s;
-	      }
-	      
-	      button:hover { background: #1d4ed8; }
-	      button.clear { background: #6b7280; }
-	      button.clear:hover { background: #4b5563; }
-          
-          /* Tm Calculator Buttons */
-          .btn-add { background-color: #28a745; color: white; }
-          .btn-add:hover { background-color: #218838; }
-          .btn-del { background-color: #dc3545; color: white; padding: 6px 10px; font-size: 12px; }
-          .btn-del:hover { background-color: #c82333; }
-          .btn-check {
-            background-color: #fff;
-            color: #2563eb;
-            border: 1px solid #2563eb;
-            font-weight: bold;
-            transition: all 0.2s;
-            padding: 6px 10px; font-size: 12px;
-          }
-          .btn-check:hover { background-color: #2563eb; color: white; }
-	      
-	      .button-group {
-	        display: flex;
-	        gap: 10px;
-	        flex-wrap: wrap;
-	        margin-top: 15px;
-	      }
-	      
-	      .result {
-	        margin-top: 15px;
-	        padding: 15px;
-	        background: #fff;
-	        border-radius: 6px;
-	        border-left: 4px solid #2563eb;
-	        font-weight: bold;
-	        color: #2563eb;
-	        white-space: pre-wrap;
-	        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-	      }
-	      
-	      .note {
-	        font-size: 0.85em;
-	        color: #dc2626;
-	        margin: 10px 0;
-	        padding: 10px;
-	        background: #fef2f2;
-	        border-radius: 4px;
-	        border-left: 3px solid #dc2626;
-	      }
-	      
-	      .flex-container {
-	        display: grid;
-	        gap: 20px;
-	        margin: 15px 0;
-	      }
-	      
-	      .flex-block {
-	        background: #fff;
-	        border-radius: 8px;
-	        padding: 20px;
-	        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-	      }
-	      
-	      /* Timer Styles */
-	      .timer-flex-container { display: grid; gap: 20px; margin: 15px 0; }
-	      .timer-block { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-	      .timer-title { width: 100%; margin-bottom: 10px; padding: 8px; font-weight: bold; font-size: 1em; border: 1px solid #ddd; border-radius: 4px; max-width: 100%;}
-	      .time-inputs { display: flex; gap: 5px; margin-bottom: 10px; justify-content: center; }
-	      .time-inputs input { width: 70px; padding: 8px; text-align: center; }
-	      .timer-display { font-size: 1.8em; text-align: center; margin: 15px 0; font-family: 'Courier New', monospace; font-weight: bold; color: #2563eb; background: #f8fafc; padding: 15px; border-radius: 6px; border: 2px solid #e2e8f0; }
-	      .timer-controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-	      .timer-controls button { flex: 1; min-width: 70px; }
-	      .timer-section-title { margin: 20px 0 15px 0; font-size: 1.3em; color: #2563eb; text-align: center; font-weight: bold; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  padding: 20px 15px;
+  font-size: 15px;
+  line-height: 1.5;
+}
 
-          /* SolPrep Styles */
-          .solute-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-          .solute-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-          .remove-solute { background: #ef4444; color: #fff; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; height: fit-content; margin: 0; }
-          .remove-solute:hover { background: #dc2626; }
-          .fixed-unit { padding: 6px 8px; background: #eee; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; display: inline-block; }
+/* 語言切換按鈕樣式 */
+.language-switcher {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+}
 
-          /* === Tm Calc & Structure Analysis Styles === */
-          .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; }
-          .calc-table th { background-color: #2563eb; color: white; padding: 12px; text-align: left; font-size: 14px; white-space: nowrap; }
-          .calc-table td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
-          
-          .res-cell { font-family: 'Consolas', monospace; font-weight: bold; color: #555; }
-          .tm-cell { color: #d32f2f; font-size: 16px; }
+.lang-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  cursor: pointer;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
 
-          /* Modal Styles */
-          .modal {
-            display: none; position: fixed; z-index: 2000; left: 0; top: 0;
-            width: 100%; height: 100%; overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-          }
+.lang-btn:hover { 
+  background: var(--border-color); 
+  color: var(--text-main);
+}
 
-          .modal-content {
-            background-color: #fff;
-            margin: 5% auto;
-            padding: 0;
-            width: 90%;
-            max-width: 750px;
-            border-radius: 8px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-            animation: fadeIn 0.3s;
-          }
-          
-          @keyframes fadeIn { from {opacity: 0; transform: translateY(-20px);} to {opacity: 1; transform: translateY(0);} }
+.lang-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
 
-          .modal-header {
-            background-color: #2563eb;
-            color: white;
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-          .modal-header h3 { margin: 0; font-size: 18px; }
-          .close-modal { color: white; font-size: 24px; cursor: pointer; font-weight: bold; line-height: 1; }
-          .close-modal:hover { color: #ddd; }
+h1 {
+  text-align: center;
+  color: var(--text-main);
+  font-size: 2.2em;
+  font-weight: 700;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 40px;
+  letter-spacing: -0.5px;
+}
 
-          .modal-body { padding: 25px; max-height: 80vh; overflow-y: auto; }
+h2 { 
+  display: flex; 
+  align-items: center;
+  font-size: 1.3em;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: var(--text-main);
+}
 
-          .section-title {
-            font-size: 16px; font-weight: bold; color: #2563eb;
-            border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 15px; margin-top: 10px;
-          }
+#download-btn {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
 
-          .structure-box {
-            background-color: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-family: 'Courier New', Courier, monospace;
-            white-space: pre;
-            overflow-x: auto;
-            font-size: 15px;
-            line-height: 1.4;
-            color: #333;
-          }
+#download-btn:hover { 
+  background: var(--border-color); 
+  transform: translateY(-1px);
+}
 
-          .status-none { color: #28a745; font-weight: bold; font-style: italic; padding: 10px 0; font-size: 16px; }
-          .status-warn { color: #dc3545; font-weight: bold; margin-bottom: 5px; display: block; }
-          .strand-top, .strand-bottom { color: #000; }
-          .match-lines { color: #2563eb; font-weight: bold; }
-	      
-	      /* 響應式設計 */
-	      @media (min-width: 640px) {
-	        body { padding: 20px; font-size: 15px; }
-	        h1 { font-size: 2.2em; }
-	        .form-row-inline { flex-direction: row; align-items: center; }
-	        .form-row-inline label { min-width: 140px; margin-bottom: 0; }
-	        input, select { width: auto; }
-            textarea { width: 100%; }
-	        .flex-container { grid-template-columns: 1fr 1fr; }
-	        .timer-flex-container { grid-template-columns: 1fr 1fr; }
-	      }
-	      
-	      @media (min-width: 768px) {
-	        .tabs { gap: 8px; }
-	        .tab { padding: 10px 16px; font-size: 14px; min-width: 100px; }
-	        .timer-display { font-size: 2.2em; }
-	      }
-	      
-	      @media (min-width: 1024px) {
-	        body { padding: 30px; }
-	        .form-container { max-width: 600px; }
-            #revcomp .form-container { max-width: 800px; }
-            .calc-table { table-layout: fixed; }
-            .calc-table th:nth-child(2) { width: 40%; } /* Sequence column width */
-	      }
-	      
-	      .animal-dose-group { margin: 15px 0; padding: 15px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; }
-	      .animal-dose-group label { display: block; margin-bottom: 8px; }
-	      .indent { margin-left: 20px; }
-	      
-	      @media (max-width: 639px) {
-	        .language-switcher { position: static; justify-content: center; margin-bottom: 15px; }
-	        h1 { margin-top: 0; font-size: 1.5em; flex-direction: column; gap: 8px; }
-	        .tabs { justify-content: flex-start; overflow-x: auto; padding-bottom: 5px; }
-	        .tab { flex-shrink: 0; min-width: 90px; font-size: 12px; padding: 6px 10px; }
-	        .time-inputs input { width: 60px; padding: 6px; }
-	        .timer-display { font-size: 1.5em; padding: 10px; }
-	        .timer-controls button { min-width: 60px; padding: 8px 12px; font-size: 13px; }
-	        #download-btn { font-size: 11px; padding: 3px 8px; }
-            
-            /* Table Responsive for Mobile */
-            .calc-table thead { display: none; }
-            .calc-table, .calc-table tbody, .calc-table tr, .calc-table td { display: block; width: 100%; }
-            .calc-table tr { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background: #fff; }
-            .calc-table td { text-align: right; padding-left: 50%; position: relative; border-bottom: 1px solid #eee; }
-            .calc-table td::before { content: attr(data-label); position: absolute; left: 10px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; color: #2563eb; }
-            .seq-input { width: 100%; }
-	      }
+/* 膠囊型 Tabs */
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: var(--card-bg);
+  padding: 8px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab {
+  padding: 10px 18px;
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  min-width: 90px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab:hover {
+  background: var(--bg-color);
+  color: var(--text-main);
+}
+
+.tab.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+/* 統一的卡片背景設定 */
+.tab-content {
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 20px;
+}
+
+/* 表單布局 */
+.form-container {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 25px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-row-inline {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+label {
+  font-weight: 600;
+  color: var(--text-main);
+  min-width: 140px;
+  font-size: 14px;
+}
+
+input, select, textarea {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  width: 100%;
+  color: var(--text-main);
+  background-color: #f8fafc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  background-color: #fff;
+}
+
+input, select { max-width: 220px; }
+
+textarea {
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  resize: vertical;
+  min-height: 100px;
+  background-color: #f8fafc;
+}
+
+.seq-input {
+  width: 100% !important; 
+  max-width: 100% !important;
+  font-family: 'Cascadia Code', 'Consolas', monospace; 
+  text-transform: uppercase; 
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input-group input { flex: 1; min-width: 120px; }
+.input-group select { min-width: 90px; flex-shrink: 0; }
+
+/* 按鈕樣式 */
+button {
+  padding: 10px 20px;
+  margin: 5px 8px 5px 0;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+button:hover { 
+  background: var(--primary-hover); 
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button.clear { 
+  background: var(--text-muted); 
+}
+
+button.clear:hover { 
+  background: #475569; 
+}
+
+.btn-add { background-color: var(--success); }
+.btn-add:hover { background-color: var(--success-hover); }
+.btn-del { background-color: var(--danger); padding: 8px 12px; font-size: 12px; }
+.btn-del:hover { background-color: var(--danger-hover); }
+
+.btn-check {
+  background-color: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 8px 12px; 
+  font-size: 12px;
+  box-shadow: none;
+}
+.btn-check:hover { 
+  background-color: var(--primary); 
+  color: white; 
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* 提示與結果區塊 */
+.result {
+  margin-top: 20px;
+  padding: 18px;
+  background: #eff6ff;
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--primary);
+  font-weight: 600;
+  color: var(--primary-hover);
+  white-space: pre-wrap;
+  box-shadow: var(--shadow-sm);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.note {
+  font-size: 13px;
+  color: #991b1b;
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: var(--danger-bg);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--danger);
+  line-height: 1.5;
+}
+
+/* 彈性區塊佈局 (Flex Containers) */
+.flex-container {
+  display: grid;
+  gap: 25px;
+  margin: 15px 0;
+}
+
+.flex-block {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 25px;
+  border: 1px solid var(--border-color);
+}
+
+/* Timer Styles */
+.timer-flex-container { display: grid; gap: 25px; margin: 15px 0; }
+.timer-block { background: #f8fafc; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 20px; }
+.timer-title { width: 100%; margin-bottom: 15px; padding: 10px; font-weight: 600; font-size: 1em; border: 1px solid var(--border-color); border-radius: var(--radius-sm); max-width: 100%; background: white;}
+.time-inputs { display: flex; gap: 8px; margin-bottom: 15px; justify-content: center; }
+.time-inputs input { width: 75px; padding: 10px; text-align: center; font-size: 16px; }
+.timer-display { font-size: 2.5em; text-align: center; margin: 20px 0; font-family: 'Cascadia Code', 'Consolas', monospace; font-weight: 700; color: var(--primary); background: white; padding: 20px; border-radius: var(--radius-md); border: 2px solid var(--border-color); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+.timer-controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.timer-controls button { flex: 1; min-width: 80px; padding: 12px; }
+.timer-section-title { margin: 0 0 20px 0; font-size: 1.4em; color: var(--text-main); text-align: center; font-weight: 700; }
+
+/* SolPrep Styles */
+.solute-item { background: #f8fafc; border: 1px solid var(--border-color); padding: 20px; border-radius: var(--radius-md); margin-bottom: 15px; transition: box-shadow 0.2s; }
+.solute-item:hover { box-shadow: var(--shadow-md); }
+.solute-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+.remove-solute { background: var(--danger); color: #fff; border: none; border-radius: var(--radius-sm); padding: 6px 12px; font-size: 12px; cursor: pointer; margin: 0; box-shadow: none; }
+.remove-solute:hover { background: var(--danger-hover); transform: none; }
+.fixed-unit { padding: 8px 12px; background: #e2e8f0; border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 13px; display: inline-block; font-weight: 500; color: var(--text-muted); }
+
+/* Table Styles (Tm Calc) */
+.calc-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 25px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; }
+.calc-table th { background-color: #f8fafc; color: var(--text-main); padding: 14px; text-align: left; font-size: 14px; font-weight: 600; white-space: nowrap; border-bottom: 2px solid var(--border-color); }
+.calc-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+.calc-table tr:last-child td { border-bottom: none; }
+.calc-table tr:hover td { background-color: #f8fafc; }
+
+.res-cell { font-family: 'Cascadia Code', 'Consolas', monospace; font-weight: 600; color: var(--text-muted); }
+.tm-cell { color: var(--danger); font-size: 16px; font-weight: 700; }
+
+/* Modal Styles */
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+.modal-content { background-color: var(--card-bg); margin: 5% auto; padding: 0; width: 90%; max-width: 750px; border-radius: var(--radius-lg); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); overflow: hidden; animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes fadeIn { from {opacity: 0; transform: translateY(-20px) scale(0.98);} to {opacity: 1; transform: translateY(0) scale(1);} }
+
+.modal-header { background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); color: var(--text-main); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { margin: 0; font-size: 18px; font-weight: 700; }
+.close-modal { color: var(--text-muted); font-size: 28px; cursor: pointer; font-weight: 300; line-height: 1; transition: color 0.2s; }
+.close-modal:hover { color: var(--text-main); }
+
+.modal-body { padding: 30px; max-height: 75vh; overflow-y: auto; background-color: #f8fafc; }
+.section-title { font-size: 15px; font-weight: 700; color: var(--text-main); border-bottom: 2px solid var(--border-color); padding-bottom: 8px; margin-bottom: 15px; margin-top: 15px; }
+
+.structure-box { background-color: #1e293b; color: #e2e8f0; border-radius: var(--radius-md); padding: 20px; margin-bottom: 25px; font-family: 'Cascadia Code', 'Consolas', monospace; white-space: pre; overflow-x: auto; font-size: 14px; line-height: 1.5; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
+.status-none { color: var(--success); font-weight: 600; padding: 10px 0; font-size: 15px; }
+.status-warn { color: var(--danger); font-weight: 600; margin-bottom: 8px; display: inline-block; background: var(--danger-bg); padding: 4px 10px; border-radius: 20px; font-size: 13px; }
+.strand-top, .strand-bottom { color: #60a5fa; }
+.match-lines { color: #f87171; font-weight: bold; }
+
+.animal-dose-group { margin: 15px 0; padding: 20px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
+.animal-dose-group label { display: block; margin-bottom: 12px; }
+.indent { margin-left: 20px; }
+
+/* 響應式設計 */
+@media (min-width: 640px) {
+  body { padding: 30px; }
+  h1 { font-size: 2.4em; }
+  .form-row-inline { flex-direction: row; align-items: center; }
+  .form-row-inline label { min-width: 140px; margin-bottom: 0; }
+  input, select { width: auto; }
+  textarea { width: 100%; }
+  .flex-container { grid-template-columns: 1fr 1fr; }
+  .timer-flex-container { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 1024px) {
+  body { padding: 40px; }
+  .form-container { max-width: 650px; }
+  #revcomp .form-container { max-width: 800px; }
+  .calc-table { table-layout: fixed; }
+  .calc-table th:nth-child(2) { width: 40%; }
+  /* 取消單一 tab-content 的背景設定，改為全域設定 */
+  .tab-content { padding: 40px; }
+}
+
+@media (max-width: 639px) {
+  .language-switcher { position: static; justify-content: center; margin-bottom: 20px; }
+  h1 { margin-top: 0; font-size: 1.8em; flex-direction: column; gap: 10px; }
+  .tabs { justify-content: flex-start; overflow-x: auto; padding-bottom: 10px; border-radius: var(--radius-md); }
+  .tab { flex-shrink: 0; min-width: auto; font-size: 13px; padding: 8px 14px; }
+  .time-inputs input { width: 65px; padding: 8px; }
+  .timer-display { font-size: 2em; padding: 15px; }
+  .timer-controls button { min-width: 60px; padding: 10px 12px; font-size: 13px; }
+  #download-btn { font-size: 12px; padding: 5px 12px; }
+  .tab-content { padding: 20px; }
+  
+  /* Table Responsive for Mobile */
+  .calc-table thead { display: none; }
+  .calc-table, .calc-table tbody, .calc-table tr, .calc-table td { display: block; width: 100%; }
+  .calc-table tr { margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; background: #fff; }
+  .calc-table td { text-align: right; padding-left: 45%; position: relative; border-bottom: 1px solid #f1f5f9; padding-top: 10px; padding-bottom: 10px; }
+  .calc-table td:last-child { border-bottom: none; }
+  .calc-table td::before { content: attr(data-label); position: absolute; left: 0; width: 40%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: 600; color: var(--text-muted); font-size: 13px; }
+  .seq-input { width: 100%; }
+  .button-group { justify-content: stretch; }
+  .button-group button { flex: 1 1 100%; margin-right: 0; }
+}
 	</style>
 </head>
 <body>
