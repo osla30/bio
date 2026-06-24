@@ -50,6 +50,7 @@ body {
   top: 20px;
   right: 20px;
   display: flex;
+  align-items: center; /* 新增這行讓按鈕垂直置中對齊 */
   gap: 8px;
   z-index: 1000;
 }
@@ -441,9 +442,11 @@ button.clear:hover {
 </head>
 <body>
 	<div class="language-switcher">
-		<button class="lang-btn active" id="lang-zh" onclick="switchLanguage('zh')">中文</button> <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">English</button>
+        <a href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" id="download-btn" rel="noopener noreferrer" target="_blank" data-text="download-btn">下載離線版</a>
+		<button class="lang-btn active" id="lang-zh" onclick="switchLanguage('zh')">中文</button> 
+        <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">English</button>
 	</div>
-	<h1 id="main-title">科科計算器 <a href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" id="download-btn" rel="noopener noreferrer" target="_blank">下載離線版</a></h1>
+	<h1 id="main-title" data-text="main-title">科科計算器</h1>
 	<div class="tabs">
 		<div class="tab active" id="tab-mass" onclick="switchTab('mass')" data-text="tab-mass">莫耳濃度</div>
 		<div class="tab" id="tab-dilution" onclick="switchTab('dilution')" data-text="tab-dilution">稀釋計算</div>
@@ -1432,14 +1435,6 @@ button.clear:hover {
       document.querySelectorAll('.seq-input').forEach(el => {
           el.placeholder = translations[lang]['tm-placeholder'];
       });
-      
-      // 更新主標題
-      const title = document.getElementById('main-title');
-      if (lang === 'zh') {
-        title.innerHTML = '科科計算器 <a id="download-btn" href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" target="_blank" rel="noopener noreferrer">下載離線版<\/a>';
-      } else {
-        title.innerHTML = 'BioCalculator <a id="download-btn" href="https://drive.google.com/file/d/1XZXuOxtin_b-Psg7c6mRKox81ZiWvU8g/view?usp=sharing" target="_blank" rel="noopener noreferrer">Download Offline Version<\/a>';
-      }
       
       // 更新分頁標籤
       const tabs = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer', 'tmcalc', 'revcomp', 'ligation', 'cellcount', 'timer'];
