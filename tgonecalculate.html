@@ -407,7 +407,12 @@ function calculateUpperGel() {
   document.getElementById('upper-aps').textContent = toFixedNumber(H, 1);
   document.getElementById('upper-total').textContent = toFixedNumber(I, 3);
 
-  document.getElementById('upper-results').style.display = 'block';
+  const upperResults = document.getElementById('upper-results');
+  upperResults.style.display = 'block';
+  // 加上自動平滑滾動並置中
+  setTimeout(() => {
+    upperResults.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50); // 50毫秒的微小延遲確保 DOM 完成渲染
 }
 
 function calculateLowerGel() {
@@ -439,7 +444,12 @@ function calculateLowerGel() {
   document.getElementById('lower-aps').textContent = toFixedNumber(h, 1);
   document.getElementById('lower-total').textContent = toFixedNumber(i, 3);
 
-  document.getElementById('lower-results').style.display = 'block';
+  const lowerResults = document.getElementById('lower-results');
+  lowerResults.style.display = 'block';
+  // 加上自動平滑滾動並置中
+  setTimeout(() => {
+    lowerResults.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
 }
 
 function clearUpperInputs() {
