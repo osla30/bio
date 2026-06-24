@@ -1482,10 +1482,11 @@ button.clear:hover {
 
     // 顯示/隱藏結果區域
     function showResult(id, text) {
-      const element = document.getElementById(id);
-      element.textContent = text;
-      element.style.display = 'block';
-      element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const element = document.getElementById(id);
+    element.textContent = text;
+    element.style.display = 'block';
+    // 將 nearest 改為 center，確保每次都會產生明顯的捲動聚焦
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function hideResult(id) {
@@ -1784,6 +1785,7 @@ button.clear:hover {
       const resDiv = document.getElementById('solprepResult');
       resDiv.innerText = out;
       resDiv.style.display = 'block';
+      resDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function clearSolPrep() {
@@ -2273,6 +2275,7 @@ button.clear:hover {
         `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
       document.getElementById("wbcResult").style.display = 'block';
       document.getElementById("wbcVolumeCalc").style.display = 'block';
+      document.getElementById("wbcResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     
     function updateWBCResult() {
@@ -2385,6 +2388,7 @@ button.clear:hover {
         `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
       document.getElementById("rbcResult").style.display = 'block';
       document.getElementById("rbcVolumeCalc").style.display = 'block';
+      document.getElementById("rbcResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     
     function updateRBCResult() {
