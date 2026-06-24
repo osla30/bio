@@ -821,9 +821,11 @@ button.clear:hover {
 						<label data-text="稀釋倍數：">稀釋倍數：</label> <input id="wbcDilution" step="any" type="number">
 					</div>
 					<div class="form-row-inline">
-						<label data-text="單位顯示：">單位顯示：</label> <select id="wbcUnit" onchange="updateWBCResult()">
-							<option data-text="個/µL" value="1">個/µL</option><option data-text="個/mL" value="1000">個/mL</option>
-						</select>
+						<label data-text="單位顯示：">單位顯示：</label>
+            <select id="wbcUnit" onchange="updateWBCResult()">
+	            <option data-text="個/µL" value="1">個/µL</option>
+              <option data-text="個/mL" value="1000" selected>個/mL</option>
+            </select>
 					</div>
 				</div>
 				<div class="button-group">
@@ -875,9 +877,11 @@ button.clear:hover {
 						<label data-text="稀釋倍數：">稀釋倍數：</label> <input id="rbcDilution" step="any" type="number">
 					</div>
 					<div class="form-row-inline">
-						<label data-text="單位顯示：">單位顯示：</label> <select id="rbcUnit" onchange="updateRBCResult()">
-							<option data-text="個/µL" value="1">個/µL</option><option data-text="個/mL" value="1000">個/mL</option>
-						</select>
+						<label data-text="單位顯示：">單位顯示：</label>
+            <select id="rbcUnit" onchange="updateRBCResult()">
+	           <option data-text="個/µL" value="1">個/µL</option>
+             <option data-text="個/mL" value="1000" selected>個/mL</option>
+            </select>
 					</div>
 				</div>
 				<div class="button-group">
