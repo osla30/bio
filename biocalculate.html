@@ -2204,6 +2204,7 @@ button.clear:hover {
         
         document.getElementById('revcompResult').value = result;
         document.getElementById('revcompResult').value += `\n\n(Length: ${result.length} bp)`;
+        document.getElementById('revcompResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     
     function getComplement(seq) {
@@ -2307,6 +2308,7 @@ button.clear:hover {
         `${translations[currentLanguage]['所需體積：']}${volumeUL.toFixed(2)} µL (${volumeML.toFixed(4)} mL)`;
       document.getElementById("wbcVolumeResult").style.display = 'block';
       document.getElementById('wbcBatchCalc').style.display = 'block';
+      document.getElementById("wbcVolumeResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function calcWBCBatch() {
@@ -2334,6 +2336,7 @@ button.clear:hover {
              `${translations[currentLanguage]['所需添加培養基體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
              `${translations[currentLanguage]['總體積：']} ${totalUL.toFixed(2)} µL (${(totalUL/1000).toFixed(2)} mL)`;
            r.style.display = 'block';
+           r.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch (e) {
            alert(translations[currentLanguage]['計算錯誤：'] + e.message);
         }
@@ -2420,6 +2423,7 @@ button.clear:hover {
         `${translations[currentLanguage]['所需體積：']}${volumeUL.toFixed(2)} µL (${volumeML.toFixed(4)} mL)`;
       document.getElementById("rbcVolumeResult").style.display = 'block';
       document.getElementById('rbcBatchCalc').style.display = 'block';
+      document.getElementById("rbcVolumeResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function calcRBCBatch() {
@@ -2447,6 +2451,7 @@ button.clear:hover {
              `${translations[currentLanguage]['所需添加培養基體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
              `${translations[currentLanguage]['總體積：']} ${totalUL.toFixed(2)} µL (${(totalUL/1000).toFixed(2)} mL)`;
            r.style.display = 'block';
+           r.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } catch (e) {
            alert(translations[currentLanguage]['計算錯誤：'] + e.message);
         }
