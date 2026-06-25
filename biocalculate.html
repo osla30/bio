@@ -200,12 +200,12 @@ label {
 
 input, select, textarea {
   padding: 10px 14px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #94a3b8;
   border-radius: var(--radius-sm);
   font-size: 14px;
   width: 100%;
   color: var(--text-main);
-  background-color: #f8fafc;
+  background-color: #ffffff;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -2709,6 +2709,7 @@ button.clear:hover {
 
     // 初始化
     document.addEventListener('DOMContentLoaded', function() {
+    switchLanguage('zh');
         addSolute(); // 初始化溶液配製
         // 初始化 Tm 表格
         for(let i=0; i<3; i++) addRow();
