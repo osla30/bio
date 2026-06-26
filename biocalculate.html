@@ -97,8 +97,8 @@ h1 {
 h2 { 
   display: flex; 
   align-items: center;
-  font-size: 1.3em;
-  font-weight: 600;
+  font-size: 1.4em;
+  font-weight: 700;
   margin-bottom: 15px;
   color: var(--text-main);
 }
@@ -597,6 +597,7 @@ button.clear:hover {
     <div class="tab-content" id="animal" style="display:none;">
       <div class="flex-container">
         <div class="flex-block">
+          <h2 data-text="批量投藥計算">批量投藥計算</h2>
           <div class="form-container">
             <div class="form-row-inline">
               <label data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
@@ -627,6 +628,7 @@ button.clear:hover {
           <div class="result" id="animalResult" style="display:none;"></div>
         </div>
         <div class="flex-block">
+          <h2 data-text="普通投藥計算">普通投藥計算</h2>
           <div class="form-container">
             <div class="form-row-inline">
               <label data-text="目標藥物劑量 (mg/Kg)：">目標藥物劑量 (mg/Kg)：</label>
@@ -1072,6 +1074,8 @@ button.clear:hover {
         "solprep-mixError": "錯誤 (莫耳濃度與百分比單位不可混用)",
         
         // 動物投藥計算
+        "批量投藥計算": "批量投藥計算",
+        "普通投藥計算": "普通投藥計算",
         "目標藥物劑量 (mg/Kg)：": "目標藥物劑量 (mg/Kg)：",
         "希望的投藥法：": "希望的投藥法：",
         "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL": "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL",
@@ -1276,6 +1280,8 @@ button.clear:hover {
         "solprep-mixError": "Error (Cannot mix Molarity and % units)",
         
         // 動物投藥計算
+        "批量投藥計算": "Batch Dosage Calculation",
+        "普通投藥計算": "Normal Dosage Calculation",
         "目標藥物劑量 (mg/Kg)：": "Target Drug Dosage (mg/Kg)：",
         "希望的投藥法：": "Preferred Administration Method：",
         "例如：輸入 10、0.1 ➜ 每 10g 投 0.1mL<br>則動物體重測量 27g，投 0.27mL": "For example: Enter 10, 0.1 ➜ Administer 0.1mL per 10g<br>Then for an animal weighing 27g, administer 0.27mL.",
