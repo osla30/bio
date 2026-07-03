@@ -578,9 +578,9 @@ button.clear:hover {
         <div class="form-container">
             <div class="form-row-inline">
               <label id="lbl-total" data-text="solprep-total">目標總體積：</label>
-              <input id="totalVol" type="number" value="100" step="any" style="max-width: 150px;">
+              <input id="totalVol" type="number" step="any" style="max-width: 150px;">
               <select id="totalUnit" style="max-width: 80px;">
-                <option value="1">L</option><option value="0.001" selected>mL</option><option value="0.000001">µL</option>
+              <option value="1" selected>L</option><option value="0.001">mL</option><option value="0.000001">µL</option>
               </select>
             </div>
         </div>
@@ -1657,8 +1657,8 @@ button.clear:hover {
 
     // (D) 溶液配製 (SolPrep)
     const solPrepConcUnitOptions = `
-      <option value="1">M</option>
-      <option value="0.001" selected>mM</option>
+      <option value="1" selected>M</option>
+      <option value="0.001">mM</option>
       <option value="0.000001">µM</option>
       <option value="0.000000001">nM</option>
       <option value="0.000000000001">pM</option>
