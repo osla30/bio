@@ -48,7 +48,7 @@
 
 ### 🎯 蛋白質相關計算
 * **SDS-PAGE膠體配製計算**：支援 2X、4X Buffer 鑄膠，支援小編自製 TGOne 系統，同時也支援 BioRad TGX 系統。
-* **BCA Working Solution 體積計算**：不再需要想著有多少標準品、樣本數、重複數，傷腦筋要取多少Reagent A + Reagent B，一秒得到你要的答案。
+* **BCA Working Solution 體積計算**：不再需要傷腦筋要取多少Reagent A + Reagent B，一秒得到你要的答案。
 * **Bradford/BCA 蛋白質定量**：Bradford/BCA 蛋白質定量計算、Western Blot 樣本配製計算。
 * **Western Blot 條帶相對定量標準化**：輸入條帶灰度值，即可進行相對定量與標準化統計分析。
 
