@@ -159,6 +159,12 @@
             cursor: pointer;
         }
 
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
         .result-box {
             background-color: #e8f4f8;
             padding: 20px;
@@ -167,6 +173,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            flex: 1;
         }
 
         .result-item {
@@ -191,6 +198,38 @@
         .notes ul {
             margin: 0;
             padding-left: 20px;
+        }
+
+        /* Protocol 淺紅色區塊樣式 */
+        .protocol-box {
+            background-color: #fde8e8;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .protocol-box ul {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .protocol-box li {
+            margin-bottom: 5px;
+        }
+
+        .protocol-box a {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .protocol-box a:visited {
+            color: #2980b9; /* 點擊過不變色 */
+        }
+
+        .protocol-box a:hover {
+            color: #1a5276;
+            text-decoration: underline;
         }
 
         .highlight-red {
@@ -285,19 +324,31 @@
                 </div>
             </div>
 
-            <div class="result-box">
-                <div class="result-item">
-                    Working solution = <span class="value" id="valWS">0</span> μL
-                    <div style="font-size: 0.85em; color: #555;" data-i18n="hintWS">(Reagent A + B)</div>
+            <div class="right-column">
+                <div class="result-box">
+                    <div class="result-item">
+                        Working solution = <span class="value" id="valWS">0</span> μL
+                        <div style="font-size: 0.85em; color: #555;" data-i18n="hintWS">(Reagent A + B)</div>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
+                    <div class="result-item">
+                        Reagent A = <span class="value" id="valA">0</span> μL
+                        <div style="font-size: 0.85em; color: #555;" data-i18n="hintA">(大罐透明)</div>
+                    </div>
+                    <div class="result-item">
+                        Reagent B = <span class="value" id="valB">0</span> μL
+                        <div style="font-size: 0.85em; color: #555;" data-i18n="hintB">(小罐藍色)</div>
+                    </div>
                 </div>
-                <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
-                <div class="result-item">
-                    Reagent A = <span class="value" id="valA">0</span> μL
-                    <div style="font-size: 0.85em; color: #555;" data-i18n="hintA">(大罐透明)</div>
-                </div>
-                <div class="result-item">
-                    Reagent B = <span class="value" id="valB">0</span> μL
-                    <div style="font-size: 0.85em; color: #555;" data-i18n="hintB">(小罐藍色)</div>
+
+                <div class="protocol-box">
+                    <strong data-i18n="lblProtocols">Protocol：</strong>
+                    <ul>
+                        <li><a href="https://drive.google.com/file/d/1nfJYKQdePcNpc7j-nptpuq3jLVsAeprm/view?usp=sharing" target="_blank" data-i18n="linkThermo">Thermo 說明書</a></li>
+                        <li><a href="https://drive.google.com/file/d/1wR8iNXpjt2Kp63dtjPOaTlQB_VHbVXxF/view?usp=sharing" target="_blank" data-i18n="linkBioman">BIOMAN 說明書</a></li>
+                        <li><a href="https://drive.google.com/file/d/1kdfVG_wMwOVf52cACApMR7SmWp-aJaVA/view?usp=sharing" target="_blank" data-i18n="linkTpro">T-Pro 說明書</a></li>
+                        <li><a href="https://drive.google.com/file/d/1owWUe02ZE1eRhQhIdmkCC3WUxVQMPfgZ/view?usp=sharing" target="_blank" data-i18n="linkVisual">Visual Protein 說明書</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -307,7 +358,6 @@
         <div class="header-with-buttons">
             <h2>Preparation of diluted BSA standards</h2>
             <div class="header-buttons">
-                <a href="https://drive.google.com/file/d/1wR8iNXpjt2Kp63dtjPOaTlQB_VHbVXxF/view?usp=sharing" target="_blank" class="btn" data-i18n="btnManual">慧眾BCA說明書</a>
                 <a href="https://osla30.github.io/bio/wb/proteinassay" target="_blank" class="btn" data-i18n="btnTool">蛋白質定量工具</a>
             </div>
         </div>
@@ -386,8 +436,12 @@
             hintWS: "(Reagent A + B)",
             hintA: "(大罐透明)",
             hintB: "(小罐藍色)",
-            btnManual: "慧眾BCA說明書",
-            btnTool: "蛋白質定量工具"
+            btnTool: "蛋白質定量工具",
+            lblProtocols: "Protocol：",
+            linkThermo: "Thermo 說明書",
+            linkBioman: "BIOMAN 說明書",
+            linkTpro: "T-Pro 說明書",
+            linkVisual: "Visual Protein 說明書"
         },
         en: {
             titleMain: "BCA Working Sol. Volume Calculator",
@@ -408,8 +462,12 @@
             hintWS: "(Reagent A + B)",
             hintA: "(Large Clear Bottle)",
             hintB: "(Small Blue Bottle)",
-            btnManual: "BCA Manual",
-            btnTool: "Protein Quant Tool"
+            btnTool: "Protein Quant Tool",
+            lblProtocols: "Protocols:",
+            linkThermo: "Thermo Protocol",
+            linkBioman: "BIOMAN Protocol",
+            linkTpro: "T-Pro Protocol",
+            linkVisual: "Visual Protein Protocol"
         }
     };
 
