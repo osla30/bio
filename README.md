@@ -44,11 +44,11 @@
 * **Primer Tm值計算**：得知 Primer 大約的 Tm值，長度、GC%、二級結構與 Dimer。
 * **DNA 反轉/互補**：輸入 DNA 序列，可進行反轉、互補、反轉+互補，同時具有去除 ATCG 以外字元的功能。
 * **Ligation 計算**：快速計算 Insert 與 Vector 的莫耳比。
-* **qPCR 相對定量分析**：輸入 qPCR Raw Data，快速以 2^(-ΔΔCt) 方法進行 qPCR 相對定量分析。
 
 
 ### 🎯 蛋白質相關計算
 * **SDS-PAGE膠體配製計算**：支援 2X、4X Buffer 鑄膠，支援小編自製 TGOne 系統，同時也支援 BioRad TGX 系統。
+* **BCA Working Solution 體積計算**：不再需要想著有多少標準品、樣本數、重複數，傷腦筋要取多少Reagent A + Reagent B，一秒得到你要的答案。
 * **Bradford/BCA 蛋白質定量**：Bradford/BCA 蛋白質定量計算、Western Blot 樣本配製計算。
 * **Western Blot 條帶相對定量標準化**：輸入條帶灰度值，即可進行相對定量與標準化統計分析。
 
