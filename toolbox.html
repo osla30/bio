@@ -23,6 +23,7 @@
             padding: 2.5rem 1rem;
             text-align: center;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative; /* 為了讓語言切換按鈕絕對定位 */
         }
         header h1 {
             margin: 0;
@@ -34,12 +35,31 @@
             opacity: 0.9;
             font-size: 1.1rem;
         }
+        /* 語言切換按鈕 */
+        .lang-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+        .lang-btn:hover {
+            background: white;
+            color: #2c3e50;
+        }
         /* 標題作者連結樣式設定 */
         header p a, header p a:visited {
             color: inherit; 
             text-decoration: none; 
         }
-        
         header p a:hover {
             text-decoration: underline; 
         }
@@ -156,7 +176,6 @@
             color: #3182ce; 
             text-decoration: none; 
         }
-        
         .sub-text a:hover {
             text-decoration: underline; 
         }
@@ -177,85 +196,80 @@
             text-decoration: underline;
         }
         /* 針對行動裝置的優化 */
-@media (max-width: 480px) {
-    /* 讓格線在極窄螢幕下也能適配 */
-    .grid {
-        grid-template-columns: 1fr;
-    }
-    
-    /* 讓按鈕在手機上水平鋪滿，方便單手點擊 */
-    .actions {
-        flex-direction: column; /* 按鈕改為上下堆疊 */
-        gap: 0.8rem;
-    }
-    
-    .btn {
-        text-align: center;
-        padding: 0.8rem; /* 增加高度，更好點 */
-        font-size: 1rem; /* 字體稍微放大一點點 */
-    }
-
-    /* 處理 TGOne 特殊的「抄寫紙本」按鈕 */
-    .actions .btn:first-child {
-        margin-right: 0 !important;
-    }
-}
+        @media (max-width: 480px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .actions {
+                flex-direction: column; 
+                gap: 0.8rem;
+            }
+            .btn {
+                text-align: center;
+                padding: 0.8rem; 
+                font-size: 1rem; 
+            }
+            .actions .btn:first-child {
+                margin-right: 0 !important;
+            }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>科科計算工具箱</h1>
-        <p>by <a href="https://www.youtube.com/@GrandpaCan" target="_blank">我阿公都會</a></p>
+        <button id="lang-btn" class="lang-btn" onclick="toggleLanguage()">EN / 中文</button>
+        <h1 data-i18n="header_title">科科計算工具箱</h1>
+        <p>by <a href="https://www.youtube.com/@GrandpaCan" target="_blank" data-i18n="author_name">我阿公都會</a></p>
     </header>
 
     <div class="container">
         <div class="grid">
             
             <div class="card">
-                <h2>🧮 基礎計算、分子量、學術配色</h2>
+                <h2 data-i18n="cat1_title">🧮 基礎計算、分子量、學術配色</h2>
                 <div class="tool-list">
                     <div class="tool-item">
-                        <div class="tool-title">科科計算器</div>
-                        <div class="tool-desc">各類科學計算：莫耳濃度、稀釋、酸鹼、動物投藥、細胞計數等</div>
+                        <div class="tool-title" data-i18n="c1_t1_title">科科計算器</div>
+                        <div class="tool-desc" data-i18n="c1_t1_desc">各類科學計算：莫耳濃度、稀釋、酸鹼、動物投藥、細胞計數等</div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/biocalculate" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/biocalculate')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/biocalculate" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/biocalculate')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
-                        <div class="tool-title">常用化學藥品分子量查詢工具</div>
-                        <div class="tool-desc">常用化學藥品分子量查詢</div>
+                        <div class="tool-title" data-i18n="c1_t2_title">常用化學藥品分子量查詢工具</div>
+                        <div class="tool-desc" data-i18n="c1_t2_desc">常用化學藥品分子量查詢</div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/mwtool" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/mwtool')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/mwtool" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/mwtool')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
-                        <div class="tool-title">細胞培養實用數據</div>
-                        <div class="tool-desc">細胞培養數量、容器數據</div>
+                        <div class="tool-title" data-i18n="c1_t3_title">細胞培養實用數據</div>
+                        <div class="tool-desc" data-i18n="c1_t3_desc">細胞培養數量、容器數據</div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/cellnumber" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/cellnumber')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/cellnumber" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/cellnumber')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
-                        <div class="tool-title">學術科研配色</div>
-                        <div class="tool-desc">各種學術科研配色方案</div>
+                        <div class="tool-title" data-i18n="c1_t4_title">學術科研配色</div>
+                        <div class="tool-desc" data-i18n="c1_t4_desc">各種學術科研配色方案</div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/color" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/color')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/color" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/color')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="card">
-                <h2>🧪 蛋白質電泳 (PAGE)</h2>
+                <h2 data-i18n="cat2_title">🧪 蛋白質電泳 (PAGE)</h2>
                 <div class="tool-list">
                     <div class="tool-item">
-                        <div class="tool-title">經典SDS-PAGE 鑄膠計算器</div>
-                        <div class="tool-desc">
+                        <div class="tool-title" data-i18n="c2_t1_title">經典SDS-PAGE 鑄膠計算器</div>
+                        <div class="tool-desc" data-i18n="c2_t1_desc">
                             傳統經典 鑄膠計算 (SDS-PAGE用)
                             <span class="sub-text">
                                 適用傳統 4X 上下膠 Buffer：<br>
@@ -265,24 +279,24 @@
                             </span>
                         </div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/classicpagecalculate" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/classicpagecalculate')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/classicpagecalculate" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/classicpagecalculate')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
-                        <div class="tool-title">Bio-Rad TGX 鑄膠計算器</div>
-                        <div class="tool-desc">
+                        <div class="tool-title" data-i18n="c2_t2_title">Bio-Rad TGX 鑄膠計算器</div>
+                        <div class="tool-desc" data-i18n="c2_t2_desc">
                             Bio-Rad TGX 鑄膠計算 (SDS-PAGE用)
-                            <span class="sub-text">Bio-Rad TGX 快速凝膠試劑組-介紹：<br><a href="https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" target="_blank">產品網址參考</a></span>
+                            <span class="sub-text">Bio-Rad TGX 快速凝膠試劑組-介紹：<br><a href="https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" target="_blank" data-i18n="c2_t2_link">產品網址參考</a></span>
                         </div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/tgxcalculate" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/tgxcalculate')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/tgxcalculate" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/tgxcalculate')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
-                        <div class="tool-title">TGOne 鑄膠計算器</div>
-                        <div class="tool-desc">
+                        <div class="tool-title" data-i18n="c2_t3_title">TGOne 鑄膠計算器</div>
+                        <div class="tool-desc" data-i18n="c2_t3_desc">
                             TGOne Buffer 鑄膠計算 (SDS-PAGE用)
                             <span class="sub-text">
                                 仿 Bio-Rad TGX 快速凝膠試劑：<br>2X TGOne Buffer<br><br>
@@ -292,53 +306,53 @@
                             </span>
                         </div>
                         <div class="actions">
-                            <a href="https://drive.google.com/file/d/1ImMVqoS0MFTVE7sP_CGpgBiLzuiv7_ox/view" target="_blank" class="btn btn-copy" style="margin-right: auto;">抄寫紙本</a>
-                            <a href="https://osla30.github.io/bio/tgonecalculate" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/tgonecalculate')">複製連結</button>
+                            <a href="https://drive.google.com/file/d/1ImMVqoS0MFTVE7sP_CGpgBiLzuiv7_ox/view" target="_blank" class="btn btn-copy" style="margin-right: auto;" data-i18n="btn_paper">抄寫紙本</a>
+                            <a href="https://osla30.github.io/bio/tgonecalculate" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/tgonecalculate')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="card">
-                <h2>🆆🅱 西方墨點法 (Western Blot)</h2>
+                <h2 data-i18n="cat3_title">🆆🅱 西方墨點法 (Western Blot)</h2>
                 <div class="tool-list">
                     <div class="tool-item">
-                        <div class="tool-title">BCA Working Solution 體積計算器</div>
-                        <div class="tool-desc">BCA Working Solution 體積計算</div>
+                        <div class="tool-title" data-i18n="c3_t1_title">BCA Working Solution 體積計算器</div>
+                        <div class="tool-desc" data-i18n="c3_t1_desc">BCA Working Solution 體積計算</div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/wb/bcaworking" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/bcaworking')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/wb/bcaworking" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/bcaworking')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
-                        <div class="tool-title">Bradford/BCA 蛋白質定量工具</div>
-                        <div class="tool-desc">蛋白質定量計算、Western Blot 樣本配製計算</div>
+                        <div class="tool-title" data-i18n="c3_t2_title">Bradford/BCA 蛋白質定量工具</div>
+                        <div class="tool-desc" data-i18n="c3_t2_desc">蛋白質定量計算、Western Blot 樣本配製計算</div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/wb/proteinassay" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/proteinassay')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/wb/proteinassay" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/proteinassay')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
-                        <div class="tool-title">Western Blot 條帶相對定量標準化工具</div>
-                        <div class="tool-desc">輸入條帶灰度值，即可進行相對定量與標準化分析</div>
+                        <div class="tool-title" data-i18n="c3_t3_title">Western Blot 條帶相對定量標準化工具</div>
+                        <div class="tool-desc" data-i18n="c3_t3_desc">輸入條帶灰度值，即可進行相對定量與標準化分析</div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/wb/wbnormal" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/wbnormal')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/wb/wbnormal" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/wbnormal')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="card" style="display: none;">
-                <h2>🧬 核酸分析 (PCR)</h2>
+                <h2 data-i18n="cat4_title">🧬 核酸分析 (PCR)</h2>
                 <div class="tool-list">
                     <div class="tool-item">
-                        <div class="tool-title">qPCR 相對定量分析工具</div>
-                        <div class="tool-desc">以 2^(-ΔΔCt) 方法，進行 qPCR 相對定量分析</div>
+                        <div class="tool-title" data-i18n="c4_t1_title">qPCR 相對定量分析工具</div>
+                        <div class="tool-desc" data-i18n="c4_t1_desc">以 2^(-ΔΔCt) 方法，進行 qPCR 相對定量分析</div>
                         <div class="actions">
-                            <a href="https://osla30.github.io/bio/q/qpcr" target="_blank" class="btn btn-open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/q/qpcr')">複製連結</button>
+                            <a href="https://osla30.github.io/bio/q/qpcr" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/q/qpcr')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                 </div>
@@ -348,19 +362,163 @@
     </div>
 
     <footer>
-        若喜歡，可自由 Donate 支持：<a href="https://pse.is/4524sw" target="_blank">https://pse.is/4524sw</a><br>
+        <span data-i18n="footer_text">若喜歡，可自由 Donate 支持：</span><a href="https://pse.is/4524sw" target="_blank">https://pse.is/4524sw</a><br>
     </footer>
 
     <script>
+        // --- 語言翻譯資料庫 ---
+        const translations = {
+            zh: {
+                pageTitle: "科科計算工具箱",
+                header_title: "科科計算工具箱",
+                author_name: "我阿公都會",
+                
+                cat1_title: "🧮 基礎計算、分子量、學術配色",
+                c1_t1_title: "科科計算器",
+                c1_t1_desc: "各類科學計算：莫耳濃度、稀釋、酸鹼、動物投藥、細胞計數等",
+                c1_t2_title: "常用化學藥品分子量查詢工具",
+                c1_t2_desc: "常用化學藥品分子量查詢",
+                c1_t3_title: "細胞培養實用數據",
+                c1_t3_desc: "細胞培養數量、容器數據",
+                c1_t4_title: "學術科研配色",
+                c1_t4_desc: "各種學術科研配色方案",
+                
+                cat2_title: "🧪 蛋白質電泳 (PAGE)",
+                c2_t1_title: "經典SDS-PAGE 鑄膠計算器",
+                c2_t1_desc: `傳統經典 鑄膠計算 (SDS-PAGE用)
+                            <span class="sub-text">
+                                適用傳統 4X 上下膠 Buffer：<br>
+                                4X 上膠 Buffer (0.5M Tris, pH6.8)<br>
+                                4X 下膠 Buffer (1.5M Tris, pH8.8)<br>
+                                10% SDS
+                            </span>`,
+                c2_t2_title: "Bio-Rad TGX 鑄膠計算器",
+                c2_t2_desc: `Bio-Rad TGX 鑄膠計算 (SDS-PAGE用)
+                            <span class="sub-text">Bio-Rad TGX 快速凝膠試劑組-介紹：<br><a href="https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" target="_blank">產品網址參考</a></span>`,
+                c2_t3_title: "TGOne 鑄膠計算器",
+                c2_t3_desc: `TGOne Buffer 鑄膠計算 (SDS-PAGE用)
+                            <span class="sub-text">
+                                仿 Bio-Rad TGX 快速凝膠試劑：<br>2X TGOne Buffer<br><br>
+                                也可適用傳統 2X 上下膠 Buffer：<br>
+                                2X 上膠 Buffer (0.25M Tris, 0.2% SDS, pH6.8)<br>
+                                2X 下膠 Buffer (0.75M Tris, 0.2% SDS, pH8.8)
+                            </span>`,
+                            
+                cat3_title: "🆆🅱 西方墨點法 (Western Blot)",
+                c3_t1_title: "BCA Working Solution 體積計算器",
+                c3_t1_desc: "BCA Working Solution 體積計算",
+                c3_t2_title: "Bradford/BCA 蛋白質定量工具",
+                c3_t2_desc: "蛋白質定量計算、Western Blot 樣本配製計算",
+                c3_t3_title: "Western Blot 條帶相對定量標準化工具",
+                c3_t3_desc: "輸入條帶灰度值，即可進行相對定量與標準化分析",
+                
+                cat4_title: "🧬 核酸分析 (PCR)",
+                c4_t1_title: "qPCR 相對定量分析工具",
+                c4_t1_desc: "以 2^(-ΔΔCt) 方法，進行 qPCR 相對定量分析",
+                
+                btn_open: "開啟工具",
+                btn_copy: "複製連結",
+                btn_paper: "抄寫紙本",
+                footer_text: "若喜歡，可自由 Donate 支持："
+            },
+            en: {
+                pageTitle: "BioToolBox",
+                header_title: "BioToolBox",
+                author_name: "GrandpaCan",
+                
+                cat1_title: "🧮 Basic Calcs, MW & Color Schemes",
+                c1_t1_title: "BioCalculator",
+                c1_t1_desc: "Calculations: Molarity, dilution, pH, animal dosing, cell counting, etc.",
+                c1_t2_title: "Chemical MW Lookup Tool",
+                c1_t2_desc: "Molecular weight lookup for common laboratory chemicals",
+                c1_t3_title: "Cell Culture Useful Numbers",
+                c1_t3_desc: "Cell numbers and culture vessel specifications",
+                c1_t4_title: "Academic Color Palettes",
+                c1_t4_desc: "Color palettes for scientific figures and presentations",
+                
+                cat2_title: "🧪 Protein Electrophoresis (PAGE)",
+                c2_t1_title: "Classic SDS-PAGE Gel Calculator",
+                c2_t1_desc: `Traditional gel casting calculation (for SDS-PAGE)
+                            <span class="sub-text">
+                                For traditional 4X buffers:<br>
+                                4X Stacking Buffer (0.5M Tris, pH6.8)<br>
+                                4X Resolving Buffer (1.5M Tris, pH8.8)<br>
+                                10% SDS
+                            </span>`,
+                c2_t2_title: "Bio-Rad TGX Gel Calculator",
+                c2_t2_desc: `Bio-Rad TGX gel casting calculation (for SDS-PAGE)
+                            <span class="sub-text">Bio-Rad TGX FastCast Acrylamide Kit info:<br><a href="https://www.genmall.com.tw/products/tgx-fastcast-acrylamide-kit" target="_blank">Product Reference</a></span>`,
+                c2_t3_title: "TGOne Gel Calculator",
+                c2_t3_desc: `TGOne Buffer gel casting calculation (for SDS-PAGE)
+                            <span class="sub-text">
+                                Like Bio-Rad TGX FastCast:<br>2X TGOne Buffer<br><br>
+                                Also suitable for traditional 2X buffers:<br>
+                                2X Stacking Buffer (0.25M Tris, 0.2% SDS, pH6.8)<br>
+                                2X Resolving Buffer (0.75M Tris, 0.2% SDS, pH8.8)
+                            </span>`,
+                            
+                cat3_title: "🆆🅱 Western Blot",
+                c3_t1_title: "BCA Working Solution Vol Calculator",
+                c3_t1_desc: "Calculate required volume for BCA working solution",
+                c3_t2_title: "Bradford/BCA Protein Assay Tool",
+                c3_t2_desc: "Protein quantification and Western Blot sample prep calculations",
+                c3_t3_title: "WB Band Normalization Tool",
+                c3_t3_desc: "Enter band densitometry values for relative quantification and normalization",
+                
+                cat4_title: "🧬 Nucleic Acid Analysis (PCR)",
+                c4_t1_title: "qPCR Relative Quantification Tool",
+                c4_t1_desc: "qPCR relative quantification analysis using the 2^(-ΔΔCt) method",
+                
+                btn_open: "Open Tool",
+                btn_copy: "Copy Link",
+                btn_paper: "Paper Copy",
+                footer_text: "If you find this helpful, feel free to Donate: "
+            }
+        };
+
+        // 系統提示訊息多國語言
+        const alertMessages = {
+            zh: {
+                noUrl: '這個工具的網址尚未設定喔！',
+                success: '已成功複製連結：\n',
+                fail: '複製失敗，請手動複製網址。'
+            },
+            en: {
+                noUrl: 'The URL for this tool has not been set yet!',
+                success: 'Successfully copied link:\n',
+                fail: 'Failed to copy. Please copy the URL manually.'
+            }
+        };
+
+        let currentLang = 'zh';
+
+        // --- 語言切換邏輯 ---
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            
+            // 更新按鈕文字與頁面標題
+            document.getElementById('lang-btn').innerText = currentLang === 'zh' ? 'EN / 中文' : '中文 / EN';
+            document.title = translations[currentLang].pageTitle;
+            
+            // 更新所有帶有 data-i18n 屬性的元素
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.innerHTML = translations[currentLang][key];
+                }
+            });
+        }
+
+        // --- 複製連結功能 (加入多國語言提示) ---
         function copyToClipboard(url) {
             if (url === '#') {
-                alert('這個工具的網址尚未設定喔！');
+                alert(alertMessages[currentLang].noUrl);
                 return;
             }
             navigator.clipboard.writeText(url).then(function() {
-                alert('已成功複製連結：\n' + url);
+                alert(alertMessages[currentLang].success + url);
             }, function(err) {
-                alert('複製失敗，請手動複製網址。');
+                alert(alertMessages[currentLang].fail);
             });
         }
     </script>
