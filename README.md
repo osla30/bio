@@ -65,3 +65,67 @@
 **[贊助支持小編] 👉 <a href="https://pse.is/4524sw" target="_blank">https://pse.is/4524sw</a>**
 
 *Powered by Research Spirit.*
+
+🧪 BioToolBox (科科計算工具箱)
+An ultra-fast calculation suite tailored specifically for biomedical researchers. Break free from tedious Excel formulas and manual calculation errors—shrink complex laboratory math down to just a few seconds.
+
+"Perform your experiments with absolute confidence and ease. No more chaotic rushing or panic at the bench!"
+
+🔗 Launch the Toolbox instantly: https://osla30.github.io/bio/toolbox
+
+🚀 Why Choose BioToolBox?
+In a race-against-the-clock laboratory environment, we prioritize Speed and Precision:
+
+⚡ Ultra-Fast Response: Pure, lightweight web design. Open and use it immediately in any mobile or desktop browser—no installation or loading times required.
+
+🎯 Lab-Focused Specialization: Deeply optimized for real biomedical workflows, addressing pain points like molarity conversion, stock dilution, solution preparation, animal dosing, cell counting, and more.
+
+📱 On-the-Go Bench Assistant: Responsive UI design allows you to calculate dilution volumes, dosing formulas, or cell numbers right from your smartphone while standing at the bench.
+
+🔒 Privacy & Security: All calculations are executed locally within your browser. Your confidential experimental data never uploads to the cloud, ensuring absolute research security.
+
+🛠️ Powerful Experimental Features Overview
+The toolbox features built-in modules designed specifically for real-world biomedical workflows:
+
+🎯 Concentration & Solution Preparation
+Molarity Converter: Input molecular weight, target concentration, and volume to instantly get the required mass.
+
+Serial & Stock Dilution: Intuitive inputs to quickly calculate stock dilution ratios and volumes.
+
+Acid/Base Concentration: Rapidly calculate the weight percentage (w/w%) and molarity of common chemical stocks.
+
+Multi-Solute Solution Mixer: Enter molecular weights or stock concentrations for multiple solutes simultaneously to generate a detailed, comprehensive preparation checklist.
+
+🎯 Animal Dosing & Cell Counting
+Animal Dosing Calculator: Input the administration route and required dosage to automatically generate a precise drug formulation guide.
+
+Cell Counting & Seeding: Input your hemocytometer counts to calculate total cell numbers. You can even specify your target seeding density and plate counts to get exact seeding volumes instantly.
+
+🎯 Molecular Biology Modules
+Primer Reconstitution & Dilution: Quickly calculate volumes and concentrations when resuspending primers—even if you accidentally add the wrong volume of water, you can recalculate without panic.
+
+Primer Tm & Property Analyzer: Estimate primer Tm values, length, GC content, secondary structures, and primer-dimer potential.
+
+DNA Reverse / Complementary: Input DNA sequences to instantly reverse, complement, or reverse-complement them, complete with a function to filter out non-ATCG characters.
+
+Ligation Calculator: Rapidly determine the optimal molar ratio between Insert and Vector.
+
+🎯 Protein & Western Blot Assays
+SDS-PAGE Gel Casting: Supports gel preparation using 2X or 4X buffers, customized home-brew systems, and Bio-Rad TGX systems.
+
+BCA Working Solution: Never scratch your head over how much Reagent A and Reagent B to mix again—get your exact volumes in one click.
+
+Bradford / BCA Protein Quantification: Input standard and sample absorbance values to instantly plot a regression curve, deduce sample concentrations, and calculate Western Blot sample loading amounts.
+
+Western Blot Band Relative Quantification & Normalization: Input densitometric gray values to perform relative quantification and statistical normalization effortlessly.
+
+☕ Support the Developer
+This toolbox is independently developed and maintained with the sole mission of boosting efficiency in the scientific community.
+
+If this tool helps you finish your experiments faster and saves you from crying during overtime, please share it with your lab mates!
+
+If you find it valuable, consider buying the dev a coffee to support the creation of even more handy lab tools!
+
+[Support & Buy Me a Coffee] 👉 https://pse.is/4524sw
+
+Powered by Research Spirit.
