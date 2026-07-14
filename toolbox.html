@@ -195,8 +195,21 @@
         footer a:hover {
             text-decoration: underline;
         }
-        /* 針對行動裝置的優化 */
-        @media (max-width: 480px) {
+
+        /* 針對行動裝置與窄螢幕的優化 */
+        @media (max-width: 768px) {
+            header {
+                padding: 1.5rem 1rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            /* 將絕對定位改為靜態排版，並透過 order 排在最上方，避免遮擋標題 */
+            .lang-btn {
+                position: static;
+                order: -1;
+                margin-bottom: 1rem;
+            }
             .grid {
                 grid-template-columns: 1fr;
             }
@@ -330,7 +343,7 @@
                         <div class="tool-desc" data-i18n="c3_t2_desc">蛋白質定量計算、Western Blot 樣本配製計算</div>
                         <div class="actions">
                             <a href="https://osla30.github.io/bio/wb/proteinassay" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
-                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/proteinassay')" data-i18n="btn_copy">複製連結</button>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/proteinassay')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                     <div class="tool-item">
@@ -428,7 +441,7 @@
                 
                 cat1_title: "🧮 Basic Calcs, MW & Color Schemes",
                 c1_t1_title: "BioCalculator",
-                c1_t1_desc: "Calculations: Molarity, dilution, pH, animal dosing, cell counting, etc.",
+                c1_t1_desc: "Calculations: Molarity, dilution, acid-base, animal dosing, cell counting, etc.",
                 c1_t2_title: "Chemical MW Lookup Tool",
                 c1_t2_desc: "Molecular weight lookup for common laboratory chemicals",
                 c1_t3_title: "Cell Culture Useful Numbers",
@@ -509,7 +522,7 @@
             });
         }
 
-        // --- 複製連結功能 (加入多國語言提示) ---
+        // --- 複製連結功能 ---
         function copyToClipboard(url) {
             if (url === '#') {
                 alert(alertMessages[currentLang].noUrl);
