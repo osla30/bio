@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>學術科研配色 / Academic Color Palettes</title>
-    <script src="chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -32,25 +32,31 @@
             top: 15px;
             right: 15px;
             display: flex;
-            gap: 5px;
+            align-items: center; /* 讓按鈕垂直置中對齊 */
+            gap: 8px; /* 稍微拉開按鈕間距 */
             z-index: 2000;
         }
         .lang-btn {
-            padding: 5px 10px;
-            border: 1px solid #888;
-            background: #f0f0f0;
+            padding: 6px 12px; /* 調整內距讓按鈕圓潤一點 */
+            border: 1px solid #97abc7; /* 科科計算器的邊框顏色 */
+            background: #ffffff; /* 白色背景 */
             cursor: pointer;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #222;
-            transition: all 0.2s;
+            border-radius: 20px; /* ★改成膠囊圓角★ */
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b; /* 科科計算器的灰色字體 */
+            transition: all 0.2s ease;
             text-decoration: none;
         }
-        .lang-btn:hover { background: #e0e0e0; }
+        .lang-btn:hover { 
+            background: #97abc7; /* 滑鼠懸停時的背景色 */
+            color: #1e293b; /* 滑鼠懸停時的字體顏色 */
+        }
         .lang-btn.active {
-            background: #2563eb;
+            background: #3b82f6; /* 啟動時的藍色 */
             color: white;
             border-color: #2563eb;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* 增加微微的陰影質感 */
         }
 
         /* 置頂控制台容器 (毛玻璃效果) */
@@ -276,7 +282,7 @@
     </div>
 
     <h1 data-text="title">🎨 學術科研配色</h1>
-    <p class="subtitle" data-text="subtitle">目前收錄189款配色方案 (2026/6/14)</p>
+    <p class="subtitle" data-text="subtitle">目前收錄220款配色方案 (2026/7/15)</p>
     
     <div class="sticky-header">
         <div class="control-panel">
@@ -365,7 +371,7 @@
         const translations = {
             zh: {
                 "title": "🎨 學術科研配色",
-                "subtitle": "目前收錄189款配色方案 (2026/6/14)",
+                "subtitle": "目前收錄220款配色方案 (2026/7/15)",
                 "select-label": "選擇配色方案：",
                 "filter-colorblind": "👁️ 只顯示色盲友善配色",
                 "filter-grayscale": "🖨️ 模擬黑白列印",
@@ -384,7 +390,7 @@
             },
             en: {
                 "title": "🎨 Academic Color Palettes",
-                "subtitle": "Currently featuring 189 color palettes (2026/6/14)",
+                "subtitle": "Currently featuring 220 color palettes (2026/7/15)",
                 "select-label": "Select Palette:",
                 "filter-colorblind": "👁️ Colorblind Safe Only",
                 "filter-grayscale": "🖨️ Grayscale Preview",
@@ -594,7 +600,38 @@
             { name: 'Grain Ears and Pottery Jar', colors: ['#DFDCD6', '#8A9174', '#C9A898', '#C6925D'] },
             { name: 'Late Persimmons like Lamps', colors: ['#CAC8C1', '#F49340', '#373735', '#FBDCAF'] },
             { name: 'Empty Valley Orchid', colors: ['#A4C3A6', '#C4E7E1', '#A4AFA6', '#E4E4D7'] },
-            { name: 'Blue Sky and Cloud Shadows', colors: ['#BCC6DD', '#98A3CA', '#8092C4', '#455D99'] }
+            { name: 'Blue Sky and Cloud Shadows', colors: ['#BCC6DD', '#98A3CA', '#8092C4', '#455D99'] },
+            { name: 'Twilight Blue Shadows', colors: ['#4F8FD6', '#8FA6E3', '#F2D6A6', '#C5B5E8', '#E76B6B'] },
+            { name: 'Sunny Sea Warm Breeze', colors: ['#4FA3D9', '#2FA3A3', '#D96A4A', '#6A8F3F', '#1B2333'] },
+            { name: 'Deep Sea Glimmer', colors: ['#1F6F7A', '#5BA9A6', '#A7D5C9', '#F2B848', '#F7E9C6'] },
+            { name: 'Amber Sunset', colors: ['#F1B84B', '#F28C3A', '#E45A2A', '#7A2D1E', '#F6D7C2'] },
+            { name: 'Starry Night Coral', colors: ['#4A6FA5', '#7B6BB2', '#E24C3B', '#F08A1A', '#F6D48A'] },
+            { name: 'Tidal Purple Mist', colors: ['#1F6F78', '#79B8C9', '#8A7DB3', '#E07A5F', '#D5A44C'] },
+            { name: 'Cherry Purple Flower Paper', colors: ['#9B2D6F', '#F06A99', '#FFC2D6', '#9A88C9', '#D9CDEA'] },
+            { name: 'Bamboo Shadow Warm Islet', colors: ['#166E6E', '#8EBFA7', '#F6F4EC', '#F2E1C6', '#4C8FAE', '#F08A3C'] },
+            { name: 'Lakeside Moss Light', colors: ['#4C8EA6', '#7EA99E', '#8EA27A', '#E6D8AE', '#8B8170', '#6D7D93'] },
+            { name: 'Pink Sakura Moss Shadow', colors: ['#FBE4E6', '#E8B3C6', '#F4C4B8', '#DFF0E6', '#B8DCB0', '#7FB59B', '#538F7B', '#2E5B47'] },
+            { name: 'Morning Mist Crimson Clouds', colors: ['#C7D6E3', '#E6C8B6', '#FBB24B', '#E76F51', '#C06A7A', '#9A58AA', '#6F5E34', '#B0322B', '#1F5D53'] },
+            { name: 'Sandy Shore Clear Clouds', colors: ['#F7EDC9', '#C3D6E8', '#EFC0CD', '#BE96B1', '#F1CE5E', '#91B0DB', '#597EA8', '#FAA01C'] },
+            { name: 'Rational Warm Light', colors: ['#D55E00', '#E69F00', '#FDDBC7', '#56B4E9', '#0072B2', '#003366', '#B3B3B3', '#1A1A1A'] },
+            { name: 'Amber Deep Tide', colors: ['#D04A2C', '#E67C4A', '#D4B15C', '#E6D9B5', '#274C8A', '#2E6F6E', '#3A322F'] },
+            { name: 'Apricot Cloud Azure', colors: ['#FFE7CC', '#FFB66D', '#F27C2B', '#E7C9A0', '#DCE6F2', '#A7CFF2', '#3B82D6', '#0D47A1'] },
+            { name: 'Mint Amethyst', colors: ['#F7F7FB', '#EDE4F6', '#D7C4ED', '#B792D8', '#E7F5EF', '#BFDCCF', '#86C8AF', '#3F7F6B'] },
+            { name: 'Sunny Sea Crimson Clouds', colors: ['#F28C7C', '#2E7D73', '#F2C14E', '#7E6AA8', '#7FB7E6', '#D97A3A', '#A9C48A', '#C75A87'] },
+            { name: 'Morning Coral', colors: ['#F6A19A', '#E15A6D', '#FFB226', '#FFE08A', '#FFF5D6', '#BBD6F2', '#6FA3E3', '#1E4A9E'] },
+            { name: 'Sakura Mist Deep Blue', colors: ['#FCE7EC', '#E8B3C6', '#D79AB7', '#D8D4EA', '#D4E4F2', '#9CC6E6', '#5B7FAF', '#0F2B55'] },
+            { name: 'Smoky Pink', colors: ['#F5EBE9', '#EEDFD9', '#E7D3CA', '#E0C7BB', '#D9BBAF', '#D1ADA3', '#C9A197', '#C2958B', '#B9897F', '#B27D73', '#A97167', '#A2655B', '#9A594F', '#934D43', '#8B4137', '#84352B', '#8B4137', '#84352B', '#7C291F', '#751D13'] },
+            { name: 'Haze Blue', colors: ['#E8EDF0', '#DCE4E8', '#D0DCE0', '#C4D3D8', '#B8CAD0', '#ACC1C8', '#A0B8C0', '#94AFB8', '#88A6B0', '#7C9DA8', '#7094A0', '#648B98', '#588290', '#4C7988', '#407080', '#346778', '#285E70', '#1C5568', '#104C60', '#044358'] },
+            { name: 'Gray Bean Green', colors: ['#EAECE6', '#DEE2DA', '#D2D8CE', '#C6CEC2', '#BAC4B6', '#AEBAAA', '#A2B09E', '#96A692', '#8A9C86', '#7E927A', '#72886E', '#667E62', '#5A7456', '#4E6A4A', '#42603E', '#365632', '#2A4C26', '#1E421A', '#12380E', '#062E02'] },
+            { name: 'Warm Taupe', colors: ['#EBEAE6', '#E0DED9', '#D5D2CC', '#CAC6BF', '#BFBAB2', '#B4AEA5', '#A9A298', '#9E968B', '#938A7E', '#887E71', '#7D7264', '#726657', '#675A4A', '#5C4E3D', '#514230', '#463623', '#3B2A16', '#301E09', '#251200', '#1A0600'] },
+            { name: 'Ochre', colors: ['#F2F0E6', '#E9E5D9', '#E0DACA', '#D7CFBB', '#CEC4AC', '#C5B99D', '#BCAD8E', '#B3A27F', '#A99770', '#A08C61', '#978152', '#8D7643', '#846B34', '#7B6025', '#725516', '#684A07', '#5F3F00', '#563400', '#4D2900', '#441E00'] },
+            { name: 'Dusty Purple', colors: ['#EAE9ED', '#DEDCE3', '#D2CFDA', '#C6C2D1', '#BAB5C8', '#AEA8BF', '#A29BB6', '#968EAD', '#8A81A4', '#7E749B', '#726792', '#665A89', '#5A4D80', '#4E4077', '#42336E', '#362665', '#2A195C', '#1E0C53', '#12004A', '#060041'] },
+            { name: 'Pale Blue', colors: ['#E9EAEC', '#DCDFE1', '#CFD4D6', '#C2C9CB', '#B5BEC0', '#A8B3B5', '#9BA8AA', '#8E9DA0', '#819295', '#74878A', '#677C7F', '#5A7174', '#4D6669', '#405B5E', '#335053', '#264548', '#193A3D', '#0C2F32', '#002427', '#00191C'] },
+            { name: 'Terracotta Red', colors: ['#F2EAE4', '#EADFD6', '#E2D4C8', '#DACABA', '#D2C0AC', '#C9B59E', '#C1AA90', '#B9A082', '#B19574', '#A98A66', '#A17F58', '#99744A', '#91693C', '#895E2E', '#815320', '#794812', '#713D04', '#693200', '#612700', '#591C00'] },
+            { name: 'Intoxicated Rouge', colors: ['#ead2cc', '#f0e5e8', '#fbccee', '#f6bfca', '#ddb1b1', '#e3b8d4', '#f7bdcb', '#e5c7cf', '#d07f7a', '#caa7b7', '#dd91a6', '#ecc6be', '#f9d2e4', '#e1929d', '#f1e1e5', '#ca93ab', '#eedae9', '#efbbd2', '#cb7e99', '#93445e'] },
+            { name: 'Song of the Blue Sky', colors: ['#d5dee6', '#b3c3d5', '#d4d2e9', '#d5d3de', '#aecbe0', '#dbe0eb', '#c0c4c9', '#c4d4de', '#0accca', '#acc5d1', '#7aa490', '#8db1e1', '#b3c3d5', '#7fa6c4', '#7e88af', '#7eb2da', '#92b7c8', '#306692', '#8ba3c8', '#7396c6'] },
+            { name: 'Warm Agarwood', colors: ['#d9d0bf', '#faecd5', '#fee3c6', '#f0ceab', '#d4ab88', '#f0ebdb', '#ead7b8', '#eedaaf', '#ffe2cf', '#e0c7ae', '#ccbfae', '#d4ab88', '#c4967b', '#e5d8c9', '#e2bba6', '#a89181', '#e5d7d1', '#ceb3aa', '#a5796b', '#c193a2'] },
+            { name: 'Whispers of Green Mist', colors: ['#abc4ba', '#c9dfd6', '#d7ede4', '#c6ecce', '#d1ecd9', '#bbdab8', '#d2dec7', '#aed9c1', '#7da490', '#b6ccb5', '#94d4bc', '#b0be97', '#c8eac0', '#78b8a3', '#accec4', '#87ce9d', '#8cbdb6', '#527865', '#aed09c', '#719f6f'] }
         ];
 
         const chartInstances = {};
