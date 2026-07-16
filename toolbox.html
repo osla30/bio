@@ -35,11 +35,18 @@
             opacity: 0.9;
             font-size: 1.1rem;
         }
-        /* 語言切換按鈕 */
-        .lang-btn {
+        /* 右上角控制區塊 (包含語言切換與 QR Code) */
+        .top-right-controls {
             position: absolute;
             top: 20px;
             right: 20px;
+            display: flex;
+            align-items: center; /* 讓按鈕與圖片垂直置中對齊 */
+            gap: 12px; /* 兩者的間距 */
+        }
+
+        /* 語言切換按鈕 */
+        .lang-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.5);
@@ -54,6 +61,23 @@
         .lang-btn:hover {
             background: white;
             color: #2c3e50;
+        }
+
+        /* QR Code 圖片樣式 */
+        .qr-link {
+            display: flex; 
+            transition: transform 0.2s ease;
+        }
+        .qr-link:hover {
+            transform: scale(1.05); /* 滑鼠懸停時微微放大 */
+        }
+        .qr-img {
+            height: 32px; /* 調整高度以對齊旁邊的按鈕 */
+            width: 32px;
+            object-fit: cover;
+            border-radius: 4px;
+            background-color: white; /* 加上白底確保 QR Code 可掃描 */
+            padding: 2px;
         }
         /* 標題作者連結樣式設定 */
         header p a, header p a:visited {
@@ -229,10 +253,11 @@ header p a[data-i18n="author_name"]:hover::before {
                 align-items: center;
             }
             /* 將絕對定位改為靜態排版，並透過 order 排在最上方，避免遮擋標題 */
-            .lang-btn {
+            .top-right-controls {
                 position: static;
                 order: -1;
                 margin-bottom: 1rem;
+                justify-content: center; /* 手機版時置中對齊 */
             }
             .grid {
                 grid-template-columns: 1fr;
@@ -255,9 +280,13 @@ header p a[data-i18n="author_name"]:hover::before {
 <body>
 
     <header>
-        <button id="lang-btn" class="lang-btn" onclick="toggleLanguage()">EN / 中文</button>
+        <div class="top-right-controls">
+            <button id="lang-btn" class="lang-btn" onclick="toggleLanguage()">EN / 中文</button>
+            <a href="https://osla30.github.io/bio/toolbox.png" target="_blank" class="qr-link" title="點擊檢視完整圖片">
+                <img src="https://osla30.github.io/bio/toolbox.png" alt="Toolbox QR Code" class="qr-img">
+            </a>
+        </div>
         <h1 data-i18n="header_title">科科計算工具箱</h1>
-        <!-- ✅ HTML 不需要任何修改 -->
         <p>by <a href="https://www.youtube.com/@GrandpaCan" target="_blank" data-i18n="author_name">我阿公都會</a></p>
     </header>
 
