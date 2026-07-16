@@ -282,7 +282,7 @@ header p a[data-i18n="author_name"]:hover::before {
     <header>
         <div class="top-right-controls">
             <button id="lang-btn" class="lang-btn" onclick="toggleLanguage()">EN / 中文</button>
-            <a href="https://osla30.github.io/bio/toolbox.png" target="_blank" class="qr-link" title="點擊檢視完整圖片">
+            <a href="https://osla30.github.io/bio/toolbox.png" target="_blank" class="qr-link" id="qr-link" title="點擊檢視完整圖片">
                 <img src="https://osla30.github.io/bio/toolbox.png" alt="Toolbox QR Code" class="qr-img">
             </a>
         </div>
@@ -439,6 +439,7 @@ header p a[data-i18n="author_name"]:hover::before {
                 pageTitle: "科科計算工具箱",
                 header_title: "科科計算工具箱",
                 author_name: "我阿公都會",
+                qr_title: "點擊檢視完整圖片",
                 
                 cat1_title: "🧮 基礎計算、分子量、學術配色",
                 c1_t1_title: "科科計算器",
@@ -492,6 +493,7 @@ header p a[data-i18n="author_name"]:hover::before {
                 pageTitle: "BioToolBox",
                 header_title: "BioToolBox",
                 author_name: "GrandpaCan",
+                qr_title: "Click to view full image",
                 
                 cat1_title: "🧮 Basic Calcs, MW & Color Schemes",
                 c1_t1_title: "BioCalculator",
@@ -574,6 +576,7 @@ header p a[data-i18n="author_name"]:hover::before {
                     el.innerHTML = translations[currentLang][key];
                 }
             });
+            document.getElementById('qr-link').title = translations[currentLang].qr_title;
         }
 
         // --- 複製連結功能 ---
