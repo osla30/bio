@@ -164,7 +164,7 @@
         const currentYear = new Date().getFullYear();
         const yearSelect = document.getElementById('year-select');
         
-        for (let y = currentYear - 2; y <= currentYear + 2; y++) {
+        for (let y = currentYear - 2; y <= currentYear + 1; y++) {
             const option = document.createElement('option');
             option.value = y;
             option.textContent = y + ' 年';
