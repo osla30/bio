@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WB 條帶相對定量標準化工具 / WB Band Relative Quantitation & Normalization Tool</title>
-    <script src="plotly.min.js"></script>
-    <script src="jstat.min.js"></script>
-    <script src="html2canvas.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root { --primary: #4f46e5; --bg: #f3f4f6; --card: #ffffff; --header-bg: #ffffff; }
@@ -572,6 +572,40 @@
         calculate();
         }
     }
+    function renameGroup(idx) {
+    const oldName = state.groups[idx];
+    const msg = curLang === 'zh' ? `請輸入新的組別名稱 (原名稱: ${oldName})：` : `Enter new name for ${oldName}:`;
+    const newName = prompt(msg, oldName);
+    
+    // 檢查使用者是否有輸入，且名稱有變動
+    if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
+        const cleanName = newName.trim();
+        
+        // 防呆：避免與現有其他組別名稱重複
+        if (state.groups.includes(cleanName)) {
+            alert(curLang === 'zh' ? '❌ 組別名稱已存在，請使用其他名稱！' : '❌ Group name already exists!');
+            return;
+        }
+        
+        saveCurrentInputs(); // 先儲存當前文字框的數據
+        
+        // 將該組的舊數據，無縫轉移到新名稱的屬性下
+        state.proteins.forEach(p => {
+            if (p.data[oldName] !== undefined) {
+                p.data[cleanName] = p.data[oldName];
+                delete p.data[oldName]; // 刪除舊的 key
+            }
+        });
+        
+        state.groups[idx] = cleanName; // 更新系統中對應 index 的名稱
+        renderAll(); // 重新渲染畫面
+        
+        // 若已執行過運算，自動觸發重新計算以更新圖表與表格
+        if (window.lastCalcResults) {
+            calculate();
+        }
+    }
+}
     function addProtein() {
         saveCurrentInputs();
         state.proteins.push({ id: state.nextId++, name: '', isHkp: false, data: {} }); renderAll();
@@ -594,9 +628,18 @@
     }
 
 function renderAll() {
-        document.getElementById('group-tags').innerHTML = state.groups.map((g, i) => 
-            `<span class="tag">${g} <span onclick="removeGroup(${i})">×</span></span>`
-        ).join('');
+    document.getElementById('group-tags').innerHTML = state.groups.map((g, i) => {
+        // 編輯圖示 (所有組別皆提供)
+        const editBtn = `<span style="font-size:0.8em; margin-left:4px; cursor:pointer;" onclick="renameGroup(${i})" title="${curLang === 'zh' ? '修改名稱' : 'Rename'}">✏️</span>`;
+        
+        // 刪除圖示 (第 0 組 Control 不提供，其餘保留)
+        const delBtn = i === 0 ? '' : `<span style="margin-left:6px; cursor:pointer;" onclick="removeGroup(${i})" title="${curLang === 'zh' ? '刪除' : 'Delete'}">×</span>`;
+        
+        // 第 0 組 Control 給予特別的背景色標示
+        const style = i === 0 ? 'background:#dbeafe; border:1px solid #bfdbfe;' : '';
+        
+        return `<span class="tag" style="${style}">${g} ${editBtn} ${delBtn}</span>`;
+    }).join('');
 
         const phContainer = document.getElementById('posthoc-container');
         if (phContainer) {
