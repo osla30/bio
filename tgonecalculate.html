@@ -230,6 +230,24 @@
   .lang-en { display: none; }
   body.english .lang-zh { display: none; }
   body.english .lang-en { display: inline; }
+
+  /* 頁尾標註樣式 */
+footer {
+   text-align: center;
+   padding: 2rem 1rem;
+   color: #718096;
+   font-size: 0.95rem;
+   margin-top: 2rem;
+   line-height: 1.6;
+}
+footer a, footer a:visited {
+   color: #3182ce;
+   text-decoration: none;
+   font-weight: bold;
+}
+footer a:hover {
+   text-decoration: underline;
+}
 </style>
 </head>
 <body>
@@ -350,6 +368,9 @@
     <p class="total-row"><span>Total Volume:</span><span><span id="lower-total"></span> mL</span></p>
   </div>
 </div>
+<footer>
+ by <a href="https://www.youtube.com/@GrandpaCan" target="_blank">我阿公都會</a>
+</footer>
 
 <script>
 function toFixedNumber(num, digits) {
