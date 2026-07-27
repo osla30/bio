@@ -33,7 +33,7 @@
         header p {
             margin-top: 0.5rem;
             opacity: 0.9;
-            font-size: 1.1rem;
+            font-size: 1.1rem; /* 字體大小與原先相同 */
         }
         /* 右上角控制區塊 (包含語言切換與 QR Code) */
         .top-right-controls {
@@ -79,31 +79,36 @@
             background-color: white; /* 加上白底確保 QR Code 可掃描 */
             padding: 2px;
         }
-        /* 標題作者連結樣式設定 */
-        header p a, header p a:visited {
+        
+        /* 作者連結樣式設定 (移至 footer 的樣式) */
+        .author-info {
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
+        }
+        .author-info a, .author-info a:visited {
             color: inherit; 
             text-decoration: none; 
+            font-weight: normal; /* 讓字體不與下方Donate連結一樣粗 */
         }
-        header p a:hover {
+        .author-info a:hover {
             text-decoration: underline; 
         }
 
-        /* --- 新增：在"我阿公都會"後面加上小小 YouTube LOGO --- */
-        header p a[data-i18n="author_name"]::before {
-        content: ""; 
-        display: inline-block; 
-        width: 20px; /* 微調了大一點點，讓 LOGO 更清晰 */
-        height: 20px; 
-        /* 這裡換成了更穩定的 SVG URL 編碼，修復了不顯示的問題 */
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FF0000' d='M21.582 6.186a2.684 2.684 0 0 0-1.884-1.884C18.04 3.84 12 3.84 12 3.84s-6.04 0-7.698.462a2.684 2.684 0 0 0-1.884 1.884C1.956 7.844 1.956 12 1.956 12s0 4.156.462 5.814a2.684 2.684 0 0 0 1.884 1.884C6.04 20.16 12 20.16 12 20.16s6.04 0 7.698-.462a2.684 2.684 0 0 0 1.884-1.884C22.044 16.156 22.044 12 22.044 12s0-4.156-.462-5.814z'/%3E%3Cpath fill='%23FFFFFF' d='M9.91 15.488V8.512L15.96 12z'/%3E%3C/svg%3E");
-        background-size: contain; 
-        background-repeat: no-repeat; 
-        vertical-align: middle; 
-        margin-right: 5px; 
+        /* --- 在"我阿公都會"前面加上小小 YouTube LOGO --- */
+        a[data-i18n="author_name"]::before {
+            content: ""; 
+            display: inline-block; 
+            width: 20px; 
+            height: 20px; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FF0000' d='M21.582 6.186a2.684 2.684 0 0 0-1.884-1.884C18.04 3.84 12 3.84 12 3.84s-6.04 0-7.698.462a2.684 2.684 0 0 0-1.884 1.884C1.956 7.844 1.956 12 1.956 12s0 4.156.462 5.814a2.684 2.684 0 0 0 1.884 1.884C6.04 20.16 12 20.16 12 20.16s6.04 0 7.698-.462a2.684 2.684 0 0 0 1.884-1.884C22.044 16.156 22.044 12 22.044 12s0-4.156-.462-5.814z'/%3E%3Cpath fill='%23FFFFFF' d='M9.91 15.488V8.512L15.96 12z'/%3E%3C/svg%3E");
+            background-size: contain; 
+            background-repeat: no-repeat; 
+            vertical-align: middle; 
+            margin-right: 5px; 
         }
         
-        /* 當滑鼠懸停在連結上時，不希望 LOGO 有下劃線 (如果原本有的話) */
-        header p a[data-i18n="author_name"]:hover::before {
+        /* 當滑鼠懸停在連結上時，不希望 LOGO 有下劃線 */
+        a[data-i18n="author_name"]:hover::before {
             text-decoration: none; 
         }
 
@@ -283,7 +288,7 @@
             </a>
         </div>
         <h1 data-i18n="header_title">科科計算工具箱</h1>
-        <p>by <a href="https://www.youtube.com/@GrandpaCan" target="_blank" data-i18n="author_name">我阿公都會</a></p>
+        <p data-i18n="header_desc">所有資料均在您本機瀏覽器上分析計算，不會有任何資料上傳雲端，請安心使用</p>
     </header>
 
     <div class="container">
@@ -425,6 +430,9 @@
     </div>
 
     <footer>
+        <div class="author-info">
+            by <a href="https://www.youtube.com/@GrandpaCan" target="_blank" data-i18n="author_name">我阿公都會</a>
+        </div>
         <span data-i18n="footer_text">若喜歡，可自由 Donate 支持：</span><a href="https://pse.is/4524sw" target="_blank">https://pse.is/4524sw</a><br>
     </footer>
 
@@ -434,6 +442,7 @@
             zh: {
                 pageTitle: "科科計算工具箱",
                 header_title: "科科計算工具箱",
+                header_desc: "所有資料均在您本機瀏覽器上分析計算，不會有任何資料上傳雲端，請安心使用",
                 author_name: "我阿公都會",
                 qr_title: "點擊檢視完整圖片",
                 
@@ -488,6 +497,7 @@
             en: {
                 pageTitle: "BioToolBox",
                 header_title: "BioToolBox",
+                header_desc: "All data is analyzed and calculated locally in your browser. No data is uploaded to the cloud, please use with peace of mind.",
                 author_name: "GrandpaCan",
                 qr_title: "Click to view full image",
                 
