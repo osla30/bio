@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCA Working Solution 體積計算工具 / BCA Working Sol. Calculator</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header-with-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header-with-buttons h1,
+        .header-with-buttons h2 {
+            color: var(--primary-color);
+            margin: 0;
+            padding: 0;
+            border-bottom: none;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--secondary-color);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--secondary-color);
+            border: 2px solid var(--secondary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--secondary-color);
+            color: #ffffff;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-with-buttons {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .header-with-buttons h1 {
+                font-size: 1.5em;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: #fdfdfd;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            font-size: 1.05em;
+            color: var(--primary-color);
+        }
+
+        .input-group input,
+        .input-group select.short-select {
+            width: 80px;
+            padding: 6px 10px;
+            font-size: 1.1em;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .input-group select.short-select {
+            cursor: pointer;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .result-box {
+            background-color: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .result-item {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .result-item span.value {
+            font-weight: bold;
+            color: #d35400;
+            font-size: 1.3em;
+        }
+
+        .notes {
+            background-color: #fffbc8;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #f1c40f;
+            margin-top: 20px;
+        }
+
+        .notes ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        /* Protocol 淺紅色區塊樣式 */
+        .protocol-box {
+            background-color: #fde8e8;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .protocol-box ul {
+            margin: 8px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .protocol-box li {
+            margin-bottom: 5px;
+        }
+
+        .protocol-box a {
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .protocol-box a:visited {
+            color: #2980b9; /* 點擊過不變色 */
+        }
+
+        .protocol-box a:hover {
+            color: #1a5276;
+            text-decoration: underline;
+        }
+
+        .highlight-red {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+            min-width: 600px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: normal;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* 頁尾標註樣式 */
+footer {
+   text-align: center;
+   padding: 2rem 1rem;
+   color: #718096;
+   font-size: 0.95rem;
+   margin-top: 2rem;
+   line-height: 1.6;
+}
+footer a, footer a:visited {
+   color: #3182ce;
+   text-decoration: none;
+   font-weight: bold;
+}
+footer a:hover {
+   text-decoration: underline;
+}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="header-with-buttons">
+            <h1 data-i18n="titleMain">BCA Working Solution 體積計算</h1>
+            <div class="header-buttons">
+                <a href="https://drive.google.com/file/d/1FOC3EQC5yBFf7P2cT1w2KCMXdTiYunvV/view?usp=sharing" target="_blank" class="btn btn-outline" data-i18n="btnOffline">離線版</a>
+                <button id="langBtn" class="btn btn-outline" onclick="toggleLanguage()">EN / 中文</button>
+            </div>
+        </div>
+        
+        <div class="calculator-grid">
+            <div>
+                <div class="input-group">
+                    <label for="standardCount" data-i18n="lblStdCount">Standard 數量</label>
+                    <input type="number" id="standardCount" min="0" value="8" oninput="calculateVolumes()">
+                </div>
+                <div class="input-group">
+                    <label for="standardReps" data-i18n="lblStdReps">Standard 重複次數</label>
+                    <select id="standardReps" class="short-select" onchange="calculateVolumes()">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-top: 20px;">
+                    <label for="sampleCount" data-i18n="lblSmpCount">Sample 數量</label>
+                    <input type="number" id="sampleCount" min="0" value="0" oninput="calculateVolumes()">
+                </div>
+                <div class="input-group">
+                    <label for="sampleReps" data-i18n="lblSmpReps">Sample 重複次數</label>
+                    <select id="sampleReps" class="short-select" onchange="calculateVolumes()">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+
+                <div class="input-group" style="margin-top: 20px; background-color: #f0f7ff; border-color: #cce5ff;">
+                    <label for="calcScheme" data-i18n="lblScheme">計算方案</label>
+                    <select id="calcScheme" onchange="calculateVolumes()" style="width: auto; padding: 6px 10px; font-size: 1.05em; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer;">
+                        <option value="A" data-i18n="optSchemeA">方案 A</option>
+                        <option value="B" data-i18n="optSchemeB">方案 B</option>
+                    </select>
+                </div>
+                
+                <div class="notes">
+                    <strong data-i18n="noteTitle">實驗提醒：<span class="highlight-red">(直接以96孔盤測量)</span></strong>
+                    <ul>
+                        <li data-i18n="note1">蛋白樣本可稀釋所需倍數後再做測量</li>
+                        <li data-i18n="note2">方案A：<span class="highlight-red">160 μL</span> Working sol. + <span class="highlight-red">20 μL</span> BSA & 蛋白</li>
+                        <li data-i18n="note3">方案B：<span class="highlight-red">200 μL</span> Working sol. + <span class="highlight-red">25 μL</span> BSA & 蛋白</li>
+                        <li data-i18n="note4"><span class="highlight-red">37°C</span> incubate <span class="highlight-red">30 分鐘</span>，測 <span class="highlight-red">562nm</span> 或 540-590nm</li>
+                        <li data-i18n="note5">若進行 Enhanced 測微量，<span class="highlight-red">60°C</span> incubate <span class="highlight-red">30 分鐘</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <div class="result-box">
+                    <div class="result-item">
+                        Working solution = <span class="value" id="valWS">0</span> μL
+                        <div style="font-size: 0.85em; color: #555;" data-i18n="hintWS">(Reagent A + B)</div>
+                    </div>
+                    <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
+                    <div class="result-item">
+                        Reagent A = <span class="value" id="valA">0</span> μL
+                        <div style="font-size: 0.85em; color: #555;" data-i18n="hintA">(大罐透明)</div>
+                    </div>
+                    <div class="result-item">
+                        Reagent B = <span class="value" id="valB">0</span> μL
+                        <div style="font-size: 0.85em; color: #555;" data-i18n="hintB">(小罐藍色)</div>
+                    </div>
+                </div>
+
+                <div class="protocol-box">
+                    <strong data-i18n="lblProtocols">Protocols：</strong>
+                    <ul>
+                        <li><a href="https://drive.google.com/file/d/1nfJYKQdePcNpc7j-nptpuq3jLVsAeprm/view?usp=sharing" target="_blank" data-i18n="linkThermo">Thermo 說明書</a></li>
+                        <li><a href="https://drive.google.com/file/d/1wR8iNXpjt2Kp63dtjPOaTlQB_VHbVXxF/view?usp=sharing" target="_blank" data-i18n="linkBioman">BIOMAN 說明書</a></li>
+                        <li><a href="https://drive.google.com/file/d/1kdfVG_wMwOVf52cACApMR7SmWp-aJaVA/view?usp=sharing" target="_blank" data-i18n="linkTpro">T-Pro 說明書</a></li>
+                        <li><a href="https://drive.google.com/file/d/1owWUe02ZE1eRhQhIdmkCC3WUxVQMPfgZ/view?usp=sharing" target="_blank" data-i18n="linkVisual">Visual Protein 說明書</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="header-with-buttons">
+            <h2>Preparation of diluted BSA standards</h2>
+            <div class="header-buttons">
+                <a href="https://osla30.github.io/bio/wb/proteinassay" target="_blank" class="btn" data-i18n="btnTool">蛋白質定量工具</a>
+            </div>
+        </div>
+        
+        <p><strong>Stock = 2 mg/mL BSA</strong></p>
+        
+        <h3 style="font-size: 1.1em; margin-top: 20px;">Standard Test Tube Protocol and Microplate Procedure (Working Range = 0.125–2 μg/μL) Modified</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vial</th>
+                        <th>Volume of Diluent (μL)</th>
+                        <th>Volume and Source of BSA (μL)</th>
+                        <th>Final Diluted BSA Volume (μL)</th>
+                        <th>Final BSA Concentration (μg/μL)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A</td><td>0</td><td>300 of Stock</td><td>300</td><td>2</td></tr>
+                    <tr><td>B</td><td>125</td><td>375 of Stock</td><td>335</td><td>1.5</td></tr>
+                    <tr><td>C</td><td>325</td><td>325 of Stock</td><td>350</td><td>1</td></tr>
+                    <tr><td>D</td><td>165</td><td>165 of vial B dilution</td><td>330</td><td>0.75</td></tr>
+                    <tr><td>E</td><td>300</td><td>300 of vial C dilution</td><td>350</td><td>0.5</td></tr>
+                    <tr><td>F</td><td>250</td><td>250 of vial E dilution</td><td>335</td><td>0.25</td></tr>
+                    <tr><td>G</td><td>165</td><td>165 of vial F dilution</td><td>330</td><td>0.125</td></tr>
+                    <tr><td>H</td><td>400</td><td>0</td><td>400</td><td>0</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="font-size: 1.1em; margin-top: 30px;">Enhanced Test Tube Protocol and Microplate Procedure (Working Range = 0.005–0.25 μg/μL) Modified</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vial</th>
+                        <th>Volume of Diluent (μL)</th>
+                        <th>Volume and Source of BSA (μL)</th>
+                        <th>Final Diluted BSA Volume (μL)</th>
+                        <th>Final BSA Concentration (μg/μL)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A</td><td>700</td><td>100 of Stock</td><td>400</td><td>0.25</td></tr>
+                    <tr><td>B</td><td>400</td><td>400 of vial A dilution</td><td>400</td><td>0.125</td></tr>
+                    <tr><td>C</td><td>600</td><td>400 of vial B dilution</td><td>600</td><td>0.05</td></tr>
+                    <tr><td>D</td><td>400</td><td>400 of vial C dilution</td><td>700</td><td>0.025</td></tr>
+                    <tr><td>E</td><td>400</td><td>100 of vial D dilution</td><td>500</td><td>0.005</td></tr>
+                    <tr><td>F</td><td>700</td><td>0</td><td>700</td><td>0</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<footer>
+ Back to <a href="https://osla30.github.io/bio/toolbox" target="_blank">ToolBox</a>
+</footer>
+
+<script>
+    // 翻譯內容字典
+    const translations = {
+        zh: {
+            titleMain: "BCA Working Solution 體積計算",
+            btnOffline: "離線版",
+            lblStdCount: "Standard 數量",
+            lblStdReps: "Standard 重複次數",
+            lblSmpCount: "Sample 數量",
+            lblSmpReps: "Sample 重複次數",
+            lblScheme: "計算方案",
+            optSchemeA: "方案 A",
+            optSchemeB: "方案 B",
+            noteTitle: "實驗提醒：<span class='highlight-red'>(直接以96孔盤測量)</span>",
+            note1: "蛋白樣本可稀釋所需倍數後再做測量",
+            note2: "方案A：<span class='highlight-red'>160 μL</span> Working sol. + <span class='highlight-red'>20 μL</span> BSA & 蛋白",
+            note3: "方案B：<span class='highlight-red'>200 μL</span> Working sol. + <span class='highlight-red'>25 μL</span> BSA & 蛋白",
+            note4: "<span class='highlight-red'>37°C</span> incubate <span class='highlight-red'>30 分鐘</span>，測 <span class='highlight-red'>562nm</span> 或 540-590nm",
+            note5: "若進行 Enhanced 測微量，<span class='highlight-red'>60°C</span> incubate <span class='highlight-red'>30 分鐘</span>",
+            hintWS: "(Reagent A + B)",
+            hintA: "(大罐透明)",
+            hintB: "(小罐藍色)",
+            btnTool: "蛋白質定量工具",
+            lblProtocols: "Protocols：",
+            linkThermo: "Thermo 說明書",
+            linkBioman: "BIOMAN 說明書",
+            linkTpro: "T-Pro 說明書",
+            linkVisual: "Visual Protein 說明書"
+        },
+        en: {
+            titleMain: "BCA Working Sol. Volume Calculator",
+            btnOffline: "Offline Version",
+            lblStdCount: "Standard Count",
+            lblStdReps: "Standard Replicates",
+            lblSmpCount: "Sample Count",
+            lblSmpReps: "Sample Replicates",
+            lblScheme: "Calculation Method",
+            optSchemeA: "Method A",
+            optSchemeB: "Method B",
+            noteTitle: "Experimental Notes: <span class='highlight-red'>(Measure directly in a 96-well plate)</span>",
+            note1: "Protein samples can be diluted to the required fold before measurement.",
+            note2: "Method A: <span class='highlight-red'>160 μL</span> Working sol. + <span class='highlight-red'>20 μL</span> BSA & Protein",
+            note3: "Method B: <span class='highlight-red'>200 μL</span> Working sol. + <span class='highlight-red'>25 μL</span> BSA & Protein",
+            note4: "Incubate at <span class='highlight-red'>37°C</span> for <span class='highlight-red'>30 mins</span>, measure at <span class='highlight-red'>562nm</span> (or 540-590nm).",
+            note5: "For Enhanced micro-measurement, incubate at <span class='highlight-red'>60°C</span> for <span class='highlight-red'>30 mins</span>.",
+            hintWS: "(Reagent A + B)",
+            hintA: "(Large Clear Bottle)",
+            hintB: "(Small Blue Bottle)",
+            btnTool: "Protein Quant Tool",
+            lblProtocols: "Protocols:",
+            linkThermo: "Thermo Protocol",
+            linkBioman: "BIOMAN Protocol",
+            linkTpro: "T-Pro Protocol",
+            linkVisual: "Visual Protein Protocol"
+        }
+    };
+
+    let currentLang = 'zh';
+
+    // 切換語言功能
+    function toggleLanguage() {
+        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        
+        // 更新按鈕文字狀態
+        document.getElementById('langBtn').textContent = currentLang === 'zh' ? 'EN / 中文' : '中文 / EN';
+        
+        // 抓取所有有 data-i18n 屬性的元素進行替換
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[currentLang][key]) {
+                el.innerHTML = translations[currentLang][key];
+            }
+        });
+    }
+
+    // 計算體積功能
+    function calculateVolumes() {
+        let stdCount = parseFloat(document.getElementById('standardCount').value) || 0;
+        let stdReps  = parseFloat(document.getElementById('standardReps').value) || 1;
+        let smpCount = parseFloat(document.getElementById('sampleCount').value) || 0;
+        let smpReps  = parseFloat(document.getElementById('sampleReps').value) || 1;
+        let scheme = document.getElementById('calcScheme').value;
+        
+        if (stdCount < 0) stdCount = 0;
+        if (stdReps < 1) stdReps = 1; 
+        if (smpCount < 0) smpCount = 0;
+        if (smpReps < 1) smpReps = 1; 
+
+        let totalReactions = (stdCount * stdReps) + (smpCount * smpReps);
+        let reagentA = 0;
+
+        if (scheme === 'A') {
+            reagentA = totalReactions * 200;
+        } else if (scheme === 'B') {
+            reagentA = totalReactions * 250;
+        }
+
+        let reagentB = reagentA / 50;
+        let totalWS = reagentA + reagentB;
+
+        document.getElementById('valA').textContent = reagentA;
+        document.getElementById('valB').textContent = reagentB;
+        document.getElementById('valWS').textContent = totalWS;
+    }
+
+    window.onload = calculateVolumes;
+</script>
+
+</body>
+</html>
