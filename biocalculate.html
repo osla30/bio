@@ -837,6 +837,9 @@ footer a:hover {
 					<div class="form-row-inline">
 						<label data-text="稀釋倍數：">稀釋倍數：</label> <input id="wbcDilution" step="any" type="number">
 					</div>
+          <div class="form-row-inline">
+            <label data-text="懸浮液總體積 (mL)：">懸浮液總體積 (mL)：</label> <input id="wbcVolume" step="any" type="number">
+          </div>
 					<div class="form-row-inline">
 						<label data-text="單位顯示：">單位顯示：</label>
             <select id="wbcUnit" onchange="updateWBCResult()">
@@ -853,7 +856,7 @@ footer a:hover {
           <h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積</h3>
 					<div class="form-container">
 						<div class="form-row-inline">
-							<label data-text="目標細胞數量：">目標細胞數量：</label>
+							<label data-text="目標細胞數量 (個)：">目標細胞數量 (個)：</label>
 							<div class="input-group">
 								<input data-placeholder="基數" id="wbcTargetBase" placeholder="基數" step="any" style="max-width: 100px;" type="number"> <span>× 10^</span> <input data-placeholder="次方" id="wbcTargetExp" placeholder="次方" step="1" style="max-width: 80px;" type="number">
 							</div>
@@ -893,6 +896,9 @@ footer a:hover {
 					<div class="form-row-inline">
 						<label data-text="稀釋倍數：">稀釋倍數：</label> <input id="rbcDilution" step="any" type="number">
 					</div>
+          <div class="form-row-inline">
+            <label data-text="懸浮液總體積 (mL)：">懸浮液總體積 (mL)：</label> <input id="rbcVolume" step="any" type="number">
+          </div>
 					<div class="form-row-inline">
 						<label data-text="單位顯示：">單位顯示：</label>
             <select id="rbcUnit" onchange="updateRBCResult()">
@@ -909,7 +915,7 @@ footer a:hover {
           <h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積</h3>
 					<div class="form-container">
 						<div class="form-row-inline">
-							<label data-text="目標細胞數量：">目標細胞數量：</label>
+							<label data-text="目標細胞數量 (個)：">目標細胞數量 (個)：</label>
 							<div class="input-group">
 								<input data-placeholder="基數" id="rbcTargetBase" placeholder="基數" step="any" style="max-width: 100px;" type="number"> <span>× 10^</span> <input data-placeholder="次方" id="rbcTargetExp" placeholder="次方" step="1" style="max-width: 80px;" type="number">
 							</div>
@@ -1157,6 +1163,10 @@ footer a:hover {
         "找不到所需體積數值，請先計算體積。": "找不到所需體積數值，請先計算體積。",
         "請輸入有效的份數與每份體積 (mL)。": "請輸入有效的份數與每份體積 (mL)。",
         "計算錯誤：": "計算錯誤：",
+        "懸浮液總體積 (mL)：": "懸浮液總體積 (mL)：",
+        "濃度計算結果：": "濃度計算結果：",
+        "目前細胞總數：": "目前細胞總數：",
+        "個": "個",
         
         // 計時器
         "倒數計時器": "倒數計時器",
@@ -1210,7 +1220,7 @@ footer a:hover {
         "cells/µL": "個/µL",
         "cells/mL": "個/mL",
         "計算所需體積": "計算所需體積",
-        "目標細胞數量：": "目標細胞數量：",
+        "目標細胞數量 (個)：": "目標細胞數量 (個)：",
         "基數": "基數",
         "次方": "次方",
         "計算體積": "計算體積",
@@ -1361,6 +1371,10 @@ footer a:hover {
         "找不到所需體積數值，請先計算體積。": "Could not find the required volume value, please calculate the volume first.",
         "請輸入有效的份數與每份體積 (mL)。": "Please enter a valid number of aliquots and volume per aliquot (mL).",
         "計算錯誤：": "Calculation Error：",
+        "懸浮液總體積 (mL)：": "Suspension volume (mL):",
+        "濃度計算結果：": "Concentration Result: ",
+        "目前細胞總數：": "Total Cell Count: ",
+        "個": "cells",
         
         // 計時器
         "倒數計時器": "Countdown Timer",
@@ -1415,7 +1429,7 @@ footer a:hover {
         "cells/µL": "cells/µL",
         "cells/mL": "cells/mL",
         "計算所需體積": "Calculate Required Volume",
-        "目標細胞數量：": "Target Cell Count：",
+        "目標細胞數量 (個)：": "Target Cell Count (cells)：",
         "基數": "Base",
         "次方": "Exponent",
         "計算體積": "Calculate Volume",
@@ -2300,8 +2314,19 @@ footer a:hover {
       const sciParts = sciNotation.split('e');
       const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}<\/sup>`;
 
+      const volume = parseFloat(document.getElementById('wbcVolume').value);
+      let totalDisplay = "";
+      if (!isNaN(volume) && volume > 0) {
+        // baseResultUL 是 個/µL，乘 1000 變成 個/mL，再乘上體積 (mL) 即可得到總數
+        const totalCells = (baseResultUL * 1000) * volume; 
+        const totalSci = totalCells.toExponential(2).split('e');
+        const totalSciDisplay = `${Number(totalSci[0])} × 10<sup>${Number(totalSci[1])}<\/sup>`;
+        // 注意：總數的單位固定為 "個" 會比較符合邏輯
+        totalDisplay = `<br>${translations[currentLanguage]['目前細胞總數：']}${totalSciDisplay} ${translations[currentLanguage]['個']}`;
+      }
+
       document.getElementById("wbcResult").innerHTML =
-        `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
+        `${translations[currentLanguage]['濃度計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}${totalDisplay}`;
       document.getElementById("wbcResult").style.display = 'block';
       document.getElementById("wbcVolumeCalc").style.display = 'block';
       document.getElementById("wbcResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2378,6 +2403,7 @@ footer a:hover {
       document.getElementById('wbcTargetExp').value = '';
       document.getElementById('wbcBatchN').value = '';
       document.getElementById('wbcBatchVol').value = '';
+      document.getElementById('wbcVolume').value = '';
       wbcConcentration = 0;
       calculatedWbcVolUL = 0; // 清除時，把暫存的體積也忘掉
       hideResult('wbcResult');
@@ -2415,8 +2441,17 @@ footer a:hover {
       const sciParts = sciNotation.split('e');
       const sciDisplay = `${Number(sciParts[0])} × 10<sup>${Number(sciParts[1])}<\/sup>`;
 
+      const volume = parseFloat(document.getElementById('rbcVolume').value);
+      let totalDisplay = "";
+      if (!isNaN(volume) && volume > 0) {
+        const totalCells = (baseResultUL * 1000) * volume;
+        const totalSci = totalCells.toExponential(2).split('e');
+        const totalSciDisplay = `${Number(totalSci[0])} × 10<sup>${Number(totalSci[1])}<\/sup>`;
+        totalDisplay = `<br>${translations[currentLanguage]['目前細胞總數：']}${totalSciDisplay} ${translations[currentLanguage]['個']}`;
+      }
+
       document.getElementById("rbcResult").innerHTML =
-        `${translations[currentLanguage]['計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}`;
+        `${translations[currentLanguage]['濃度計算結果：']}${result.toFixed(2)} ${unitText}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplay} ${unitText}${totalDisplay}`;
       document.getElementById("rbcResult").style.display = 'block';
       document.getElementById("rbcVolumeCalc").style.display = 'block';
       document.getElementById("rbcResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2493,6 +2528,7 @@ footer a:hover {
       document.getElementById('rbcTargetExp').value = '';
       document.getElementById('rbcBatchN').value = '';
       document.getElementById('rbcBatchVol').value = '';
+      document.getElementById('rbcVolume').value = '';
       rbcConcentration = 0;
       calculatedRbcVolUL = 0; // 清除時，把暫存的體積也忘掉
       hideResult('rbcResult');
