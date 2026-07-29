@@ -779,15 +779,26 @@ footer a:hover {
     </div>
     <div class="tab-content" id="revcomp" style="display:none;">
         <div class="form-container">
-            <div class="form-row">
-                <label data-text="輸入序列：">輸入序列：</label>
-                <textarea id="revcompInput" placeholder="Enter DNA sequence..." oninput="this.value = this.value.replace(/[^atcgATCG]/g, '')"></textarea>
-            </div>
+    <!-- 新增：核酸類型選擇 -->
+    <div class="form-row-inline">
+        <label data-text="核酸類型：">核酸類型：</label>
+        <select id="naType" onchange="filterRevcompInput()">
+            <option value="dna">DNA</option>
+            <option value="rna">RNA</option>
+        </select>
+    </div>
+    
+    <div class="form-row">
+        <label data-text="輸入序列：">輸入序列：</label>
+        <!-- 修改：將 oninput 替換為呼叫自訂函數，以動態判斷只能輸入 T 或 U -->
+        <textarea id="revcompInput" placeholder="Enter sequence..." oninput="filterRevcompInput()"></textarea>
+    </div>
         </div>
         <div class="button-group">
             <button data-text="反轉" onclick="runRevComp('reverse')">反轉</button>
             <button data-text="互補" onclick="runRevComp('complement')">互補</button>
             <button data-text="反轉並互補" onclick="runRevComp('revcomp')">反轉並互補</button>
+            <button data-text="轉 DNA/RNA" onclick="convertDnaRna()">轉 DNA/RNA</button>
             <button class="clear" data-text="清除" onclick="clearRevComp()">清除</button>
         </div>
         <div class="form-container" style="margin-top:20px;">
@@ -1030,8 +1041,8 @@ footer a:hover {
         "tab-solprep": "溶液配製",
         "tab-animal": "動物投藥計算",
         "tab-primer": "Primer 回溶/稀釋",
-        "tab-tmcalc": "Primer Tm 計算",  // New
-        "tab-revcomp": "DNA 反轉/互補",
+        "tab-tmcalc": "Primer Tm 計算",
+        "tab-revcomp": "核酸轉換",
         "tab-ligation": "Ligation 計算",
         "tab-cellcount": "細胞計數",
         "tab-timer": "計時器",
@@ -1131,6 +1142,8 @@ footer a:hover {
         "反轉": "反轉",
         "互補": "互補",
         "反轉並互補": "反轉並互補",
+        "核酸類型：": "核酸類型：",
+        "轉 DNA/RNA": "轉 DNA/RNA",
         "結果：": "結果：",
 
         // Ligation
@@ -1240,8 +1253,8 @@ footer a:hover {
         "tab-solprep": "Solution Prep",
         "tab-animal": "Animal Drug Dosage",
         "tab-primer": "Primer Reconstitution/Dilute",
-        "tab-tmcalc": "Primer Tm Calculate", // New
-        "tab-revcomp": "DNA Reverse/Complement",
+        "tab-tmcalc": "Primer Tm Calculate",
+        "tab-revcomp": "Nucleic Acid Conversion",
         "tab-ligation": "Ligation Calculate",
         "tab-cellcount": "Cell Count",
         "tab-timer": "Timer",
@@ -1339,6 +1352,8 @@ footer a:hover {
         "反轉": "Reverse",
         "互補": "Complement",
         "反轉並互補": "Reverse Complement",
+        "核酸類型：": "Type:",
+        "轉 DNA/RNA": "Convert DNA/RNA",
         "結果：": "Result:",
         
         // Ligation
@@ -2248,15 +2263,51 @@ footer a:hover {
         document.getElementById('revcompResult').value += `\n\n(Length: ${result.length} bp)`;
         document.getElementById('revcompResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+    function filterRevcompInput() {
+    const type = document.getElementById('naType').value;
+    const input = document.getElementById('revcompInput');
+    
+    if (type === 'dna') {
+        // DNA 模式：只允許 A, T, C, G
+        input.value = input.value.replace(/[^atcgATCG]/g, '');
+    } else {
+        // RNA 模式：只允許 A, U, C, G
+        input.value = input.value.replace(/[^aucgAUCG]/g, '');
+    }
+    }
+    function convertDnaRna() {
+    const type = document.getElementById('naType').value;
+    // 加上 .toUpperCase() 讓輸入的序列統一變成大寫
+    const input = document.getElementById('revcompInput').value.toUpperCase();
+    if (!input) return; // 如果沒有輸入則不動作
+    
+    let result = '';
+    if (type === 'dna') {
+        // 若選擇 DNA，將 T 轉成 U（因為已經全大寫了，只需取代大寫 T）
+        result = input.replace(/T/g, 'U');
+    } else if (type === 'rna') {
+        // 若選擇 RNA，將 U 轉成 T（只需取代大寫 U）
+        result = input.replace(/U/g, 'T');
+    }
+    
+    // 輸出結果並維持原有的長度計算與畫面滾動
+    document.getElementById('revcompResult').value = result + `\n\n(Length: ${result.length} bp)`;
+    document.getElementById('revcompResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     
     function getComplement(seq) {
-        const map = {
-            'A': 'T', 'T': 'A', 'U': 'A', 'G': 'C', 'C': 'G',
-            'Y': 'R', 'R': 'Y', 'S': 'S', 'W': 'W', 'K': 'M',
-            'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
-            'N': 'N'
-        };
-        return seq.split('').map(c => map[c] || c).join('');
+    // 獲取目前選擇是 DNA 還是 RNA
+    const type = document.getElementById('naType').value;
+    
+    const map = {
+        // 動態判斷 A 的互補：DNA 為 T，RNA 為 U
+        'A': type === 'dna' ? 'T' : 'U', 
+        'T': 'A', 'U': 'A', 'G': 'C', 'C': 'G',
+        'Y': 'R', 'R': 'Y', 'S': 'S', 'W': 'W', 'K': 'M',
+        'M': 'K', 'B': 'V', 'D': 'H', 'H': 'D', 'V': 'B',
+        'N': 'N'
+    };
+    return seq.split('').map(c => map[c] || c).join('');
     }
     
     function clearRevComp() {
