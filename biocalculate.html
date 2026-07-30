@@ -789,9 +789,14 @@ footer a:hover {
     </div>
     
     <div class="form-row">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
         <label data-text="輸入序列：">輸入序列：</label>
-        <!-- 修改：將 oninput 替換為呼叫自訂函數，以動態判斷只能輸入 T 或 U -->
-        <textarea id="revcompInput" placeholder="Enter sequence..." oninput="filterRevcompInput()"></textarea>
+        <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">
+        <span data-text="revcomp-length">長度</span>: <span id="revcomp-len">0</span> bp | GC: <span id="revcomp-gc">0.0</span> %
+        </span>
+    </div>
+    <!-- 修改：將 oninput 替換為呼叫自訂函數，以動態判斷只能輸入 T 或 U -->
+    <textarea id="revcompInput" placeholder="Enter sequence..." oninput="filterRevcompInput()"></textarea>
     </div>
         </div>
         <div class="button-group">
@@ -1145,6 +1150,7 @@ footer a:hover {
         "核酸類型：": "核酸類型：",
         "轉 DNA/RNA": "轉 DNA/RNA",
         "結果：": "結果：",
+        "revcomp-length": "長度",
 
         // Ligation
         "Insert DNA 長度 (bp)：": "Insert DNA 長度 (bp)：",
@@ -1355,6 +1361,7 @@ footer a:hover {
         "核酸類型：": "Type:",
         "轉 DNA/RNA": "Convert DNA/RNA",
         "結果：": "Result:",
+        "revcomp-length": "Length",
         
         // Ligation
         "Insert DNA 長度 (bp)：": "Insert DNA length (bp)：",
@@ -2274,6 +2281,19 @@ footer a:hover {
         // RNA 模式：只允許 A, U, C, G
         input.value = input.value.replace(/[^aucgAUCG]/g, '');
     }
+
+    // 新增：即時計算長度與 GC %
+    const seq = input.value.toUpperCase();
+    const len = seq.length;
+    let gc = 0;
+    
+    if (len > 0) {
+        gc = ((seq.match(/[GC]/g) || []).length / len) * 100;
+    }
+    
+    // 更新顯示到畫面上
+    document.getElementById('revcomp-len').innerText = len;
+    document.getElementById('revcomp-gc').innerText = len > 0 ? gc.toFixed(1) : '0.0';
     }
     function convertDnaRna() {
     const type = document.getElementById('naType').value;
@@ -2311,8 +2331,12 @@ footer a:hover {
     }
     
     function clearRevComp() {
-        document.getElementById('revcompInput').value = '';
-        document.getElementById('revcompResult').value = '';
+    document.getElementById('revcompInput').value = '';
+    document.getElementById('revcompResult').value = '';
+    
+    // 新增：連同長度與 GC 顯示一起歸零
+    document.getElementById('revcomp-len').innerText = '0';
+    document.getElementById('revcomp-gc').innerText = '0.0';
     }
 
     // (I) Ligation 計算
