@@ -1225,7 +1225,7 @@ footer a:hover {
         "配製藥物濃度：": "配製藥物濃度：",
         "配製藥物總重量：": "配製藥物總重量：",
         "配製藥物溶液總體積：": "配製藥物溶液總體積：",
-        "請輸入有效數值，且藥物濃度不可為零": "請輸入有效數值，且藥物濃度不可為零",
+        "請輸入有效數值，且數值必須大於 0": "請輸入有效數值，且數值必須大於 0",
         "投藥量：": "投藥量：",
         "請輸入任意兩個欄位": "請輸入任意兩個欄位",
         "計算後濃度：": "計算後濃度：",
@@ -1436,7 +1436,7 @@ footer a:hover {
         "配製藥物濃度：": "Prepare drug concentration：",
         "配製藥物總重量：": "Total weight of prepared drugs：",
         "配製藥物溶液總體積：": "Total volume of prepared drug solution：",
-        "請輸入有效數值，且藥物濃度不可為零": "Please enter a valid value, and the drug concentration cannot be zero",
+        "請輸入有效數值，且數值必須大於 0": "Please enter a valid value, and the values must be greater than 0",
         "投藥量：": "Dosage：",
         "請輸入任意兩個欄位": "Please enter any two fields",
         "計算後濃度：": "Calculated concentration：",
@@ -1558,6 +1558,20 @@ footer a:hover {
       element.style.display = 'none';
       element.textContent = '';
     }
+    // === 新增：統一的錯誤顯示介面 ===
+function showError(id, text) {
+  const element = document.getElementById(id);
+  // 使用紅色與警告圖示，讓錯誤訊息更清楚
+  element.innerHTML = `<span style="color: var(--danger); font-weight: bold;">⚠️ ${text}</span>`;
+  element.style.display = 'block';
+  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// === 新增：共用輸入驗證函式 ===
+// values: 數值陣列, options: { allowZero: 是否允許輸入 0,預設為 false }
+function validateInputs(values, { allowZero = false } = {}) {
+  return values.every(v => !isNaN(v) && (allowZero ? v >= 0 : v > 0));
+}
 
     // === 3. 各分頁計算邏輯 ===
 
@@ -1571,8 +1585,8 @@ footer a:hover {
       const massValue = parseFloat(document.getElementById('massValue').value);
       const massUnit = parseFloat(document.getElementById('massUnit').value);
 
-      if (isNaN(molarMass) || molarMass <= 0) {
-        alert(translations[currentLanguage]['請輸入分子量']);
+      if (!validateInputs([molarMass])) {
+        showError('massResult', translations[currentLanguage]['請輸入分子量']);
         return;
       }
 
@@ -1582,7 +1596,7 @@ footer a:hover {
       if (!isNaN(massValue)) filledCount++;
 
       if (filledCount < 2) {
-        alert(translations[currentLanguage]['請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項']);
+        showError('massResult', translations[currentLanguage]['請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項']);
         return;
       }
 
@@ -1630,7 +1644,14 @@ footer a:hover {
       [c1, v1, c2, v2].forEach(v => { if (!isNaN(v)) filledCount++; });
 
       if (filledCount < 3) {
-        alert(translations[currentLanguage]['請輸入任意三個值']);
+        showError('dilutionResult', translations[currentLanguage]['請輸入任意三個值']);
+        return;
+      }
+      
+      // 新增防呆：已填寫的數值必須大於 0，防止除以零
+      const filledValues = [c1, v1, c2, v2].filter(v => !isNaN(v));
+      if (!validateInputs(filledValues)) {
+        showError('dilutionResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
         return;
       }
 
@@ -1684,8 +1705,8 @@ footer a:hover {
       const molarMass = parseFloat(molarMassInput.value);
       const molarityUnit = parseFloat(molarityUnitSelect.value);
 
-      if (isNaN(density) || isNaN(molarMass)) {
-        alert(translations[currentLanguage]['請輸入分子量與密度']);
+      if (!validateInputs([density, molarMass])) {
+        showError('acidBaseResult', translations[currentLanguage]['請輸入分子量與密度']);
         return;
       }
 
@@ -1702,7 +1723,7 @@ footer a:hover {
         weightPercentInput.value = weightPercentCalc.toFixed(6);
         showResult('acidBaseResult', `${translations[currentLanguage]['計算重量百分比：']}${weightPercentCalc.toFixed(6)} %`);
       } else {
-        alert(translations[currentLanguage]['請輸入重量百分比或莫耳濃度其中一項，另一項留空']);
+        showError('acidBaseResult', translations[currentLanguage]['請輸入重量百分比或莫耳濃度其中一項，另一項留空']);
       }
     }
 
@@ -1786,8 +1807,8 @@ footer a:hover {
       const totalVolVal = parseFloat(document.getElementById('totalVol').value);
       const totalUnitVal = parseFloat(document.getElementById('totalUnit').value);
       
-      if(isNaN(totalVolVal) || totalVolVal <= 0) {
-         alert(translations[lang]['請輸入所有欄位且數值皆大於 0']);
+      if(!validateInputs([totalVolVal])) {
+         showError('solprepResult', translations[lang]['請輸入所有欄位且數值皆大於 0']);
          return;
       }
 
@@ -1840,7 +1861,7 @@ footer a:hover {
       });
       
       if (!hasItems) {
-        alert(translations[lang]['請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項']); 
+        showError('solprepResult', currentLanguage === 'zh' ? '請至少加入一項溶質並填寫數值' : 'Please add at least one solute with valid values'); 
         return;
       }
 
@@ -1866,15 +1887,15 @@ footer a:hover {
       const animalWeight = parseFloat(document.getElementById('animalWeight').value);
       const animalCount = parseFloat(document.getElementById('animalCount').value);
 
-      if ([targetDose, doseB1, doseB2, animalWeight, animalCount].some(v => isNaN(v) || v <= 0)) {
-        alert(translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
+      if (!validateInputs([targetDose, doseB1, doseB2, animalWeight, animalCount])) {
+        showError('animalResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
         return;
       }
 
       const dosePerAnimal = (targetDose / 1000) * animalWeight;
       const concentration = (targetDose / (1000 / doseB1)) / doseB2;
-      const totalWeight = (targetDose / (1000 / doseB1)) * ((doseB2 * animalCount * (animalWeight / doseB1)) / doseB2);
-      const totalVolume = doseB2 * animalCount * (animalWeight / doseB1);
+      const totalWeight = dosePerAnimal * animalCount;
+      const totalVolume = (animalWeight / doseB1) * doseB2 * animalCount;
 
       const resultText =
         `${translations[currentLanguage]['每隻動物投藥量：']}${dosePerAnimal.toFixed(6)} mg/pc\n` +
@@ -1896,8 +1917,8 @@ footer a:hover {
       const unit = document.getElementById('drugConc2Unit').value;
       const c = parseFloat(document.getElementById('animalWeight2').value);
 
-      if (isNaN(a) || isNaN(b) || isNaN(c) || b === 0) {
-        showResult('animalResult2', translations[currentLanguage]['請輸入有效數值，且藥物濃度不可為零']);
+      if (!validateInputs([a, b, c])) {
+        showError('animalResult2', translations[currentLanguage]['請輸入有效數值，且數值必須大於 0']);
         return;
       }
 
@@ -1927,7 +1948,14 @@ footer a:hover {
       if (!isNaN(B)) count++;
       if (!isNaN(C)) count++;
       if (count < 2) {
-        showResult('primerResult', translations[currentLanguage]['請輸入任意兩個欄位']);
+        showError('primerResult', translations[currentLanguage]['請輸入任意兩個欄位']);
+        return;
+      }
+      
+      // 新增防呆：防止除以零
+      const filledValues = [A, B, C].filter(v => !isNaN(v));
+      if (!validateInputs(filledValues)) {
+        showError('primerResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
         return;
       }
       if (!isNaN(A) && !isNaN(B)) {
@@ -1954,10 +1982,18 @@ footer a:hover {
       let a = parseFloat(document.getElementById('stockConc').value);
       let b = parseFloat(document.getElementById('targetConc').value);
       let c = parseFloat(document.getElementById('targetVol').value);
-      if ([a, b, c].some(v => isNaN(v) || v <= 0)) {
-        showResult('diluteResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
+      // 使用統一的驗證函式與錯誤顯示
+      if (!validateInputs([a, b, c])) {
+        showError('diluteResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
         return;
       }
+
+      // === 新增：濃度合理性防呆 ===
+      if (b > a) {
+        showError('diluteResult', currentLanguage === 'zh' ? '目標濃度不可大於原液濃度' : 'Target concentration cannot be greater than stock concentration.');
+        return;
+      }
+
       let d = (b / a) * c;
       let e = c - d;
       showResult('diluteResult', `${translations[currentLanguage]['原液體積：']}${d.toFixed(2)} µL\n${translations[currentLanguage]['加水體積：']}${e.toFixed(2)} µL`);
@@ -2347,8 +2383,8 @@ footer a:hover {
       const vectorRatio = parseFloat(document.getElementById('vectorRatio').value);
       const vectorMass = parseFloat(document.getElementById('vectorMass').value);
       
-      if ([insertLength, vectorLength, insertRatio, vectorRatio, vectorMass].some(v => isNaN(v) || v <= 0)) {
-        alert(translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
+      if (!validateInputs([insertLength, vectorLength, insertRatio, vectorRatio, vectorMass])) {
+        showError('ligationResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
         return;
       }
       
@@ -2370,8 +2406,9 @@ footer a:hover {
       const dilution = parseFloat(document.getElementById('wbcDilution').value);
       const unit = parseFloat(document.getElementById('wbcUnit').value);
 
-      if (isNaN(count) || isNaN(squares) || isNaN(dilution) || squares === 0) {
-        alert(translations[currentLanguage]['請輸入所有必填欄位，且格數不可為0']);
+      // 允許細胞數(count)為 0 (allowZero: true)，但格數(squares)與稀釋倍數(dilution)必須大於 0
+      if (!validateInputs([count], { allowZero: true }) || !validateInputs([squares, dilution])) {
+        showError('wbcResult', translations[currentLanguage]['請輸入所有必填欄位，且格數不可為0']);
         return;
       }
 
@@ -2418,12 +2455,12 @@ footer a:hover {
       const exponent = parseFloat(document.getElementById('wbcTargetExp').value);
       
       if (isNaN(base) || isNaN(exponent)) {
-        alert(translations[currentLanguage]['請輸入目標細胞數量']);
+        showError('wbcVolumeResult', translations[currentLanguage]['請輸入目標細胞數量']);
         return;
       }
       
       if (wbcConcentration === 0) {
-        alert(translations[currentLanguage]['請先計算細胞濃度']);
+        showError('wbcVolumeResult', translations[currentLanguage]['請先計算細胞濃度']);
         return;
       }
       
@@ -2444,7 +2481,7 @@ footer a:hover {
            // ★★★ 修改開始：不再去讀 HTML 文字，而是檢查變數 (步驟 3) ★★★
            // 如果變數是 0，代表使用者還沒按過「計算體積」
            if (calculatedWbcVolUL <= 0) {
-             alert(translations[currentLanguage]['找不到所需體積數值，請先計算體積。']);
+             showError('wbcBatchResult', translations[currentLanguage]['找不到所需體積數值，請先計算體積。']);
              return;
            }
            const needUL = calculatedWbcVolUL; // 直接從變數拿數字，超穩！
@@ -2452,10 +2489,19 @@ footer a:hover {
 
            const A = parseFloat(document.getElementById('wbcBatchN').value);
            const B = parseFloat(document.getElementById('wbcBatchVol').value);
-           if (isNaN(A) || A <= 0 || isNaN(B) || B <= 0) {
-             alert(translations[currentLanguage]['請輸入有效的組數與每組體積 (mL)。']);
+           
+           // 改用 showError 取代 alert
+           if (!validateInputs([A, B])) {
+             showError('wbcBatchResult', translations[currentLanguage]['請輸入有效的組數與每組體積 (mL)。']);
              return;
            }
+           
+           // 新增防呆：確保每組體積大於所需細胞液體積
+           if (B * 1000 < needUL) {
+             showError('wbcBatchResult', currentLanguage === 'zh' ? '每組體積小於單組所需細胞懸浮液體積，請提高每組體積 (mL)' : 'Target volume per group is less than required cell suspension volume.');
+             return;
+           }
+
            const needCellVol = needUL * A; 
            const mediaUL = (B * 1000 - needUL) * A; 
            const totalUL = needCellVol + mediaUL;
@@ -2497,8 +2543,9 @@ footer a:hover {
       const dilution = parseFloat(document.getElementById('rbcDilution').value);
       const unit = parseFloat(document.getElementById('rbcUnit').value);
 
-      if (isNaN(count) || isNaN(squares) || isNaN(dilution) || squares === 0) {
-        alert(translations[currentLanguage]['請輸入所有必填欄位，且格數不可為0']);
+      // 允許細胞數(count)為 0 (allowZero: true)，但格數(squares)與稀釋倍數(dilution)必須大於 0
+      if (!validateInputs([count], { allowZero: true }) || !validateInputs([squares, dilution])) {
+        showError('rbcResult', translations[currentLanguage]['請輸入所有必填欄位，且格數不可為0']);
         return;
       }
 
@@ -2543,12 +2590,12 @@ footer a:hover {
       const exponent = parseFloat(document.getElementById('rbcTargetExp').value);
       
       if (isNaN(base) || isNaN(exponent)) {
-        alert(translations[currentLanguage]['請輸入目標細胞數量']);
+        showError('rbcVolumeResult', translations[currentLanguage]['請輸入目標細胞數量']);
         return;
       }
       
       if (rbcConcentration === 0) {
-        alert(translations[currentLanguage]['請先計算細胞濃度']);
+        showError('rbcVolumeResult', translations[currentLanguage]['請先計算細胞濃度']);
         return;
       }
       
@@ -2569,7 +2616,7 @@ footer a:hover {
            // ★★★ 修改開始：不再去讀 HTML 文字，而是檢查變數 (步驟 3) ★★★
            // 如果變數是 0，代表使用者還沒按過「計算體積」
            if (calculatedRbcVolUL <= 0) {
-             alert(translations[currentLanguage]['找不到所需體積數值，請先計算體積。']);
+             showError('rbcBatchResult', translations[currentLanguage]['找不到所需體積數值，請先計算體積。']);
              return;
            }
            const needUL = calculatedRbcVolUL; // 直接從變數拿數字，超穩！
@@ -2577,10 +2624,19 @@ footer a:hover {
 
            const A = parseFloat(document.getElementById('rbcBatchN').value);
            const B = parseFloat(document.getElementById('rbcBatchVol').value);
-           if (isNaN(A) || A <= 0 || isNaN(B) || B <= 0) {
-             alert(translations[currentLanguage]['請輸入有效的組數與每組體積 (mL)。']);
+           
+           // 改用 showError 取代 alert
+           if (!validateInputs([A, B])) {
+             showError('rbcBatchResult', translations[currentLanguage]['請輸入有效的組數與每組體積 (mL)。']);
              return;
            }
+           
+           // 新增防呆：確保每組體積大於所需細胞液體積
+           if (B * 1000 < needUL) {
+             showError('rbcBatchResult', currentLanguage === 'zh' ? '每組體積小於單組所需細胞懸浮液體積，請提高每組體積 (mL)' : 'Target volume per group is less than required cell suspension volume.');
+             return;
+           }
+
            const needCellVol = needUL * A; 
            const mediaUL = (B * 1000 - needUL) * A; 
            const totalUL = needCellVol + mediaUL;
@@ -2715,7 +2771,7 @@ footer a:hover {
           // 1. 立即嗶一聲
           playBeep();
           
-          // 2. 設定循環嗶聲 (每 0.625 秒響一次)
+          // 2. 設定循環嗶聲 (每 1 秒響一次)
           countdowns[idx].audioLoopInterval = setInterval(() => { 
             playBeep(); 
           }, 1000);
