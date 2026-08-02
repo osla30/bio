@@ -869,7 +869,7 @@ footer a:hover {
 				</div>
 				<div class="result" id="wbcResult" style="display:none;"></div>
 				<div id="wbcVolumeCalc" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-          <h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積</h3>
+          <h3 data-text="懸浮液體積計算" style="font-size: 1.1em; margin-bottom: 10px;">懸浮液體積計算</h3>
 					<div class="form-container">
 						<div class="form-row-inline">
 							<label data-text="目標細胞數量 (個)：">目標細胞數量 (個)：</label>
@@ -883,13 +883,13 @@ footer a:hover {
 					</div>
 					<div class="result" id="wbcVolumeResult" style="display:none;"></div>
 					<div id="wbcBatchCalc" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-						<h3 data-text="批量細胞準備">批量細胞準備</h3>
+						<h3 data-text="多組細胞混合液準備 (上一步設定之目標細胞數為1組)">多組細胞混合液準備 (上一步設定之目標細胞數為1組)</h3>
 						<div class="form-container">
 							<div class="form-row-inline">
-								<label data-text="目標細胞份數：">目標細胞份數：</label> <input data-placeholder="份數" id="wbcBatchN" placeholder="份數" step="1" type="number">
+								<label data-text="目標細胞組數：">目標細胞組數：</label> <input data-placeholder="組數" id="wbcBatchN" placeholder="組數" step="1" type="number">
 							</div>
 							<div class="form-row-inline">
-								<label data-text="目標細胞培養體積(每份，mL)：">目標細胞培養體積(每份，mL)：</label> <input data-placeholder="體積 (mL)" id="wbcBatchVol" placeholder="體積 (mL)" step="any" type="number">
+								<label data-text="目標細胞培養體積(每組，mL)：">目標細胞培養體積(每組，mL)：</label> <input data-placeholder="體積 (mL)" id="wbcBatchVol" placeholder="體積 (mL)" step="any" type="number">
 							</div>
 						</div>
 						<div class="button-group">
@@ -928,7 +928,7 @@ footer a:hover {
 				</div>
 				<div class="result" id="rbcResult" style="display:none;"></div>
 				<div id="rbcVolumeCalc" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-          <h3 data-text="計算所需體積" style="font-size: 1.1em; margin-bottom: 10px;">計算所需體積</h3>
+          <h3 data-text="懸浮液體積計算" style="font-size: 1.1em; margin-bottom: 10px;">懸浮液體積計算</h3>
 					<div class="form-container">
 						<div class="form-row-inline">
 							<label data-text="目標細胞數量 (個)：">目標細胞數量 (個)：</label>
@@ -942,13 +942,13 @@ footer a:hover {
 					</div>
 					<div class="result" id="rbcVolumeResult" style="display:none;"></div>
 					<div id="rbcBatchCalc" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-						<h3 data-text="批量細胞準備">批量細胞準備</h3>
+						<h3 data-text="多組細胞混合液準備 (上一步設定之目標細胞數為1組)">多組細胞混合液準備 (上一步設定之目標細胞數為1組)</h3>
 						<div class="form-container">
 							<div class="form-row-inline">
-								<label data-text="目標細胞份數：">目標細胞份數：</label> <input data-placeholder="份數" id="rbcBatchN" placeholder="份數" step="1" type="number">
+								<label data-text="目標細胞組數：">目標細胞組數：</label> <input data-placeholder="組數" id="rbcBatchN" placeholder="組數" step="1" type="number">
 							</div>
 							<div class="form-row-inline">
-								<label data-text="目標細胞培養體積(每份，mL)：">目標細胞培養體積(每份，mL)：</label> <input data-placeholder="體積 (mL)" id="rbcBatchVol" placeholder="體積 (mL)" step="any" type="number">
+								<label data-text="目標細胞培養體積(每組，mL)：">目標細胞培養體積(每組，mL)：</label> <input data-placeholder="體積 (mL)" id="rbcBatchVol" placeholder="體積 (mL)" step="any" type="number">
 							</div>
 						</div>
 						<div class="button-group">
@@ -1170,17 +1170,17 @@ footer a:hover {
         "個/mL": "個/mL",
         "紅血球計數": "紅血球計數",
         "(紅血球：一般使用25中格並選5格錯開不重疊格子)": "(紅血球：一般使用25中格並選5格錯開不重疊格子)",
-        "批量細胞準備": "批量細胞準備",
-        "目標細胞份數：": "目標細胞份數：",
-        "目標細胞培養體積(每份，mL)：": "目標細胞培養體積(每份，mL)：",
-        "份數": "份數",
+        "多組細胞混合液準備 (上一步設定之目標細胞數為1組)": "多組細胞混合液準備 (上一步設定之目標細胞數為1組)",
+        "目標細胞組數：": "目標細胞組數：",
+        "目標細胞培養體積(每組，mL)：": "目標細胞培養體積(每組，mL)：",
+        "組數": "組數",
         "體積 (mL)": "體積 (mL)",
         "計算批量結果": "計算批量結果",
-        "所需目標細胞體積：": "所需目標細胞體積：",
+        "所需懸浮液細胞體積：": "所需懸浮液細胞體積：",
         "所需添加培養基體積：": "所需添加培養基體積：",
         "總體積：": "總體積：",
         "找不到所需體積數值，請先計算體積。": "找不到所需體積數值，請先計算體積。",
-        "請輸入有效的份數與每份體積 (mL)。": "請輸入有效的份數與每份體積 (mL)。",
+        "請輸入有效的組數與每組體積 (mL)。": "請輸入有效的組數與每組體積 (mL)。",
         "計算錯誤：": "計算錯誤：",
         "懸浮液總體積 (mL)：": "懸浮液總體積 (mL)：",
         "濃度計算結果：": "濃度計算結果：",
@@ -1238,7 +1238,7 @@ footer a:hover {
         "科學記號表示：": "科學記號表示：",
         "cells/µL": "個/µL",
         "cells/mL": "個/mL",
-        "計算所需體積": "計算所需體積",
+        "懸浮液體積計算": "懸浮液體積計算",
         "目標細胞數量 (個)：": "目標細胞數量 (個)：",
         "基數": "基數",
         "次方": "次方",
@@ -1381,17 +1381,17 @@ footer a:hover {
         "個/mL": "cells/mL",
         "紅血球計數": "Red Blood Cell Count",
         "(紅血球：一般使用25中格並選5格錯開不重疊格子)": "(Usually use 25 medium squares and select 5 non-overlapping squares)",
-        "批量細胞準備": "Batch Cell Preparation",
-        "目標細胞份數：": "Target number of aliquots：",
-        "目標細胞培養體積(每份，mL)：": "Target volume per aliquot (mL)：",
-        "份數": "Aliquots",
+        "多組細胞混合液準備 (上一步設定之目標細胞數為1組)": "Multi-Group Cell Mixture Preparation (Target cells above = 1 group)",
+        "目標細胞組數：": "Target Number of Groups：",
+        "目標細胞培養體積(每組，mL)：": "Target Culture Volume (per group, mL)：",
+        "組數": "Groups",
         "體積 (mL)": "Volume (mL)",
         "計算批量結果": "Calculate Batch Result",
-        "所需目標細胞體積：": "Required Target Cell Volume：",
+        "所需懸浮液細胞體積：": "Required Cell Suspension Volume：",
         "所需添加培養基體積：": "Required Medium Volume：",
         "總體積：": "Total Volume：",
         "找不到所需體積數值，請先計算體積。": "Could not find the required volume value, please calculate the volume first.",
-        "請輸入有效的份數與每份體積 (mL)。": "Please enter a valid number of aliquots and volume per aliquot (mL).",
+        "請輸入有效的組數與每組體積 (mL)。": "Please enter a valid number of groups and volume per group (mL).",
         "計算錯誤：": "Calculation Error：",
         "懸浮液總體積 (mL)：": "Suspension volume (mL):",
         "濃度計算結果：": "Concentration Result: ",
@@ -1450,7 +1450,7 @@ footer a:hover {
         "科學記號表示：": "Scientific notation：",
         "cells/µL": "cells/µL",
         "cells/mL": "cells/mL",
-        "計算所需體積": "Calculate Required Volume",
+        "懸浮液體積計算": "Suspension Volume Calculation",
         "目標細胞數量 (個)：": "Target Cell Count (cells)：",
         "基數": "Base",
         "次方": "Exponent",
@@ -2453,14 +2453,14 @@ footer a:hover {
            const A = parseFloat(document.getElementById('wbcBatchN').value);
            const B = parseFloat(document.getElementById('wbcBatchVol').value);
            if (isNaN(A) || A <= 0 || isNaN(B) || B <= 0) {
-             alert(translations[currentLanguage]['請輸入有效的份數與每份體積 (mL)。']);
+             alert(translations[currentLanguage]['請輸入有效的組數與每組體積 (mL)。']);
              return;
            }
            const needCellVol = needUL * A; 
            const mediaUL = (B * 1000 - needUL) * A; 
            const totalUL = needCellVol + mediaUL;
            const r = document.getElementById('wbcBatchResult');
-           r.innerText = `${translations[currentLanguage]['所需目標細胞體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
+           r.innerText = `${translations[currentLanguage]['所需懸浮液細胞體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
              `${translations[currentLanguage]['所需添加培養基體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
              `${translations[currentLanguage]['總體積：']} ${totalUL.toFixed(2)} µL (${(totalUL/1000).toFixed(2)} mL)`;
            r.style.display = 'block';
@@ -2578,14 +2578,14 @@ footer a:hover {
            const A = parseFloat(document.getElementById('rbcBatchN').value);
            const B = parseFloat(document.getElementById('rbcBatchVol').value);
            if (isNaN(A) || A <= 0 || isNaN(B) || B <= 0) {
-             alert(translations[currentLanguage]['請輸入有效的份數與每份體積 (mL)。']);
+             alert(translations[currentLanguage]['請輸入有效的組數與每組體積 (mL)。']);
              return;
            }
            const needCellVol = needUL * A; 
            const mediaUL = (B * 1000 - needUL) * A; 
            const totalUL = needCellVol + mediaUL;
            const r = document.getElementById('rbcBatchResult');
-           r.innerText = `${translations[currentLanguage]['所需目標細胞體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
+           r.innerText = `${translations[currentLanguage]['所需懸浮液細胞體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
              `${translations[currentLanguage]['所需添加培養基體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
              `${translations[currentLanguage]['總體積：']} ${totalUL.toFixed(2)} µL (${(totalUL/1000).toFixed(2)} mL)`;
            r.style.display = 'block';
