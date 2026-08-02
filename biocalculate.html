@@ -1233,7 +1233,7 @@ footer a:hover {
         "計算所需Primer產量：": "計算所需Primer產量：",
         "原液體積：": "原液體積：",
         "加水體積：": "加水體積：",
-        "請輸入所有必填欄位，且格數不可為0": "請輸入所有必填欄位，且格數不可為0",
+        "請輸入所有必填欄位，且數值不可為0": "請輸入所有必填欄位，且數值不可為0",
         "計算結果：": "計算結果：",
         "科學記號表示：": "科學記號表示：",
         "cells/µL": "個/µL",
@@ -1445,7 +1445,7 @@ footer a:hover {
         "請輸入所有欄位且數值皆大於 0": "Please enter all fields and the values must be greater than 0",
         "原液體積：": "Stock solution volume：",
         "加水體積：": "Water volume：",
-        "請輸入所有必填欄位，且格數不可為0": "Please fill in all required fields and the number of fields cannot be 0",
+        "請輸入所有必填欄位，且數值不可為0": "Please fill in all required fields and the number of fields cannot be 0",
         "計算結果：": "Calculation results：",
         "科學記號表示：": "Scientific notation：",
         "cells/µL": "cells/µL",
@@ -2408,7 +2408,7 @@ function validateInputs(values, { allowZero = false } = {}) {
 
       // 允許細胞數(count)為 0 (allowZero: true)，但格數(squares)與稀釋倍數(dilution)必須大於 0
       if (!validateInputs([count], { allowZero: true }) || !validateInputs([squares, dilution])) {
-        showError('wbcResult', translations[currentLanguage]['請輸入所有必填欄位，且格數不可為0']);
+        showError('wbcResult', translations[currentLanguage]['請輸入所有必填欄位，且數值不可為0']);
         return;
       }
 
@@ -2545,7 +2545,7 @@ function validateInputs(values, { allowZero = false } = {}) {
 
       // 允許細胞數(count)為 0 (allowZero: true)，但格數(squares)與稀釋倍數(dilution)必須大於 0
       if (!validateInputs([count], { allowZero: true }) || !validateInputs([squares, dilution])) {
-        showError('rbcResult', translations[currentLanguage]['請輸入所有必填欄位，且格數不可為0']);
+        showError('rbcResult', translations[currentLanguage]['請輸入所有必填欄位，且數值不可為0']);
         return;
       }
 
