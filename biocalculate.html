@@ -1694,7 +1694,9 @@ function validateInputs(values, { allowZero = false } = {}) {
         document.getElementById('massValue').value = massConverted.toFixed(6);
         resultText = `${translations[currentLanguage]['計算出質量：']}${massConverted.toFixed(6)} ${getSelectedText('massUnit')}`;
       } else {
-        showError('massResult', translations[currentLanguage]['請清空一個欄位以計算該值']);
+        showError('massResult', currentLanguage === 'zh' 
+          ? '請清空「莫耳濃度 / 體積 / 質量」其中一項以進行計算' 
+          : 'Please clear either Molarity, Volume, or Mass to calculate.');
         return;
       }
 
@@ -1813,6 +1815,10 @@ function validateInputs(values, { allowZero = false } = {}) {
         const weightPercentCalc = (molarityM * molarMass) / (densityStd * 10);
         weightPercentInput.value = weightPercentCalc.toFixed(6);
         showResult('acidBaseResult', `${translations[currentLanguage]['計算重量百分比：']}${weightPercentCalc.toFixed(6)} %`);
+      } else if (!isNaN(weightPercent) && !isNaN(molarity)) {
+        showError('acidBaseResult', currentLanguage === 'zh' 
+          ? '請清空「重量百分比」或「莫耳濃度」其中一項以進行計算' 
+          : 'Please clear either Weight percentage or Molarity to calculate.');
       } else {
         showError('acidBaseResult', translations[currentLanguage]['請輸入重量百分比或莫耳濃度其中一項，另一項留空']);
       }
@@ -1906,6 +1912,7 @@ function validateInputs(values, { allowZero = false } = {}) {
       const V_liters = totalVolVal * totalUnitVal; 
       let out = `${translations[lang]['solprep-guide']}\n\n${translations[lang]['solprep-take']}\n`;
       let hasItems = false;
+      let hasError = false;
 
       document.querySelectorAll('.solute-item').forEach((box, i) => {
         const name = box.querySelector('.s-name').value || `${translations[lang]['solprep-name']}${i+1}`;
@@ -1916,7 +1923,8 @@ function validateInputs(values, { allowZero = false } = {}) {
 
         if (isNaN(vVal) || isNaN(tVal)) return;
         if (vVal <= 0 || tVal <= 0) {
-          showError('solprepResult', currentLanguage === 'zh' ? '溶質的數值必須大於 0' : 'Solute values must be greater than 0');
+          showError('solprepResult', currentLanguage === 'zh' ? '請輸入大於 0 的有效數值' : 'Please enter valid values greater than 0');
+          hasError = true;
           return;
            }
           hasItems = true;
@@ -1954,7 +1962,7 @@ function validateInputs(values, { allowZero = false } = {}) {
           }
         }
       });
-      
+      if (hasError) return;
       if (!hasItems) {
         showError('solprepResult', currentLanguage === 'zh' ? '請至少加入一項溶質並填寫數值' : 'Please add at least one solute with valid values'); 
         return;
