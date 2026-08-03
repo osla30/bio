@@ -866,7 +866,7 @@ footer a:hover {
                <label data-text="稀釋倍數：">稀釋倍數：</label> <input id="ccDilution" step="any" type="number" oninput="invalidateCellStep1()">
             </div>
             <div class="form-row-inline">
-                <label data-text="懸浮液總體積 (mL)：">懸浮液總體積 (mL)：</label> <input id="ccVolume" step="any" type="number" oninput="invalidateCellStep1()">
+                <label data-text="細胞液總體積 (mL)：">細胞液總體積 (mL)：</label> <input id="ccVolume" step="any" type="number" oninput="invalidateCellStep1()">
             </div>
             <div class="form-row-inline">
                 <label data-text="單位顯示：">單位顯示：</label>
@@ -882,7 +882,7 @@ footer a:hover {
         <div class="result" id="ccResult" style="display:none;"></div>
         
         <div id="ccVolumeCalc" style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <h3 data-text="懸浮液體積計算" style="font-size: 1.1em; margin-bottom: 10px;">懸浮液體積計算</h3>
+            <h3 data-text="細胞液體積計算" style="font-size: 1.1em; margin-bottom: 10px;">細胞液體積計算</h3>
             <div class="form-container">
                 <div class="form-row-inline">
                     <label data-text="目標細胞數量 (個)：">目標細胞數量 (個)：</label>
@@ -1203,13 +1203,13 @@ footer a:hover {
         "組數": "組數",
         "體積 (mL)": "體積 (mL)",
         "計算批量結果": "計算批量結果",
-        "所需懸浮液細胞體積：": "所需懸浮液細胞體積：",
+        "所需細胞液體積：": "所需細胞液體積：",
         "所需添加培養基體積：": "所需添加培養基體積：",
         "總體積：": "總體積：",
         "找不到所需體積數值，請先計算體積。": "找不到所需體積數值，請先計算體積。",
         "請輸入有效的組數與每組體積 (mL)。": "請輸入有效的組數與每組體積 (mL)。",
         "計算錯誤：": "計算錯誤：",
-        "懸浮液總體積 (mL)：": "懸浮液總體積 (mL)：",
+        "細胞液總體積 (mL)：": "細胞液總體積 (mL)：",
         "濃度計算結果：": "濃度計算結果：",
         "目前細胞總數：": "目前細胞總數：",
         "個": "個",
@@ -1266,7 +1266,7 @@ footer a:hover {
         "科學記號表示：": "科學記號表示：",
         "cells/µL": "個/µL",
         "cells/mL": "個/mL",
-        "懸浮液體積計算": "懸浮液體積計算",
+        "細胞液體積計算": "細胞液體積計算",
         "目標細胞數量 (個)：": "目標細胞數量 (個)：",
         "基數": "基數",
         "次方": "次方",
@@ -1437,13 +1437,13 @@ footer a:hover {
         "組數": "Groups",
         "體積 (mL)": "Volume (mL)",
         "計算批量結果": "Calculate Batch Result",
-        "所需懸浮液細胞體積：": "Required Cell Suspension Volume：",
+        "所需細胞液體積：": "Required Cell Suspension Volume：",
         "所需添加培養基體積：": "Required Medium Volume：",
         "總體積：": "Total Volume：",
         "找不到所需體積數值，請先計算體積。": "Could not find the required volume value, please calculate the volume first.",
         "請輸入有效的組數與每組體積 (mL)。": "Please enter a valid number of groups and volume per group (mL).",
         "計算錯誤：": "Calculation Error：",
-        "懸浮液總體積 (mL)：": "Suspension volume (mL):",
+        "細胞液總體積 (mL)：": "Cell Suspension volume (mL):",
         "濃度計算結果：": "Concentration Result: ",
         "目前細胞總數：": "Total Cell Count: ",
         "個": "cells",
@@ -1501,7 +1501,7 @@ footer a:hover {
         "科學記號表示：": "Scientific notation：",
         "cells/µL": "cells/µL",
         "cells/mL": "cells/mL",
-        "懸浮液體積計算": "Suspension Volume Calculation",
+        "細胞液體積計算": "Cell Suspension Volume Calculation",
         "目標細胞數量 (個)：": "Target Cell Count (cells)：",
         "基數": "Base",
         "次方": "Exponent",
@@ -1660,6 +1660,11 @@ function validateInputs(values, { allowZero = false } = {}) {
         showError('massResult', translations[currentLanguage]['請輸入分子量']);
         return;
       }
+      const massInputs = [molarity, volume, massValue].filter(v => !isNaN(v));
+      if (!validateInputs(massInputs)) {
+       showError('massResult', currentLanguage === 'zh' ? '請輸入大於 0 的有效數值' : 'Please enter valid values greater than 0');
+       return;
+      }
 
       let filledCount = 0;
       if (!isNaN(molarity)) filledCount++;
@@ -1776,6 +1781,11 @@ function validateInputs(values, { allowZero = false } = {}) {
       const densityUnit = parseFloat(densityUnitSelect.value);
       const molarMass = parseFloat(molarMassInput.value);
       const molarityUnit = parseFloat(molarityUnitSelect.value);
+
+      if (!isNaN(molarity) && molarity <= 0) {
+         showError('acidBaseResult', currentLanguage === 'zh' ? '莫耳濃度必須大於 0' : 'Molarity must be greater than 0');
+         return;
+      }
 
       if (!validateInputs([density, molarMass])) {
         showError('acidBaseResult', translations[currentLanguage]['請輸入分子量與密度']);
@@ -1905,7 +1915,11 @@ function validateInputs(values, { allowZero = false } = {}) {
         const tUnit = box.querySelector('.s-target-unit').value;
 
         if (isNaN(vVal) || isNaN(tVal)) return;
-        hasItems = true;
+        if (vVal <= 0 || tVal <= 0) {
+          showError('solprepResult', currentLanguage === 'zh' ? '溶質的數值必須大於 0' : 'Solute values must be greater than 0');
+          return;
+           }
+          hasItems = true;
 
         if (src === 'solid') {
           let massGrams = 0;
@@ -2157,13 +2171,13 @@ function validateInputs(values, { allowZero = false } = {}) {
     
     // === 1. 讀取進階設定參數 (修正與防呆) ===
     let rawNa = parseFloat(document.getElementById('tm-na').value);
-    let Na_mM = isNaN(rawNa) ? 50 : rawNa;
+    let Na_mM = (isNaN(rawNa) || rawNa <= 0) ? 50 : rawNa;
 
     let rawMg = parseFloat(document.getElementById('tm-mg').value);
-    let Mg_mM = isNaN(rawMg) ? 0 : rawMg;
+    let Mg_mM = (isNaN(rawMg) || rawMg < 0) ? 0 : rawMg; // Mg 可以為 0，所以用 < 0 防負數
 
     let rawPrimer = parseFloat(document.getElementById('tm-pconc').value);
-    let Primer_nM = isNaN(rawPrimer) ? 500 : rawPrimer;
+    let Primer_nM = (isNaN(rawPrimer) || rawPrimer <= 0) ? 500 : rawPrimer;
 
     // === 2. 單位轉換 ===
     let Na = Na_mM / 1000;          // mM -> M
@@ -2488,7 +2502,7 @@ function validateInputs(values, { allowZero = false } = {}) {
       const vectorRatio = parseFloat(document.getElementById('vectorRatio').value);
       const vectorMass = parseFloat(document.getElementById('vectorMass').value);
       
-      if (!validateInputs([insertLength, vectorLength, insertRatio, vectorRatio, vectorMass])) {
+      if (!validateInputs([insertLength, vectorLength, insertRatio, vectorRatio, vectorMass], { allowZero: false })) {
         showError('ligationResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
         return;
       }
@@ -2647,7 +2661,7 @@ function calcCellBatch() {
         }
         
         if (B * 1000 < needUL) {
-            showError('ccBatchResult', currentLanguage === 'zh' ? '每組體積小於單組所需細胞懸浮液體積，請提高每組體積 (mL)' : 'Target volume per group is less than required cell suspension volume.');
+            showError('ccBatchResult', currentLanguage === 'zh' ? '每組體積小於單組所需細胞液體積，請提高每組體積 (mL)' : 'Target volume per group is less than required cell suspension volume.');
             return;
         }
 
@@ -2655,7 +2669,7 @@ function calcCellBatch() {
         const mediaUL = (B * 1000 - needUL) * A; 
         const totalUL = needCellVol + mediaUL;
         const r = document.getElementById('ccBatchResult');
-        r.innerText = `${translations[currentLanguage]['所需懸浮液細胞體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
+        r.innerText = `${translations[currentLanguage]['所需細胞液體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n` +
             `${translations[currentLanguage]['所需添加培養基體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n` +
             `${translations[currentLanguage]['總體積：']} ${totalUL.toFixed(2)} µL (${(totalUL/1000).toFixed(2)} mL)`;
         r.style.display = 'block';
@@ -2724,7 +2738,10 @@ function calcFreezingStep1() {
 }
 
 function calcFreezingStep2() {
-    if (remainingCellsForFreezing <= 0) return;
+    if (remainingCellsForFreezing <= 0) {
+        showError('fzResult2', currentLanguage === 'zh' ? '無剩餘細胞可供凍存' : 'No remaining cells for freezing');
+        return;
+    }
 
     const tBase = parseFloat(document.getElementById('fzTargetBase').value);
     const tExp = parseFloat(document.getElementById('fzTargetExp').value);
