@@ -2856,7 +2856,7 @@ function calcCellDilution() {
             resEl.style.display = 'block';
             resEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else {
-            showResult('cdilResult', translations[currentLanguage]['請清空一個欄位以計算該值']);
+            showError('cdilResult', translations[currentLanguage]['請清空一個欄位以計算該值']);
         }
     } catch {
         showError('cdilResult', 'Calculation error');
