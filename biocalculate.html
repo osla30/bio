@@ -2198,7 +2198,7 @@ function validateInputs(values, { allowZero = false } = {}) {
     let Na_eq = Na;
     if (Mg > 0) {
         // 當有 Mg 時，使用校正公式
-        Na_eq = Na + 4 * Math.sqrt(Mg);
+        Na_eq = Na + 3.3 * Math.sqrt(Mg);
     }
 
     let tmVal = 0;
