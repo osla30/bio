@@ -1937,9 +1937,9 @@ function validateInputs(values, { allowZero = false } = {}) {
             massGrams = vVal * (tVal * parseFloat(tUnit)) * V_liters;
           }
           if (massGrams < 1 && massGrams > 0) {
-            out += `- [${name}]: ${(massGrams * 1000).toFixed(6)} mg\n`;
+            out += `- [${name}]: ${(massGrams * 1000).toFixed(2)} mg\n`;
           } else {
-            out += `- [${name}]: ${massGrams.toFixed(6)} g\n`;
+            out += `- [${name}]: ${massGrams.toFixed(4)} g\n`;
           }
         } else {
           const stockUnitSelect = box.querySelector('.s-stock-unit');
@@ -1953,9 +1953,9 @@ function validateInputs(values, { allowZero = false } = {}) {
             volRequiredL = (cTarget * V_liters) / cStock;
             const volML = volRequiredL * 1000;
             if (volML < 1 && volML > 0) {
-              out += `- [${name}]: ${(volML * 1000).toFixed(6)} μL\n`;
+              out += `- [${name}]: ${(volML * 1000).toFixed(2)} μL\n`;
             } else {
-              out += `- [${name}]: ${volML.toFixed(6)} mL\n`;
+              out += `- [${name}]: ${volML.toFixed(4)} mL\n`;
             }
           } else {
             out += `- [${name}]: ${translations[lang]['solprep-mixError']}\n`;
