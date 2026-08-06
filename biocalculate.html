@@ -922,16 +922,16 @@ footer a:hover {
           <h2 data-text="細胞凍存">細胞凍存</h2>
           <div class="form-container">
           <div class="form-row-inline">
-            <label data-text="細胞濃度 (個/mL)：">細胞濃度 (個/mL)：</label>
+            <label data-text="目前細胞濃度 (個/mL)：">目前細胞濃度 (個/mL)：</label>
           <div class="input-group">
             <input id="fzConcBase" type="number" step="any" placeholder="基數" data-placeholder="基數" style="max-width: 100px;" oninput="invalidateFreezingStep1()"> <span>× 10^</span> <input id="fzConcExp" type="number" step="1" placeholder="次方" data-placeholder="次方" style="max-width: 80px;" oninput="invalidateFreezingStep1()">
          </div>
         </div>
           <div class="form-row-inline">
-           <label data-text="細胞液體積 (mL)：">細胞液體積 (mL)：</label> <input id="fzVol" type="number" step="any" oninput="invalidateFreezingStep1()">
+           <label data-text="目前細胞液體積 (mL)：">目前細胞液體積 (mL)：</label> <input id="fzVol" type="number" step="any" oninput="invalidateFreezingStep1()">
           </div>
         <div class="form-row-inline">
-           <label data-text="取出細胞液體積 (mL)：">取出細胞液體積 (mL)：</label> <input id="fzTakeOut" type="number" step="any" oninput="invalidateFreezingStep1()">
+           <label data-text="欲取出細胞液體積 (mL)：">欲取出細胞液體積 (mL)：</label> <input id="fzTakeOut" type="number" step="any" oninput="invalidateFreezingStep1()">
           </div>
         </div>
           <div class="button-group">
@@ -1277,9 +1277,9 @@ footer a:hover {
         "tab-celldilution": "細胞 凍存/稀釋",
         "細胞凍存": "細胞凍存",
         "細胞稀釋": "細胞稀釋",
-        "細胞濃度 (個/mL)：": "細胞濃度 (個/mL)：",
-        "細胞液體積 (mL)：": "細胞液體積 (mL)：",
-        "取出細胞液體積 (mL)：": "取出細胞液體積 (mL)：",
+        "目前細胞濃度 (個/mL)：": "目前細胞濃度 (個/mL)：",
+        "目前細胞液體積 (mL)：": "目前細胞液體積 (mL)：",
+        "欲取出細胞液體積 (mL)：": "欲取出細胞液體積 (mL)：",
         "取出後，剩餘細胞液體積：": "取出後，剩餘細胞液體積：",
         "取出後，剩餘細胞數：": "取出後，剩餘細胞數：",
         "凍存條件 (吸掉培養基後，凍存液添加計算)": "凍存條件 (吸掉培養基後，凍存液添加計算)",
@@ -1512,9 +1512,9 @@ footer a:hover {
         "tab-celldilution": "Cell Freezing/Dilution",
         "細胞凍存": "Cell Freezing",
         "細胞稀釋": "Cell Dilution",
-        "細胞濃度 (個/mL)：": "Cell Conc. (cells/mL):",
-        "細胞液體積 (mL)：": "Cell Suspension Vol. (mL):",
-        "取出細胞液體積 (mL)：": "Volume Removed (mL):",
+        "目前細胞濃度 (個/mL)：": "Current Cell Conc. (cells/mL):",
+        "目前細胞液體積 (mL)：": "Current Cell Suspension Vol. (mL):",
+        "欲取出細胞液體積 (mL)：": "Target Volume to Remove (mL):",
         "取出後，剩餘細胞液體積：": "Remaining volume after removal: ",
         "取出後，剩餘細胞數：": "Remaining cells after removal: ",
         "凍存條件 (吸掉培養基後，凍存液添加計算)": "Freezing Conditions (Freezing medium calculation after removing medium)",
