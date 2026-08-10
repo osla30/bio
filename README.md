@@ -62,6 +62,6 @@
 
 如果您覺得好用，也歡迎贊助一杯咖啡，支持更多實驗工具的開發！
 
-**[贊助支持小編] 👉 <a href="https://pse.is/4524sw" target="_blank">https://pse.is/4524sw</a>**
+**[贊助支持小編] 👉 <a href="https://bely.cc/F7ZKIV" target="_blank">https://bely.cc/F7ZKIV</a>**
 
 *Powered by Research Spirit.*
