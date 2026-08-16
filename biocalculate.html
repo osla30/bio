@@ -1573,8 +1573,7 @@ footer a:hover {
       });
       
       // 更新分頁標籤
-      const tabs = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer', 'tmcalc', 'revcomp', 'ligation', 'cellcount', 'celldilution', 'timer'];
-      tabs.forEach(tab => {
+      TAB_LIST.forEach(tab => {
         const tabElement = document.getElementById(`tab-${tab}`);
         if(tabElement) tabElement.textContent = translations[lang][`tab-${tab}`];
       });
@@ -1604,8 +1603,7 @@ footer a:hover {
 }
     
     function switchTab(tab) {
-      const tabs = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer', 'tmcalc', 'revcomp', 'ligation', 'cellcount', 'celldilution', 'timer'];
-      tabs.forEach(t => {
+      TAB_LIST.forEach(t => {
         if(document.getElementById(t)) {
             document.getElementById(t).style.display = (t === tab) ? 'block' : 'none';
         }
@@ -1643,6 +1641,15 @@ function showError(id, text) {
 function validateInputs(values, { allowZero = false } = {}) {
   return values.every(v => !isNaN(v) && (allowZero ? v >= 0 : v > 0));
 }
+
+// === 共用清空欄位函式：清空指定 id 的欄位值，並隱藏對應結果區塊 ===
+function clearFields(ids, resultId) {
+  ids.forEach(id => document.getElementById(id).value = '');
+  if (resultId) hideResult(resultId);
+}
+
+// === 分頁清單（語言切換與分頁顯示共用，避免重複定義）===
+const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer', 'tmcalc', 'revcomp', 'ligation', 'cellcount', 'celldilution', 'timer'];
 
     // === 3. 各分頁計算邏輯 ===
 
@@ -1704,8 +1711,7 @@ function validateInputs(values, { allowZero = false } = {}) {
     }
 
     function clearMass() {
-      ['molarity', 'volume', 'massValue', 'molarMass'].forEach(id => document.getElementById(id).value = '');
-      hideResult('massResult');
+      clearFields(['molarity', 'volume', 'massValue', 'molarMass'], 'massResult');
     }
 
     // (B) 稀釋計算
@@ -1764,8 +1770,7 @@ function validateInputs(values, { allowZero = false } = {}) {
     }
 
     function clearDilution() {
-      ['c1', 'v1', 'c2', 'v2'].forEach(id => document.getElementById(id).value = '');
-      hideResult('dilutionResult');
+      clearFields(['c1', 'v1', 'c2', 'v2'], 'dilutionResult');
     }
 
     // (C) 酸鹼濃度
@@ -1825,8 +1830,7 @@ function validateInputs(values, { allowZero = false } = {}) {
     }
 
     function clearAcidBase() {
-      ['weightPercent', 'acidBaseMolarity', 'density', 'acidBaseMW'].forEach(id => document.getElementById(id).value = '');
-      hideResult('acidBaseResult');
+      clearFields(['weightPercent', 'acidBaseMolarity', 'density', 'acidBaseMW'], 'acidBaseResult');
     }
 
     // (D) 溶液配製 (SolPrep)
@@ -2010,8 +2014,7 @@ function validateInputs(values, { allowZero = false } = {}) {
     }
 
     function clearAnimal() {
-      ['targetDose', 'doseB1', 'doseB2', 'animalWeight', 'animalCount'].forEach(id => document.getElementById(id).value = '');
-      hideResult('animalResult');
+      clearFields(['targetDose', 'doseB1', 'doseB2', 'animalWeight', 'animalCount'], 'animalResult');
     }
 
     function calculateAnimalDose2() {
@@ -2034,11 +2037,8 @@ function validateInputs(values, { allowZero = false } = {}) {
     }
 
     function clearAnimal2() {
-      document.getElementById('targetDose2').value = '';
-      document.getElementById('drugConc2').value = '';
-      document.getElementById('animalWeight2').value = '';
+      clearFields(['targetDose2', 'drugConc2', 'animalWeight2'], 'animalResult2');
       document.getElementById('drugConc2Unit').selectedIndex = 0;
-      hideResult('animalResult2');
     }
 
     // (F) Primer 回溶/稀釋
@@ -2081,8 +2081,7 @@ function validateInputs(values, { allowZero = false } = {}) {
     }
     
     function clearPrimer() {
-      ['primerAmount', 'primerVolume', 'primerConc'].forEach(id => document.getElementById(id).value = '');
-      hideResult('primerResult');
+      clearFields(['primerAmount', 'primerVolume', 'primerConc'], 'primerResult');
     }
 
     function calcDilute() {
@@ -2107,8 +2106,7 @@ function validateInputs(values, { allowZero = false } = {}) {
     }
     
     function clearDilute() {
-      ['stockConc', 'targetConc', 'targetVol'].forEach(id => document.getElementById(id).value = '');
-      hideResult('diluteResult');
+      clearFields(['stockConc', 'targetConc', 'targetVol'], 'diluteResult');
     }
 
     // === (G) Tm 計算 & Structure Analysis ===
@@ -2520,11 +2518,9 @@ function validateInputs(values, { allowZero = false } = {}) {
     }
 
     function clearLigation() {
-      ['insertLength', 'vectorLength', 'insertRatio', 'vectorRatio', 'vectorMass'].forEach(id => document.getElementById(id).value = '');
-      hideResult('ligationResult');
+      clearFields(['insertLength', 'vectorLength', 'insertRatio', 'vectorRatio', 'vectorMass'], 'ligationResult');
     }
 
-    // (J) 細胞計數
     // (J) 細胞計數 (統一版)
 let cellConcentration = 0;
 let calculatedCellVolUL = 0;
@@ -2688,17 +2684,9 @@ function calcCellBatch() {
 }
 
 function clearCell() {
-    document.getElementById('ccCount').value = '';
-    document.getElementById('ccSquares').value = '';
-    document.getElementById('ccDilution').value = '';
-    document.getElementById('ccTargetBase').value = '';
-    document.getElementById('ccTargetExp').value = '';
-    document.getElementById('ccBatchN').value = '';
-    document.getElementById('ccBatchVol').value = '';
-    document.getElementById('ccVolume').value = '';
+    clearFields(['ccCount', 'ccSquares', 'ccDilution', 'ccTargetBase', 'ccTargetExp', 'ccBatchN', 'ccBatchVol', 'ccVolume'], 'ccResult');
     cellConcentration = 0;
-    calculatedCellVolUL = 0; 
-    hideResult('ccResult');
+    calculatedCellVolUL = 0;
     hideResult('ccVolumeResult');
     document.getElementById("ccVolumeCalc").style.display = 'none';
     document.getElementById('ccBatchCalc').style.display = 'none';
@@ -2777,16 +2765,14 @@ function calcFreezingStep2() {
 }
 
 function clearFreezing() {
-    ['fzConcBase', 'fzConcExp', 'fzVol', 'fzTakeOut'].forEach(id => document.getElementById(id).value = '');
-    hideResult('fzResult1');
+    clearFields(['fzConcBase', 'fzConcExp', 'fzVol', 'fzTakeOut'], 'fzResult1');
     remainingCellsForFreezing = 0;
     document.getElementById('fzStep2Calc').style.display = 'none';
     clearFreezingStep2();
 }
 
 function clearFreezingStep2() {
-    ['fzTargetBase', 'fzTargetExp'].forEach(id => document.getElementById(id).value = '');
-    hideResult('fzResult2');
+    clearFields(['fzTargetBase', 'fzTargetExp'], 'fzResult2');
 }
 
 // 輔助函數：將科學記號填入對應的 Base 與 Exp Input 中
@@ -2872,8 +2858,7 @@ function calcCellDilution() {
 }
 
 function clearCellDilution() {
-    ['cdilC1Base', 'cdilC1Exp', 'cdilC2Base', 'cdilC2Exp', 'cdilV2', 'cdilV1'].forEach(id => document.getElementById(id).value = '');
-    hideResult('cdilResult');
+    clearFields(['cdilC1Base', 'cdilC1Exp', 'cdilC2Base', 'cdilC2Exp', 'cdilV2', 'cdilV1'], 'cdilResult');
 }
 
     // (K) 計時器功能
@@ -2885,8 +2870,7 @@ function clearCellDilution() {
       interval: null, running: false, elapsed: 0, lastStart: 0, title: ''
     }));
     
-    // === 修改後的 Web Audio API 發聲函式 ===
-    // === 修改後的 Web Audio API 發聲函式 (全域變數版) ===
+    // === Web Audio API 發聲函式 (全域變數版) ===
     let audioCtx = null; // 全域變數
 
     function playBeep() {
@@ -3082,7 +3066,6 @@ function clearCellDilution() {
         `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${ms}`;
     }
 
-    // 更新結果顯示
     // 更新所有已顯示的結果文字
     function updateDisplayedResults() {
     // 基礎計算分頁
