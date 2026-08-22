@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" data-immersive-translate-page-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>常用化學藥品分子量查詢工具</title>
+    <title>常用化學藥品分子量查詢/計算工具 | Chemical MW Lookup & Calculator</title>
     <style>
-        /* 設定滿版高度，讓內部區塊處理捲動 */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
@@ -15,36 +14,57 @@
             height: 100vh;
             display: flex;
             justify-content: center;
+            overflow: hidden;
         }
         .container {
             width: 100%;
-            max-width: 1100px;
+            max-width: 1300px;
             margin: 20px;
             background-color: #fff;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* 確保內容不會超出圓角邊界 */
+            overflow: hidden;
         }
         
-        /* 凍結在頂部的控制面板 */
+        /* 頂部控制面板 */
         .top-panel {
-            padding: 25px 30px 10px 30px;
+            padding: 20px 30px 10px 30px;
             background-color: #fff;
             z-index: 10;
+            border-bottom: 1px solid #eee;
         }
         .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         h1 {
             color: #2c3e50;
             margin: 0;
-            font-size: 24px;
+            font-size: 22px;
         }
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .lang-btn {
+            background-color: #8e44ad;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .lang-btn:hover { background-color: #9b59b6; }
         .export-btn {
             background-color: #27ae60;
             color: white;
@@ -52,13 +72,108 @@
             padding: 10px 16px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
-            transition: background-color 0.2s ease;
-            box-shadow: 0 2px 4px rgba(39, 174, 96, 0.2);
+            transition: background-color 0.2s;
         }
-        .export-btn:hover {
-            background-color: #2ecc71;
+        .export-btn:hover { background-color: #2ecc71; }
+        .download-btn {
+            background-color: #34495e;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .download-btn:hover { background-color: #2c3e50; }
+
+        /* 主要內容佈局：左計算、右表格 */
+        .main-content {
+            display: flex;
+            flex-direction: row;
+            flex-grow: 1;
+            overflow: hidden;
+            background: #fdfdfd;
+        }
+        
+        /* 左側計算器面板 */
+        .left-panel {
+            width: 320px;
+            padding: 20px 30px;
+            background-color: #fafbfc;
+            border-right: 1px solid #eee;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .calculator-card h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: inline-block;
+        }
+        .input-group { margin-bottom: 15px; }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .calc-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .calc-btn:hover { background-color: #2980b9; }
+        .result-box {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+            font-size: 16px;
+            display: none;
+            word-break: break-all;
+        }
+        .error {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        /* 右側表格面板 */
+        .right-panel {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 20px 30px 0 30px;
         }
         .search-box {
             width: 100%;
@@ -67,7 +182,7 @@
             box-sizing: border-box;
             border: 2px solid #bdc3c7;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 15px;
             transition: border-color 0.3s ease;
         }
         .search-box:focus {
@@ -76,16 +191,14 @@
         }
         .data-count {
             text-align: right;
-            font-size: 0.9em;
+            font-size: 13px;
             color: #7f8c8d;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
-
-        /* 表格捲動區域 */
         .scrollable-table {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 0 30px 25px 30px;
+            padding-bottom: 25px;
         }
         table {
             width: 100%;
@@ -93,81 +206,74 @@
             table-layout: fixed;
         }
         th, td {
-            padding: 12px 15px;
+            padding: 10px 12px;
             text-align: left;
             border-bottom: 1px solid #ecf0f1;
             word-wrap: break-word;
+            font-size: 14px;
         }
-        /* 表頭黏性定位 */
         th {
             position: sticky;
             top: 0;
-            background-color: #3498db;
+            background-color: #2c3e50;
             color: white;
             font-weight: 600;
             z-index: 5;
-            /* 使用陰影代替 border-bottom 以避免捲動時的視覺破圖 */
             box-shadow: 0 2px 2px -1px rgba(0,0,0,0.2); 
         }
-        th:nth-child(1) { width: 18%; }
-        th:nth-child(2) { width: 35%; }
-        th:nth-child(3) { width: 16%; }
+        th:nth-child(1) { width: 22%; }
+        th:nth-child(2) { width: 33%; }
+        th:nth-child(3) { width: 15%; }
         th:nth-child(4) { width: 15%; }
-        th:nth-child(5) { width: 16%; }
+        th:nth-child(5) { width: 15%; }
 
-        tr:hover {
-            background-color: #f9f9f9;
-        }
-        .mw-value {
-            font-weight: bold;
-            color: #e74c3c;
-        }
-        .cas-value {
-            font-family: 'Courier New', Courier, monospace;
-            color: #2980b9;
-        }
+        tr:hover { background-color: #f9f9f9; }
+        .mw-value { font-weight: bold; color: #e74c3c; }
+        .cas-value { font-family: 'Courier New', Courier, monospace; color: #2980b9; }
+        
         .note {
             text-align: center;
-            padding: 15px;
+            padding: 12px;
             background-color: #fcfcfc;
             border-top: 1px solid #ecf0f1;
-            font-size: 0.9em;
+            font-size: 13px;
             color: #7f8c8d;
             margin: 0;
+            flex-shrink: 0;
         }
-        /* 右上角按鈕群組排版 */
-.button-group {
-    display: flex;
-    gap: 12px; /* 兩個按鈕之間的間距 */
-}
+        .note a { color: #3498db; text-decoration: none; font-weight: bold; }
+        .note a:hover { text-decoration: underline; }
 
-/* 下載離線版按鈕樣式 */
-.download-btn {
-    background-color: #34495e; /* 深藍灰色區隔視覺 */
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-    transition: background-color 0.2s ease;
-    box-shadow: 0 2px 4px rgba(52, 73, 94, 0.2);
-}
-
-.download-btn:hover {
-    background-color: #2c3e50;
-}
-
-/* 超連結樣式：確保按過與沒按過顏色一致 */
-.note a:link, .note a:visited {
-    color: #3498db;
-    text-decoration: none;
-    font-weight: bold;
-}
-.note a:hover {
-    text-decoration: underline;
-}
+        /* RWD 響應式設計 */
+        @media (max-width: 850px) {
+            html, body {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+            .container {
+                height: auto;
+                overflow: visible;
+                margin: 10px;
+            }
+            .main-content {
+                flex-direction: column;
+                overflow: visible;
+                flex-grow: 0;
+            }
+            .left-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #eee;
+                box-sizing: border-box;
+                overflow: visible;
+                max-height: none;
+            }
+            .scrollable-table {
+                overflow: visible;
+                flex-grow: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -175,42 +281,277 @@
 <div class="container">
     <div class="top-panel">
         <div class="header-row">
-    <h1>常用化學藥品分子量查詢工具</h1>
-        <div class="button-group">
-           <button id="downloadBtn" class="download-btn">💾 下載離線版</button>
-           <button id="exportBtn" class="export-btn">📥 匯出為 CSV</button>
+            <h1 id="ui_title">常用化學藥品分子量查詢/計算工具</h1>
+            <div class="button-group">
+                <button id="langToggleBtn" class="lang-btn">🌐 English</button>
+                <button id="downloadBtn" class="download-btn">💾 下載離線版</button>
+                <button id="exportBtn" class="export-btn">📥 匯出為 CSV</button>
+            </div>
         </div>
     </div>
-        <input type="text" id="searchInput" class="search-box" placeholder="輸入常用簡稱、IUPAC名、化學式或 CAS 編號進行搜尋...">
-        <div class="data-count" id="dataCount"></div>
-    </div>
 
-    <div class="scrollable-table">
-        <table id="chemTable">
-            <thead>
-                <tr>
-                    <th>常用簡稱</th>
-                    <th>首選 IUPAC 名</th>
-                    <th>化學式</th>
-                    <th>分子量 (g/mol)</th>
-                    <th>CAS 編號</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                </tbody>
-        </table>
+    <div class="main-content">
+        <!-- 左側：計算器 -->
+        <div class="left-panel">
+            <div class="calculator-card">
+                <h2 id="ui_calcTitle">分子量計算器</h2>
+                <div class="input-group">
+                    <label for="formula" id="ui_calcLabel">輸入化學式</label>
+                    <input type="text" id="formula" placeholder="例如：CuSO4·5H2O 或 (NH₄)₂SO₄" autocomplete="off">
+                    <div id="error-msg" class="error"></div>
+                </div>
+                <button class="calc-btn" id="ui_calcBtn" onclick="calculate()">計算</button>
+                <div id="result-box" class="result-box">
+                    <span id="ui_mwResult">分子量：</span><strong id="result-value"></strong> g/mol
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：查詢表 -->
+        <div class="right-panel">
+            <input type="text" id="searchInput" class="search-box" placeholder="輸入常用簡稱、IUPAC名、化學式或 CAS 編號進行搜尋...">
+            <div class="data-count" id="dataCount">顯示 0 筆資料</div>
+            
+            <div class="scrollable-table">
+                <table id="chemTable">
+                    <thead>
+                        <tr>
+                            <th id="th_common">常用簡稱</th>
+                            <th id="th_iupac">首選 IUPAC 名</th>
+                            <th id="th_formula">化學式</th>
+                            <th id="th_mw">分子量 (g/mol)</th>
+                            <th id="th_cas">CAS 編號</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <div class="note">
-        💡 更新日期：2026/02/28<br>
-        <div style="margin-top: 8px;">
+        💡 <span id="ui_update">更新日期：2026/08/23</span><br>
+        <div style="margin-top: 5px;">
           Back to <a href="https://osla30.github.io/bio/toolbox" target="_blank">ToolBox</a>
         </div>
     </div>
 </div>
 
 <script>
-    // 化學藥品資料庫
+    // --- 語系支援 (i18n) ---
+    let currentLang = 'tw';
+    const dict = {
+        tw: {
+            title: "常用化學藥品分子量查詢/計算工具",
+            calcTitle: "分子量計算器",
+            calcLabel: "輸入化學式 (支援下標)",
+            calcPlaceholder: "例如：CuSO4·5H2O 或 (NH₄)₂SO₄",
+            calcBtn: "計算分子量",
+            mwResult: "計算結果：",
+            searchPlaceholder: "輸入常用簡稱、IUPAC名、化學式或 CAS 編號進行搜尋...",
+            downloadBtn: "💾 下載離線版",
+            exportBtn: "📥 匯出為 CSV",
+            thCommon: "常用簡稱",
+            thIupac: "首選 IUPAC 名",
+            thFormula: "化學式",
+            thMw: "分子量 (g/mol)",
+            thCas: "CAS 編號",
+            dataCount: "顯示 {n} 筆資料",
+            noData: "找不到符合的化學藥品",
+            langBtn: "🌐 English",
+            update: "更新日期：2026/08/23",
+            errEmpty: "請輸入化學式",
+            errParse: "無法解析該化學式",
+            errElement: "未知的元素符號：",
+            errPolymer: "無法辨識的字元（此工具無法計算含 n 等聚合物重複單位記號的平均分子量）："
+        },
+        en: {
+            title: "Chemical MW Lookup & Calculator",
+            calcTitle: "MW Calculator",
+            calcLabel: "Enter Chemical Formula",
+            calcPlaceholder: "e.g. CuSO4·5H2O or (NH₄)₂SO₄",
+            calcBtn: "Calculate MW",
+            mwResult: "Result: ",
+            searchPlaceholder: "Search by common name, IUPAC, formula, or CAS No...",
+            downloadBtn: "💾 Download Offline",
+            exportBtn: "📥 Export to CSV",
+            thCommon: "Common Name",
+            thIupac: "Preferred IUPAC Name",
+            thFormula: "Formula",
+            thMw: "MW (g/mol)",
+            thCas: "CAS No.",
+            dataCount: "Showing {n} entries",
+            noData: "No chemicals found matching your search.",
+            langBtn: "🌐 中文",
+            update: "Updated: 2026/08/23",
+            errEmpty: "Please enter a chemical formula",
+            errParse: "Unable to parse formula",
+            errElement: "Unknown element: ",
+            errPolymer: "Unrecognized character (this tool cannot compute polymer repeat-unit notation like \"n\"): "
+        }
+    };
+
+    function updateLanguage() {
+        const t = dict[currentLang];
+        document.getElementById('ui_title').innerText = t.title;
+        document.getElementById('ui_calcTitle').innerText = t.calcTitle;
+        document.getElementById('ui_calcLabel').innerText = t.calcLabel;
+        document.getElementById('formula').placeholder = t.calcPlaceholder;
+        document.getElementById('ui_calcBtn').innerText = t.calcBtn;
+        document.getElementById('ui_mwResult').innerText = t.mwResult;
+        document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+        document.getElementById('downloadBtn').innerHTML = t.downloadBtn;
+        document.getElementById('exportBtn').innerHTML = t.exportBtn;
+        document.getElementById('th_common').innerText = t.thCommon;
+        document.getElementById('th_iupac').innerText = t.thIupac;
+        document.getElementById('th_formula').innerText = t.thFormula;
+        document.getElementById('th_mw').innerText = t.thMw;
+        document.getElementById('th_cas').innerText = t.thCas;
+        document.getElementById('langToggleBtn').innerText = t.langBtn;
+        document.getElementById('ui_update').innerText = t.update;
+        
+        // 重新渲染表格與計數文字以套用語言
+        renderTable(currentDisplayData);
+        // 清除計算器錯誤訊息避免語言衝突
+        document.getElementById('error-msg').textContent = "";
+    }
+
+    document.getElementById('langToggleBtn').addEventListener('click', () => {
+        currentLang = currentLang === 'tw' ? 'en' : 'tw';
+        updateLanguage();
+    });
+
+    // --- 計算器邏輯 (支援下標與水合物) ---
+    const atomicWeights = {
+        H: 1.008, He: 4.0026, Li: 6.94, Be: 9.0122, B: 10.81, C: 12.011, N: 14.007, O: 15.999,
+        F: 18.998, Ne: 20.180, Na: 22.990, Mg: 24.305, Al: 26.982, Si: 28.085, P: 30.974,
+        S: 32.06, Cl: 35.45, K: 39.098, Ar: 39.95, Ca: 40.078, Fe: 55.845, Cu: 63.546,
+        Zn: 65.38, Br: 79.904, Ag: 107.87, I: 126.90, Ba: 137.33, Au: 196.97, Hg: 200.59, Pb: 207.2
+    };
+
+    function normalizeSubscripts(str) {
+        const subscriptMap = {
+            '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4',
+            '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9'
+        };
+        // 額外過濾掉化學式內部的所有空白字元與常見電荷符號，避免解析錯誤
+        return str.replace(/[₀-₉]/g, match => subscriptMap[match]).replace(/\s+/g, '').replace(/[\+\-]/g, ''); 
+    }
+
+    function parseGroup(formula) {
+        if (!formula) return {}; // 防呆：避免空字串
+        let stack = [{}];
+        let i = 0;
+        while (i < formula.length) {
+            let char = formula[i];
+            if (char === '(' || char === '[') {
+                stack.push({});
+                i++;
+            } else if (char === ')' || char === ']') {
+                if (stack.length === 1) throw new Error(dict[currentLang].errParse); // 括號不對稱
+                let counts = stack.pop();
+                i++;
+                let num = "";
+                while (i < formula.length && /[0-9.]/.test(formula[i])) {
+                    num += formula[i];
+                    i++;
+                }
+                num = num === "" ? 1 : parseFloat(num);
+                let top = stack[stack.length - 1];
+                for (let [el, count] of Object.entries(counts)) {
+                    top[el] = (top[el] || 0) + count * num;
+                }
+            } else if (/[A-Z]/.test(char)) {
+                let el = char;
+                i++;
+                while (i < formula.length && /[a-z]/.test(formula[i])) {
+                    el += formula[i];
+                    i++;
+                }
+                let num = "";
+                while (i < formula.length && /[0-9.]/.test(formula[i])) {
+                    num += formula[i];
+                    i++;
+                }
+                num = num === "" ? 1 : parseFloat(num);
+                let top = stack[stack.length - 1];
+                top[el] = (top[el] || 0) + num;
+            } else {
+                if (char === 'n') {
+                     throw new Error(`${dict[currentLang].errPolymer}"${char}"`);
+                } else {
+                     throw new Error(`${dict[currentLang].errParse}: 無法識別字元 "${char}"`);
+                }
+            }
+        }
+        if (stack.length !== 1) throw new Error(dict[currentLang].errParse); // 括號不對稱
+        return stack[0];
+    }
+
+    function calculateMolecularWeight(rawInput) {
+        // 先將字串根據中點或星號分割 (移除了 + 號分割，因為 + 號通常是電荷)
+        let parts = rawInput.split(/·|\*/);
+        let totalWeight = 0;
+        
+        for (let part of parts) {
+            part = part.trim();
+            if (!part) continue;
+            // 進行下標轉換與去空白
+            part = normalizeSubscripts(part); 
+            
+            // 捕捉前置係數
+            let match = part.match(/^([0-9\.]+)(.*)/);
+            let multiplier = 1;
+            let formula = part;
+            
+            if (match) {
+                multiplier = parseFloat(match[1]);
+                formula = match[2];
+                if (!formula) continue; // 如果只有數字，略過
+            }
+            
+            let counts = parseGroup(formula);
+            let partWeight = 0;
+            for (let [el, count] of Object.entries(counts)) {
+                if (atomicWeights[el] !== undefined) {
+                    partWeight += atomicWeights[el] * count;
+                } else {
+                    throw new Error(`${dict[currentLang].errElement}${el}`);
+                }
+            }
+            totalWeight += partWeight * multiplier;
+        }
+        return totalWeight;
+    }
+
+    function calculate() {
+        const input = document.getElementById('formula').value;
+        const errorMsg = document.getElementById('error-msg');
+        const resultBox = document.getElementById('result-box');
+        const resultValue = document.getElementById('result-value');
+        
+        errorMsg.textContent = "";
+        resultBox.style.display = "none";
+        
+        if (!input.trim()) {
+            errorMsg.textContent = dict[currentLang].errEmpty;
+            return;
+        }
+        try {
+            const mw = calculateMolecularWeight(input);
+            if (mw === 0) throw new Error(dict[currentLang].errParse);
+            resultValue.textContent = mw.toFixed(2);
+            resultBox.style.display = "block";
+        } catch (e) {
+            errorMsg.textContent = e.message;
+        }
+    }
+
+    document.getElementById('formula').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') calculate();
+    });
+
+    // --- 資料表邏輯 ---
     const chemicalData = [
         { common: "Sodium chloride", iupac: "Sodium chloride", formula: "NaCl", mw: 58.44, cas: "7647-14-5" },
         { common: "Sodium hydroxide", iupac: "Sodium hydroxide", formula: "NaOH", mw: 40.00, cas: "1310-73-2" },
@@ -244,7 +585,7 @@
         { common: "Bis-Tris", iupac: "2-[Bis(2-hydroxyethyl)amino]-2-(hydroxymethyl)propane-1,3-diol", formula: "C₈H₁₉NO₅", mw: 209.24, cas: "6976-37-0" },
         { common: "Tricine", iupac: "N-[Tris(hydroxymethyl)methyl]glycine", formula: "C₆H₁₃NO₅", mw: 179.17, cas: "5704-04-1" },
         { common: "Triethanolamine (TEA)", iupac: "2,2',2''-Nitrilotri(ethan-1-ol)", formula: "C₆H₁₅NO₃", mw: 149.19, cas: "102-71-6" },
-        { common: "Taurine", iupac: "2-Aminoethanesulfonic acid", formula: "C₂H₇NO₂S", mw: 125.15, cas: "107-35-7" },
+        { common: "Taurine", iupac: "2-Aminoethanesulfonic acid", formula: "C₂H₇NO₃S", mw: 125.15, cas: "107-35-7" },
         { common: "EDTA", iupac: "2,2',2'',2'''-(Ethane-1,2-diyldinitrilo)tetraacetic acid", formula: "C₁₀H₁₆N₂O₈", mw: 292.24, cas: "60-00-4" },
         { common: "EDTA-Na2·2H2O", iupac: "Disodium 2,2',2'',2'''-(ethane-1,2-diyldinitrilo)tetraacetate dihydrate", formula: "C₁₀H₁₄N₂Na₂O₈·2H₂O", mw: 372.24, cas: "6381-92-6" },
         { common: "EGTA", iupac: "3,12-Bis(carboxymethyl)-6,9-dioxa-3,12-diazatetradecanedioic acid", formula: "C₁₄H₂₄N₂O₁₀", mw: 380.35, cas: "67-42-5" },
@@ -301,10 +642,8 @@
         { common: "Nitric acid", iupac: "Nitric acid", formula: "HNO₃", mw: 63.012, cas: "7697-37-2" },
         { common: "Magnesium sulfate", iupac: "Magnesium sulfate", formula: "MgSO₄", mw: 120.37, cas: "7487-88-9" },
         { common: "Magnesium sulfate heptahydrate", iupac: "Magnesium sulfate heptahydrate", formula: "MgSO₄·7H₂O", mw: 246.47, cas: "10034-99-8" }
-
     ];
-    // 💡 化學式下標小抄（供複製貼上用）： ₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉
-    // 初始化：字母排序 A~Z，並儲存當前顯示的資料用於匯出
+
     chemicalData.sort((a, b) => a.common.toLowerCase().localeCompare(b.common.toLowerCase()));
     let currentDisplayData = [...chemicalData];
 
@@ -313,24 +652,23 @@
     const dataCount = document.getElementById('dataCount');
     const exportBtn = document.getElementById('exportBtn');
 
-    // 渲染表格內容
     function renderTable(data) {
-        currentDisplayData = data; // 更新當前顯示資料
+        currentDisplayData = data;
         tableBody.innerHTML = '';
-        dataCount.innerText = `顯示 ${data.length} 筆資料`;
+        
+        let textCount = dict[currentLang].dataCount.replace('{n}', data.length);
+        dataCount.innerText = textCount;
         
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 30px; color:#7f8c8d;">找不到符合的化學藥品</td></tr>';
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px; color:#7f8c8d;">${dict[currentLang].noData}</td></tr>`;
             return;
         }
         data.forEach(chem => {
             const row = document.createElement('tr');
-            
             let mwDisplay = chem.mw.toFixed(2);
             if (chem.common.includes("Triton") || chem.common.includes("Tween") || chem.common.includes("NP-40") || chem.common.includes("PFA")) {
                 mwDisplay = `~${mwDisplay} (Avg/Monomer)`;
             }
-
             row.innerHTML = `
                 <td><strong>${chem.common}</strong></td>
                 <td style="font-size: 0.9em; color: #555;">${chem.iupac}</td>
@@ -342,10 +680,8 @@
         });
     }
 
-    // 初始載入
     renderTable(chemicalData);
 
-    // 搜尋過濾功能
     searchInput.addEventListener('input', function(e) {
         const searchTerm = e.target.value.toLowerCase();
         const filteredData = chemicalData.filter(chem => 
@@ -357,66 +693,51 @@
         renderTable(filteredData);
     });
 
-    // 匯出 CSV 功能
     exportBtn.addEventListener('click', function() {
-        // 加入 BOM (\uFEFF) 讓 Excel 支援 UTF-8 中文顯示
-        let csvContent = "\uFEFF"; 
-        csvContent += "常用簡稱,首選 IUPAC 名,化學式,分子量 (g/mol),CAS 編號\n";
+        let csvContent = "﻿"; 
+        csvContent += `${dict[currentLang].thCommon},${dict[currentLang].thIupac},${dict[currentLang].thFormula},${dict[currentLang].thMw},${dict[currentLang].thCas}
+`;
 
         currentDisplayData.forEach(chem => {
-            // 處理 IUPAC 名稱中可能含有的逗號 (用雙引號包覆)
             let common = `"${chem.common.replace(/"/g, '""')}"`;
             let iupac = `"${chem.iupac.replace(/"/g, '""')}"`;
             let formula = `"${chem.formula.replace(/"/g, '""')}"`;
             let cas = `"${chem.cas}"`;
-            
             let mwDisplay = chem.mw;
             if (chem.common.includes("Triton") || chem.common.includes("Tween") || chem.common.includes("NP-40") || chem.common.includes("PFA")) {
                 mwDisplay = `"~${chem.mw.toFixed(2)} (Avg/Monomer)"`;
             }
-
-            csvContent += `${common},${iupac},${formula},${mwDisplay},${cas}\n`;
+            csvContent += `${common},${iupac},${formula},${mwDisplay},${cas}
+`;
         });
 
-        // 建立 Blob 與虛擬下載連結
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
-        
         link.setAttribute("href", url);
         link.setAttribute("download", "Chemical_MW_List.csv");
         link.style.visibility = 'hidden';
-        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     });
-    // 下載離線版 HTML 功能
-const downloadBtn = document.getElementById('downloadBtn');
 
-downloadBtn.addEventListener('click', function() {
-    // 複製一份當下的 DOM 結構樹（這在背景進行，不會影響畫面上看到的表格）
-    const clonedDoc = document.documentElement.cloneNode(true);
-    
-    // 將複製體內的 tbody 內容清空，還原成初次載入前乾淨的狀態
-    clonedDoc.querySelector('#tableBody').innerHTML = '';
-    
-    // 從清空後的複製體抓取 HTML 結構
-    const htmlContent = "<!DOCTYPE html>\n" + clonedDoc.outerHTML;
-    
-    // 建立 Blob 與虛擬下載連結
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", "Chemical_MW_Tool.html");
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-});
+    const downloadBtn = document.getElementById('downloadBtn');
+    downloadBtn.addEventListener('click', function() {
+        const clonedDoc = document.documentElement.cloneNode(true);
+        clonedDoc.querySelector('#tableBody').innerHTML = '';
+        const htmlContent = "\uFEFF<!DOCTYPE html>\n" + clonedDoc.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "Chemical_MW_Tool.html");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
 </script>
+
 </body>
 </html>
