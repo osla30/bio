@@ -538,6 +538,33 @@ footer a, footer a:visited {
 footer a:hover {
    text-decoration: underline;
 }
+/* 隱藏進階按鍵的預設狀態 */
+.adv-btn {
+    display: none; 
+}
+/* 當父層加上 show-adv 類別時，顯示這些按鍵 */
+.calc-buttons.show-adv .adv-btn {
+    display: flex; 
+}
+/* 展開/收合控制條樣式 */
+.adv-toggle-bar {
+    grid-column: span 4;
+    background: transparent;
+    color: #94a3b8;
+    border: none;
+    font-size: 14px;
+    padding: 8px 0;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.adv-toggle-bar:hover {
+    background: #f1f5f9;
+    color: var(--text-muted);
+}
 	</style>
 </head>
 <body>
@@ -1075,35 +1102,38 @@ footer a:hover {
                 <div id="calc-result">0</div>
             </div>
             <div class="calc-buttons">
-                <!-- 第 0 排：記憶體 (新增) -->
-                <button class="calc-btn fn" onclick="memoryClear()">MC</button>
-                <button class="calc-btn fn" onclick="memoryRecall()">MR</button>
-                <button class="calc-btn fn" onclick="memoryAdd()">M+</button>
-                <button class="calc-btn fn" onclick="memorySub()">M−</button>
+    <!-- 第 0 排：記憶體 (新增 adv-btn) -->
+    <button class="calc-btn fn adv-btn" onclick="memoryClear()">MC</button>
+    <button class="calc-btn fn adv-btn" onclick="memoryRecall()">MR</button>
+    <button class="calc-btn fn adv-btn" onclick="memoryAdd()">M+</button>
+    <button class="calc-btn fn adv-btn" onclick="memorySub()">M−</button>
 
-                <!-- 第 1 排：功能按鍵 -->
-                <button class="calc-btn fn" id="btn-inv" onclick="toggleInv()">INV</button>
-                <button class="calc-btn fn" id="btn-angle-unit" onclick="toggleAngleUnit()">DEG</button>
-                <button class="calc-btn fn" id="btn-sqrt" onclick="appendCalc('√')">√</button>
-                <button class="calc-btn fn" onclick="appendCalc('^')">xʸ</button>
+    <!-- 第 1 排：功能按鍵 (新增 adv-btn) -->
+    <button class="calc-btn fn adv-btn" id="btn-inv" onclick="toggleInv()">INV</button>
+    <button class="calc-btn fn adv-btn" id="btn-angle-unit" onclick="toggleAngleUnit()">DEG</button>
+    <button class="calc-btn fn adv-btn" id="btn-sqrt" onclick="appendCalc('√')">√</button>
+    <button class="calc-btn fn adv-btn" onclick="appendCalc('^')">xʸ</button>
 
-                <!-- 第 2 排：三角與階乘 -->
-                <button class="calc-btn fn" id="btn-sin" onclick="appendCalc('sin')">sin</button>
-                <button class="calc-btn fn" id="btn-cos" onclick="appendCalc('cos')">cos</button>
-                <button class="calc-btn fn" id="btn-tan" onclick="appendCalc('tan')">tan</button>
-                <button class="calc-btn fn" id="btn-fact" onclick="appendCalc('!')">x!</button>
+    <!-- 第 2 排：三角與階乘 (新增 adv-btn) -->
+    <button class="calc-btn fn adv-btn" id="btn-sin" onclick="appendCalc('sin')">sin</button>
+    <button class="calc-btn fn adv-btn" id="btn-cos" onclick="appendCalc('cos')">cos</button>
+    <button class="calc-btn fn adv-btn" id="btn-tan" onclick="appendCalc('tan')">tan</button>
+    <button class="calc-btn fn adv-btn" id="btn-fact" onclick="appendCalc('!')">x!</button>
 
-                <!-- 第 3 排：對數與常數 -->
-                <button class="calc-btn fn" id="btn-ln" onclick="appendCalc('ln')">ln</button>
-                <button class="calc-btn fn" id="btn-log" onclick="appendCalc('log')">log</button>
-                <button class="calc-btn fn" onclick="appendCalc('π')">π</button>
-                <button class="calc-btn fn" onclick="appendCalc('e')">e</button>
+    <!-- 第 3 排：對數與常數 (新增 adv-btn) -->
+    <button class="calc-btn fn adv-btn" id="btn-ln" onclick="appendCalc('ln')">ln</button>
+    <button class="calc-btn fn adv-btn" id="btn-log" onclick="appendCalc('log')">log</button>
+    <button class="calc-btn fn adv-btn" onclick="appendCalc('π')">π</button>
+    <button class="calc-btn fn adv-btn" onclick="appendCalc('e')">e</button>
 
-                <!-- 第 4 排：括號與科學符號 -->
-                <button class="calc-btn fn" onclick="appendCalc('(')">(</button>
-                <button class="calc-btn fn" onclick="appendCalc(')')">)</button>
-                <button class="calc-btn fn" onclick="appendCalc('Ans')">Ans</button>
-                <button class="calc-btn fn" onclick="appendCalc('EXP')">EXP</button>
+    <!-- 第 4 排：括號與科學符號 (新增 adv-btn) -->
+    <button class="calc-btn fn adv-btn" onclick="appendCalc('(')">(</button>
+    <button class="calc-btn fn adv-btn" onclick="appendCalc(')')">)</button>
+    <button class="calc-btn fn adv-btn" onclick="appendCalc('Ans')">Ans</button>
+    <button class="calc-btn fn adv-btn" onclick="appendCalc('EXP')">EXP</button>
+
+    <!-- !!! 新增這行：展開/收合控制條 !!! -->
+    <button class="adv-toggle-bar" id="btn-adv-toggle" onclick="toggleAdvKeys()" data-text="calc-adv-show">▼ 展開進階</button>
 
                 <!-- 第 5 排：清除與退格 -->
                 <button class="calc-btn action" onclick="clearCalc()">C</button>
@@ -1421,7 +1451,9 @@ footer a:hover {
         "計算出原始細胞濃度 C₁ = ": "計算出原始細胞濃度 C₁ = ",
         "計算出原始細胞體積 V₁ = ": "計算出原始細胞體積 V₁ = ",
         "計算出目標細胞濃度 C₂ = ": "計算出目標細胞濃度 C₂ = ",
-        "計算出目標細胞體積 V₂ = ": "計算出目標細胞體積 V₂ = "
+        "計算出目標細胞體積 V₂ = ": "計算出目標細胞體積 V₂ = ",
+        "calc-adv-show": "▼ 展開進階",
+        "calc-adv-hide": "▲ 收合進階"
       },
       en: {
         "main-title": "BioCalculator",
@@ -1628,7 +1660,9 @@ footer a:hover {
         "計算出原始細胞濃度 C₁ = ": "Calculated Initial Conc. C₁ = ",
         "計算出原始細胞體積 V₁ = ": "Calculated Initial Vol. V₁ = ",
         "計算出目標細胞濃度 C₂ = ": "Calculated Target Conc. C₂ = ",
-        "計算出目標細胞體積 V₂ = ": "Calculated Target Vol. V₂ = "
+        "計算出目標細胞體積 V₂ = ": "Calculated Target Vol. V₂ = ",
+        "calc-adv-show": "▼ Expand",
+        "calc-adv-hide": "▲ Collapse"
       }
     };
 
@@ -1750,6 +1784,24 @@ footer a:hover {
     let isEvaluated = false;
     let isInv = false;
     let memoryVal = 0;
+
+    // --- 進階按鍵展開/收合 ---
+    function toggleAdvKeys() {
+        const container = document.querySelector('.calc-buttons');
+        const toggleBtn = document.getElementById('btn-adv-toggle');
+        
+        container.classList.toggle('show-adv');
+        
+        if (container.classList.contains('show-adv')) {
+            // 切換為收合狀態，並套用當前語言
+            toggleBtn.setAttribute('data-text', 'calc-adv-hide');
+            toggleBtn.innerHTML = translations[currentLanguage]['calc-adv-hide'];
+        } else {
+            // 切換為展開狀態，並套用當前語言
+            toggleBtn.setAttribute('data-text', 'calc-adv-show');
+            toggleBtn.innerHTML = translations[currentLanguage]['calc-adv-show'];
+        }
+    }
 
     // --- 記憶體功能 ---
     function showMemoryFeedback(text) {
