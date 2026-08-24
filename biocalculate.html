@@ -50,7 +50,7 @@ body {
   top: 20px;
   right: 20px;
   display: flex;
-  align-items: center; /* 新增這行讓按鈕垂直置中對齊 */
+  align-items: center; 
   gap: 8px;
   z-index: 1000;
 }
@@ -340,6 +340,92 @@ button.clear:hover {
   border: 1px solid var(--border-color);
 }
 
+/* 科學計算機樣式 (Google Style) */
+.scientific-calculator {
+    max-width: 400px; /* 收窄版面讓比例更接近手機 */
+    margin: 0 auto;
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+}
+.calc-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    min-height: 120px;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    overflow: hidden;
+}
+#calc-input {
+    width: 100%;
+    max-width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    color: var(--text-main);
+    text-align: right;
+    margin-bottom: 8px;
+    outline: none;
+    padding: 0 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+#calc-input:focus {
+    box-shadow: none;
+    border: none;
+}
+#calc-result {
+    font-size: 20px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 5px;
+    font-family: 'Inter', sans-serif;
+    min-height: 24px;
+    cursor: pointer; /* 新增滑鼠游標 */
+    transition: opacity 0.2s; /* 新增動畫過渡 */
+}
+/* 新增點擊時的閃爍回饋 */
+#calc-result:active {
+    opacity: 0.5;
+}
+.calc-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 欄位完美還原 */
+    gap: 8px;
+}
+.calc-btn {
+    padding: 12px 0;
+    font-size: 16px;
+    border: none;
+    border-radius: 50px; /* 膠囊狀/圓形按鈕 */
+    background: #ffffff;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+}
+.calc-btn:hover { background: #e2e8f0; transform: scale(0.97); }
+.calc-btn:active { transform: scale(0.92); box-shadow: none; }
+.calc-btn.num { background: #ffffff; font-weight: 500; font-size: 20px; }
+.calc-btn.op { background: #e0f2fe; color: var(--primary-hover); font-weight: 600; font-size: 20px;}
+.calc-btn.fn { background: #f1f5f9; font-size: 15px; color: #475569; font-weight: 500;}
+.calc-btn.action { background: #fee2e2; color: #dc2626; font-weight: 600; font-size: 18px;}
+.calc-btn.eval-btn { background: var(--primary); color: white; border: none; font-size: 24px; font-weight: 500; box-shadow: 0 4px 6px rgba(59,130,246,0.3); }
+.calc-btn.eval-btn:hover { background: var(--primary-hover); }
+
 /* Timer Styles */
 .timer-flex-container { display: grid; gap: 25px; margin: 15px 0; }
 .timer-block { background: #f8fafc; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 20px; }
@@ -410,7 +496,6 @@ button.clear:hover {
   #revcomp .form-container { max-width: 800px; }
   .calc-table { table-layout: fixed; }
   .calc-table th:nth-child(2) { width: 40%; }
-  /* 取消單一 tab-content 的背景設定，改為全域設定 */
   .tab-content { padding: 40px; }
 }
 
@@ -475,6 +560,7 @@ footer a:hover {
 		<div class="tab" id="tab-ligation" onclick="switchTab('ligation')" data-text="tab-ligation">Ligation 計算</div>
 		<div class="tab" id="tab-cellcount" onclick="switchTab('cellcount')" data-text="tab-cellcount">細胞 計數/種植</div>
     <div class="tab" id="tab-celldilution" onclick="switchTab('celldilution')" data-text="tab-celldilution">細胞 凍存/稀釋</div>
+    <div class="tab" id="tab-scientific" onclick="switchTab('scientific')" data-text="tab-scientific">科學計算機</div>
 		<div class="tab" id="tab-timer" onclick="switchTab('timer')" data-text="tab-timer">計時器</div>
 	</div>
     <div class="tab-content" id="mass">
@@ -780,7 +866,6 @@ footer a:hover {
     </div>
     <div class="tab-content" id="revcomp" style="display:none;">
         <div class="form-container">
-    <!-- 新增：核酸類型選擇 -->
     <div class="form-row-inline">
         <label data-text="核酸類型：">核酸類型：</label>
         <select id="naType" onchange="filterRevcompInput()">
@@ -796,7 +881,6 @@ footer a:hover {
         <span data-text="revcomp-length">長度</span>: <span id="revcomp-len">0</span> bp | GC: <span id="revcomp-gc">0.0</span> %
         </span>
     </div>
-    <!-- 修改：將 oninput 替換為呼叫自訂函數，以動態判斷只能輸入 T 或 U -->
     <textarea id="revcompInput" placeholder="Enter sequence..." oninput="filterRevcompInput()"></textarea>
     </div>
         </div>
@@ -840,7 +924,6 @@ footer a:hover {
 	</div>
     
     <div class="tab-content" id="cellcount" style="display:none;">
-    <!-- 新增：細胞類型下拉選單 -->
     <div class="form-container">
         <div class="form-row-inline">
             <label data-text="細胞類型：">細胞類型：</label>
@@ -851,7 +934,6 @@ footer a:hover {
         </div>
     </div>
     
-    <!-- 統一的計算區塊 -->
     <div class="flex-block" style="margin-top: 15px;">
         <h2 id="cellTitle" data-text="白血球(細胞)計數">白血球(細胞)計數</h2>
         <div class="note" id="cellNote" data-text="(白血球、細胞：一般使用四個角的大正方形)">(白血球、細胞：一般使用四個角的大正方形)</div>
@@ -914,10 +996,8 @@ footer a:hover {
         </div>
     </div>
 </div>
-    <!-- 新增分頁：細胞凍存 / 稀釋 -->
     <div class="tab-content" id="celldilution" style="display:none;">
       <div class="flex-container">
-        <!-- 左側：細胞凍存 -->
         <div class="flex-block">
           <h2 data-text="細胞凍存">細胞凍存</h2>
           <div class="form-container">
@@ -956,7 +1036,6 @@ footer a:hover {
           </div>
         </div>
 
-        <!-- 右側：細胞稀釋 -->
         <div class="flex-block">
           <h2 data-text="細胞稀釋">細胞稀釋</h2>
           <div class="form-container">
@@ -987,6 +1066,77 @@ footer a:hover {
         </div>
       </div>
     </div>
+    
+    <!-- 新增科學計算機分頁 -->
+    <div class="tab-content" id="scientific" style="display:none;">
+        <div class="scientific-calculator">
+            <div class="calc-display">
+                <input type="text" id="calc-input" inputmode="none" placeholder="">
+                <div id="calc-result">0</div>
+            </div>
+            <div class="calc-buttons">
+                <!-- 第 0 排：記憶體 (新增) -->
+                <button class="calc-btn fn" onclick="memoryClear()">MC</button>
+                <button class="calc-btn fn" onclick="memoryRecall()">MR</button>
+                <button class="calc-btn fn" onclick="memoryAdd()">M+</button>
+                <button class="calc-btn fn" onclick="memorySub()">M−</button>
+
+                <!-- 第 1 排：功能按鍵 -->
+                <button class="calc-btn fn" id="btn-inv" onclick="toggleInv()">INV</button>
+                <button class="calc-btn fn" id="btn-angle-unit" onclick="toggleAngleUnit()">DEG</button>
+                <button class="calc-btn fn" id="btn-sqrt" onclick="appendCalc('√')">√</button>
+                <button class="calc-btn fn" onclick="appendCalc('^')">xʸ</button>
+
+                <!-- 第 2 排：三角與階乘 -->
+                <button class="calc-btn fn" id="btn-sin" onclick="appendCalc('sin')">sin</button>
+                <button class="calc-btn fn" id="btn-cos" onclick="appendCalc('cos')">cos</button>
+                <button class="calc-btn fn" id="btn-tan" onclick="appendCalc('tan')">tan</button>
+                <button class="calc-btn fn" id="btn-fact" onclick="appendCalc('!')">x!</button>
+
+                <!-- 第 3 排：對數與常數 -->
+                <button class="calc-btn fn" id="btn-ln" onclick="appendCalc('ln')">ln</button>
+                <button class="calc-btn fn" id="btn-log" onclick="appendCalc('log')">log</button>
+                <button class="calc-btn fn" onclick="appendCalc('π')">π</button>
+                <button class="calc-btn fn" onclick="appendCalc('e')">e</button>
+
+                <!-- 第 4 排：括號與科學符號 -->
+                <button class="calc-btn fn" onclick="appendCalc('(')">(</button>
+                <button class="calc-btn fn" onclick="appendCalc(')')">)</button>
+                <button class="calc-btn fn" onclick="appendCalc('Ans')">Ans</button>
+                <button class="calc-btn fn" onclick="appendCalc('EXP')">EXP</button>
+
+                <!-- 第 5 排：清除與退格 -->
+                <button class="calc-btn action" onclick="clearCalc()">C</button>
+                <button class="calc-btn action" onclick="delCalc()">⌫</button>
+                <button class="calc-btn op" onclick="appendCalc('%')">%</button>
+                <button class="calc-btn op" onclick="appendCalc('÷')">÷</button>
+
+                <!-- 第 6 排：數字 7 8 9 與乘 -->
+                <button class="calc-btn num" onclick="appendCalc('7')">7</button>
+                <button class="calc-btn num" onclick="appendCalc('8')">8</button>
+                <button class="calc-btn num" onclick="appendCalc('9')">9</button>
+                <button class="calc-btn op" onclick="appendCalc('×')">×</button>
+
+                <!-- 第 7 排：數字 4 5 6 與減 -->
+                <button class="calc-btn num" onclick="appendCalc('4')">4</button>
+                <button class="calc-btn num" onclick="appendCalc('5')">5</button>
+                <button class="calc-btn num" onclick="appendCalc('6')">6</button>
+                <button class="calc-btn op" onclick="appendCalc('−')">−</button>
+
+                <!-- 第 8 排：數字 1 2 3 與加 -->
+                <button class="calc-btn num" onclick="appendCalc('1')">1</button>
+                <button class="calc-btn num" onclick="appendCalc('2')">2</button>
+                <button class="calc-btn num" onclick="appendCalc('3')">3</button>
+                <button class="calc-btn op" onclick="appendCalc('+')">+</button>
+
+                <!-- 第 9 排：數字 0 點 與等於 -->
+                <button class="calc-btn num" style="grid-column: span 2;" onclick="appendCalc('0')">0</button>
+                <button class="calc-btn num" onclick="appendCalc('.')">.</button>
+                <button class="calc-btn eval-btn" onclick="evalCalc()">=</button>
+            </div>
+        </div>
+    </div>
+    
     <div class="tab-content" id="timer" style="display:none;">
 		<div class="timer-flex-container">
 			<div style="flex: 1;">
@@ -1055,8 +1205,8 @@ footer a:hover {
     
     const complement = { 'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C' };
     let tmRowCount = 0;
-    let calculatedWbcVolUL = 0; // 用來暫存 WBC 算出來的體積
-    let calculatedRbcVolUL = 0; // 用來暫存 RBC 算出來的體積
+    let calculatedWbcVolUL = 0; 
+    let calculatedRbcVolUL = 0; 
 
     // 語言配置
     const translations = {
@@ -1076,9 +1226,10 @@ footer a:hover {
         "tab-revcomp": "核酸轉換",
         "tab-ligation": "Ligation 計算",
         "tab-cellcount": "細胞 計數/種植",
+        "tab-scientific": "科學計算機",
         "tab-timer": "計時器",
         
-        // --- Tm Calc 翻譯 ---
+        // ...以下保留您原本的翻譯，無更動...
         "tm-seq": "引物序列 (5' -> 3')",
         "tm-len": "長度",
         "tm-gc": "GC %",
@@ -1103,28 +1254,20 @@ footer a:hover {
         "tm-mg-conc": "Mg²⁺ 濃度 (mM):",
         "tm-p-conc": "Primer 濃度 (nM):",
         "tm-adv-note": "調整參數後將自動重新計算所有 Tm 值。<br>Mg²⁺ 校正採用 von Ahsen et al. (2001) 算法轉換為等效 Na⁺。",
-        
-        // 莫耳濃度
         "分子量 (g/mol)：": "分子量 (g/mol)：",
         "莫耳濃度：": "莫耳濃度：",
         "體積：": "體積：",
         "質量：": "質量：",
         "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項": "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項",
-        
-        // 稀釋計算
         "原液濃度 C₁：": "原液濃度 C₁：",
         "目標濃度 C₂：": "目標濃度 C₂：",
         "目標體積 V₂：": "目標體積 V₂：",
         "原液體積 V₁：": "原液體積 V₁：",
         "請輸入任意三個值，將可計算第四個值": "請輸入任意三個值，將可計算第四個值",
-        
-        // 酸鹼濃度
         "密度：": "密度：",
         "重量百分比 (%)：": "重量百分比 (%)：",
         "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N",
         "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項",
-
-        // 溶液配製
         "solprep-total": "目標總體積：",
         "solprep-add": "＋ 新增溶質",
         "solprep-calc": "計算配製清單",
@@ -1140,8 +1283,6 @@ footer a:hover {
         "solprep-take": "1. 取以下物質：",
         "solprep-addSolvent": "2. 加入溶劑補足總體積至：",
         "solprep-mixError": "錯誤 (莫耳濃度與百分比單位不可混用)",
-        
-        // 動物投藥計算
         "批量投藥計算": "批量投藥計算",
         "普通投藥計算": "普通投藥計算",
         "目標藥物劑量 (mg/Kg)：": "目標藥物劑量 (mg/Kg)：",
@@ -1153,8 +1294,6 @@ footer a:hover {
         "動物體重 (g)：": "動物體重 (g)：",
         "計算": "計算",
         "清除": "清除",
-        
-        // Primer
         "Primer回溶": "Primer回溶",
         "(Primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)": "(Primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)",
         "Primer產量 (nmole)：": "Primer產量 (nmole)：",
@@ -1167,8 +1306,6 @@ footer a:hover {
         "目標體積 (µL)：": "目標體積 (µL)：",
         "原液體積：": "原液體積：",
         "加水體積：": "加水體積：",
-
-        // RevComp
         "輸入序列：": "輸入序列：",
         "反轉": "反轉",
         "互補": "互補",
@@ -1178,15 +1315,11 @@ footer a:hover {
         "轉 DNA": "轉 DNA",
         "結果：": "結果：",
         "revcomp-length": "長度",
-
-        // Ligation
         "Insert DNA 長度 (bp)：": "Insert DNA 長度 (bp)：",
         "Vector DNA 長度 (bp)：": "Vector DNA 長度 (bp)：",
         "Insert : Vector 比例：": "Insert : Vector 比例：",
         "Vector DNA 質量 (ng)：": "Vector DNA 質量 (ng)：",
         "所需 Insert DNA 質量：": "所需 Insert DNA 質量：",
-        
-        // 細胞計數
         "白血球(細胞)計數": "白血球(細胞)計數",
         "(白血球、細胞：一般使用四個角的大正方形)": "(白血球、細胞：一般使用四個角的大正方形)",
         "細胞數：": "細胞數：",
@@ -1214,8 +1347,6 @@ footer a:hover {
         "目前細胞總數：": "目前細胞總數：",
         "個": "個",
         "細胞類型：": "細胞類型：",
-        
-        // 計時器
         "倒數計時器": "倒數計時器",
         "計時器 1": "計時器 1",
         "計時器 2": "計時器 2",
@@ -1225,14 +1356,10 @@ footer a:hover {
         "碼表": "碼表",
         "碼表 1": "碼表 1",
         "碼表 2": "碼表 2",
-        
-        // 按鈕
         "計算": "計算",
         "開始": "開始",
         "暫停": "暫停",
         "重設": "重設",
-        
-        // 計算結果訊息
         "請輸入分子量": "請輸入分子量",
         "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項": "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項",
         "計算出莫耳濃度：": "計算出莫耳濃度：",
@@ -1297,11 +1424,8 @@ footer a:hover {
         "計算出目標細胞體積 V₂ = ": "計算出目標細胞體積 V₂ = "
       },
       en: {
-        // 主標題和下載按鈕
         "main-title": "BioCalculator",
         "download-btn": "Download Offline Version",
-        
-        // 分頁標籤
         "tab-mass": "Molarity",
         "tab-dilution": "Dilute", 
         "tab-acidbase": "Acid-Base",
@@ -1312,9 +1436,9 @@ footer a:hover {
         "tab-revcomp": "Nucleic Acid Conversion",
         "tab-ligation": "Ligation Calculate",
         "tab-cellcount": "Cell Count/Seeding",
+        "tab-scientific": "Scientific Calculator",
         "tab-timer": "Timer",
-        
-        // --- Tm Calc 翻譯 ---
+        // 以下省略保留相同部分
         "tm-seq": "Primer Sequence (5' -> 3')",
         "tm-len": "Length",
         "tm-gc": "GC %",
@@ -1339,28 +1463,20 @@ footer a:hover {
         "tm-mg-conc": "Mg²⁺ Conc. (mM):",
         "tm-p-conc": "Primer Conc. (nM):",
         "tm-adv-note": "Tm values will recalculate automatically upon adjustment.<br>Mg²⁺ correction uses von Ahsen et al. (2001) equivalent Na⁺ algorithm.",
-
-        // 莫耳濃度
         "分子量 (g/mol)：": "Molecular Weight (g/mol)：",
         "莫耳濃度：": "Molarity：",
         "體積：": "Volume：",
         "質量：": "Mass：",
         "請輸入 [分子量] 以及 [莫耳濃度 / 體積 / 質量] 三者中的任意兩項，將可計算另一項": "Please enter the [Molecular Weight] and any two of the following: [Molarity, Volume, or Mass]. The remaining value will be calculated automatically.",
-        
-        // 稀釋計算
         "原液濃度 C₁：": "Stock Concentration C₁：",
         "目標濃度 C₂：": "Target Concentration C₂：",
         "目標體積 V₂：": "Target Volume V₂：",
         "原液體積 V₁：": "Stock Volume V₁：",
         "請輸入任意三個值，將可計算第四個值": "Please enter any three values to calculate the fourth value.",
-        
-        // 酸鹼濃度
         "密度：": "Density：",
         "重量百分比 (%)：": "Weight Percentage (%)：",
         "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "Sulfuric acid (H₂SO₄) → Two H⁺ ions → 1M = 2N<br>Phosphoric acid (H₃PO₄) → Three H⁺ ions → 1M = 3N",
         "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "Please enter the [Molecular Weight and Density], along with either the [Weight percentage or Molarity]. The remaining value will be calculated automatically.",
-        
-        // 溶液配製
         "solprep-total": "Target Total Volume:",
         "solprep-add": "+ Add Solute",
         "solprep-calc": "Calculate Recipe",
@@ -1376,8 +1492,6 @@ footer a:hover {
         "solprep-take": "1. Take following solutes:",
         "solprep-addSolvent": "2. Add solvent up to:",
         "solprep-mixError": "Error (Cannot mix Molarity and % units)",
-        
-        // 動物投藥計算
         "批量投藥計算": "Batch Administration",
         "普通投藥計算": "Normal Administration",
         "目標藥物劑量 (mg/Kg)：": "Target Drug Dosage (mg/Kg)：",
@@ -1389,8 +1503,6 @@ footer a:hover {
         "動物體重 (g)：": "Animal Weight (g)：",
         "計算": "Calculate",
         "清除": "Clear",
-        
-        // Primer
         "Primer回溶": "Primer Reconstitution",
         "(Primer 產量 X nmole，回溶 X*10 µL 的水則為 100 µM)": "(Primer yield X nmole, reconstitute with X*10 µL water gives 100 µM)",
         "Primer產量 (nmole)：": "Primer Yield (nmole)：",
@@ -1401,8 +1513,6 @@ footer a:hover {
         "原液濃度 (µM)：": "Stock Concentration (µM)：",
         "目標濃度 (µM)：": "Target Concentration (µM)：",
         "目標體積 (µL)：": "Target Volume (µL)：",
-
-        // RevComp
         "輸入序列：": "Input Sequence:",
         "反轉": "Reverse",
         "互補": "Complement",
@@ -1412,15 +1522,11 @@ footer a:hover {
         "轉 DNA": "Convert to DNA",
         "結果：": "Result:",
         "revcomp-length": "Length",
-        
-        // Ligation
         "Insert DNA 長度 (bp)：": "Insert DNA length (bp)：",
         "Vector DNA 長度 (bp)：": "Vector DNA length (bp)：",
         "Insert : Vector 比例：": "Insert : Vector ratio：",
         "Vector DNA 質量 (ng)：": "Vector DNA mass (ng)：",
         "所需 Insert DNA 質量：": "Required Insert DNA mass: ",
-
-        // 細胞計數
         "白血球(細胞)計數": "White Blood Cell (Cell) Count",
         "(白血球、細胞：一般使用四個角的大正方形)": "(Usually use large squares at the four corners)",
         "細胞數：": "Cell Count：",
@@ -1448,8 +1554,6 @@ footer a:hover {
         "目前細胞總數：": "Total Cell Count: ",
         "個": "cells",
         "細胞類型：": "Cell Type：",
-        
-        // 計時器
         "倒數計時器": "Countdown Timer",
         "計時器 1": "Timer 1",
         "計時器 2": "Timer 2",
@@ -1459,14 +1563,10 @@ footer a:hover {
         "碼表": "Stopwatch",
         "碼表 1": "Stopwatch 1",
         "碼表 2": "Stopwatch 2",
-        
-        // 按鈕
         "計算": "Calculate",
         "開始": "Start",
         "暫停": "Pause",
         "重設": "Reset",
-        
-        // 計算結果訊息
         "請輸入分子量": "Please enter the Molecular Weight",
         "請至少輸入莫耳濃度 / 體積 / 質量中的任意兩項": "Please enter at least any two of Molarity, Volume, or Mass",
         "計算出莫耳濃度：": "Calculate molarity：",
@@ -1493,7 +1593,6 @@ footer a:hover {
         "計算後濃度：": "Calculated concentration：",
         "計算所需回溶水量：": "Calculate the amount of water needed for re-dissolution：",
         "計算所需Primer產量：": "Calculate the required Primer yield：",
-        "請輸入所有欄位且數值皆大於 0": "Please enter all fields and the values must be greater than 0",
         "原液體積：": "Stock solution volume：",
         "加水體積：": "Water volume：",
         "請輸入所有必填欄位，且數值不可為0": "Please fill in all required fields and the number of fields cannot be 0",
@@ -1613,13 +1712,11 @@ footer a:hover {
       });
     }
 
-    // 顯示/隱藏結果區域
     function showResult(id, text) {
-    const element = document.getElementById(id);
-    element.textContent = text;
-    element.style.display = 'block';
-    // 將 nearest 改為 center，確保每次都會產生明顯的捲動聚焦
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const element = document.getElementById(id);
+      element.textContent = text;
+      element.style.display = 'block';
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function hideResult(id) {
@@ -1627,33 +1724,397 @@ footer a:hover {
       element.style.display = 'none';
       element.textContent = '';
     }
-    // === 新增：統一的錯誤顯示介面 ===
-function showError(id, text) {
-  const element = document.getElementById(id);
-  // 使用紅色與警告圖示，讓錯誤訊息更清楚
-  element.innerHTML = `<span style="color: var(--danger); font-weight: bold;">⚠️ ${text}</span>`;
-  element.style.display = 'block';
-  element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
 
-// === 新增：共用輸入驗證函式 ===
-// values: 數值陣列, options: { allowZero: 是否允許輸入 0,預設為 false }
-function validateInputs(values, { allowZero = false } = {}) {
-  return values.every(v => !isNaN(v) && (allowZero ? v >= 0 : v > 0));
-}
+    function showError(id, text) {
+      const element = document.getElementById(id);
+      element.innerHTML = `<span style="color: var(--danger); font-weight: bold;">⚠️ ${text}</span>`;
+      element.style.display = 'block';
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-// === 共用清空欄位函式：清空指定 id 的欄位值，並隱藏對應結果區塊 ===
-function clearFields(ids, resultId) {
-  ids.forEach(id => document.getElementById(id).value = '');
-  if (resultId) hideResult(resultId);
-}
+    function validateInputs(values, { allowZero = false } = {}) {
+      return values.every(v => !isNaN(v) && (allowZero ? v >= 0 : v > 0));
+    }
 
-// === 分頁清單（語言切換與分頁顯示共用，避免重複定義）===
-const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer', 'tmcalc', 'revcomp', 'ligation', 'cellcount', 'celldilution', 'timer'];
+    function clearFields(ids, resultId) {
+      ids.forEach(id => document.getElementById(id).value = '');
+      if (resultId) hideResult(resultId);
+    }
 
-    // === 3. 各分頁計算邏輯 ===
+    const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer', 'tmcalc', 'revcomp', 'ligation', 'cellcount', 'celldilution', 'scientific', 'timer'];
 
-    // (A) 莫耳濃度
+    // === M. 科學計算機邏輯 (Google Style) ===
+    let calcExpression = "";
+    let calcAns = "0";
+    let isDegree = true;
+    let isEvaluated = false;
+    let isInv = false;
+    let memoryVal = 0;
+
+    // --- 記憶體功能 ---
+    function showMemoryFeedback(text) {
+        const res = document.getElementById('calc-result');
+        let oldText = res.innerText;
+        res.innerText = text;
+        res.style.color = "var(--primary)";
+        setTimeout(() => { 
+            res.innerText = oldText; 
+            res.style.color = "var(--text-muted)";
+            updateCalcDisplay();
+        }, 500);
+    }
+    function memoryClear() { memoryVal = 0; showMemoryFeedback("Memory Cleared"); }
+    function memoryRecall() { if (memoryVal !== 0) appendCalc(formatNumberLimit(memoryVal)); }
+    function memoryAdd() { 
+        memoryVal += isEvaluated ? parseFloat(calcAns) : parseFloat(calculatePreview() || 0);
+        showMemoryFeedback("M+");
+    }
+    function memorySub() { 
+        memoryVal -= isEvaluated ? parseFloat(calcAns) : parseFloat(calculatePreview() || 0);
+        showMemoryFeedback("M−");
+    }
+
+    // --- INV 模式切換 ---
+    function toggleInv() {
+        isInv = !isInv;
+        let invBtn = document.getElementById('btn-inv');
+        invBtn.style.backgroundColor = isInv ? "#e2e8f0" : "#f1f5f9";
+        invBtn.style.color = isInv ? "var(--primary)" : "#475569";
+        invBtn.style.fontWeight = isInv ? "600" : "500";
+        
+        document.getElementById('btn-sin').innerText = isInv ? "asin" : "sin";
+        document.getElementById('btn-sin').setAttribute('onclick', isInv ? "appendCalc('asin')" : "appendCalc('sin')");
+        
+        document.getElementById('btn-cos').innerText = isInv ? "acos" : "cos";
+        document.getElementById('btn-cos').setAttribute('onclick', isInv ? "appendCalc('acos')" : "appendCalc('cos')");
+        
+        document.getElementById('btn-tan').innerText = isInv ? "atan" : "tan";
+        document.getElementById('btn-tan').setAttribute('onclick', isInv ? "appendCalc('atan')" : "appendCalc('tan')");
+        
+        document.getElementById('btn-ln').innerText = isInv ? "eˣ" : "ln";
+        document.getElementById('btn-ln').setAttribute('onclick', isInv ? "appendCalc('e^(')" : "appendCalc('ln')");
+        
+        document.getElementById('btn-log').innerText = isInv ? "10ˣ" : "log";
+        document.getElementById('btn-log').setAttribute('onclick', isInv ? "appendCalc('10^(')" : "appendCalc('log')");
+        
+        document.getElementById('btn-sqrt').innerText = isInv ? "x²" : "√";
+        document.getElementById('btn-sqrt').setAttribute('onclick', isInv ? "appendCalc('²')" : "appendCalc('√')");
+        
+        document.getElementById('btn-fact').innerText = isInv ? "1/x" : "x!";
+        document.getElementById('btn-fact').setAttribute('onclick', isInv ? "appendCalc('1/(')" : "appendCalc('!')");
+    }
+
+    // --- 反三角函數計算 ---
+    function calcAsin(val) { let res = Math.asin(val); return isDegree ? res * 180 / Math.PI : res; }
+    function calcAcos(val) { let res = Math.acos(val); return isDegree ? res * 180 / Math.PI : res; }
+    function calcAtan(val) { let res = Math.atan(val); return isDegree ? res * 180 / Math.PI : res; }
+
+    function toggleAngleUnit() {
+        isDegree = !isDegree;
+        document.getElementById('btn-angle-unit').innerText = isDegree ? "DEG" : "RAD";
+        isEvaluated = false;
+        updateCalcDisplay();
+    }
+
+    function calcSin(val) {
+        if (isDegree) {
+            // 0, 180, 360, -180 等整數倍 180 度的 sin 應該精確為 0
+            if (Math.abs(val % 180) < 1e-10) return 0;
+            return Math.sin(val * Math.PI / 180);
+        } else {
+            // 0, PI, 2PI 等的 sin 應該精確為 0
+            let rem = (val / Math.PI) % 1;
+            if (Math.abs(rem) < 1e-10 || Math.abs(Math.abs(rem) - 1) < 1e-10) return 0;
+            return Math.sin(val);
+        }
+    }
+    function calcCos(val) {
+        if (isDegree) {
+            // 90, 270, -90 等奇數倍 90 度的 cos 應該精確為 0
+            if (Math.abs(Math.abs(val % 180) - 90) < 1e-10) return 0;
+            return Math.cos(val * Math.PI / 180);
+        } else {
+            // PI/2, 3PI/2 等的 cos 應該精確為 0
+            let rem = (val / Math.PI) % 1;
+            if (Math.abs(Math.abs(rem) - 0.5) < 1e-10) return 0;
+            return Math.cos(val);
+        }
+    }
+    function calcTan(val) {
+    if (isDegree) {
+        // 判斷是否為 90, 270, -90, -270 等奇數倍 90 度
+        if (Math.abs(Math.abs(val % 180) - 90) < 1e-10) return NaN;
+        return Math.tan(val * Math.PI / 180);
+    } else {
+        // 判斷是否為 PI/2, 3PI/2 等
+        let rem = (val / Math.PI) % 1;
+        if (Math.abs(Math.abs(rem) - 0.5) < 1e-10) return NaN;
+        return Math.tan(val);
+    }
+    }
+    
+    function factorial(n) {
+    // 修正：僅負整數無定義，負小數可透過 Gamma 函數計算
+    if (n < 0 && Number.isInteger(n)) return NaN;
+        
+        // 若為整數，維持原本迴圈算法以確保絕對精確度
+        if (Number.isInteger(n)) {
+            if (n === 0 || n === 1) return 1;
+            let res = 1;
+            for (let i = 2; i <= n; i++) res *= i;
+            return res;
+        }
+        
+        // 若為小數，使用 Lanczos 近似法計算 Gamma 函數: n! = Gamma(n+1)
+        let g = 7;
+        let p = [
+            0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+            771.32342877765313, -176.61502916214059, 12.507343278220815,
+            -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7
+        ];
+        
+        // 【修正點】：因為 n! = Gamma(n+1)，而 Gamma 演算法標準起手式是 z -= 1
+        // (n + 1) - 1 = n，所以迴圈與次方計算直接使用 z = n 即可
+        let z = n;
+        let x = p[0];
+        for (let i = 1; i < g + 2; i++) {
+            x += p[i] / (z + i);
+        }
+        let t = z + g + 0.5;
+        return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+    }
+
+    function parseCalcExpr(expr) {
+        let e = expr;
+        
+        e = e.replace(/Ans!/g, 'factorial(Ans)');
+        e = e.replace(/π!/g, 'factorial(π)');
+        e = e.replace(/e!/g, 'factorial(e)');
+        e = e.replace(/(\d+(?:\.\d+)?)!/g, 'factorial($1)');
+        
+        e = e.replace(/((?:\d+(?:\.\d+)?)|Ans)\s*([\+−])\s*(\d+(?:\.\d+)?)%/g, '$1$2($1*$3/100)');
+        e = e.replace(/%/g, '/100');
+
+        // 修改這裡：隱式乘法加入 asin|acos|atan
+        e = e.replace(/(\d|\)|!)(?=\(|sin|cos|tan|asin|acos|atan|ln|log|√|π|e|Ans)/g, '$1×');
+        e = e.replace(/(\)|π|e|Ans)(?=\d)/g, '$1×');
+
+        e = e.replace(/×/g, '*');
+        e = e.replace(/÷/g, '/');
+        e = e.replace(/−/g, '-');
+        e = e.replace(/π/g, 'Math.PI');
+        e = e.replace(/Ans/g, `(${calcAns})`);
+        
+        // 新增反三角函數 (必須在普通的 sin/cos 替換之前)
+        e = e.replace(/\basin\(/g, 'calcAsin(');
+        e = e.replace(/\bacos\(/g, 'calcAcos(');
+        e = e.replace(/\batan\(/g, 'calcAtan(');
+        
+        e = e.replace(/\bsin\(/g, 'calcSin(');
+        e = e.replace(/\bcos\(/g, 'calcCos(');
+        e = e.replace(/\btan\(/g, 'calcTan(');
+        e = e.replace(/log\(/g, 'Math.log10(');
+        e = e.replace(/ln\(/g, 'Math.log(');
+        e = e.replace(/√\(/g, 'Math.sqrt(');
+        
+        e = e.replace(/\be\b/g, 'Math.E'); 
+        e = e.replace(/²/g, '**2');
+        e = e.replace(/\^/g, '**');
+        e = e.replace(/EXP/g, '*10**');
+        
+        return e;
+    }
+
+    function formatNumberLimit(num) {
+        if (!isFinite(num)) return num.toString();
+        
+        // 1. 先用 13 位精確度修復 0.1+0.2 這類浮點數誤差，同時保留足夠的精度
+        let res = parseFloat(num.toPrecision(13));
+        
+        // 2. 如果絕對值 >= 1e12 (即整數部分達到 13 位數或以上)
+        if (Math.abs(res) >= 1e12) {
+            // 轉為科學記號，最多保留 11 位小數 (總共 12 位有效數字)
+            // .replace(/\.?0+e/, 'e') 會把尾端多餘的 0 俐落去除 (例如 1.200e+12 -> 1.2e+12)
+            return res.toExponential(11).replace(/\.?0+e/, 'e');
+        }
+        
+        // 3. 其餘正常情況直接轉字串 (JS 原生針對小於 1e-7 的極小數也會自動轉為科學記號)
+        return res.toString();
+    }
+
+    function calculatePreview() {
+        if (!calcExpression) return "";
+        try {
+            let testExpr = calcExpression;
+            let open = (testExpr.match(/\(/g) || []).length;
+            let close = (testExpr.match(/\)/g) || []).length;
+            for (let i = 0; i < (open - close); i++) testExpr += ")";
+            
+            let parsed = parseCalcExpr(testExpr);
+            let res = eval(parsed);
+            if (res !== undefined && !isNaN(res) && typeof res === 'number') {
+                return formatNumberLimit(res);
+            }
+            return "";
+        } catch (e) {
+            return "";
+        }
+    }
+
+    function updateCalcDisplay() {
+        const inputEl = document.getElementById('calc-input');
+        const resultEl = document.getElementById('calc-result');
+
+        inputEl.value = calcExpression;
+
+        if (isEvaluated) {
+        // 修改這裡：算出結果後，下方顯示最終答案，算式保留在上方
+        resultEl.innerText = "= " + calcAns;
+        resultEl.style.color = "var(--primary)"; // 加入顏色提示已計算
+        } else {
+        let preview = calculatePreview();
+        resultEl.innerText = preview ? "= " + preview : "";
+        resultEl.style.color = "var(--text-muted)"; // 恢復原本的灰色
+        }
+        
+        inputEl.scrollLeft = inputEl.scrollWidth;
+        resultEl.scrollLeft = resultEl.scrollWidth;
+    }
+
+    function appendCalc(val) {
+        const operators = ['+', '−', '×', '÷', '^', '%', '!', '²', 'EXP'];
+        const infixOps = ['+', '−', '×', '÷', '^']; // 雙元運算符
+
+        if (isEvaluated) {
+            if (operators.includes(val)) {
+                // 如果是運算符，保留前次答案
+                calcExpression = calcAns; 
+            } else {
+                calcExpression = ""; 
+            }
+            isEvaluated = false;
+        }
+
+        // 【新增修復】防呆：若最後一個字元與輸入字元皆為雙元運算符，則替換之
+        if (infixOps.includes(val) && calcExpression.length > 0) {
+            const lastChar = calcExpression.slice(-1);
+            if (infixOps.includes(lastChar)) {
+                calcExpression = calcExpression.slice(0, -1) + val;
+                updateCalcDisplay();
+                return;
+            }
+        }
+
+        // 一般字元附加邏輯
+        if (['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', '√'].includes(val)) {
+            calcExpression += val + "(";
+        } else {
+            calcExpression += val;
+        }
+        
+        updateCalcDisplay();
+    }
+
+    function clearCalc() {
+        calcExpression = "";
+        isEvaluated = false;
+        document.getElementById('calc-input').value = "";
+        document.getElementById('calc-result').innerText = "0";
+    }
+
+    function delCalc() {
+        if (isEvaluated) {
+            calcExpression = "";
+            isEvaluated = false;
+        } else {
+            // 升級智慧刪除：支援所有新函數長度
+            if (calcExpression.endsWith('asin(') || calcExpression.endsWith('acos(') || calcExpression.endsWith('atan(')) {
+                calcExpression = calcExpression.slice(0, -5);
+            } else if (calcExpression.endsWith('Ans') || calcExpression.endsWith('sin(') || calcExpression.endsWith('cos(') || calcExpression.endsWith('tan(') || calcExpression.endsWith('log(') || calcExpression.endsWith('10^(')) {
+                calcExpression = calcExpression.slice(0, -4);
+            } else if (calcExpression.endsWith('EXP') || calcExpression.endsWith('ln(') || calcExpression.endsWith('e^(')) {
+                calcExpression = calcExpression.slice(0, -3);
+            } else if (calcExpression.endsWith('√(') || calcExpression.endsWith('1/(')) {
+                calcExpression = calcExpression.slice(0, -2);
+            } else {
+                calcExpression = calcExpression.slice(0, -1);
+            }
+        }
+        updateCalcDisplay();
+    }
+
+    function evalCalc() {
+        if (!calcExpression) return;
+        let preview = calculatePreview();
+        
+        if (preview) {
+            calcAns = preview;
+            // 將下面這行刪除或註解，不要覆蓋原始算式！
+            // calcExpression = preview;
+            isEvaluated = true;
+            updateCalcDisplay();
+        } else {
+            document.getElementById('calc-result').innerText = "Error";
+            // 避免卡死，讓使用者可以按退格鍵修改
+            isEvaluated = false; 
+        }
+    }
+    // === 複製與貼上功能 ===
+    const calcInputEl = document.getElementById('calc-input');
+    const calcResultEl = document.getElementById('calc-result');
+
+    // 1. 攔截貼上動作 (長按上排輸入框貼上)
+    calcInputEl.addEventListener('paste', function(e) {
+        e.preventDefault(); // 阻止原生貼上破壞排版
+        let paste = (e.clipboardData || window.clipboardData).getData('text');
+        
+        // 僅保留數字與數學符號，並自動轉換成美觀的運算符號
+        let cleaned = paste.replace(/[^0-9+\-×÷*/().eE]/g, '');
+        cleaned = cleaned.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
+        
+        if (cleaned) {
+            if (isEvaluated) {
+                calcExpression = cleaned;
+                isEvaluated = false;
+            } else {
+                calcExpression += cleaned;
+            }
+            updateCalcDisplay();
+        }
+    });
+
+    // 2. 防止實體鍵盤直接輸入干擾 (僅允許 Ctrl+V 貼上快捷鍵)
+    calcInputEl.addEventListener('keydown', function(e) {
+        if (!e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+        }
+    });
+
+    // 3. 點擊下排結果自動複製
+    calcResultEl.title = "點擊複製答案"; // 電腦版滑鼠懸停提示
+    calcResultEl.addEventListener('click', function() {
+        let preview = calculatePreview();
+        // 取得要複製的文字：若算完則複製答案，否則複製預覽，都沒有則複製目前算式
+        let textToCopy = isEvaluated ? calcAns : (preview ? preview : calcExpression || "0");
+        
+        if (navigator.clipboard && textToCopy) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // 複製成功時，短暫顯示「Copied！」提示
+                let originalText = calcResultEl.innerText;
+                calcResultEl.innerText = "✅ Copied！";
+                calcResultEl.style.color = "var(--success)"; // 變綠色
+                
+                setTimeout(() => {
+                    calcResultEl.style.color = "var(--text-muted)"; // 顏色恢復
+                    updateCalcDisplay(); // 文字恢復
+                }, 800);
+            }).catch(err => {
+                console.error("複製失敗", err);
+            });
+        }
+    });
+
+    // === 原有邏輯保留區段 ===
     function calculateMass() {
       const molarMass = parseFloat(document.getElementById('molarMass').value);
       const molarity = parseFloat(document.getElementById('molarity').value);
@@ -1714,7 +2175,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
       clearFields(['molarity', 'volume', 'massValue', 'molarMass'], 'massResult');
     }
 
-    // (B) 稀釋計算
     function calculateDilution() {
       const c1 = parseFloat(document.getElementById('c1').value);
       const c1Unit = parseFloat(document.getElementById('c1Unit').value);
@@ -1733,7 +2193,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
         return;
       }
       
-      // 新增防呆：已填寫的數值必須大於 0，防止除以零
       const filledValues = [c1, v1, c2, v2].filter(v => !isNaN(v));
       if (!validateInputs(filledValues)) {
         showError('dilutionResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
@@ -1773,7 +2232,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
       clearFields(['c1', 'v1', 'c2', 'v2'], 'dilutionResult');
     }
 
-    // (C) 酸鹼濃度
     function calculateAcidBase() {
       const weightPercentInput = document.getElementById('weightPercent');
       const molarityInput = document.getElementById('acidBaseMolarity');
@@ -1801,14 +2259,12 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
 
       const densityStd = density * densityUnit;
 
-      // === 新增：重量百分比防呆檢查 (0 ~ 100%) ===
       if (!isNaN(weightPercent) && (weightPercent < 0 || weightPercent > 100)) {
         showError('acidBaseResult', currentLanguage === 'zh' 
           ? '重量百分比 (%) 必須介於 0 到 100 之間' 
           : 'Weight percentage (%) must be between 0 and 100');
         return;
       }
-      // ==========================================
 
       if (!isNaN(weightPercent) && isNaN(molarity)) {
         const molarityM = ((weightPercent * densityStd) / molarMass) * 10;
@@ -1833,7 +2289,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
       clearFields(['weightPercent', 'acidBaseMolarity', 'density', 'acidBaseMW'], 'acidBaseResult');
     }
 
-    // (D) 溶液配製 (SolPrep)
     const solPrepConcUnitOptions = `
       <option value="1" selected>M</option>
       <option value="0.001">mM</option>
@@ -1986,7 +2441,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
       addSolute(); 
     }
 
-    // (E) 動物投藥
     function calculateAnimalDose() {
       const targetDose = parseFloat(document.getElementById('targetDose').value);
       const doseB1 = parseFloat(document.getElementById('doseB1').value);
@@ -2041,7 +2495,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
       document.getElementById('drugConc2Unit').selectedIndex = 0;
     }
 
-    // (F) Primer 回溶/稀釋
     function calcPrimer() {
       let A = parseFloat(document.getElementById('primerAmount').value);
       let B = parseFloat(document.getElementById('primerVolume').value);
@@ -2059,7 +2512,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
         return;
       }
       
-      // 新增防呆：防止除以零
       const filledValues = [A, B, C].filter(v => !isNaN(v));
       if (!validateInputs(filledValues)) {
         showError('primerResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
@@ -2088,13 +2540,11 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
       let a = parseFloat(document.getElementById('stockConc').value);
       let b = parseFloat(document.getElementById('targetConc').value);
       let c = parseFloat(document.getElementById('targetVol').value);
-      // 使用統一的驗證函式與錯誤顯示
+      
       if (!validateInputs([a, b, c])) {
         showError('diluteResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
         return;
       }
-
-      // === 新增：濃度合理性防呆 ===
       if (b > a) {
         showError('diluteResult', currentLanguage === 'zh' ? '目標濃度不可大於原液濃度' : 'Target concentration cannot be greater than stock concentration.');
         return;
@@ -2108,8 +2558,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
     function clearDilute() {
       clearFields(['stockConc', 'targetConc', 'targetVol'], 'diluteResult');
     }
-
-    // === (G) Tm 計算 & Structure Analysis ===
 
     function addRow() {
         tmRowCount++;
@@ -2147,7 +2595,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
     }
     
     function recalcAllTm() {
-    // 找出所有有輸入序列的輸入框，重新觸發計算
     const inputs = document.querySelectorAll('.seq-input');
     inputs.forEach(input => {
         if (input.value) calculateRow(input);
@@ -2157,7 +2604,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
     function calculateRow(inputElement) {
     const row = inputElement.closest('tr');
     
-    // 清理輸入
     let val = inputElement.value.replace(/[^a-zA-Z]/g, '').replace(/[^ATCGatcg]/g, '').toUpperCase();
     if (inputElement.value !== val) inputElement.value = val;
 
@@ -2175,27 +2621,22 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
     const length = val.length;
     const gcPercent = ((val.match(/[GC]/g) || []).length / length) * 100;
     
-    // === 1. 讀取進階設定參數 (修正與防呆) ===
     let rawNa = parseFloat(document.getElementById('tm-na').value);
     let Na_mM = (isNaN(rawNa) || rawNa <= 0) ? 50 : rawNa;
 
     let rawMg = parseFloat(document.getElementById('tm-mg').value);
-    let Mg_mM = (isNaN(rawMg) || rawMg < 0) ? 0 : rawMg; // Mg 可以為 0，所以用 < 0 防負數
+    let Mg_mM = (isNaN(rawMg) || rawMg < 0) ? 0 : rawMg; 
 
     let rawPrimer = parseFloat(document.getElementById('tm-pconc').value);
     let Primer_nM = (isNaN(rawPrimer) || rawPrimer <= 0) ? 500 : rawPrimer;
 
-    // === 2. 單位轉換 ===
-    let Na = Na_mM / 1000;          // mM -> M
-    let Mg = Mg_mM / 1000;          // mM -> M
-    let C_primer = Primer_nM / 1e9; // nM -> M
-    const R = 1.987;                // cal/K·mol
+    let Na = Na_mM / 1000;          
+    let Mg = Mg_mM / 1000;          
+    let C_primer = Primer_nM / 1e9; 
+    const R = 1.987;                
 
-    // === 3. 鎂離子/鹽濃度校正 (von Ahsen et al. 2001) ===
-    // 計算單價陽離子等效濃度 (Monovalent equivalent)
     let Na_eq = Na;
     if (Mg > 0) {
-        // 當有 Mg 時，使用校正公式
         Na_eq = Na + 3.3 * Math.sqrt(Mg);
     }
 
@@ -2205,7 +2646,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
         let sumH = 0;
         let sumS = 0;
 
-        // Nearest Neighbor
         for (let i = 0; i < length - 1; i++) {
             const pair = val.substr(i, 2);
             if (santaLuciaParams[pair]) { 
@@ -2214,7 +2654,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
             }
         }
 
-        // Terminal Corrections
         const firstBase = val[0];
         const lastBase = val[length - 1];
         if (['G','C'].includes(firstBase)) { sumH += santaLuciaParams['initGC'].H; sumS += santaLuciaParams['initGC'].S; }
@@ -2222,16 +2661,13 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
         if (['G','C'].includes(lastBase)) { sumH += santaLuciaParams['initGC'].H; sumS += santaLuciaParams['initGC'].S; }
         else { sumH += santaLuciaParams['initAT'].H; sumS += santaLuciaParams['initAT'].S; }
 
-        // Salt Correction (修正點：使用 Na_eq)
         const saltCorrection = 0.368 * (length - 1) * Math.log(Na_eq);
         sumS += saltCorrection;
 
-        // Calculate Tm (修正點：使用讀取到的 C_primer)
         const denominator = sumS + (R * Math.log(C_primer / 4));
         tmVal = ((1000 * sumH) / denominator) - 273.15;
 
     } else {
-        // 長序列公式 (修正點：使用 Na_eq)
         tmVal = 81.5 + (16.6 * Math.log10(Na_eq)) + (0.41 * gcPercent) - (600 / length);
     }
 
@@ -2240,7 +2676,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
     tmCell.innerText = tmVal.toFixed(2) + ' °C';
     }
 
-    // Structure Analysis
     function analyzeStructure(btn) {
         const tr = btn.closest('tr');
         const seq = tr.querySelector('.seq-input').value.toUpperCase();
@@ -2249,11 +2684,9 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
 
         document.getElementById('modal-seq').innerText = seq;
         
-        // 1. Hairpin (Intramolecular)
         const hairpin = findHairpinStrict(seq);
         renderHairpin(hairpin, seq);
 
-        // 2. Self-Dimer (Intermolecular)
         const dimer = findSelfDimerStrict(seq);
         renderDimer(dimer, seq);
 
@@ -2278,10 +2711,7 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
                 }
 
                 if (k >= 4 || (k===3 && currentScore >= 8)) {
-                // 【新增】計算扣除配對鹼基 (Stem) 後，實際剩餘的 Loop 長度
                 const actualLoopSize = (j - k) - (i + k) + 1;
-    
-                // 【新增】只有當 Loop 空間符合最小物理限制 (>= 3) 時，才視為有效 Hairpin
                 if (actualLoopSize >= minLoop) {
                 if (currentScore > maxScore) {
                 maxScore = currentScore;
@@ -2403,7 +2833,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
     function closeModal() { document.getElementById('structModal').style.display = "none"; }
     window.onclick = function(e) { if(e.target == document.getElementById('structModal')) closeModal(); }
 
-    // (H) DNA 反轉/互補
     function runRevComp(action) {
         const input = document.getElementById('revcompInput').value.trim();
         if(!input) return;
@@ -2422,20 +2851,19 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
         document.getElementById('revcompResult').value += `\n\n(Length: ${result.length} bp)`;
         document.getElementById('revcompResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+    
     function filterRevcompInput() {
     const type = document.getElementById('naType').value;
     const input = document.getElementById('revcompInput');
     const convertBtn = document.getElementById('btn-convert-na');
     
     if (type === 'dna') {
-        // DNA 模式：只允許 A, T, C, G
         input.value = input.value.replace(/[^atcgATCG]/g, '');
         if (convertBtn) {
             convertBtn.setAttribute('data-text', '轉 RNA');
             convertBtn.innerText = translations[currentLanguage]['轉 RNA'];
         }
     } else {
-        // RNA 模式：只允許 A, U, C, G
         input.value = input.value.replace(/[^aucgAUCG]/g, '');
         if (convertBtn) {
             convertBtn.setAttribute('data-text', '轉 DNA');
@@ -2443,7 +2871,6 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
         }
     }
 
-    // 新增：即時計算長度與 GC %
     const seq = input.value.toUpperCase();
     const len = seq.length;
     let gc = 0;
@@ -2452,36 +2879,29 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
         gc = ((seq.match(/[GC]/g) || []).length / len) * 100;
     }
     
-    // 更新顯示到畫面上
     document.getElementById('revcomp-len').innerText = len;
     document.getElementById('revcomp-gc').innerText = len > 0 ? gc.toFixed(1) : '0.0';
     }
+    
     function convertDnaRna() {
     const type = document.getElementById('naType').value;
-    // 加上 .toUpperCase() 讓輸入的序列統一變成大寫
     const input = document.getElementById('revcompInput').value.toUpperCase();
-    if (!input) return; // 如果沒有輸入則不動作
+    if (!input) return; 
     
     let result = '';
     if (type === 'dna') {
-        // 若選擇 DNA，將 T 轉成 U（因為已經全大寫了，只需取代大寫 T）
         result = input.replace(/T/g, 'U');
     } else if (type === 'rna') {
-        // 若選擇 RNA，將 U 轉成 T（只需取代大寫 U）
         result = input.replace(/U/g, 'T');
     }
     
-    // 輸出結果並維持原有的長度計算與畫面滾動
     document.getElementById('revcompResult').value = result + `\n\n(Length: ${result.length} bp)`;
     document.getElementById('revcompResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     
     function getComplement(seq) {
-    // 獲取目前選擇是 DNA 還是 RNA
     const type = document.getElementById('naType').value;
-    
     const map = {
-        // 動態判斷 A 的互補：DNA 為 T，RNA 為 U
         'A': type === 'dna' ? 'T' : 'U', 
         'T': 'A', 'U': 'A', 'G': 'C', 'C': 'G',
         'Y': 'R', 'R': 'Y', 'S': 'S', 'W': 'W', 'K': 'M',
@@ -2494,13 +2914,10 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
     function clearRevComp() {
     document.getElementById('revcompInput').value = '';
     document.getElementById('revcompResult').value = '';
-    
-    // 新增：連同長度與 GC 顯示一起歸零
     document.getElementById('revcomp-len').innerText = '0';
     document.getElementById('revcomp-gc').innerText = '0.0';
     }
 
-    // (I) Ligation 計算
     function calculateLigation() {
       const insertLength = parseFloat(document.getElementById('insertLength').value);
       const vectorLength = parseFloat(document.getElementById('vectorLength').value);
@@ -2521,35 +2938,31 @@ const TAB_LIST = ['mass', 'dilution', 'acidbase', 'solprep', 'animal', 'primer',
       clearFields(['insertLength', 'vectorLength', 'insertRatio', 'vectorRatio', 'vectorMass'], 'ligationResult');
     }
 
-    // (J) 細胞計數 (統一版)
 let cellConcentration = 0;
 let calculatedCellVolUL = 0;
 
-// === 【修改】細胞計數第一步防呆 (源頭) ===
 function invalidateCellStep1() {
     cellConcentration = 0;
     calculatedCellVolUL = 0;
-    hideResult('ccResult');           // 隱藏第一步結果
-    hideResult('ccVolumeResult');     // 隱藏第二步結果
-    hideResult('ccBatchResult');      // 隱藏第三步結果
-    document.getElementById('ccVolumeCalc').style.display = 'none'; // 收起第二步表單
-    document.getElementById('ccBatchCalc').style.display = 'none';  // 收起第三步表單
+    hideResult('ccResult');           
+    hideResult('ccVolumeResult');     
+    hideResult('ccBatchResult');      
+    document.getElementById('ccVolumeCalc').style.display = 'none'; 
+    document.getElementById('ccBatchCalc').style.display = 'none';  
 }
 
-// === 【新增】細胞計數第二步防呆 (中游) ===
 function invalidateCellStep2() {
     calculatedCellVolUL = 0;
-    hideResult('ccVolumeResult');     // 隱藏第二步結果
-    hideResult('ccBatchResult');      // 隱藏第三步結果
-    document.getElementById('ccBatchCalc').style.display = 'none';  // 收起第三步表單
+    hideResult('ccVolumeResult');     
+    hideResult('ccBatchResult');      
+    document.getElementById('ccBatchCalc').style.display = 'none';  
 }
 
-// === 【修改】細胞凍存液第一步防呆 (源頭) ===
 function invalidateFreezingStep1() {
     remainingCellsForFreezing = 0; 
-    hideResult('fzResult1');          // 隱藏第一步結果
-    hideResult('fzResult2');          // 隱藏第二步結果
-    document.getElementById('fzStep2Calc').style.display = 'none';  // 收起第二步表單
+    hideResult('fzResult1');          
+    hideResult('fzResult2');          
+    document.getElementById('fzStep2Calc').style.display = 'none';  
 }
 
 function updateCellNoteAndResult() {
@@ -2569,7 +2982,6 @@ function updateCellNoteAndResult() {
         noteEl.setAttribute('data-text', '(紅血球：一般使用25中格並選5格錯開不重疊格子)');
     }
 
-    // 若格數已有輸入值，切換時自動重新計算
     if (document.getElementById('ccCount').value) {
         calculateCellCount();
     }
@@ -2589,7 +3001,6 @@ function calculateCellCount() {
 
     const unitText = document.getElementById("ccUnit").selectedOptions[0].text;
 
-    // 依據細胞類型動態選擇算法係數
     const squareVolume = (type === 'wbc') ? 0.1 : (0.04 * 0.1);
     const baseResultUL = (count * dilution) / (squares * squareVolume); 
 
@@ -2693,7 +3104,6 @@ function clearCell() {
     document.getElementById('ccBatchResult').style.display = 'none';
 }
 
-// (L) 細胞凍存 / 稀釋
 let remainingCellsForFreezing = 0;
 
 function calcFreezingStep1() {
@@ -2707,7 +3117,6 @@ function calcFreezingStep1() {
         return;
     }
     if (base <= 0 || vol <= 0 || takeOut < 0) {
-        // 沿用您已經寫好的語系錯誤提示
         showError('fzResult1', translations[currentLanguage]['請輸入有效數值，且數值必須大於 0']);
         return;
     }
@@ -2753,7 +3162,6 @@ function calcFreezingStep2() {
         return;
     }
 
-    // 計算方式：C = B / 目標細胞凍存濃度 (算出為 mL)
     const C_mL = remainingCellsForFreezing / targetConc;
     const C_uL = C_mL * 1000;
 
@@ -2775,7 +3183,6 @@ function clearFreezingStep2() {
     clearFields(['fzTargetBase', 'fzTargetExp'], 'fzResult2');
 }
 
-// 輔助函數：將科學記號填入對應的 Base 與 Exp Input 中
 function fillSciNotInputs(baseId, expId, num) {
     if (num === 0) { document.getElementById(baseId).value = 0; document.getElementById(expId).value = 0; return; }
     const parts = num.toExponential(4).split('e');
@@ -2783,7 +3190,6 @@ function fillSciNotInputs(baseId, expId, num) {
     document.getElementById(expId).value = Number(parts[1]);
 }
 
-// 輔助函數：轉成科學記號字串顯示
 function toSciDisplayString(num) {
     if (num === 0) return "0";
     const parts = num.toExponential(2).split('e');
@@ -2811,22 +3217,18 @@ function calcCellDilution() {
         showError('cdilResult', translations[currentLanguage]['請輸入任意三個值']);
         return;
     }
-    // === 新增：數值大於 0 的防呆機制 ===
     const filledValues = [c1, c2, v1, v2].filter(v => !isNaN(v));
     if (!validateInputs(filledValues)) {
         showError('cdilResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']);
         return;
     }
-    // ==================================
     try {
         const resEl = document.getElementById('cdilResult');
-        // 動態判斷當前語言的單位
         const unitText = currentLanguage === 'zh' ? '個/mL' : 'cells/mL';
         
         if (isNaN(c1)) {
             const res = (c2 * v2) / v1;
             fillSciNotInputs('cdilC1Base', 'cdilC1Exp', res);
-            // 改用 innerHTML，讓 <sup> 標籤被正確渲染為上標
             resEl.innerHTML = `${translations[currentLanguage]['計算出原始細胞濃度 C₁ = ']}${toSciDisplayString(res)} ${unitText}`;
             resEl.style.display = 'block';
             resEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2839,7 +3241,6 @@ function calcCellDilution() {
         } else if (isNaN(c2)) {
             const res = (c1 * v1) / v2;
             fillSciNotInputs('cdilC2Base', 'cdilC2Exp', res);
-            // 改用 innerHTML
             resEl.innerHTML = `${translations[currentLanguage]['計算出目標細胞濃度 C₂ = ']}${toSciDisplayString(res)} ${unitText}`;
             resEl.style.display = 'block';
             resEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2861,7 +3262,6 @@ function clearCellDilution() {
     clearFields(['cdilC1Base', 'cdilC1Exp', 'cdilC2Base', 'cdilC2Exp', 'cdilV2', 'cdilV1'], 'cdilResult');
 }
 
-    // (K) 計時器功能
     const countdowns = Array(2).fill().map(() => ({
       interval: null, running: false, remaining: 0, title: '', audioLoopInterval: null, audioTimeout: null
     }));
@@ -2870,22 +3270,18 @@ function clearCellDilution() {
       interval: null, running: false, elapsed: 0, lastStart: 0, title: ''
     }));
     
-    // === Web Audio API 發聲函式 (全域變數版) ===
-    let audioCtx = null; // 全域變數
+    let audioCtx = null; 
 
     function playBeep() {
-    // 1. 初始化 AudioContext (只建立一次)
     if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) {
             audioCtx = new AudioContext();
         } else {
-            return; // 瀏覽器不支援
+            return; 
         }
     }
 
-    // 2. 防呆機制：如果是 suspended 狀態，嘗試喚醒
-    // 這是解決「計時結束沒聲音」的關鍵
     if (audioCtx.state === 'suspended') {
         audioCtx.resume().then(() => {
             triggerOscillator();
@@ -2906,7 +3302,6 @@ function clearCellDilution() {
     osc.type = 'square';
     osc.frequency.setValueAtTime(3000, t);
 
-    // 四連音節奏
     gain.gain.setValueAtTime(0.1, t);
     gain.gain.setValueAtTime(0, t + 0.08);
     
@@ -2934,18 +3329,15 @@ function clearCellDilution() {
     }
 
     function startCountdown(idx) {
-      // === 新增：提早初始化並喚醒 AudioContext ===
       if (!audioCtx) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (AudioContext) {
           audioCtx = new AudioContext();
       }
       }
-      // 如果已經建立，但狀態是暫停的，強制喚醒它
       if (audioCtx && audioCtx.state === 'suspended') {
       audioCtx.resume();
       }
-      // ==========================================
       if (countdowns[idx].running) return;
 
       if (countdowns[idx].remaining === 0) {
@@ -2966,20 +3358,16 @@ function clearCellDilution() {
         countdowns[idx].remaining = Math.max(0, left);
         updateCountdownDisplay(idx);
         
-        // ★★★ 修改點：倒數結束時 ★★★
         if (countdowns[idx].remaining <= 0) {
           clearInterval(countdowns[idx].interval);
           countdowns[idx].running = false;
 
-          // 1. 立即嗶一聲
           playBeep();
           
-          // 2. 設定循環嗶聲 (每 1 秒響一次)
           countdowns[idx].audioLoopInterval = setInterval(() => { 
             playBeep(); 
           }, 1000);
           
-          // 3. 設定 30 秒後自動停止
           countdowns[idx].audioTimeout = setTimeout(() => { 
             stopAudio(idx); 
           }, 30000);
@@ -3008,17 +3396,14 @@ function clearCellDilution() {
     }
     
     function stopAudio(idx) {
-      // 清除循環嗶聲
       if (countdowns[idx].audioLoopInterval) { 
         clearInterval(countdowns[idx].audioLoopInterval); 
         countdowns[idx].audioLoopInterval = null; 
       }
-      // 清除自動停止計時器
       if (countdowns[idx].audioTimeout) { 
         clearTimeout(countdowns[idx].audioTimeout); 
         countdowns[idx].audioTimeout = null; 
       }
-      // 這裡不需要再呼叫 audio.pause() 了，因為電子音是即時合成的
     }
 
     function updateCountdownDisplay(idx) {
@@ -3066,9 +3451,7 @@ function clearCellDilution() {
         `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${ms}`;
     }
 
-    // 更新所有已顯示的結果文字
     function updateDisplayedResults() {
-    // 基礎計算分頁
     const massResult = document.getElementById('massResult'); if (massResult.style.display === 'block') calculateMass();
     const dilutionResult = document.getElementById('dilutionResult'); if (dilutionResult.style.display === 'block') calculateDilution();
     const acidBaseResult = document.getElementById('acidBaseResult'); if (acidBaseResult.style.display === 'block') calculateAcidBase();
@@ -3079,7 +3462,6 @@ function clearCellDilution() {
     const diluteResult = document.getElementById('diluteResult'); if (diluteResult.style.display === 'block') calcDilute();
     const ligationResult = document.getElementById('ligationResult'); if (ligationResult.style.display === 'block') calculateLigation();
 
-    // 細胞計數 - 統一版
     const ccResult = document.getElementById('ccResult'); 
     if (ccResult.style.display === 'block') calculateCellCount();
 
@@ -3089,7 +3471,6 @@ function clearCellDilution() {
     const ccBatchRes = document.getElementById('ccBatchResult'); 
     if (ccBatchRes.style.display === 'block') calcCellBatch();
     
-    // 細胞凍存/稀釋
     const fzResult1 = document.getElementById('fzResult1'); 
     if (fzResult1.style.display === 'block') calcFreezingStep1();
     
@@ -3100,14 +3481,10 @@ function clearCellDilution() {
     if (cdilResult.style.display === 'block') calcCellDilution();
     }
 
-    // 初始化
     document.addEventListener('DOMContentLoaded', function() {
     switchLanguage('zh');
-        addSolute(); // 初始化溶液配製
-        // 初始化 Tm 表格
+        addSolute(); 
         for(let i=0; i<3; i++) addRow();
-        
-        // 初始化 Timer
         for(let i=0; i<2; i++) {
           updateCountdownDisplay(i);
           updateStopwatchDisplay(i);
