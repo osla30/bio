@@ -342,13 +342,19 @@ button.clear:hover {
 
 /* 科學計算機樣式 (Google Style) */
 .scientific-calculator {
-    max-width: 400px; /* 收窄版面讓比例更接近手機 */
+    max-width: 750px; /* 將版面加寬以容納左右兩大欄位 */
     margin: 0 auto;
     background: #f8fafc;
     border: 1px solid var(--border-color);
     border-radius: 24px;
     padding: 20px;
     box-shadow: var(--shadow-sm);
+}
+/* 新增排版容器，切分左右欄位 */
+.calc-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 切分為兩欄 */
+    gap: 16px;
 }
 .calc-display {
     display: flex;
@@ -520,6 +526,19 @@ button.clear:hover {
   .seq-input { width: 100%; }
   .button-group { justify-content: stretch; }
   .button-group button { flex: 1 1 100%; margin-right: 0; }
+  /* 新增計算機手機版排列方式 */
+  .scientific-calculator { 
+        max-width: 100%; 
+        overflow-x: auto; /* 開啟橫向滾動 */
+        -webkit-overflow-scrolling: touch; /* 讓 iOS 滑動更滑順 */
+        padding: 15px;
+    }
+    .calc-layout { 
+        display: grid;
+        grid-template-columns: 1fr 1fr; 
+        width: 600px; /* 強制撐開寬度，確保按鍵不被壓縮 */
+        gap: 16px; 
+    }
 }
 /* 頁尾標註樣式 */
 footer {
@@ -537,33 +556,6 @@ footer a, footer a:visited {
 }
 footer a:hover {
    text-decoration: underline;
-}
-/* 隱藏進階按鍵的預設狀態 */
-.adv-btn {
-    display: none; 
-}
-/* 當父層加上 show-adv 類別時，顯示這些按鍵 */
-.calc-buttons.show-adv .adv-btn {
-    display: flex; 
-}
-/* 展開/收合控制條樣式 */
-.adv-toggle-bar {
-    grid-column: span 4;
-    background: transparent;
-    color: #94a3b8;
-    border: none;
-    font-size: 14px;
-    padding: 8px 0;
-    cursor: pointer;
-    border-radius: 8px;
-    transition: background 0.2s, color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.adv-toggle-bar:hover {
-    background: #f1f5f9;
-    color: var(--text-muted);
 }
 	</style>
 </head>
@@ -1093,7 +1085,6 @@ footer a:hover {
         </div>
       </div>
     </div>
-    
     <!-- 新增科學計算機分頁 -->
     <div class="tab-content" id="scientific" style="display:none;">
         <div class="scientific-calculator">
@@ -1101,68 +1092,55 @@ footer a:hover {
                 <input type="text" id="calc-input" inputmode="none" placeholder="">
                 <div id="calc-result">0</div>
             </div>
-            <div class="calc-buttons">
-    <!-- 第 0 排：記憶體 (新增 adv-btn) -->
-    <button class="calc-btn fn adv-btn" onclick="memoryClear()">MC</button>
-    <button class="calc-btn fn adv-btn" onclick="memoryRecall()">MR</button>
-    <button class="calc-btn fn adv-btn" onclick="memoryAdd()">M+</button>
-    <button class="calc-btn fn adv-btn" onclick="memorySub()">M−</button>
+            
+            <!-- 將按鍵分為左右兩大區塊 -->
+            <div class="calc-layout">
+                <!-- 左側：進階與記憶體功能 -->
+                <div class="calc-buttons">
+                    <button class="calc-btn fn" onclick="memoryClear()">MC</button>
+                    <button class="calc-btn fn" onclick="memoryRecall()">MR</button>
+                    <button class="calc-btn fn" onclick="memoryAdd()">M+</button>
+                    <button class="calc-btn fn" onclick="memorySub()">M−</button>
+                    <button class="calc-btn fn" id="btn-inv" onclick="toggleInv()">INV</button>
+                    <button class="calc-btn fn" id="btn-angle-unit" onclick="toggleAngleUnit()">DEG</button>
+                    <button class="calc-btn fn" id="btn-sqrt" onclick="appendCalc('√')">√</button>
+                    <button class="calc-btn fn" onclick="appendCalc('^')">xʸ</button>
+                    <button class="calc-btn fn" id="btn-sin" onclick="appendCalc('sin')">sin</button>
+                    <button class="calc-btn fn" id="btn-cos" onclick="appendCalc('cos')">cos</button>
+                    <button class="calc-btn fn" id="btn-tan" onclick="appendCalc('tan')">tan</button>
+                    <button class="calc-btn fn" id="btn-fact" onclick="appendCalc('!')">x!</button>
+                    <button class="calc-btn fn" id="btn-ln" onclick="appendCalc('ln')">ln</button>
+                    <button class="calc-btn fn" id="btn-log" onclick="appendCalc('log')">log</button>
+                    <button class="calc-btn fn" onclick="appendCalc('π')">π</button>
+                    <button class="calc-btn fn" onclick="appendCalc('e')">e</button>
+                    <button class="calc-btn fn" onclick="appendCalc('(')">(</button>
+                    <button class="calc-btn fn" onclick="appendCalc(')')">)</button>
+                    <button class="calc-btn fn" onclick="appendCalc('Ans')">Ans</button>
+                    <button class="calc-btn fn" onclick="appendCalc('EXP')">EXP</button>
+                </div>
 
-    <!-- 第 1 排：功能按鍵 (新增 adv-btn) -->
-    <button class="calc-btn fn adv-btn" id="btn-inv" onclick="toggleInv()">INV</button>
-    <button class="calc-btn fn adv-btn" id="btn-angle-unit" onclick="toggleAngleUnit()">DEG</button>
-    <button class="calc-btn fn adv-btn" id="btn-sqrt" onclick="appendCalc('√')">√</button>
-    <button class="calc-btn fn adv-btn" onclick="appendCalc('^')">xʸ</button>
-
-    <!-- 第 2 排：三角與階乘 (新增 adv-btn) -->
-    <button class="calc-btn fn adv-btn" id="btn-sin" onclick="appendCalc('sin')">sin</button>
-    <button class="calc-btn fn adv-btn" id="btn-cos" onclick="appendCalc('cos')">cos</button>
-    <button class="calc-btn fn adv-btn" id="btn-tan" onclick="appendCalc('tan')">tan</button>
-    <button class="calc-btn fn adv-btn" id="btn-fact" onclick="appendCalc('!')">x!</button>
-
-    <!-- 第 3 排：對數與常數 (新增 adv-btn) -->
-    <button class="calc-btn fn adv-btn" id="btn-ln" onclick="appendCalc('ln')">ln</button>
-    <button class="calc-btn fn adv-btn" id="btn-log" onclick="appendCalc('log')">log</button>
-    <button class="calc-btn fn adv-btn" onclick="appendCalc('π')">π</button>
-    <button class="calc-btn fn adv-btn" onclick="appendCalc('e')">e</button>
-
-    <!-- 第 4 排：括號與科學符號 (新增 adv-btn) -->
-    <button class="calc-btn fn adv-btn" onclick="appendCalc('(')">(</button>
-    <button class="calc-btn fn adv-btn" onclick="appendCalc(')')">)</button>
-    <button class="calc-btn fn adv-btn" onclick="appendCalc('Ans')">Ans</button>
-    <button class="calc-btn fn adv-btn" onclick="appendCalc('EXP')">EXP</button>
-
-    <!-- !!! 新增這行：展開/收合控制條 !!! -->
-    <button class="adv-toggle-bar" id="btn-adv-toggle" onclick="toggleAdvKeys()" data-text="calc-adv-show">▼ 展開進階</button>
-
-                <!-- 第 5 排：清除與退格 -->
-                <button class="calc-btn action" onclick="clearCalc()">C</button>
-                <button class="calc-btn action" onclick="delCalc()">⌫</button>
-                <button class="calc-btn op" onclick="appendCalc('%')">%</button>
-                <button class="calc-btn op" onclick="appendCalc('÷')">÷</button>
-
-                <!-- 第 6 排：數字 7 8 9 與乘 -->
-                <button class="calc-btn num" onclick="appendCalc('7')">7</button>
-                <button class="calc-btn num" onclick="appendCalc('8')">8</button>
-                <button class="calc-btn num" onclick="appendCalc('9')">9</button>
-                <button class="calc-btn op" onclick="appendCalc('×')">×</button>
-
-                <!-- 第 7 排：數字 4 5 6 與減 -->
-                <button class="calc-btn num" onclick="appendCalc('4')">4</button>
-                <button class="calc-btn num" onclick="appendCalc('5')">5</button>
-                <button class="calc-btn num" onclick="appendCalc('6')">6</button>
-                <button class="calc-btn op" onclick="appendCalc('−')">−</button>
-
-                <!-- 第 8 排：數字 1 2 3 與加 -->
-                <button class="calc-btn num" onclick="appendCalc('1')">1</button>
-                <button class="calc-btn num" onclick="appendCalc('2')">2</button>
-                <button class="calc-btn num" onclick="appendCalc('3')">3</button>
-                <button class="calc-btn op" onclick="appendCalc('+')">+</button>
-
-                <!-- 第 9 排：數字 0 點 與等於 -->
-                <button class="calc-btn num" style="grid-column: span 2;" onclick="appendCalc('0')">0</button>
-                <button class="calc-btn num" onclick="appendCalc('.')">.</button>
-                <button class="calc-btn eval-btn" onclick="evalCalc()">=</button>
+                <!-- 右側：基本數字與運算符號 -->
+                <div class="calc-buttons">
+                    <button class="calc-btn action" onclick="clearCalc()">C</button>
+                    <button class="calc-btn action" onclick="delCalc()">⌫</button>
+                    <button class="calc-btn op" onclick="appendCalc('%')">%</button>
+                    <button class="calc-btn op" onclick="appendCalc('÷')">÷</button>
+                    <button class="calc-btn num" onclick="appendCalc('7')">7</button>
+                    <button class="calc-btn num" onclick="appendCalc('8')">8</button>
+                    <button class="calc-btn num" onclick="appendCalc('9')">9</button>
+                    <button class="calc-btn op" onclick="appendCalc('×')">×</button>
+                    <button class="calc-btn num" onclick="appendCalc('4')">4</button>
+                    <button class="calc-btn num" onclick="appendCalc('5')">5</button>
+                    <button class="calc-btn num" onclick="appendCalc('6')">6</button>
+                    <button class="calc-btn op" onclick="appendCalc('−')">−</button>
+                    <button class="calc-btn num" onclick="appendCalc('1')">1</button>
+                    <button class="calc-btn num" onclick="appendCalc('2')">2</button>
+                    <button class="calc-btn num" onclick="appendCalc('3')">3</button>
+                    <button class="calc-btn op" onclick="appendCalc('+')">+</button>
+                    <button class="calc-btn num" style="grid-column: span 2;" onclick="appendCalc('0')">0</button>
+                    <button class="calc-btn num" onclick="appendCalc('.')">.</button>
+                    <button class="calc-btn eval-btn" onclick="evalCalc()">=</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1785,24 +1763,6 @@ footer a:hover {
     let isInv = false;
     let memoryVal = 0;
 
-    // --- 進階按鍵展開/收合 ---
-    function toggleAdvKeys() {
-        const container = document.querySelector('.calc-buttons');
-        const toggleBtn = document.getElementById('btn-adv-toggle');
-        
-        container.classList.toggle('show-adv');
-        
-        if (container.classList.contains('show-adv')) {
-            // 切換為收合狀態，並套用當前語言
-            toggleBtn.setAttribute('data-text', 'calc-adv-hide');
-            toggleBtn.innerHTML = translations[currentLanguage]['calc-adv-hide'];
-        } else {
-            // 切換為展開狀態，並套用當前語言
-            toggleBtn.setAttribute('data-text', 'calc-adv-show');
-            toggleBtn.innerHTML = translations[currentLanguage]['calc-adv-show'];
-        }
-    }
-
     // --- 記憶體功能 ---
     function showMemoryFeedback(text) {
         const res = document.getElementById('calc-result');
@@ -1828,32 +1788,33 @@ footer a:hover {
 
     // --- INV 模式切換 ---
     function toggleInv() {
-        isInv = !isInv;
-        let invBtn = document.getElementById('btn-inv');
-        invBtn.style.backgroundColor = isInv ? "#e2e8f0" : "#f1f5f9";
-        invBtn.style.color = isInv ? "var(--primary)" : "#475569";
-        invBtn.style.fontWeight = isInv ? "600" : "500";
-        
-        document.getElementById('btn-sin').innerText = isInv ? "asin" : "sin";
-        document.getElementById('btn-sin').setAttribute('onclick', isInv ? "appendCalc('asin')" : "appendCalc('sin')");
-        
-        document.getElementById('btn-cos').innerText = isInv ? "acos" : "cos";
-        document.getElementById('btn-cos').setAttribute('onclick', isInv ? "appendCalc('acos')" : "appendCalc('cos')");
-        
-        document.getElementById('btn-tan').innerText = isInv ? "atan" : "tan";
-        document.getElementById('btn-tan').setAttribute('onclick', isInv ? "appendCalc('atan')" : "appendCalc('tan')");
-        
-        document.getElementById('btn-ln').innerText = isInv ? "eˣ" : "ln";
-        document.getElementById('btn-ln').setAttribute('onclick', isInv ? "appendCalc('e^(')" : "appendCalc('ln')");
-        
-        document.getElementById('btn-log').innerText = isInv ? "10ˣ" : "log";
-        document.getElementById('btn-log').setAttribute('onclick', isInv ? "appendCalc('10^(')" : "appendCalc('log')");
-        
-        document.getElementById('btn-sqrt').innerText = isInv ? "x²" : "√";
-        document.getElementById('btn-sqrt').setAttribute('onclick', isInv ? "appendCalc('²')" : "appendCalc('√')");
-        
-        document.getElementById('btn-fact').innerText = isInv ? "1/x" : "x!";
-        document.getElementById('btn-fact').setAttribute('onclick', isInv ? "appendCalc('1/(')" : "appendCalc('!')");
+    isInv = !isInv;
+    let invBtn = document.getElementById('btn-inv');
+    invBtn.style.backgroundColor = isInv ? "#e2e8f0" : "#f1f5f9";
+    invBtn.style.color = isInv ? "var(--primary)" : "#475569";
+    invBtn.style.fontWeight = isInv ? "600" : "500";
+    
+    document.getElementById('btn-sin').innerText = isInv ? "asin" : "sin";
+    document.getElementById('btn-sin').setAttribute('onclick', isInv ? "appendCalc('asin')" : "appendCalc('sin')");
+    
+    document.getElementById('btn-cos').innerText = isInv ? "acos" : "cos";
+    document.getElementById('btn-cos').setAttribute('onclick', isInv ? "appendCalc('acos')" : "appendCalc('cos')");
+    
+    document.getElementById('btn-tan').innerText = isInv ? "atan" : "tan";
+    document.getElementById('btn-tan').setAttribute('onclick', isInv ? "appendCalc('atan')" : "appendCalc('tan')");
+    
+    document.getElementById('btn-ln').innerText = isInv ? "eˣ" : "ln";
+    document.getElementById('btn-ln').setAttribute('onclick', isInv ? "appendCalc('e^(')" : "appendCalc('ln')");
+    
+    document.getElementById('btn-log').innerText = isInv ? "10ˣ" : "log";
+    document.getElementById('btn-log').setAttribute('onclick', isInv ? "appendCalc('10^(')" : "appendCalc('log')");
+    
+    document.getElementById('btn-sqrt').innerText = isInv ? "x²" : "√";
+    document.getElementById('btn-sqrt').setAttribute('onclick', isInv ? "appendCalc('²')" : "appendCalc('√')");
+    
+    // 修正：將 1/x 改為標準後綴 x⁻¹，避免數字相連的錯誤
+    document.getElementById('btn-fact').innerText = isInv ? "x⁻¹" : "x!";
+    document.getElementById('btn-fact').setAttribute('onclick', isInv ? "appendCalc('⁻¹')" : "appendCalc('!')");
     }
 
     // --- 反三角函數計算 ---
@@ -1937,44 +1898,62 @@ footer a:hover {
     }
 
     function parseCalcExpr(expr) {
-        let e = expr;
-        
-        e = e.replace(/Ans!/g, 'factorial(Ans)');
-        e = e.replace(/π!/g, 'factorial(π)');
-        e = e.replace(/e!/g, 'factorial(e)');
-        e = e.replace(/(\d+(?:\.\d+)?)!/g, 'factorial($1)');
-        
-        e = e.replace(/((?:\d+(?:\.\d+)?)|Ans)\s*([\+−])\s*(\d+(?:\.\d+)?)%/g, '$1$2($1*$3/100)');
-        e = e.replace(/%/g, '/100');
+    let e = expr;
 
-        // 修改這裡：隱式乘法加入 asin|acos|atan
-        e = e.replace(/(\d|\)|!)(?=\(|sin|cos|tan|asin|acos|atan|ln|log|√|π|e|Ans)/g, '$1×');
-        e = e.replace(/(\)|π|e|Ans)(?=\d)/g, '$1×');
+    // 1. 修復括號與一般階乘：支援 (5)! 或 (2+3)!
+    while (e.includes('!')) {
+        let prev = e;
+        e = e.replace(/\(([^()]+)\)!/g, 'factorial($1)');
+        e = e.replace(/((?:\d+(?:\.\d+)?)|Ans|π|e)!/g, 'factorial($1)');
+        if (e === prev) break;
+    }
 
-        e = e.replace(/×/g, '*');
-        e = e.replace(/÷/g, '/');
-        e = e.replace(/−/g, '-');
-        e = e.replace(/π/g, 'Math.PI');
-        e = e.replace(/Ans/g, `(${calcAns})`);
-        
-        // 新增反三角函數 (必須在普通的 sin/cos 替換之前)
-        e = e.replace(/\basin\(/g, 'calcAsin(');
-        e = e.replace(/\bacos\(/g, 'calcAcos(');
-        e = e.replace(/\batan\(/g, 'calcAtan(');
-        
-        e = e.replace(/\bsin\(/g, 'calcSin(');
-        e = e.replace(/\bcos\(/g, 'calcCos(');
-        e = e.replace(/\btan\(/g, 'calcTan(');
-        e = e.replace(/log\(/g, 'Math.log10(');
-        e = e.replace(/ln\(/g, 'Math.log(');
-        e = e.replace(/√\(/g, 'Math.sqrt(');
-        
-        e = e.replace(/\be\b/g, 'Math.E'); 
-        e = e.replace(/²/g, '**2');
-        e = e.replace(/\^/g, '**');
-        e = e.replace(/EXP/g, '*10**');
-        
-        return e;
+    // 2. 修復括號後百分比加減：支援 (50+50) + 10%
+    while (e.match(/(.*)([\+−])\s*(\d+(?:\.\d+)?)%/)) {
+        e = e.replace(/(.*)([\+−])\s*(\d+(?:\.\d+)?)%/, '($1)$2(($1)*$3/100)');
+    }
+
+    // 3. 修復 % 後面直接接數字的隱藏 Bug (將 12%3 變成 12% × 3)
+    e = e.replace(/%(?=\d|π|e|Ans|\(|sin|cos|tan|asin|acos|atan|ln|log|√)/g, '%×');
+    e = e.replace(/%/g, '/100');
+
+    // 4. 全面修復隱式乘法
+    const tokens = 'sin|cos|tan|asin|acos|atan|ln|log|√|π|e|Ans|\\(';
+    e = e.replace(new RegExp(`(\\d|\\)|π|e|Ans)(?=${tokens})`, 'g'), '$1×');
+    e = e.replace(/(\)|π|e|Ans)(?=\d)/g, '$1×');
+
+    // 5. 基礎運算符轉換
+    e = e.replace(/×/g, '*');
+    e = e.replace(/÷/g, '/');
+    e = e.replace(/−/g, '-');
+    e = e.replace(/π/g, 'Math.PI');
+    e = e.replace(/Ans/g, `(${calcAns})`);
+
+    // 6. 函數與常數轉譯
+    e = e.replace(/\basin\(/g, 'calcAsin(');
+    e = e.replace(/\bacos\(/g, 'calcAcos(');
+    e = e.replace(/\batan\(/g, 'calcAtan(');
+    e = e.replace(/\bsin\(/g, 'calcSin(');
+    e = e.replace(/\bcos\(/g, 'calcCos(');
+    e = e.replace(/\btan\(/g, 'calcTan(');
+    e = e.replace(/log\(/g, 'Math.log10(');
+    e = e.replace(/ln\(/g, 'Math.log(');
+    e = e.replace(/√\(/g, 'Math.sqrt(');
+    e = e.replace(/\be\b/g, 'Math.E');
+    e = e.replace(/²/g, '**2');
+    e = e.replace(/⁻¹/g, '**(-1)');
+
+    // 7. 修復 EXP 負指數，強制加括號避免錯誤 (5 EXP -2 -> 5*10**(-2))
+    e = e.replace(/EXP\s*-\s*(\d+(?:\.\d+)?)/g, '*10**(-$1)');
+    
+    // 8. 修復 ^ 負指數，強制加括號 (2^-3 -> 2**(-3))
+    e = e.replace(/\^\s*-\s*(\d+(?:\.\d+)?)/g, '**(-$1)');
+    e = e.replace(/\^/g, '**');
+
+    // 9. 修復 JS ** 一元運算符崩潰 Bug (將負底數 -2**2 轉為 -1*2**2)
+    e = e.replace(/(^|[\+\-\*\/\(])-/g, '$1-1*');
+
+    return e;
     }
 
     function formatNumberLimit(num) {
@@ -2034,37 +2013,40 @@ footer a:hover {
     }
 
     function appendCalc(val) {
-        const operators = ['+', '−', '×', '÷', '^', '%', '!', '²', 'EXP'];
-        const infixOps = ['+', '−', '×', '÷', '^']; // 雙元運算符
+    // 新增 ⁻¹ 進入 operators，確保接續運算時保留 Ans
+    const operators = ['+', '−', '×', '÷', '^', '%', '!', '²', 'EXP', '⁻¹'];
+    const infixOps = ['+', '−', '×', '÷', '^']; 
 
-        if (isEvaluated) {
-            if (operators.includes(val)) {
-                // 如果是運算符，保留前次答案
-                calcExpression = calcAns; 
-            } else {
-                calcExpression = ""; 
-            }
-            isEvaluated = false;
-        }
-
-        // 【新增修復】防呆：若最後一個字元與輸入字元皆為雙元運算符，則替換之
-        if (infixOps.includes(val) && calcExpression.length > 0) {
-            const lastChar = calcExpression.slice(-1);
-            if (infixOps.includes(lastChar)) {
-                calcExpression = calcExpression.slice(0, -1) + val;
-                updateCalcDisplay();
-                return;
-            }
-        }
-
-        // 一般字元附加邏輯
-        if (['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', '√'].includes(val)) {
-            calcExpression += val + "(";
+    if (isEvaluated) {
+        if (operators.includes(val)) {
+            calcExpression = calcAns; 
         } else {
-            calcExpression += val;
+            calcExpression = ""; 
         }
-        
-        updateCalcDisplay();
+        isEvaluated = false;
+    }
+
+    if (infixOps.includes(val) && calcExpression.length > 0) {
+        const lastChar = calcExpression.slice(-1);
+        if (val === '−' && ['×', '÷', '^', 'EXP', '('].includes(lastChar)) {
+            calcExpression += val;
+            updateCalcDisplay();
+            return;
+        }
+        if (infixOps.includes(lastChar)) {
+            calcExpression = calcExpression.slice(0, -1) + val;
+            updateCalcDisplay();
+            return;
+        }
+    }
+
+    if (['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', '√'].includes(val)) {
+        calcExpression += val + "(";
+    } else {
+        calcExpression += val;
+    }
+    
+    updateCalcDisplay();
     }
 
     function clearCalc() {
@@ -2075,24 +2057,24 @@ footer a:hover {
     }
 
     function delCalc() {
-        if (isEvaluated) {
-            calcExpression = "";
-            isEvaluated = false;
+    if (isEvaluated) {
+        calcExpression = "";
+        isEvaluated = false;
+    } else {
+        if (calcExpression.endsWith('asin(') || calcExpression.endsWith('acos(') || calcExpression.endsWith('atan(')) {
+            calcExpression = calcExpression.slice(0, -5);
+        } else if (calcExpression.endsWith('Ans') || calcExpression.endsWith('sin(') || calcExpression.endsWith('cos(') || calcExpression.endsWith('tan(') || calcExpression.endsWith('log(') || calcExpression.endsWith('10^(')) {
+            calcExpression = calcExpression.slice(0, -4);
+        } else if (calcExpression.endsWith('EXP') || calcExpression.endsWith('ln(') || calcExpression.endsWith('e^(')) {
+            calcExpression = calcExpression.slice(0, -3);
+        } else if (calcExpression.endsWith('√(') || calcExpression.endsWith('⁻¹')) {
+            // 同時刪除 ⁻ 與 ¹ 兩個字元
+            calcExpression = calcExpression.slice(0, -2);
         } else {
-            // 升級智慧刪除：支援所有新函數長度
-            if (calcExpression.endsWith('asin(') || calcExpression.endsWith('acos(') || calcExpression.endsWith('atan(')) {
-                calcExpression = calcExpression.slice(0, -5);
-            } else if (calcExpression.endsWith('Ans') || calcExpression.endsWith('sin(') || calcExpression.endsWith('cos(') || calcExpression.endsWith('tan(') || calcExpression.endsWith('log(') || calcExpression.endsWith('10^(')) {
-                calcExpression = calcExpression.slice(0, -4);
-            } else if (calcExpression.endsWith('EXP') || calcExpression.endsWith('ln(') || calcExpression.endsWith('e^(')) {
-                calcExpression = calcExpression.slice(0, -3);
-            } else if (calcExpression.endsWith('√(') || calcExpression.endsWith('1/(')) {
-                calcExpression = calcExpression.slice(0, -2);
-            } else {
-                calcExpression = calcExpression.slice(0, -1);
-            }
+            calcExpression = calcExpression.slice(0, -1);
         }
-        updateCalcDisplay();
+    }
+    updateCalcDisplay();
     }
 
     function evalCalc() {
