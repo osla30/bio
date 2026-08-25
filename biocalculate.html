@@ -129,6 +129,9 @@ button.clear:hover { background: #475569; }
   textarea { width: 100%; }
   .flex-container { grid-template-columns: 1fr 1fr; }
   .timer-flex-container { grid-template-columns: 1fr 1fr; }
+  .calc-mobile-toggle { display: none !important; }
+  #calc-panel-fn { display: grid !important; }
+  #calc-panel-num { display: grid !important; }
 }
 @media (min-width: 1024px) {
   body { padding: 40px; }
@@ -158,12 +161,34 @@ button.clear:hover { background: #475569; }
   .button-group { justify-content: stretch; }
   .button-group button { flex: 1 1 100%; margin-right: 0; }
   .scientific-calculator { max-width: 100%; padding: 15px; }
-  .calc-layout { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; gap: 15px; padding-bottom: 15px; }
-  .calc-layout .calc-buttons { flex: 0 0 100%; scroll-snap-align: start; }
-  .calc-layout .calc-buttons:nth-child(1) { order: 2; }
-  .calc-layout .calc-buttons:nth-child(2) { order: 1; }
-  .calc-layout::-webkit-scrollbar { height: 4px; }
-  .calc-layout::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  /* 手機版：切換顯示邏輯與膠囊按鈕樣式 */
+.calc-layout { display: block; }
+#calc-panel-fn { display: none; } /* 手機預設隱藏 Fx 區 */
+#calc-panel-num { display: grid; } /* 手機預設顯示 123 區 */
+
+.calc-mobile-toggle {
+  display: flex;
+  background: #e2e8f0;
+  border-radius: 30px;
+  width: 160px; /* 寬度約佔兩顆按鈕大小 */
+  margin-top: 15px;
+}
+.calc-toggle-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.calc-toggle-btn.active {
+  background: #eff6ff; /* Google 樣式的淺藍色背景 */
+  color: var(--primary);
+}
 }
 footer { text-align: center; padding: 2rem 1rem; color: #718096; font-size: 0.95rem; margin-top: 2rem; line-height: 1.6; }
 footer a, footer a:visited { color: #3182ce; text-decoration: none; font-weight: bold; }
@@ -708,7 +733,7 @@ footer a:hover { text-decoration: underline; }
             <!-- 將按鍵分為左右兩大區塊 -->
             <div class="calc-layout">
                 <!-- 左側：進階與記憶體功能 -->
-                <div class="calc-buttons">
+                <div class="calc-buttons" id="calc-panel-fn">
                     <button class="calc-btn fn" onclick="memoryClear()">MC</button>
                     <button class="calc-btn fn" onclick="memoryRecall()">MR</button>
                     <button class="calc-btn fn" onclick="memoryAdd()">M+</button>
@@ -732,7 +757,7 @@ footer a:hover { text-decoration: underline; }
                 </div>
 
                 <!-- 右側：基本數字與運算符號 -->
-                <div class="calc-buttons">
+                <div class="calc-buttons" id="calc-panel-num">
                     <button class="calc-btn action" onclick="clearCalc()">C</button>
                     <button class="calc-btn action" onclick="delCalc()">⌫</button>
                     <button class="calc-btn op" onclick="appendCalc('%')">%</button>
@@ -752,6 +777,11 @@ footer a:hover { text-decoration: underline; }
                     <button class="calc-btn num" style="grid-column: span 2;" onclick="appendCalc('0')">0</button>
                     <button class="calc-btn num" onclick="appendCalc('.')">.</button>
                     <button class="calc-btn eval-btn" onclick="evalCalc()">=</button>
+                </div>
+
+                <div class="calc-mobile-toggle" id="calc-mobile-toggle">
+                    <button class="calc-toggle-btn active" id="btn-toggle-num" onclick="switchCalcPanel('num')">123</button>
+                    <button class="calc-toggle-btn" id="btn-toggle-fn" onclick="switchCalcPanel('fn')">Fx</button>
                 </div>
             </div>
         </div>
@@ -1199,8 +1229,13 @@ footer a:hover { text-decoration: underline; }
     function memoryAdd() { 
     let val = getEvalNumber(isEvaluated ? rawAns : calcExpression);
     if (val === null) {
-        showMemoryFeedback("Error"); // 算式未完成或錯誤時給予提示
-        return;
+        // --- 新增：空值視為 0 ---
+        if (calcExpression.trim() === "") {
+            val = math.bignumber(0);
+        } else {
+            showMemoryFeedback("Error"); 
+            return;
+        }
     }
     memoryVal = math.add(memoryVal, val);
     showMemoryFeedback("M+");
@@ -1210,8 +1245,13 @@ footer a:hover { text-decoration: underline; }
     function memorySub() { 
     let val = getEvalNumber(isEvaluated ? rawAns : calcExpression);
     if (val === null) {
-        showMemoryFeedback("Error");
-        return;
+        // --- 新增：空值視為 0 ---
+        if (calcExpression.trim() === "") {
+            val = math.bignumber(0);
+        } else {
+            showMemoryFeedback("Error"); 
+            return;
+        }
     }
     memoryVal = math.subtract(memoryVal, val);
     showMemoryFeedback("M−");
@@ -1306,11 +1346,14 @@ footer a:hover { text-decoration: underline; }
         e = e.replace(/−/g, '-');
         e = e.replace(/π/g, 'pi');
         e = e.replace(/√\(/g, 'sqrt(');
+        e = e.replace(/√([0-9a-zA-Z_\.]+)/g, 'sqrt($1)'); // 支援使用者手打或貼上 √4、√pi 等無括號情境
         
         // 使用括號回溯將 % 轉為 _pct(...) 函式
         e = replacePercentWithFunction(e);
 
-        e = e.replace(/EXP\s*([\+\-]?)\s*(\d+(?:\.\d+)?)/g, '*10^($1$2)');
+        e = e.replace(/(^|[+−×÷\/\(\^])EXP/g, '$11EXP');
+
+        e = e.replace(/(\d+(?:\.\d+)?)\s*EXP\s*([\+\-]?)\s*(\d+(?:\.\d+)?)/g, '($1*10^($2$3))');
         e = e.replace(/EXP/g, '*10^'); 
 
         e = e.replace(/([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+)/g, function(match) {
@@ -1323,7 +1366,7 @@ footer a:hover { text-decoration: underline; }
         // 「補乘號」規則把 e 當成尤拉常數處理之前，先轉換成 *10^(...)。
         // 只有「數字 + e/E + 可選正負號 + 數字」這種明確的科學記號樣式才會轉換，
         // 單獨的 e（如 "2e"、"e^2"，代表尤拉常數本身）不受影響。
-        e = e.replace(/(\d+(?:\.\d+)?)[eE]([+-]?\d+)/g, '$1*10^($2)');
+        e = e.replace(/(\d+(?:\.\d+)?)[eE]([+-]?\d+)/g, '($1*10^($2))');
 
         const tokens = 'sin|cos|tan|asin|acos|atan|ln|log|sqrt|pi|e|Ans|_pct|\\(';
         e = e.replace(new RegExp(`(\\d|\\)|pi|e|Ans)(?=${tokens})`, 'g'), '$1*');
@@ -1335,6 +1378,14 @@ footer a:hover { text-decoration: underline; }
     // 核心 AST 解析環境配置
     function getMathScope() {
         return {
+            gamma: (x) => {
+            // 若傳入的數值為非整數（小數），math.js 的 BigNumber 不支援直接計算
+            // 必須先降級為普通 number，計算完畢後再轉回 BigNumber 以維持後續運算架構
+            if (!math.isInteger(x)) {
+                return math.bignumber(math.gamma(math.number(x)));
+            }
+            return math.gamma(x);
+            },
             sin: (x) => {
                 if (isDegree) {
                     if (math.number(math.mod(math.abs(x), 180)) === 0) return 0;
@@ -1356,9 +1407,9 @@ footer a:hover { text-decoration: underline; }
                 }
                 return math.tan(x);
             },
-            asin: (x) => isDegree ? math.number(math.evaluate(`asin(${x}) / pi * 180`)) : math.asin(x),
-            acos: (x) => isDegree ? math.number(math.evaluate(`acos(${x}) / pi * 180`)) : math.acos(x),
-            atan: (x) => isDegree ? math.number(math.evaluate(`atan(${x}) / pi * 180`)) : math.atan(x),
+            asin: (x) => isDegree ? math.multiply(math.divide(math.asin(x), math.pi), 180) : math.asin(x),
+            acos: (x) => isDegree ? math.multiply(math.divide(math.acos(x), math.pi), 180) : math.acos(x),
+            atan: (x) => isDegree ? math.multiply(math.divide(math.atan(x), math.pi), 180) : math.atan(x),
             ln: math.log,
             log: math.log10,
             // 修正：原本 math.bignumber(rawAns) 若 rawAns 曾是複數(如 "2i")或其他
@@ -1387,6 +1438,12 @@ footer a:hover { text-decoration: underline; }
         
         // 遍歷 AST 節點進行重寫
         ast = ast.transform(function (node, path, parent) {
+            // --- 新增以下區塊：將階乘轉換為 gamma(x + 1) 以支援小數運算 ---
+            if (node.isOperatorNode && node.op === '!') {
+               return new math.FunctionNode(new math.SymbolNode('gamma'), [
+                new math.OperatorNode('+', 'add', [node.args[0], new math.ConstantNode(1)])
+               ]);
+            }
             if (node.isOperatorNode && (node.op === '+' || node.op === '-') && node.args.length === 2) {
                 let right = node.args[1];
                 while (right.isParenthesisNode) {
@@ -1438,8 +1495,12 @@ footer a:hover { text-decoration: underline; }
         try {
             let result = evaluateAstWithPercent(calcExpression);
             if (result !== undefined && typeof result !== 'function') {
-                return formatNumberLimit(result);
+            // 若預覽結果為複數或 NaN，直接回傳空字串不顯示
+            if (math.typeOf(result) === 'Complex' || result.toString() === 'NaN') {
+            return "";
             }
+            return formatNumberLimit(result);
+        }
             return "";
         } catch (e) {
             return "";
@@ -1530,39 +1591,61 @@ footer a:hover { text-decoration: underline; }
     }
 
     function delCalc() {
-        if (isEvaluated) {
-            calcExpression = "";
-            isEvaluated = false;
-        } else {
-            // 修正："Ans" 只有 3 個字元，原本被誤放在刪 4 字元的分支，
-            // 會多刪掉 Ans 前面的一個字元(例如運算符號)。現在獨立處理。
-            if (calcExpression.endsWith('asin(') || calcExpression.endsWith('acos(') || calcExpression.endsWith('atan(')) {
-                calcExpression = calcExpression.slice(0, -5);
-            } else if (calcExpression.endsWith('sin(') || calcExpression.endsWith('cos(') || calcExpression.endsWith('tan(') || calcExpression.endsWith('log(') || calcExpression.endsWith('10^(')) {
-                calcExpression = calcExpression.slice(0, -4);
-            } else if (calcExpression.endsWith('Ans') || calcExpression.endsWith('EXP') || calcExpression.endsWith('ln(') || calcExpression.endsWith('e^(')) {
-                calcExpression = calcExpression.slice(0, -3);
-            } else if (calcExpression.endsWith('√(') || calcExpression.endsWith('⁻¹')) {
-                calcExpression = calcExpression.slice(0, -2);
-            } else {
-                calcExpression = calcExpression.slice(0, -1);
+    const inputEl = document.getElementById('calc-input');
+    // 取得當前游標位置，若無則預設為字串尾端
+    let cursorStart = inputEl.selectionStart !== null ? inputEl.selectionStart : calcExpression.length;
+
+    if (isEvaluated) {
+        calcExpression = "";
+        isEvaluated = false;
+    } else {
+        if (cursorStart > 0) {
+            // 根據游標位置將算式分為前後兩段
+            let beforeCursor = calcExpression.slice(0, cursorStart);
+            let afterCursor = calcExpression.slice(cursorStart);
+            let deleteLen = 1;
+
+            // 判斷游標前的字串是否為特定函數，以決定刪除長度
+            if (beforeCursor.endsWith('asin(') || beforeCursor.endsWith('acos(') || beforeCursor.endsWith('atan(')) {
+                deleteLen = 5;
+            } else if (beforeCursor.endsWith('sin(') || beforeCursor.endsWith('cos(') || beforeCursor.endsWith('tan(') || beforeCursor.endsWith('log(') || beforeCursor.endsWith('10^(')) {
+                deleteLen = 4;
+            } else if (beforeCursor.endsWith('Ans') || beforeCursor.endsWith('EXP') || beforeCursor.endsWith('ln(') || beforeCursor.endsWith('e^(')) {
+                deleteLen = 3;
+            } else if (beforeCursor.endsWith('√(') || beforeCursor.endsWith('⁻¹')) {
+                deleteLen = 2;
             }
+
+            // 刪除游標前的指定長度字元，並與游標後字串合併
+            calcExpression = beforeCursor.slice(0, -deleteLen) + afterCursor;
+
+            // 確保畫面更新後，游標回到正確位置
+            setTimeout(() => {
+                let newPos = cursorStart - deleteLen;
+                inputEl.setSelectionRange(newPos, newPos);
+                inputEl.focus();
+            }, 0);
         }
-        updateCalcDisplay();
+    }
+    updateCalcDisplay();
     }
 
     function evalCalc() {
         if (!calcExpression || typeof math === 'undefined') return;
         try {
-            let result = evaluateAstWithPercent(calcExpression);
-            if (result !== undefined && typeof result !== 'function') {
-                rawAns = result.toString(); 
-                calcAns = formatNumberLimit(result);
-                isEvaluated = true;
-                updateCalcDisplay();
-            } else {
-                throw new Error("Invalid");
-            }
+        let result = evaluateAstWithPercent(calcExpression);
+        if (result !== undefined && typeof result !== 'function') {
+        // 嚴格阻擋複數結果，強制觸發 Error
+        if (math.typeOf(result) === 'Complex' || result.toString() === 'NaN') {
+            throw new Error("Domain Error");
+        }
+        rawAns = result.toString(); 
+        calcAns = formatNumberLimit(result);
+        isEvaluated = true;
+        updateCalcDisplay();
+        } else {
+        throw new Error("Invalid");
+        }
         } catch (e) {
             document.getElementById('calc-result').innerText = "Error";
             isEvaluated = false; 
@@ -1636,7 +1719,25 @@ footer a:hover { text-decoration: underline; }
             }).catch(err => console.error("複製失敗", err));
         }
     });
+    // 新增：手機版通用計算機面板切換
+function switchCalcPanel(panel) {
+    const numPanel = document.getElementById('calc-panel-num');
+    const fnPanel = document.getElementById('calc-panel-fn');
+    const btnNum = document.getElementById('btn-toggle-num');
+    const btnFn = document.getElementById('btn-toggle-fn');
 
+    if (panel === 'num') {
+        numPanel.style.display = 'grid';
+        fnPanel.style.display = 'none';
+        btnNum.classList.add('active');
+        btnFn.classList.remove('active');
+    } else {
+        numPanel.style.display = 'none';
+        fnPanel.style.display = 'grid';
+        btnNum.classList.remove('active');
+        btnFn.classList.add('active');
+    }
+}
     // === 其他分頁計算邏輯保留區段 ===
     function calculateMass() {
       const molarMass = parseFloat(document.getElementById('molarMass').value);
