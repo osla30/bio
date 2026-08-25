@@ -1592,8 +1592,17 @@ footer a:hover { text-decoration: underline; }
 
     function delCalc() {
     const inputEl = document.getElementById('calc-input');
-    // 取得當前游標位置，若無則預設為字串尾端
-    let cursorStart = inputEl.selectionStart !== null ? inputEl.selectionStart : calcExpression.length;
+    
+    // 判斷目前輸入框是否正在被使用者選中（focus 狀態）
+    let isActive = (document.activeElement === inputEl);
+
+    // 如果輸入框被選中，就依照實際游標位置；如果沒被選中（單純點擊面板按鈕），則預設游標在最尾端
+    let cursorStart;
+    if (isActive && inputEl.selectionStart !== null) {
+        cursorStart = inputEl.selectionStart;
+    } else {
+        cursorStart = calcExpression.length;
+    }
 
     if (isEvaluated) {
         calcExpression = "";
@@ -1620,13 +1629,16 @@ footer a:hover { text-decoration: underline; }
             calcExpression = beforeCursor.slice(0, -deleteLen) + afterCursor;
 
             // 確保畫面更新後，游標回到正確位置
-            setTimeout(() => {
-                let newPos = cursorStart - deleteLen;
-                inputEl.setSelectionRange(newPos, newPos);
-                inputEl.focus();
-            }, 0);
+            // 新增條件：只有在原本就有 focus 的情況下才重新 focus，避免手機版點擊按鈕時彈出原生鍵盤
+            if (isActive) {
+                setTimeout(() => {
+                    let newPos = cursorStart - deleteLen;
+                    inputEl.setSelectionRange(newPos, newPos);
+                    inputEl.focus();
+                }, 0);
+            }
         }
-    }
+      }
     updateCalcDisplay();
     }
 
