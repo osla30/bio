@@ -1390,6 +1390,9 @@ footer a:hover { text-decoration: underline; }
                     if (math.number(math.mod(math.abs(x), 180)) === 0) return 0;
                     return math.sin(math.unit(x, 'deg'));
                 }
+                // --- RAD 模式修補：攔截 π 的倍數 ---
+                const div = math.number(math.divide(x, math.pi));
+                if (Math.abs(div - Math.round(div)) < 1e-10) return 0;
                 return math.sin(x);
             },
             cos: (x) => {
@@ -1397,13 +1400,24 @@ footer a:hover { text-decoration: underline; }
                     if (math.number(math.abs(math.mod(math.abs(x), 180) - 90)) === 0) return 0;
                     return math.cos(math.unit(x, 'deg'));
                 }
+                // --- RAD 模式修補：攔截 π/2 的奇數倍 ---
+                const div = math.number(math.divide(x, math.pi));
+                if (Math.abs((div - 0.5) - Math.round(div - 0.5)) < 1e-10) return 0;
                 return math.cos(x);
             },
             tan: (x) => {
                 if (isDegree) {
                     if (math.number(math.abs(math.mod(math.abs(x), 180) - 90)) === 0) return NaN;
+                    if (math.number(math.mod(math.abs(x), 180)) === 0) return 0; // 先前 DEG 的修補
                     return math.tan(math.unit(x, 'deg'));
                 }
+                // --- RAD 模式修補 ---
+                const div = math.number(math.divide(x, math.pi));
+                // 攔截 π 的倍數，歸零
+                if (Math.abs(div - Math.round(div)) < 1e-10) return 0;
+                // 攔截 π/2 的奇數倍，回傳 NaN (無定義/無限大)
+                if (Math.abs((div - 0.5) - Math.round(div - 0.5)) < 1e-10) return NaN;
+                
                 return math.tan(x);
             },
             asin: (x) => isDegree ? math.multiply(math.divide(math.asin(x), math.pi), 180) : math.asin(x),
