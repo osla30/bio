@@ -1490,20 +1490,21 @@ footer a:hover { text-decoration: underline; }
     }
 
     function calculatePreview() {
-        if (!calcExpression || typeof math === 'undefined') return "";
-        try {
-            let result = evaluateAstWithPercent(calcExpression);
-            if (result !== undefined && typeof result !== 'function') {
-            // 若預覽結果為複數或 NaN，直接回傳空字串不顯示
-            if (math.typeOf(result) === 'Complex' || result.toString() === 'NaN') {
-            return "";
+    if (!calcExpression || typeof math === 'undefined') return "";
+    try {
+        let result = evaluateAstWithPercent(calcExpression);
+        if (result !== undefined && typeof result !== 'function') {
+            let resStr = result.toString();
+            // 將 Infinity 與 -Infinity 納入攔截條件，保持與 evalCalc 絕對一致
+            if (math.typeOf(result) === 'Complex' || resStr === 'NaN' || resStr === 'Infinity' || resStr === '-Infinity') {
+                return "";
             }
             return formatNumberLimit(result);
         }
-            return "";
-        } catch (e) {
-            return "";
-        }
+        return "";
+    } catch (e) {
+        return "";
+    }
     }
 
     function updateCalcDisplay() {
