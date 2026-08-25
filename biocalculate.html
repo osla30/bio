@@ -526,19 +526,46 @@ button.clear:hover {
   .seq-input { width: 100%; }
   .button-group { justify-content: stretch; }
   .button-group button { flex: 1 1 100%; margin-right: 0; }
-  /* 新增計算機手機版排列方式 */
+  
+  /* 1. 計算機外框不要滑動，確保螢幕固定 */
   .scientific-calculator { 
-        max-width: 100%; 
-        overflow-x: auto; /* 開啟橫向滾動 */
-        -webkit-overflow-scrolling: touch; /* 讓 iOS 滑動更滑順 */
-        padding: 15px;
-    }
-    .calc-layout { 
-        display: grid;
-        grid-template-columns: 1fr 1fr; 
-        width: 600px; /* 強制撐開寬度，確保按鍵不被壓縮 */
-        gap: 16px; 
-    }
+      max-width: 100%; 
+      padding: 15px; 
+      /* 確保這裡沒有 overflow-x: auto */
+  }
+
+  /* 2. 只有按鍵區塊可以滑動，並改成 flex 佈局 */
+  .calc-layout { 
+      display: flex; 
+      overflow-x: auto; 
+      -webkit-overflow-scrolling: touch; 
+      scroll-snap-type: x mandatory; /* 加入滑動翻頁吸附效果 */
+      gap: 15px; 
+      padding-bottom: 15px; /* 留一點空間給捲軸 */
+  }
+
+  /* 3. 讓「進階」與「基本」兩個按鍵區塊，各佔滿整個手機寬度 */
+  .calc-layout .calc-buttons {
+      flex: 0 0 100%; 
+      scroll-snap-align: start; /* 滑動後自動對齊邊緣 */
+  }
+
+  /* 4. 手機版專屬：調換順序，預設先顯示右側的「基本按鍵」 */
+  .calc-layout .calc-buttons:nth-child(1) {
+      order: 2; /* 原本左側的進階按鍵排到第二頁 */
+  }
+  .calc-layout .calc-buttons:nth-child(2) {
+      order: 1; /* 原本右側的基本按鍵排到第一頁 (預設顯示) */
+  }
+
+  /* 美化手機版下方小捲軸 (可選) */
+  .calc-layout::-webkit-scrollbar {
+      height: 4px;
+  }
+  .calc-layout::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+  }
 }
 /* 頁尾標註樣式 */
 footer {
