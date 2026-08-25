@@ -750,8 +750,6 @@ footer a:hover { text-decoration: underline; }
                     <button class="calc-btn fn" id="btn-log" onclick="appendCalc('log')">log</button>
                     <button class="calc-btn fn" onclick="appendCalc('π')">π</button>
                     <button class="calc-btn fn" onclick="appendCalc('e')">e</button>
-                    <button class="calc-btn fn" onclick="appendCalc('(')">(</button>
-                    <button class="calc-btn fn" onclick="appendCalc(')')">)</button>
                     <button class="calc-btn fn" onclick="appendCalc('Ans')">Ans</button>
                     <button class="calc-btn fn" onclick="appendCalc('EXP')">EXP</button>
                 </div>
@@ -774,7 +772,8 @@ footer a:hover { text-decoration: underline; }
                     <button class="calc-btn num" onclick="appendCalc('2')">2</button>
                     <button class="calc-btn num" onclick="appendCalc('3')">3</button>
                     <button class="calc-btn op" onclick="appendCalc('+')">+</button>
-                    <button class="calc-btn num" style="grid-column: span 2;" onclick="appendCalc('0')">0</button>
+                    <button class="calc-btn num" onclick="appendSmartParen()">( )</button>
+                    <button class="calc-btn num" onclick="appendCalc('0')">0</button>
                     <button class="calc-btn num" onclick="appendCalc('.')">.</button>
                     <button class="calc-btn eval-btn" onclick="evalCalc()">=</button>
                 </div>
@@ -1433,39 +1432,39 @@ footer a:hover { text-decoration: underline; }
 
     // 統一 AST 解析與傳統加減百分比重寫引擎
     function evaluateAstWithPercent(exprStr) {
-        let parsedExpr = prepareExpressionForMathJs(exprStr);
-        let ast = math.parse(parsedExpr);
-        
-        // 遍歷 AST 節點進行重寫
-        ast = ast.transform(function (node, path, parent) {
-            // --- 新增以下區塊：將階乘轉換為 gamma(x + 1) 以支援小數運算 ---
-            if (node.isOperatorNode && node.op === '!') {
-               return new math.FunctionNode(new math.SymbolNode('gamma'), [
-                new math.OperatorNode('+', 'add', [node.args[0], new math.ConstantNode(1)])
-               ]);
+    let parsedExpr = prepareExpressionForMathJs(exprStr);
+    let ast = math.parse(parsedExpr);
+    
+    // 建立具名函式以便內部遞迴
+    const replacer = function (node, path, parent) {
+        if (node.isOperatorNode && node.op === '!') {
+           return new math.FunctionNode(new math.SymbolNode('gamma'), [
+            new math.OperatorNode('+', 'add', [node.args[0], new math.ConstantNode(1)])
+           ]);
+        }
+        if (node.isOperatorNode && (node.op === '+' || node.op === '-') && node.args.length === 2) {
+            let right = node.args[1];
+            while (right.isParenthesisNode) {
+                right = right.content;
             }
-            if (node.isOperatorNode && (node.op === '+' || node.op === '-') && node.args.length === 2) {
-                let right = node.args[1];
-                while (right.isParenthesisNode) {
-                    right = right.content;
-                }
-                // 若加減號右側為百分比函式 _pct
-                if (right.isFunctionNode && right.name === '_pct') {
-                    let pctArg = right.args[0];
-                    let left = node.args[0];
-                    
-                    // 將右側動態重組為: (left * pctArg / 100)
-                    let transformedRight = new math.OperatorNode('/', 'divide', [
-                        new math.OperatorNode('*', 'multiply', [left, pctArg]),
-                        new math.ConstantNode(100)
-                    ]);
-                    return new math.OperatorNode(node.op, node.fn, [left, transformedRight]);
-                }
+            if (right.isFunctionNode && right.name === '_pct') {
+                let pctArg = right.args[0];
+                
+                // 【核心修正】強制對左側節點遞迴，確保內層的 % 也被展開
+                let left = node.args[0].transform(replacer);
+                
+                let transformedRight = new math.OperatorNode('/', 'divide', [
+                    new math.OperatorNode('*', 'multiply', [left, pctArg]),
+                    new math.ConstantNode(100)
+                ]);
+                return new math.OperatorNode(node.op, node.fn, [left, transformedRight]);
             }
-            return node;
-        });
-        
-        return ast.evaluate(getMathScope());
+        }
+        return node;
+    };
+    
+    ast = ast.transform(replacer);
+    return ast.evaluate(getMathScope());
     }
 
     function formatNumberLimit(numVal) {
@@ -1579,6 +1578,22 @@ footer a:hover { text-decoration: underline; }
         updateCalcDisplay();
     }
 
+    function appendSmartParen() {
+        const openCount = (calcExpression.match(/\(/g) || []).length;
+        const closeCount = (calcExpression.match(/\)/g) || []).length;
+
+        if (openCount > closeCount) {
+            const lastChar = calcExpression.slice(-1);
+            if (/[0-9\.\)%!πe²¹sP]/.test(lastChar)) {
+                appendCalc(')');
+            } else {
+                appendCalc('(');
+            }
+        } else {
+            appendCalc('(');
+        }
+    }
+
     function clearCalc() {
         calcExpression = "";
         isEvaluated = false;
@@ -1647,11 +1662,12 @@ footer a:hover { text-decoration: underline; }
         try {
         let result = evaluateAstWithPercent(calcExpression);
         if (result !== undefined && typeof result !== 'function') {
-        // 嚴格阻擋複數結果，強制觸發 Error
-        if (math.typeOf(result) === 'Complex' || result.toString() === 'NaN') {
-            throw new Error("Domain Error");
+        let resStr = result.toString();
+        // 【修改處】擴充攔截條件，將 Infinity 與 -Infinity 納入
+        if (math.typeOf(result) === 'Complex' || resStr === 'NaN' || resStr === 'Infinity' || resStr === '-Infinity') {
+           throw new Error("Domain Error");
         }
-        rawAns = result.toString(); 
+        rawAns = resStr;
         calcAns = formatNumberLimit(result);
         isEvaluated = true;
         updateCalcDisplay();
@@ -1702,6 +1718,9 @@ footer a:hover { text-decoration: underline; }
     let nativeValue = e.target.value;
     // 將鍵盤打出的 * / - 轉換為系統可辨識的符號
     nativeValue = nativeValue.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
+    
+    // 連續運算子自動覆蓋 (允許保留乘除與次方後方的負號)
+    nativeValue = nativeValue.replace(/[+−×÷^]+([+×÷^])/g, '$1');
     
     calcExpression = nativeValue;
     isEvaluated = false;
