@@ -787,6 +787,7 @@ footer a:hover { text-decoration: underline; }
     </div>
     
     <div class="tab-content" id="timer" style="display:none;">
+        <div class="note" data-text="timer-mobile-warning">使用行動裝置時，由於先天限制，倒數計時結束後，不會響鈴聲！</div>
 		<div class="timer-flex-container">
 			<div style="flex: 1;">
 				<div class="timer-section-title" data-text="倒數計時器">倒數計時器</div>
@@ -847,9 +848,10 @@ footer a:hover { text-decoration: underline; }
     };
     
     const complement = { 'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C' };
-    let tmRowCount = 0;
-    let calculatedWbcVolUL = 0; 
-    let calculatedRbcVolUL = 0; 
+    let tmRowCount = 0; 
+    let cellConcentration = 0;
+    let calculatedCellVolUL = 0;
+    let remainingCellsForFreezing = 0;
 
     const translations = {
       zh: {
@@ -859,6 +861,7 @@ footer a:hover { text-decoration: underline; }
         "tab-tmcalc": "Primer Tm 計算", "tab-revcomp": "核酸轉換", "tab-ligation": "Ligation 計算",
         "tab-cellcount": "細胞 計數/種植", "tab-celldilution": "細胞 凍存/稀釋",
         "tab-scientific": "通用計算機", "tab-timer": "計時器",
+        "timer-mobile-warning": "使用行動裝置時，由於先天限制，倒數計時結束後，不會響鈴聲！",
         "tm-seq": "引物序列 (5' -> 3')", "tm-len": "長度", "tm-gc": "GC %",
         "tm-tm": "Tm 值 (°C)", "tm-action": "操作", "tm-add": "+ 新增欄位",
         "tm-clear": "清空", "tm-analyze": "分析", "tm-delete": "刪除",
@@ -956,11 +959,12 @@ footer a:hover { text-decoration: underline; }
         "計算出目標細胞濃度 C₂ = ": "計算出目標細胞濃度 C₂ = ", "計算出目標細胞體積 V₂ = ": "計算出目標細胞體積 V₂ = "
       },
       en: {
-        "main-title": "BioCalculator", "download-btn": "Download Offline Version",
+        "main-title": "BioCalculator", "download-btn": "Offline Version",
         "tab-mass": "Molarity", "tab-dilution": "Dilute", "tab-acidbase": "Acid-Base",
         "tab-solprep": "Solution Prep", "tab-animal": "Animal Drug Dosage", "tab-primer": "Primer Reconstitution/Dilute",
         "tab-tmcalc": "Primer Tm Calculate", "tab-revcomp": "Nucleic Acid Conversion", "tab-ligation": "Ligation Calculate",
         "tab-cellcount": "Cell Count/Seeding", "tab-scientific": "General Calculator", "tab-timer": "Timer",
+        "timer-mobile-warning": "Due to mobile OS limitations, the countdown alarm will not ring if the browser is in the background or the screen is locked!",
         "tm-seq": "Primer Sequence (5' -> 3')", "tm-len": "Length", "tm-gc": "GC %",
         "tm-tm": "Tm Value (°C)", "tm-action": "Action", "tm-add": "+ Add Row",
         "tm-clear": "Clear", "tm-analyze": "Analyze", "tm-delete": "Delete",
@@ -1065,6 +1069,14 @@ footer a:hover { text-decoration: underline; }
 
     let currentLanguage = 'zh';
 
+    function formatBioResult(num) {
+    if (num === 0) return "0";
+    if (Math.abs(num) < 1e-5 || Math.abs(num) >= 1e6) {
+        return num.toExponential(4); // 太小或太大時，啟用科學記號並保留4位小數
+    }
+    return parseFloat(num.toFixed(6)).toString(); // 一般數值最多保留6位小數，去掉多餘的0
+    }
+
     function switchLanguage(lang) {
       currentLanguage = lang;
       document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
@@ -1102,6 +1114,14 @@ footer a:hover { text-decoration: underline; }
       updateSelectOptions(lang);
       updateSolPrepList(lang);
       updateDisplayedResults();
+
+      // ★ 新增：確保動態產生的 Tm 表格按鈕也能切換語言
+     document.querySelectorAll('#tableBody .btn-check').forEach(btn => {
+      btn.innerText = translations[lang]['tm-analyze'];
+     });
+     document.querySelectorAll('#tableBody .btn-del').forEach(btn => {
+      btn.innerText = translations[lang]['tm-delete'];
+     });
     }
 
     function updateSelectOptions(lang) {
@@ -1599,7 +1619,7 @@ footer a:hover { text-decoration: underline; }
 
         if (openCount > closeCount) {
             const lastChar = calcExpression.slice(-1);
-            if (/[0-9\.\)%!πe²¹sP]/.test(lastChar)) {
+            if (/[0-9\.\)%!πe⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻sP]/.test(lastChar)) {
                 appendCalc(')');
             } else {
                 appendCalc('(');
@@ -1621,24 +1641,27 @@ footer a:hover { text-decoration: underline; }
     }
 
     function delCalc() {
-    const inputEl = document.getElementById('calc-input');
-    
-    // 判斷目前輸入框是否正在被使用者選中（focus 狀態）
-    let isActive = (document.activeElement === inputEl);
+        const inputEl = document.getElementById('calc-input');
+        
+        // 判斷目前輸入框是否正在被使用者選中（focus 狀態）
+        let isActive = (document.activeElement === inputEl);
+        
+        // 必須先初始化 cursorStart，再處理 cursorEnd
+        let cursorStart = (isActive && inputEl.selectionStart !== null) ? inputEl.selectionStart : calcExpression.length;
+        let cursorEnd = (isActive && inputEl.selectionEnd !== null) ? inputEl.selectionEnd : cursorStart;
 
-    // 如果輸入框被選中，就依照實際游標位置；如果沒被選中（單純點擊面板按鈕），則預設游標在最尾端
-    let cursorStart;
-    if (isActive && inputEl.selectionStart !== null) {
-        cursorStart = inputEl.selectionStart;
-    } else {
-        cursorStart = calcExpression.length;
-    }
+        // 如果有反白選取區間，直接刪除選取範圍
+        if (cursorStart !== cursorEnd) {
+            calcExpression = calcExpression.slice(0, cursorStart) + calcExpression.slice(cursorEnd);
+            updateCalcDisplay(); // 記得要更新畫面
+            return; 
+        }
 
-    if (isEvaluated) {
-        calcExpression = "";
-        isEvaluated = false;
-    } else {
-        if (cursorStart > 0) {
+        if (isEvaluated) {
+            calcExpression = "";
+            isEvaluated = false;
+        } else {
+            if (cursorStart > 0) {
             // 根據游標位置將算式分為前後兩段
             let beforeCursor = calcExpression.slice(0, cursorStart);
             let afterCursor = calcExpression.slice(cursorStart);
@@ -1785,6 +1808,11 @@ function switchCalcPanel(panel) {
     }
 }
     // === 其他分頁計算邏輯保留區段 ===
+    function getSelectedText(elementId) {
+    const sel = document.getElementById(elementId);
+    return sel.options[sel.selectedIndex].text;
+    }
+
     function calculateMass() {
       const molarMass = parseFloat(document.getElementById('molarMass').value);
       const molarity = parseFloat(document.getElementById('molarity').value);
@@ -1805,18 +1833,18 @@ function switchCalcPanel(panel) {
       if (isNaN(molarity)) {
         const molarityM = (massValue * massUnit) / (molarMass * volume * volumeUnit);
         const molarityConverted = molarityM / molarityUnit;
-        document.getElementById('molarity').value = molarityConverted.toFixed(6);
-        resultText = `${translations[currentLanguage]['計算出莫耳濃度：']}${molarityConverted.toFixed(6)} ${getSelectedText('molarityUnit')}`;
+        document.getElementById('molarity').value = formatBioResult(molarityConverted);
+        resultText = `${translations[currentLanguage]['計算出莫耳濃度：']}${formatBioResult(molarityConverted)} ${getSelectedText('molarityUnit')}`;
       } else if (isNaN(volume)) {
         const volumeL = (massValue * massUnit) / (molarMass * molarity * molarityUnit);
         const volumeConverted = volumeL / volumeUnit;
-        document.getElementById('volume').value = volumeConverted.toFixed(6);
-        resultText = `${translations[currentLanguage]['計算出體積：']}${volumeConverted.toFixed(6)} ${getSelectedText('volumeUnit')}`;
+        document.getElementById('volume').value = formatBioResult(volumeConverted);
+        resultText = `${translations[currentLanguage]['計算出體積：']}${formatBioResult(volumeConverted)} ${getSelectedText('volumeUnit')}`;
       } else if (isNaN(massValue)) {
         const massG = (molarity * molarityUnit) * (volume * volumeUnit) * molarMass;
         const massConverted = massG / massUnit;
-        document.getElementById('massValue').value = massConverted.toFixed(6);
-        resultText = `${translations[currentLanguage]['計算出質量：']}${massConverted.toFixed(6)} ${getSelectedText('massUnit')}`;
+        document.getElementById('massValue').value = formatBioResult(massConverted);
+        resultText = `${translations[currentLanguage]['計算出質量：']}${formatBioResult(massConverted)} ${getSelectedText('massUnit')}`;
       } else {
         showError('massResult', currentLanguage === 'zh' ? '請清空「莫耳濃度 / 體積 / 質量」其中一項以進行計算' : 'Please clear either Molarity, Volume, or Mass to calculate.');
         return;
@@ -1842,27 +1870,36 @@ function switchCalcPanel(panel) {
       const filledValues = [c1, v1, c2, v2].filter(v => !isNaN(v));
       if (!validateInputs(filledValues)) { showError('dilutionResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']); return; }
 
+      if (!isNaN(c1) && !isNaN(c2) && (c2 * c2Unit) > (c1 * c1Unit)) {
+      showError('dilutionResult', currentLanguage === 'zh' ? '錯誤：目標濃度 (C₂) 不可大於原液濃度 (C₁)' : 'Error: Target concentration (C₂) cannot exceed stock concentration (C₁)');
+       return;
+      }
+      if (!isNaN(v1) && !isNaN(v2) && (v1 * v1Unit) > (v2 * v2Unit)) {
+      showError('dilutionResult', currentLanguage === 'zh' ? '錯誤：原液體積 (V₁) 不可大於目標總體積 (V₂)' : 'Error: Stock volume (V₁) cannot exceed target volume (V₂)');
+       return;
+      }
+
       try {
-        if (isNaN(c1)) {
-          const val = (c2 * c2Unit) * (v2 * v2Unit) / (v1 * v1Unit);
-          document.getElementById('c1').value = (val / c1Unit).toFixed(6);
-          showResult('dilutionResult', `${translations[currentLanguage]['計算出原液濃度 C₁ = ']}${(val / c1Unit).toFixed(6)} ${getSelectedText('c1Unit')}`);
-        } else if (isNaN(v1)) {
-          const val = (c2 * c2Unit) * (v2 * v2Unit) / (c1 * c1Unit);
-          document.getElementById('v1').value = (val / v1Unit).toFixed(6);
-          showResult('dilutionResult', `${translations[currentLanguage]['計算出原液體積 V₁ = ']}${(val / v1Unit).toFixed(6)} ${getSelectedText('v1Unit')}`);
-        } else if (isNaN(c2)) {
-          const val = (c1 * c1Unit) * (v1 * v1Unit) / (v2 * v2Unit);
-          document.getElementById('c2').value = (val / c2Unit).toFixed(6);
-          showResult('dilutionResult', `${translations[currentLanguage]['計算出目標濃度 C₂ = ']}${(val / c2Unit).toFixed(6)} ${getSelectedText('c2Unit')}`);
-        } else if (isNaN(v2)) {
-          const val = (c1 * c1Unit) * (v1 * v1Unit) / (c2 * c2Unit);
-          document.getElementById('v2').value = (val / v2Unit).toFixed(6);
-          showResult('dilutionResult', `${translations[currentLanguage]['計算出目標體積 V₂ = ']}${(val / v2Unit).toFixed(6)} ${getSelectedText('v2Unit')}`);
-        } else {
-          showError('dilutionResult', translations[currentLanguage]['請清空一個欄位以計算該值']);
-        }
-      } catch { showError('dilutionResult', 'Calculation error'); }
+    let val = 0, targetId = '', targetUnit = 1, prefix = '';
+    
+    if (isNaN(c1)) { val = (c2 * c2Unit * v2 * v2Unit) / (v1 * v1Unit); targetId = 'c1'; targetUnit = c1Unit; prefix = '計算出原液濃度 C₁ = '; }
+    else if (isNaN(v1)) { val = (c2 * c2Unit * v2 * v2Unit) / (c1 * c1Unit); targetId = 'v1'; targetUnit = v1Unit; prefix = '計算出原液體積 V₁ = '; }
+    else if (isNaN(c2)) { val = (c1 * c1Unit * v1 * v1Unit) / (v2 * v2Unit); targetId = 'c2'; targetUnit = c2Unit; prefix = '計算出目標濃度 C₂ = '; }
+    else if (isNaN(v2)) { val = (c1 * c1Unit * v1 * v1Unit) / (c2 * c2Unit); targetId = 'v2'; targetUnit = v2Unit; prefix = '計算出目標體積 V₂ = '; }
+    else { showError('dilutionResult', translations[currentLanguage]['請清空一個欄位以計算該值']); return; }
+
+    // 攔截極端值與無限大
+    if (!isFinite(val) || val <= 0) { 
+        showError('dilutionResult', currentLanguage === 'zh' ? '計算結果異常 (如超出範圍)' : 'Invalid calculation result (out of bounds)'); 
+        return; 
+    }
+
+    const finalVal = val / targetUnit;
+    document.getElementById(targetId).value = formatBioResult(finalVal);
+    showResult('dilutionResult', `${translations[currentLanguage][prefix]}${formatBioResult(finalVal)} ${getSelectedText(targetId + 'Unit')}`);
+    } catch { 
+     showError('dilutionResult', 'Calculation error'); 
+    }
     }
     function clearDilution() { clearFields(['c1', 'v1', 'c2', 'v2'], 'dilutionResult'); }
 
@@ -1883,12 +1920,12 @@ function switchCalcPanel(panel) {
 
       if (!isNaN(weightPercent) && isNaN(molarity)) {
         const molarityConverted = (((weightPercent * densityStd) / molarMass) * 10) / molarityUnit;
-        document.getElementById('acidBaseMolarity').value = molarityConverted.toFixed(6);
-        showResult('acidBaseResult', `${translations[currentLanguage]['計算莫耳濃度：']}${molarityConverted.toFixed(6)} ${molarityUnitSelect.options[molarityUnitSelect.selectedIndex].text}`);
+        document.getElementById('acidBaseMolarity').value = formatBioResult(molarityConverted);
+        showResult('acidBaseResult', `${translations[currentLanguage]['計算莫耳濃度：']}${formatBioResult(molarityConverted)} ${molarityUnitSelect.options[molarityUnitSelect.selectedIndex].text}`);
       } else if (isNaN(weightPercent) && !isNaN(molarity)) {
         const weightPercentCalc = ((molarity * molarityUnit) * molarMass) / (densityStd * 10);
-        document.getElementById('weightPercent').value = weightPercentCalc.toFixed(6);
-        showResult('acidBaseResult', `${translations[currentLanguage]['計算重量百分比：']}${weightPercentCalc.toFixed(6)} %`);
+        document.getElementById('weightPercent').value = formatBioResult(weightPercentCalc);
+        showResult('acidBaseResult', `${translations[currentLanguage]['計算重量百分比：']}${formatBioResult(weightPercentCalc)} %`);
       } else if (!isNaN(weightPercent) && !isNaN(molarity)) {
         showError('acidBaseResult', currentLanguage === 'zh' ? '請清空「重量百分比」或「莫耳濃度」其中一項以進行計算' : 'Please clear either Weight percentage or Molarity to calculate.');
       } else {
@@ -1906,6 +1943,7 @@ function switchCalcPanel(panel) {
     }
     function toggleSoluteSource(sel) {
       const box = sel.closest('.solute-item');
+      box.querySelector('.s-val').value = '';
       if (sel.value === 'solid') {
         box.querySelector('.s-val').placeholder = translations[currentLanguage]['solprep-mw'];
         box.querySelector('.left-unit-container').innerHTML = `<span class="fixed-unit">g/mol</span>`;
@@ -1940,8 +1978,18 @@ function switchCalcPanel(panel) {
         const tVal = parseFloat(box.querySelector('.s-target').value);
         const tUnit = box.querySelector('.s-target-unit').value;
 
-        if (isNaN(vVal) || isNaN(tVal)) return;
-        if (vVal <= 0 || tVal <= 0) { showError('solprepResult', currentLanguage === 'zh' ? '請輸入大於 0 的有效數值' : 'Please enter valid values greater than 0'); hasError = true; return; }
+        if (isNaN(tVal) || tVal <= 0) { 
+        showError('solprepResult', currentLanguage === 'zh' ? '請輸入大於 0 的有效數值' : 'Please enter valid values greater than 0'); 
+        hasError = true; 
+        return; 
+        }
+        // 當選擇固體且單位為 %(w/v) 時，跳過分子量檢驗
+        const isSolidPerc = (src === 'solid' && tUnit === 'perc');
+        if (!isSolidPerc && (isNaN(vVal) || vVal <= 0)) {
+        showError('solprepResult', currentLanguage === 'zh' ? '請輸入正確的分子量或原液濃度' : 'Please enter a valid MW or Stock Conc.'); 
+        hasError = true; 
+        return;
+        }
         hasItems = true;
 
         if (src === 'solid') {
@@ -2021,6 +2069,7 @@ function switchCalcPanel(panel) {
         let Mg_mM = parseFloat(document.getElementById('tm-mg').value); Mg_mM = (isNaN(Mg_mM) || Mg_mM < 0) ? 0 : Mg_mM; 
         let Primer_nM = parseFloat(document.getElementById('tm-pconc').value); Primer_nM = (isNaN(Primer_nM) || Primer_nM <= 0) ? 500 : Primer_nM;
         let Na_eq = (Na_mM / 1000) + (Mg_mM > 0 ? 3.3 * Math.sqrt(Mg_mM / 1000) : 0);
+        Na_eq = Math.max(Na_eq, 1e-6);
         let tmVal = 0;
 
         if (len <= 60) {
@@ -2145,7 +2194,24 @@ function switchCalcPanel(panel) {
         noteEl.innerText = translations[currentLanguage][type === 'wbc' ? '(白血球、細胞：一般使用四個角的大正方形)' : '(紅血球：一般使用25中格並選5格錯開不重疊格子)']; noteEl.setAttribute('data-text', type === 'wbc' ? '(白血球、細胞：一般使用四個角的大正方形)' : '(紅血球：一般使用25中格並選5格錯開不重疊格子)');
         if (document.getElementById('ccCount').value) calculateCellCount();
     }
+    // --- 新增：科學記號格式化共用函式 ---
+function formatScientific(num, fractionDigits = 2) {
+    if (!num || num === 0 || !isFinite(num)) return "0";
+    const [base, exp] = num.toExponential(fractionDigits).split('e');
+    return `${Number(base)} × 10<sup>${Number(exp)}</sup>`;
+}
 
+function setScientificInputs(baseId, expId, num) {
+    if (!num || num === 0 || !isFinite(num)) {
+        document.getElementById(baseId).value = 0;
+        document.getElementById(expId).value = 0;
+    } else {
+        const [base, exp] = num.toExponential(4).split('e');
+        document.getElementById(baseId).value = Number(base);
+        document.getElementById(expId).value = Number(exp);
+    }
+}
+// ------------------------------------
     function calculateCellCount() {
         const count = parseFloat(document.getElementById('ccCount').value), squares = parseFloat(document.getElementById('ccSquares').value), dilution = parseFloat(document.getElementById('ccDilution').value), unit = parseFloat(document.getElementById('ccUnit').value);
         if (!validateInputs([count], { allowZero: true }) || !validateInputs([squares, dilution])) { showError('ccResult', translations[currentLanguage]['請輸入所有必填欄位，且數值不可為0']); return; }
@@ -2156,10 +2222,15 @@ function switchCalcPanel(panel) {
         const volume = parseFloat(document.getElementById('ccVolume').value);
         let totalDisplay = "";
         if (!isNaN(volume) && volume > 0) {
-            const totalSci = ((baseResultUL * 1000) * volume).toExponential(2).split('e');
-            totalDisplay = `<br>${translations[currentLanguage]['目前細胞總數：']}${Number(totalSci[0])} × 10<sup>${Number(totalSci[1])}</sup> ${translations[currentLanguage]['個']}`;
+            const totalCells = (baseResultUL * 1000) * volume;
+            const totalDisplayStr = formatScientific(totalCells);
+            totalDisplay = `<br>${translations[currentLanguage]['目前細胞總數：']}${totalDisplayStr} ${translations[currentLanguage]['個']}`;
         }
-        document.getElementById("ccResult").innerHTML = `${translations[currentLanguage]['濃度計算結果：']}${(baseResultUL * unit).toFixed(2)} ${document.getElementById("ccUnit").selectedOptions[0].text}<br>${translations[currentLanguage]['科學記號表示：']}${Number((baseResultUL * unit).toExponential(2).split('e')[0])} × 10<sup>${Number((baseResultUL * unit).toExponential(2).split('e')[1])}</sup> ${document.getElementById("ccUnit").selectedOptions[0].text}${totalDisplay}`;
+        
+        const concValue = baseResultUL * unit;
+        const sciDisplayStr = formatScientific(concValue);
+
+        document.getElementById("ccResult").innerHTML = `${translations[currentLanguage]['濃度計算結果：']}${concValue.toFixed(2)} ${document.getElementById("ccUnit").selectedOptions[0].text}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplayStr} ${document.getElementById("ccUnit").selectedOptions[0].text}${totalDisplay}`;
         document.getElementById("ccResult").style.display = 'block'; document.getElementById("ccVolumeCalc").style.display = 'block'; document.getElementById("ccResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     function updateCellResult() { if (document.getElementById('ccCount').value && document.getElementById('ccSquares').value && document.getElementById('ccDilution').value) calculateCellCount(); }
@@ -2193,7 +2264,8 @@ function switchCalcPanel(panel) {
         if (takeOut > vol) { showError('fzResult1', translations[currentLanguage]['取出體積不可大於總體積']); return; }
 
         remainingCellsForFreezing = (vol - takeOut) * (base * Math.pow(10, exp));
-        document.getElementById('fzResult1').innerHTML = `${translations[currentLanguage]['取出後，剩餘細胞液體積：']}${(vol - takeOut).toFixed(4)} mL<br>${translations[currentLanguage]['取出後，剩餘細胞數：']}${Number(remainingCellsForFreezing.toExponential(2).split('e')[0])} × 10<sup>${Number(remainingCellsForFreezing.toExponential(2).split('e')[1])}</sup> ${translations[currentLanguage]['個']}`;
+        const remainDisplayStr = formatScientific(remainingCellsForFreezing);
+        document.getElementById('fzResult1').innerHTML = `${translations[currentLanguage]['取出後，剩餘細胞液體積：']}${(vol - takeOut).toFixed(4)} mL<br>${translations[currentLanguage]['取出後，剩餘細胞數：']}${remainDisplayStr} ${translations[currentLanguage]['個']}`;
         document.getElementById('fzResult1').style.display = 'block'; document.getElementById('fzStep2Calc').style.display = 'block'; document.getElementById('fzResult1').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     function calcFreezingStep2() {
@@ -2216,14 +2288,23 @@ function switchCalcPanel(panel) {
         
         const unitText = currentLanguage === 'zh' ? '個/mL' : 'cells/mL';
         if (isNaN(c1)) {
-            const res = (c2 * v2) / v1; document.getElementById('cdilC1Base').value = Number(res.toExponential(4).split('e')[0]); document.getElementById('cdilC1Exp').value = Number(res.toExponential(4).split('e')[1]);
-            showResult('cdilResult', `${translations[currentLanguage]['計算出原始細胞濃度 C₁ = ']}${res===0?"0":Number(res.toExponential(2).split('e')[0]) + " × 10<sup>" + Number(res.toExponential(2).split('e')[1]) + "</sup>"} ${unitText}`);
-        } else if (isNaN(v1)) { document.getElementById('cdilV1').value = ((c2 * v2) / c1).toFixed(4); showResult('cdilResult', `${translations[currentLanguage]['計算出原始細胞體積 V₁ = ']}${((c2 * v2) / c1).toFixed(4)} mL`);
+            const res = (c2 * v2) / v1; 
+            setScientificInputs('cdilC1Base', 'cdilC1Exp', res);
+            showResult('cdilResult', `${translations[currentLanguage]['計算出原始細胞濃度 C₁ = ']}${formatScientific(res)} ${unitText}`);
+        } else if (isNaN(v1)) { 
+            document.getElementById('cdilV1').value = ((c2 * v2) / c1).toFixed(4); 
+            showResult('cdilResult', `${translations[currentLanguage]['計算出原始細胞體積 V₁ = ']}${((c2 * v2) / c1).toFixed(4)} mL`);
         } else if (isNaN(c2)) {
-            const res = (c1 * v1) / v2; document.getElementById('cdilC2Base').value = Number(res.toExponential(4).split('e')[0]); document.getElementById('cdilC2Exp').value = Number(res.toExponential(4).split('e')[1]);
-            showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞濃度 C₂ = ']}${res===0?"0":Number(res.toExponential(2).split('e')[0]) + " × 10<sup>" + Number(res.toExponential(2).split('e')[1]) + "</sup>"} ${unitText}`);
-        } else if (isNaN(v2)) { document.getElementById('cdilV2').value = ((c1 * v1) / c2).toFixed(4); showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞體積 V₂ = ']}${((c1 * v1) / c2).toFixed(4)} mL`); }
-        document.getElementById('cdilResult').innerHTML = document.getElementById('cdilResult').innerText.replace(/× 10<sup>/g, "× 10<sup>"); // Trigger re-render to parse HTML properly in UI
+            const res = (c1 * v1) / v2; 
+            setScientificInputs('cdilC2Base', 'cdilC2Exp', res);
+            showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞濃度 C₂ = ']}${formatScientific(res)} ${unitText}`);
+        } else if (isNaN(v2)) { 
+            document.getElementById('cdilV2').value = ((c1 * v1) / c2).toFixed(4); 
+            showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞體積 V₂ = ']}${((c1 * v1) / c2).toFixed(4)} mL`); 
+        }
+        
+        // 確保 HTML 標籤正確渲染（此行保留）
+        document.getElementById('cdilResult').innerHTML = document.getElementById('cdilResult').innerText.replace(/× 10<sup>/g, "× 10<sup>");
     }
     function clearCellDilution() { clearFields(['cdilC1Base', 'cdilC1Exp', 'cdilC2Base', 'cdilC2Exp', 'cdilV2', 'cdilV1'], 'cdilResult'); }
 
@@ -2245,21 +2326,46 @@ function switchCalcPanel(panel) {
     }
     function updateTimerTitle(type, idx, val) { type === 'countdown' ? countdowns[idx].title = val : stopwatches[idx].title = val; }
     function startCountdown(idx) {
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        if (countdowns[idx].running) return;
-        if (countdowns[idx].remaining === 0) countdowns[idx].remaining = (parseInt(document.getElementById(`cd-hours${idx + 1}`).value) || 0) * 3600 + (parseInt(document.getElementById(`cd-minutes${idx + 1}`).value) || 0) * 60 + (parseInt(document.getElementById(`cd-seconds${idx + 1}`).value) || 0);
-        if (countdowns[idx].remaining <= 0) return;
+    // 1. 核心修復：在使用者點擊「開始」的當下，立刻初始化並播放極短的靜音來解鎖 iOS 音頻限制
+    if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+            
+            // 建立一個無聲的振盪器 (Silent Oscillator) 來強制 iOS 授權播放音效
+            const osc = audioCtx.createOscillator();
+            const silentGain = audioCtx.createGain();
+            silentGain.gain.value = 0; // 設定為完全靜音
+            osc.connect(silentGain);
+            silentGain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.001); // 播放 0.001 秒後立即停止
+        }
+    } else if (audioCtx.state === 'suspended') {
+        // 若已經初始化但被系統暫停，則喚醒它
+        audioCtx.resume();
+    }
 
-        countdowns[idx].running = true; countdowns[idx].targetTimestamp = Date.now() + countdowns[idx].remaining * 1000;
-        countdowns[idx].interval = setInterval(() => {
-            countdowns[idx].remaining = Math.max(0, Math.round((countdowns[idx].targetTimestamp - Date.now()) / 1000));
-            updateCountdownDisplay(idx);
-            if (countdowns[idx].remaining <= 0) {
-                clearInterval(countdowns[idx].interval); countdowns[idx].running = false;
-                playBeep(); countdowns[idx].audioLoopInterval = setInterval(playBeep, 1000);
-                countdowns[idx].audioTimeout = setTimeout(() => stopAudio(idx), 30000);
-            }
-        }, 200);
+    // 2. 原本的計時邏輯 (維持不變)
+    if (countdowns[idx].running) return;
+    if (countdowns[idx].remaining === 0) countdowns[idx].remaining = (parseInt(document.getElementById(`cd-hours${idx + 1}`).value) || 0) * 3600 + (parseInt(document.getElementById(`cd-minutes${idx + 1}`).value) || 0) * 60 + (parseInt(document.getElementById(`cd-seconds${idx + 1}`).value) || 0);
+    if (countdowns[idx].remaining <= 0) return;
+
+    countdowns[idx].running = true; 
+    countdowns[idx].targetTimestamp = Date.now() + countdowns[idx].remaining * 1000;
+    countdowns[idx].interval = setInterval(() => {
+        countdowns[idx].remaining = Math.max(0, Math.round((countdowns[idx].targetTimestamp - Date.now()) / 1000));
+        updateCountdownDisplay(idx);
+        if (countdowns[idx].remaining <= 0) {
+            clearInterval(countdowns[idx].interval); 
+            countdowns[idx].running = false;
+            
+            // 此時 audioCtx 已經在先前被使用者點擊解鎖過，iOS 將允許在此處正常發出提示音
+            playBeep(); 
+            countdowns[idx].audioLoopInterval = setInterval(playBeep, 1000);
+            countdowns[idx].audioTimeout = setTimeout(() => stopAudio(idx), 30000);
+        }
+      }, 200);
     }
     function pauseCountdown(idx) {
         if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
