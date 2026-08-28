@@ -210,7 +210,7 @@ footer a:hover { text-decoration: underline; }
 		<div class="tab" id="tab-animal" onclick="switchTab('animal')" data-text="tab-animal">動物投藥計算</div>
 		<div class="tab" id="tab-primer" onclick="switchTab('primer')" data-text="tab-primer">Primer 回溶/稀釋</div>
         <div class="tab" id="tab-tmcalc" onclick="switchTab('tmcalc')" data-text="tab-tmcalc">Primer Tm 計算</div>
-        <div class="tab" id="tab-revcomp" onclick="switchTab('revcomp')" data-text="tab-revcomp">DNA 反轉/互補</div>
+        <div class="tab" id="tab-revcomp" onclick="switchTab('revcomp')" data-text="tab-revcomp">核酸轉換</div>
 		<div class="tab" id="tab-ligation" onclick="switchTab('ligation')" data-text="tab-ligation">Ligation 計算</div>
 		<div class="tab" id="tab-cellcount" onclick="switchTab('cellcount')" data-text="tab-cellcount">細胞 計數/種植</div>
     <div class="tab" id="tab-celldilution" onclick="switchTab('celldilution')" data-text="tab-celldilution">細胞 凍存/稀釋</div>
@@ -256,20 +256,28 @@ footer a:hover { text-decoration: underline; }
     
     <div class="tab-content" id="dilution" style="display:none;">
 		<div class="form-container">
+            <div class="form-row-inline" id="dilutionMwRow" style="display:none;">
+			<label data-text="分子量 (g/mol)：" for="dilutionMW">分子量 (g/mol)：</label>
+			<input id="dilutionMW" step="any" type="number">
+		    </div>
 			<div class="form-row-inline">
 				<label data-text="原液濃度 C₁：" for="c1">原液濃度 C₁：</label>
 				<div class="input-group">
-					<input id="c1" step="any" type="number"> <select id="c1Unit">
-						<option value="1">M</option><option value="0.001">mM</option><option value="0.000001">μM</option><option value="0.000000001">nM</option><option value="0.000000000001">pM</option><option value="0.000000000000001">fM</option>
-					</select>
+					<input id="c1" step="any" type="number">
+                    <select id="c1Unit" onchange="checkDilutionUnits()">
+	                    <option value="1">M</option><option value="0.001">mM</option><option value="0.000001">μM</option><option value="0.000000001">nM</option><option value="0.000000000001">pM</option><option value="0.000000000000001">fM</option>
+	                    <option value="perc">% (w/v)</option>
+                    </select>
 				</div>
 			</div>
 			<div class="form-row-inline">
 				<label data-text="目標濃度 C₂：" for="c2">目標濃度 C₂：</label>
 				<div class="input-group">
-					<input id="c2" step="any" type="number"> <select id="c2Unit">
+					<input id="c2" step="any" type="number">
+                    <select id="c2Unit" onchange="checkDilutionUnits()">
 						<option value="1">M</option><option value="0.001">mM</option><option value="0.000001">μM</option><option value="0.000000001">nM</option><option value="0.000000000001">pM</option><option value="0.000000000000001">fM</option>
-					</select>
+					    <option value="perc">% (w/v)</option>
+                    </select>
 				</div>
 			</div>
 			<div class="form-row-inline">
@@ -310,7 +318,7 @@ footer a:hover { text-decoration: underline; }
 				</div>
 			</div>
 			<div class="form-row-inline">
-				<label data-text="重量百分比 (%)：" for="weightPercent">重量百分比 (%)：</label> <input id="weightPercent" step="any" type="number">
+				<label data-text="重量百分比 % (w/w)：" for="weightPercent">重量百分比 % (w/w)：</label> <input id="weightPercent" step="any" type="number">
 			</div>
 			<div class="form-row-inline">
 				<label data-text="莫耳濃度：" for="acidBaseMolarity">莫耳濃度：</label>
@@ -879,7 +887,7 @@ footer a:hover { text-decoration: underline; }
         "原液濃度 C₁：": "原液濃度 C₁：", "目標濃度 C₂：": "目標濃度 C₂：",
         "目標體積 V₂：": "目標體積 V₂：", "原液體積 V₁：": "原液體積 V₁：",
         "請輸入任意三個值，將可計算第四個值": "請輸入任意三個值，將可計算第四個值",
-        "密度：": "密度：", "重量百分比 (%)：": "重量百分比 (%)：",
+        "密度：": "密度：", "重量百分比 % (w/w)：": "重量百分比 % (w/w)：",
         "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N",
         "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項",
         "solprep-total": "目標總體積：", "solprep-add": "＋ 新增溶質",
@@ -981,7 +989,7 @@ footer a:hover { text-decoration: underline; }
         "原液濃度 C₁：": "Stock Concentration C₁：", "目標濃度 C₂：": "Target Concentration C₂：",
         "目標體積 V₂：": "Target Volume V₂：", "原液體積 V₁：": "Stock Volume V₁：",
         "請輸入任意三個值，將可計算第四個值": "Please enter any three values to calculate the fourth value.",
-        "密度：": "Density：", "重量百分比 (%)：": "Weight Percentage (%)：",
+        "密度：": "Density：", "重量百分比 % (w/w)：": "Weight Percentage % (w/w)：",
         "硫酸 (Sulphuric acid) H₂SO₄ → 兩個 H⁺ 離子 → 1M = 2N<br>磷酸 (Phosphoric acid) H₃PO₄ → 三個 H⁺ 離子 → 1M = 3N": "Sulfuric acid (H₂SO₄) → Two H⁺ ions → 1M = 2N<br>Phosphoric acid (H₃PO₄) → Three H⁺ ions → 1M = 3N",
         "請輸入 [分子量]、[密度] 以及 [重量百分比 / 莫耳濃度] 兩者中的任意一項，將可計算另一項": "Please enter the [Molecular Weight and Density], along with either the [Weight percentage or Molarity]. The remaining value will be calculated automatically.",
         "solprep-total": "Target Total Volume:", "solprep-add": "+ Add Solute",
@@ -1853,55 +1861,89 @@ function switchCalcPanel(panel) {
     }
     function clearMass() { clearFields(['molarity', 'volume', 'massValue', 'molarMass'], 'massResult'); }
 
-    function calculateDilution() {
-      const c1 = parseFloat(document.getElementById('c1').value);
-      const c1Unit = parseFloat(document.getElementById('c1Unit').value);
-      const v1 = parseFloat(document.getElementById('v1').value);
-      const v1Unit = parseFloat(document.getElementById('v1Unit').value);
-      const c2 = parseFloat(document.getElementById('c2').value);
-      const c2Unit = parseFloat(document.getElementById('c2Unit').value);
-      const v2 = parseFloat(document.getElementById('v2').value);
-      const v2Unit = parseFloat(document.getElementById('v2Unit').value);
+    // 新增：檢查是否混合使用不同類型單位
+function checkDilutionUnits() {
+  const c1U = document.getElementById('c1Unit').value;
+  const c2U = document.getElementById('c2Unit').value;
+  const mwRow = document.getElementById('dilutionMwRow');
+  // 兩者其一為 % (w/v)，且另一個不是 % (w/v) 時，顯示分子量欄位
+  if ((c1U === 'perc' && c2U !== 'perc') || (c1U !== 'perc' && c2U === 'perc')) {
+      mwRow.style.display = 'flex';
+  } else {
+      mwRow.style.display = 'none';
+  }
+}
 
-      let filledCount = 0;
-      [c1, v1, c2, v2].forEach(v => { if (!isNaN(v)) filledCount++; });
-      if (filledCount < 3) { showError('dilutionResult', translations[currentLanguage]['請輸入任意三個值']); return; }
-      
-      const filledValues = [c1, v1, c2, v2].filter(v => !isNaN(v));
-      if (!validateInputs(filledValues)) { showError('dilutionResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']); return; }
+function calculateDilution() {
+  const c1 = parseFloat(document.getElementById('c1').value);
+  const c1UnitStr = document.getElementById('c1Unit').value;
+  const v1 = parseFloat(document.getElementById('v1').value);
+  const v1Unit = parseFloat(document.getElementById('v1Unit').value);
+  const c2 = parseFloat(document.getElementById('c2').value);
+  const c2UnitStr = document.getElementById('c2Unit').value;
+  const v2 = parseFloat(document.getElementById('v2').value);
+  const v2Unit = parseFloat(document.getElementById('v2Unit').value);
+  const mw = parseFloat(document.getElementById('dilutionMW').value);
 
-      if (!isNaN(c1) && !isNaN(c2) && (c2 * c2Unit) > (c1 * c1Unit)) {
-      showError('dilutionResult', currentLanguage === 'zh' ? '錯誤：目標濃度 (C₂) 不可大於原液濃度 (C₁)' : 'Error: Target concentration (C₂) cannot exceed stock concentration (C₁)');
-       return;
-      }
-      if (!isNaN(v1) && !isNaN(v2) && (v1 * v1Unit) > (v2 * v2Unit)) {
-      showError('dilutionResult', currentLanguage === 'zh' ? '錯誤：原液體積 (V₁) 不可大於目標總體積 (V₂)' : 'Error: Stock volume (V₁) cannot exceed target volume (V₂)');
-       return;
-      }
+  const isMixed = (c1UnitStr === 'perc' && c2UnitStr !== 'perc') || (c1UnitStr !== 'perc' && c2UnitStr === 'perc');
+  if (isMixed && (isNaN(mw) || mw <= 0)) {
+      showError('dilutionResult', currentLanguage === 'zh' ? '單位不同時，請輸入有效的分子量 (g/mol)' : 'Please enter a valid MW when mixing units');
+      return;
+  }
 
-      try {
-    let val = 0, targetId = '', targetUnit = 1, prefix = '';
-    
-    if (isNaN(c1)) { val = (c2 * c2Unit * v2 * v2Unit) / (v1 * v1Unit); targetId = 'c1'; targetUnit = c1Unit; prefix = '計算出原液濃度 C₁ = '; }
-    else if (isNaN(v1)) { val = (c2 * c2Unit * v2 * v2Unit) / (c1 * c1Unit); targetId = 'v1'; targetUnit = v1Unit; prefix = '計算出原液體積 V₁ = '; }
-    else if (isNaN(c2)) { val = (c1 * c1Unit * v1 * v1Unit) / (v2 * v2Unit); targetId = 'c2'; targetUnit = c2Unit; prefix = '計算出目標濃度 C₂ = '; }
-    else if (isNaN(v2)) { val = (c1 * c1Unit * v1 * v1Unit) / (c2 * c2Unit); targetId = 'v2'; targetUnit = v2Unit; prefix = '計算出目標體積 V₂ = '; }
-    else { showError('dilutionResult', translations[currentLanguage]['請清空一個欄位以計算該值']); return; }
+  let filledCount = 0;
+  [c1, v1, c2, v2].forEach(v => { if (!isNaN(v)) filledCount++; });
+  if (filledCount < 3) { showError('dilutionResult', translations[currentLanguage]['請輸入任意三個值']); return; }
+  
+  const filledValues = [c1, v1, c2, v2].filter(v => !isNaN(v));
+  if (!validateInputs(filledValues)) { showError('dilutionResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']); return; }
 
-    // 攔截極端值與無限大
-    if (!isFinite(val) || val <= 0) { 
-        showError('dilutionResult', currentLanguage === 'zh' ? '計算結果異常 (如超出範圍)' : 'Invalid calculation result (out of bounds)'); 
-        return; 
+  // 標準化濃度為 M (1% = 10g/L = 10/MW M)
+  const getNormC = (cVal, uStr) => uStr === 'perc' ? (isMixed ? (cVal * 10 / mw) : cVal) : (cVal * parseFloat(uStr));
+  const getRevC = (normC, uStr) => uStr === 'perc' ? (isMixed ? (normC * mw / 10) : normC) : (normC / parseFloat(uStr));
+
+  let c1Norm = isNaN(c1) ? NaN : getNormC(c1, c1UnitStr);
+  let c2Norm = isNaN(c2) ? NaN : getNormC(c2, c2UnitStr);
+
+  if (!isNaN(c1Norm) && !isNaN(c2Norm) && c2Norm > c1Norm) {
+    showError('dilutionResult', currentLanguage === 'zh' ? '錯誤：目標濃度 (C₂) 不可大於原液濃度 (C₁)' : 'Error: Target concentration (C₂) cannot exceed stock (C₁)');
+    return;
+  }
+  if (!isNaN(v1) && !isNaN(v2) && (v1 * v1Unit) > (v2 * v2Unit)) {
+    showError('dilutionResult', currentLanguage === 'zh' ? '錯誤：原液體積 (V₁) 不可大於目標總體積 (V₂)' : 'Error: Stock volume (V₁) cannot exceed target (V₂)');
+    return;
+  }
+
+  try {
+    let finalVal = 0, targetId = '', prefix = '';
+
+    if (isNaN(c1)) {
+        finalVal = getRevC((c2Norm * v2 * v2Unit) / (v1 * v1Unit), c1UnitStr);
+        targetId = 'c1'; prefix = '計算出原液濃度 C₁ = ';
+    } else if (isNaN(v1)) {
+        finalVal = ((c2Norm * v2 * v2Unit) / c1Norm) / v1Unit;
+        targetId = 'v1'; prefix = '計算出原液體積 V₁ = ';
+    } else if (isNaN(c2)) {
+        finalVal = getRevC((c1Norm * v1 * v1Unit) / (v2 * v2Unit), c2UnitStr);
+        targetId = 'c2'; prefix = '計算出目標濃度 C₂ = ';
+    } else if (isNaN(v2)) {
+        finalVal = ((c1Norm * v1 * v1Unit) / c2Norm) / v2Unit;
+        targetId = 'v2'; prefix = '計算出目標體積 V₂ = ';
+    } else { 
+        showError('dilutionResult', translations[currentLanguage]['請清空一個欄位以計算該值']); return; 
     }
 
-    const finalVal = val / targetUnit;
+    if (!isFinite(finalVal) || finalVal <= 0) { 
+        showError('dilutionResult', currentLanguage === 'zh' ? '計算結果異常' : 'Invalid calculation result'); return; 
+    }
+
     document.getElementById(targetId).value = formatBioResult(finalVal);
     showResult('dilutionResult', `${translations[currentLanguage][prefix]}${formatBioResult(finalVal)} ${getSelectedText(targetId + 'Unit')}`);
-    } catch { 
-     showError('dilutionResult', 'Calculation error'); 
+     } catch { 
+    showError('dilutionResult', 'Calculation error'); 
+     }
     }
-    }
-    function clearDilution() { clearFields(['c1', 'v1', 'c2', 'v2'], 'dilutionResult'); }
+    function clearDilution() { clearFields(['c1', 'v1', 'c2', 'v2', 'dilutionMW'], 'dilutionResult'); }
 
     function calculateAcidBase() {
       const weightPercent = parseFloat(document.getElementById('weightPercent').value);
@@ -1916,7 +1958,7 @@ function switchCalcPanel(panel) {
       if (!validateInputs([density, molarMass])) { showError('acidBaseResult', translations[currentLanguage]['請輸入分子量與密度']); return; }
 
       const densityStd = density * densityUnit;
-      if (!isNaN(weightPercent) && (weightPercent < 0 || weightPercent > 100)) { showError('acidBaseResult', currentLanguage === 'zh' ? '重量百分比 (%) 必須介於 0 到 100 之間' : 'Weight percentage (%) must be between 0 and 100'); return; }
+      if (!isNaN(weightPercent) && (weightPercent < 0 || weightPercent > 100)) { showError('acidBaseResult', currentLanguage === 'zh' ? '重量百分比 % (w/w) 必須介於 0 到 100 之間' : 'Weight percentage (%) must be between 0 and 100'); return; }
 
       if (!isNaN(weightPercent) && isNaN(molarity)) {
         const molarityConverted = (((weightPercent * densityStd) / molarMass) * 10) / molarityUnit;
@@ -1936,79 +1978,180 @@ function switchCalcPanel(panel) {
 
     const solPrepConcUnitOptions = `<option value="1" selected>M</option><option value="0.001">mM</option><option value="0.000001">µM</option><option value="0.000000001">nM</option><option value="0.000000000001">pM</option><option value="0.000000000000001">fM</option><option value="perc">%(w/v)</option>`;
     function addSolute() {
-      const box = document.createElement('div');
-      box.className = 'solute-item';
-      box.innerHTML = `<div class="solute-header"><input class="s-name" placeholder="${translations[currentLanguage]['solprep-name']}"><button class="remove-solute" onclick="this.parentElement.parentElement.remove()">${translations[currentLanguage]['solprep-remove']}</button></div><div class="form-row-inline"><label></label><select class="s-source" onchange="toggleSoluteSource(this)"><option value="solid">${translations[currentLanguage]['solprep-solid']}</option><option value="stock">${translations[currentLanguage]['solprep-stock']}</option></select></div><div class="form-row-inline"><input class="s-val" type="number" step="any" placeholder="${translations[currentLanguage]['solprep-mw']}"><span class="left-unit-container"><span class="fixed-unit">g/mol</span></span><span style="margin: 0 5px;">➔</span><input class="s-target" type="number" step="any" placeholder="${translations[currentLanguage]['solprep-target']}"><select class="s-target-unit">${solPrepConcUnitOptions}</select></div>`;
-      document.getElementById('solute-list').appendChild(box);
-    }
-    function toggleSoluteSource(sel) {
-      const box = sel.closest('.solute-item');
-      box.querySelector('.s-val').value = '';
-      if (sel.value === 'solid') {
-        box.querySelector('.s-val').placeholder = translations[currentLanguage]['solprep-mw'];
-        box.querySelector('.left-unit-container').innerHTML = `<span class="fixed-unit">g/mol</span>`;
-      } else {
-        box.querySelector('.s-val').placeholder = translations[currentLanguage]['solprep-stockConc'];
-        box.querySelector('.left-unit-container').innerHTML = `<select class="s-stock-unit">${solPrepConcUnitOptions}</select>`;
+  const box = document.createElement('div');
+  box.className = 'solute-item';
+  const colon = currentLanguage === 'zh' ? '：' : ': ';
+  
+  box.innerHTML = `
+    <div class="solute-header" style="justify-content: flex-end;">
+        <button class="remove-solute" onclick="this.parentElement.parentElement.remove()">${translations[currentLanguage]['solprep-remove']}</button>
+    </div>
+    <div class="form-container" style="margin-bottom: 0;">
+        <div class="form-row-inline">
+            <label class="lbl-name">${translations[currentLanguage]['solprep-name']}${colon}</label>
+            <input class="s-name" type="text">
+        </div>
+        <div class="form-row-inline">
+            <label class="lbl-source">${currentLanguage === 'zh' ? '來源' : 'Source'}${colon}</label>
+            <select class="s-source" onchange="toggleSoluteSource(this)">
+                <option value="solid">${translations[currentLanguage]['solprep-solid']}</option>
+                <option value="stock">${translations[currentLanguage]['solprep-stock']}</option>
+            </select>
+        </div>
+        <div class="form-row-inline">
+            <label class="lbl-val">${translations[currentLanguage]['solprep-mw']}${colon}</label>
+            <div class="input-group">
+                <input class="s-val" type="number" step="any">
+                <span class="left-unit-container"><span class="fixed-unit">g/mol</span></span>
+            </div>
+        </div>
+        <div class="form-row-inline">
+            <label class="lbl-target">${translations[currentLanguage]['solprep-target']}${colon}</label>
+            <div class="input-group">
+                <input class="s-target" type="number" step="any">
+                <select class="s-target-unit" onchange="checkSolPrepUnits(this)">${solPrepConcUnitOptions}</select>
+            </div>
+        </div>
+        <div class="form-row-inline mw-container" style="display:none;">
+            <label class="lbl-mix-mw">${translations[currentLanguage]['solprep-mw']}${colon}</label>
+            <input class="s-mix-mw" type="number" step="any">
+        </div>
+    </div>`;
+  document.getElementById('solute-list').appendChild(box);
+}
+    // 新增：檢查溶液配製是否混合使用不同類型單位
+    function checkSolPrepUnits(element) {
+      const box = element.closest('.solute-item');
+      const source = box.querySelector('.s-source').value;
+      const mwContainer = box.querySelector('.mw-container');
+  
+    if (source === 'stock') {
+      const stockUnitSelect = box.querySelector('.s-stock-unit');
+      const targetUnitSelect = box.querySelector('.s-target-unit');
+      if (stockUnitSelect && targetUnitSelect) {
+          const stockUnit = stockUnitSelect.value;
+          const targetUnit = targetUnitSelect.value;
+          // 若其中一者為 % (w/v) 且另一者不是，則展開分子量欄位
+          if ((stockUnit === 'perc' && targetUnit !== 'perc') || (stockUnit !== 'perc' && targetUnit === 'perc')) {
+              mwContainer.style.display = 'flex';
+              return;
+          }
       }
     }
+      // 否則隱藏
+      mwContainer.style.display = 'none';
+    }
+    function toggleSoluteSource(sel) {
+     const box = sel.closest('.solute-item');
+      box.querySelector('.s-val').value = '';
+     const lblVal = box.querySelector('.lbl-val');
+     const colon = currentLanguage === 'zh' ? '：' : ': ';
+  
+     if (sel.value === 'solid') {
+      lblVal.innerText = translations[currentLanguage]['solprep-mw'] + colon;
+      box.querySelector('.left-unit-container').innerHTML = `<span class="fixed-unit">g/mol</span>`;
+     } else {
+      lblVal.innerText = translations[currentLanguage]['solprep-stockConc'] + colon;
+      box.querySelector('.left-unit-container').innerHTML = `<select class="s-stock-unit" onchange="checkSolPrepUnits(this)">${solPrepConcUnitOptions}</select>`;
+     }
+      // 切換固體/原液時，重新檢查是否需要顯示混和單位的分子量欄位
+      checkSolPrepUnits(sel);
+    }
     function updateSolPrepList(lang) {
-        document.querySelectorAll('.solute-item').forEach((box) => {
-          box.querySelector('.s-name').placeholder = translations[lang]['solprep-name'];
-          box.querySelector('.remove-solute').innerText = translations[lang]['solprep-remove'];
-          const sel = box.querySelector('.s-source');
-          sel.options[0].text = translations[lang]['solprep-solid'];
-          sel.options[1].text = translations[lang]['solprep-stock'];
-          box.querySelector('.s-val').placeholder = (sel.value === 'solid') ? translations[lang]['solprep-mw'] : translations[lang]['solprep-stockConc'];
-          box.querySelector('.s-target').placeholder = translations[lang]['solprep-target'];
-        });
+    const colon = lang === 'zh' ? '：' : ': ';
+    document.querySelectorAll('.solute-item').forEach((box) => {
+      // 1. 僅保留更新移除按鈕的文字 (已刪除頂部標題)
+      box.querySelector('.remove-solute').innerText = translations[lang]['solprep-remove'];
+      
+      // 2. 更新來源的下拉選單選項
+      const sel = box.querySelector('.s-source');
+      sel.options[0].text = translations[lang]['solprep-solid'];
+      sel.options[1].text = translations[lang]['solprep-stock'];
+      
+      // 3. 更新每一行的 Label 文字說明
+      box.querySelector('.lbl-name').innerText = translations[lang]['solprep-name'] + colon;
+      box.querySelector('.lbl-source').innerText = lang === 'zh' ? '來源' + colon : 'Source' + colon;
+      box.querySelector('.lbl-val').innerText = (sel.value === 'solid' ? translations[lang]['solprep-mw'] : translations[lang]['solprep-stockConc']) + colon;
+      box.querySelector('.lbl-target').innerText = translations[lang]['solprep-target'] + colon;
+      
+      // 4. 更新混合單位觸發的分子量欄位 Label
+      const lblMixMw = box.querySelector('.lbl-mix-mw');
+      if (lblMixMw) lblMixMw.innerText = translations[lang]['solprep-mw'] + colon;
+    });
     }
     function calculateSolPrep() {
-      const totalVolVal = parseFloat(document.getElementById('totalVol').value);
-      if(!validateInputs([totalVolVal])) { showError('solprepResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']); return; }
+  const totalVolVal = parseFloat(document.getElementById('totalVol').value);
+  if(!validateInputs([totalVolVal])) { showError('solprepResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']); return; }
 
-      const V_liters = totalVolVal * parseFloat(document.getElementById('totalUnit').value); 
-      let out = `${translations[currentLanguage]['solprep-guide']}\n\n${translations[currentLanguage]['solprep-take']}\n`;
-      let hasItems = false, hasError = false;
+  const V_liters = totalVolVal * parseFloat(document.getElementById('totalUnit').value); 
+  let out = `${translations[currentLanguage]['solprep-guide']}\n\n${translations[currentLanguage]['solprep-take']}\n`;
+  let hasItems = false;
 
-      document.querySelectorAll('.solute-item').forEach((box, i) => {
-        const name = box.querySelector('.s-name').value || `${translations[currentLanguage]['solprep-name']}${i+1}`;
-        const src = box.querySelector('.s-source').value;
-        const vVal = parseFloat(box.querySelector('.s-val').value);
-        const tVal = parseFloat(box.querySelector('.s-target').value);
-        const tUnit = box.querySelector('.s-target-unit').value;
+  // 使用 Array.from 將 NodeList 轉為陣列，再使用 for...of 迴圈確保可以真正 return 中斷
+  const soluteNodes = Array.from(document.querySelectorAll('.solute-item'));
+  for (let i = 0; i < soluteNodes.length; i++) {
+    const box = soluteNodes[i];
+    const name = box.querySelector('.s-name').value || `${translations[currentLanguage]['solprep-name']}${i+1}`;
+    const src = box.querySelector('.s-source').value;
+    const vVal = parseFloat(box.querySelector('.s-val').value);
+    const tVal = parseFloat(box.querySelector('.s-target').value);
+    const tUnit = box.querySelector('.s-target-unit').value;
 
-        if (isNaN(tVal) || tVal <= 0) { 
+    if (isNaN(tVal) || tVal <= 0) { 
         showError('solprepResult', currentLanguage === 'zh' ? '請輸入大於 0 的有效數值' : 'Please enter valid values greater than 0'); 
-        hasError = true; 
-        return; 
-        }
-        // 當選擇固體且單位為 %(w/v) 時，跳過分子量檢驗
-        const isSolidPerc = (src === 'solid' && tUnit === 'perc');
-        if (!isSolidPerc && (isNaN(vVal) || vVal <= 0)) {
-        showError('solprepResult', currentLanguage === 'zh' ? '請輸入正確的分子量或原液濃度' : 'Please enter a valid MW or Stock Conc.'); 
-        hasError = true; 
-        return;
-        }
-        hasItems = true;
-
-        if (src === 'solid') {
-          const massGrams = (tUnit === 'perc') ? (tVal / 100) * (V_liters * 1000) : vVal * (tVal * parseFloat(tUnit)) * V_liters;
-          out += `- [${name}]: ${(massGrams < 1 && massGrams > 0) ? (massGrams * 1000).toFixed(2) + ' mg' : massGrams.toFixed(4) + ' g'}\n`;
-        } else {
-          const stockUnit = box.querySelector('.s-stock-unit') ? box.querySelector('.s-stock-unit').value : "1";
-          if ((stockUnit === 'perc') === (tUnit === 'perc')) {
-            const volML = (((tUnit === 'perc' ? tVal : tVal * parseFloat(tUnit)) * V_liters) / (stockUnit === 'perc' ? vVal : vVal * parseFloat(stockUnit))) * 1000;
-            out += `- [${name}]: ${(volML < 1 && volML > 0) ? (volML * 1000).toFixed(2) + ' μL' : volML.toFixed(4) + ' mL'}\n`;
-          } else { out += `- [${name}]: ${translations[currentLanguage]['solprep-mixError']}\n`; }
-        }
-      });
-      if (hasError) return;
-      if (!hasItems) { showError('solprepResult', currentLanguage === 'zh' ? '請至少加入一項溶質並填寫數值' : 'Please add at least one solute with valid values'); return; }
-
-      out += `\n${translations[currentLanguage]['solprep-addSolvent']} ${totalVolVal} ${document.getElementById('totalUnit').options[document.getElementById('totalUnit').selectedIndex].text}`;
-      showResult('solprepResult', out);
+        return; // 完全中止函式
     }
+    
+    const isSolidPerc = (src === 'solid' && tUnit === 'perc');
+    if (!isSolidPerc && (isNaN(vVal) || vVal <= 0)) {
+        showError('solprepResult', currentLanguage === 'zh' ? '請輸入正確的分子量或原液濃度' : 'Please enter a valid MW or Stock Conc.'); 
+        return;
+    }
+    hasItems = true;
+
+    if (src === 'solid') {
+      const massGrams = (tUnit === 'perc') ? (tVal / 100) * (V_liters * 1000) : vVal * (tVal * parseFloat(tUnit)) * V_liters;
+      out += `- [${name}]: ${(massGrams < 1 && massGrams > 0) ? formatBioResult(massGrams * 1000) + ' mg' : formatBioResult(massGrams) + ' g'}\n`;
+    } else {
+      const stockUnit = box.querySelector('.s-stock-unit') ? box.querySelector('.s-stock-unit').value : "1";
+      const isMixed = (stockUnit === 'perc') !== (tUnit === 'perc');
+      
+      if (isMixed) {
+          const mixMw = parseFloat(box.querySelector('.s-mix-mw').value);
+          if (isNaN(mixMw) || mixMw <= 0) {
+              showError('solprepResult', currentLanguage === 'zh' ? `[${name}] 單位不同時，請輸入有效的分子量 (g/mol)` : `Please enter a valid MW for [${name}] when mixing units`);
+              return; 
+          }
+          const getNormC = (cVal, uStr) => uStr === 'perc' ? (cVal * 10 / mixMw) : (cVal * parseFloat(uStr));
+          
+          const stockNorm = getNormC(vVal, stockUnit);
+          const targetNorm = getNormC(tVal, tUnit);
+          
+          if (targetNorm > stockNorm) {
+              showError('solprepResult', currentLanguage === 'zh' ? `[${name}] 錯誤：目標濃度不可大於原液濃度` : `Error: Target conc for [${name}] cannot exceed stock`);
+              return;
+          }
+          const volML = ((targetNorm * V_liters) / stockNorm) * 1000;
+          out += `- [${name}]: ${(volML < 1 && volML > 0) ? formatBioResult(volML * 1000) + ' μL' : formatBioResult(volML) + ' mL'}\n`;
+      } else {
+          const stockNorm = stockUnit === 'perc' ? vVal : vVal * parseFloat(stockUnit);
+          const targetNorm = tUnit === 'perc' ? tVal : tVal * parseFloat(tUnit);
+          
+          if (targetNorm > stockNorm) {
+              showError('solprepResult', currentLanguage === 'zh' ? `[${name}] 錯誤：目標濃度不可大於原液濃度` : `Error: Target conc for [${name}] cannot exceed stock`);
+              return;
+          }
+          const volML = ((targetNorm * V_liters) / stockNorm) * 1000;
+          out += `- [${name}]: ${(volML < 1 && volML > 0) ? formatBioResult(volML * 1000) + ' μL' : formatBioResult(volML) + ' mL'}\n`;
+      }
+    }
+  }
+  
+  if (!hasItems) { showError('solprepResult', currentLanguage === 'zh' ? '請至少加入一項溶質並填寫數值' : 'Please add at least one solute with valid values'); return; }
+
+  out += `\n${translations[currentLanguage]['solprep-addSolvent']} ${totalVolVal} ${document.getElementById('totalUnit').options[document.getElementById('totalUnit').selectedIndex].text}`;
+  showResult('solprepResult', out);
+}
     function clearSolPrep() { document.getElementById('solute-list').innerHTML = ''; document.getElementById('solprepResult').style.display = 'none'; addSolute(); }
 
     function calculateAnimalDose() {
