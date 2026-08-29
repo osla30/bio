@@ -1195,12 +1195,13 @@ footer a:hover { text-decoration: underline; }
     let isEvaluated = false;
     let isInv = false;
     // 1. 初始化記憶體時改用 math.bignumber
-    let memoryVal = math.bignumber(0);
+    let memoryVal = null;
 
     if (typeof math !== 'undefined') {
         math.config({ number: 'BigNumber', precision: 64 });
+        memoryVal = math.bignumber(0);
     } else {
-        console.error("math.js 載入失敗！請確認網路連線。");
+        console.error("math.js 載入失敗！通用計算機將無法運作，請確認網路連線或使用完整離線版。");
     }
 
     function showMemoryFeedback(text) {
@@ -1735,7 +1736,7 @@ footer a:hover { text-decoration: underline; }
     let paste = (e.clipboardData || window.clipboardData).getData('text');
     
     // 放寬過濾條件：允許大小寫英文字母、底線及逗號
-    let cleaned = paste.replace(/[^a-zA-Z0-9+\-×÷*/().,^%_]/g, '');
+    let cleaned = paste.replace(/[^a-zA-Z0-9+\-×÷*/().,^%_⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]/g, '');
     cleaned = cleaned.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
     
     if (cleaned) {
