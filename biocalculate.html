@@ -947,8 +947,8 @@ footer a:hover { text-decoration: underline; }
         "請輸入有效數值，且數值必須大於 0": "請輸入有效數值，且數值必須大於 0",
         "投藥量：": "投藥量：", "請輸入任意兩個欄位": "請輸入任意兩個欄位",
         "計算後濃度：": "計算後濃度：", "計算所需回溶水量：": "計算所需回溶水量：",
-        "計算所需Primer產量：": "計算所需Primer產量：", "原液體積：": "原液體積：",
-        "加水體積：": "加水體積：", "請輸入所有必填欄位，且數值不可為0": "請輸入所有必填欄位，且數值不可為0",
+        "計算所需Primer產量：": "計算所需Primer產量：",
+        "請輸入所有必填欄位，且數值不可為0": "請輸入所有必填欄位，且數值不可為0",
         "計算結果：": "計算結果：", "科學記號表示：": "科學記號表示：",
         "cells/µL": "個/µL", "cells/mL": "個/mL", "細胞液體積計算": "細胞液體積計算",
         "目標細胞數量 (個)：": "目標細胞數量 (個)：", "基數": "基數", "次方": "次方",
@@ -1122,14 +1122,6 @@ footer a:hover { text-decoration: underline; }
       updateSelectOptions(lang);
       updateSolPrepList(lang);
       updateDisplayedResults();
-
-      // ★ 新增：確保動態產生的 Tm 表格按鈕也能切換語言
-     document.querySelectorAll('#tableBody .btn-check').forEach(btn => {
-      btn.innerText = translations[lang]['tm-analyze'];
-     });
-     document.querySelectorAll('#tableBody .btn-del').forEach(btn => {
-      btn.innerText = translations[lang]['tm-delete'];
-     });
     }
 
     function updateSelectOptions(lang) {
@@ -2110,7 +2102,8 @@ function calculateDilution() {
 
   for (let i = 0; i < soluteNodes.length; i++) {
     const box = soluteNodes[i];
-    const name = box.querySelector('.s-name').value || `${translations[currentLanguage]['solprep-name']}${i+1}`;
+    let rawName = box.querySelector('.s-name').value || `${translations[currentLanguage]['solprep-name']}${i+1}`;
+    const name = rawName.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const src = box.querySelector('.s-source').value;
     const vVal = parseFloat(box.querySelector('.s-val').value);
     const tVal = parseFloat(box.querySelector('.s-target').value);
@@ -2567,9 +2560,9 @@ function setScientificInputs(baseId, expId, num) {
       }, 200);
     }
     function pauseCountdown(idx) {
-        if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
-        countdowns[idx].running = false; stopAudio(idx);
-        if (countdowns[idx].targetTimestamp) countdowns[idx].remaining = Math.max(0, Math.round((countdowns[idx].targetTimestamp - Date.now()) / 1000));
+    if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
+    countdowns[idx].running = false; stopAudio(idx);
+    if (countdowns[idx].targetTimestamp) countdowns[idx].remaining = Math.max(0, (countdowns[idx].targetTimestamp - Date.now()) / 1000);
     }
     function resetCountdown(idx) { pauseCountdown(idx); countdowns[idx].remaining = 0; document.getElementById(`cd-hours${idx + 1}`).value = ''; document.getElementById(`cd-minutes${idx + 1}`).value = ''; document.getElementById(`cd-seconds${idx + 1}`).value = ''; updateCountdownDisplay(idx); }
     function stopAudio(idx) { if (countdowns[idx].audioLoopInterval) clearInterval(countdowns[idx].audioLoopInterval); if (countdowns[idx].audioTimeout) clearTimeout(countdowns[idx].audioTimeout); }
