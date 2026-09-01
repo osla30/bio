@@ -1338,8 +1338,18 @@ footer a:hover { text-decoration: underline; }
                     res = prefix + `_pct(${target})`;
                 } else {
                     let k = j;
-                    while (k >= 0 && /[0-9a-zA-Z_\.]/.test(res[k])) {
+                    while (k >= 0) {
+                    // 擴充允許清單：加入上標次方、正負號以及階乘驚嘆號
+                        if (/[0-9a-zA-Z_\.⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻!]/.test(res[k])) {
                         k--;
+                    } 
+                    // 例外放行：允許捕捉科學記號 (e/E/EXP) 後方的正負號
+                        else if ((res[k] === '+' || res[k] === '-' || res[k] === '−') && k > 0 && /[eEP]/.test(res[k-1])) {
+                        k--;
+                    } 
+                        else {
+                        break;
+                    }
                     }
                     let prefix = res.slice(0, k + 1);
                     let target = res.slice(k + 1);
@@ -1728,7 +1738,7 @@ footer a:hover { text-decoration: underline; }
     let paste = (e.clipboardData || window.clipboardData).getData('text');
     
     // 放寬過濾條件：允許大小寫英文字母、底線及逗號
-    let cleaned = paste.replace(/[^a-zA-Z0-9+\-×÷*/().,^%_⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]/g, '');
+    let cleaned = paste.replace(/[^a-zA-Z0-9+\-×÷*/().,^%_⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻π√]/g, '');
     cleaned = cleaned.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
     
     if (cleaned) {
