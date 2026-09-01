@@ -2038,20 +2038,29 @@ function calculateDilution() {
       const box = element.closest('.solute-item');
       const source = box.querySelector('.s-source').value;
       const mwContainer = box.querySelector('.mw-container');
-  
-    if (source === 'stock') {
-      const stockUnitSelect = box.querySelector('.s-stock-unit');
-      const targetUnitSelect = box.querySelector('.s-target-unit');
-      if (stockUnitSelect && targetUnitSelect) {
-          const stockUnit = stockUnitSelect.value;
-          const targetUnit = targetUnitSelect.value;
-          // 若其中一者為 % (w/v) 且另一者不是，則展開分子量欄位
-          if ((stockUnit === 'perc' && targetUnit !== 'perc') || (stockUnit !== 'perc' && targetUnit === 'perc')) {
-              mwContainer.style.display = 'flex';
-              return;
-          }
+      const targetUnit = box.querySelector('.s-target-unit').value;
+      const valRow = box.querySelector('.lbl-val').closest('.form-row-inline');
+
+      // 新增：如果來源是固體且目標單位是 % (w/v)，隱藏不需要的分子量輸入框
+      if (source === 'solid' && targetUnit === 'perc') {
+          valRow.style.display = 'none';
+      } else {
+          valRow.style.display = 'flex';
       }
-    }
+  
+      if (source === 'stock') {
+        const stockUnitSelect = box.querySelector('.s-stock-unit');
+        const targetUnitSelect = box.querySelector('.s-target-unit');
+        if (stockUnitSelect && targetUnitSelect) {
+            const stockUnit = stockUnitSelect.value;
+            const currentTarget = targetUnitSelect.value;
+            // 若其中一者為 % (w/v) 且另一者不是，則展開混合單位所需的分子量欄位
+            if ((stockUnit === 'perc' && currentTarget !== 'perc') || (stockUnit !== 'perc' && currentTarget === 'perc')) {
+                mwContainer.style.display = 'flex';
+                return;
+            }
+        }
+      }
       // 否則隱藏
       mwContainer.style.display = 'none';
     }
@@ -2255,7 +2264,7 @@ function calculateDilution() {
         let Na_mM = parseFloat(document.getElementById('tm-na').value); Na_mM = (isNaN(Na_mM) || Na_mM <= 0) ? 50 : Na_mM;
         let Mg_mM = parseFloat(document.getElementById('tm-mg').value); Mg_mM = (isNaN(Mg_mM) || Mg_mM < 0) ? 0 : Mg_mM; 
         let Primer_nM = parseFloat(document.getElementById('tm-pconc').value); Primer_nM = (isNaN(Primer_nM) || Primer_nM <= 0) ? 500 : Primer_nM;
-        let Na_eq = (Na_mM / 1000) + (Mg_mM > 0 ? 3.3 * Math.sqrt(Mg_mM / 1000) : 0);
+        let Na_eq = (Na_mM / 1000) + (Mg_mM > 0 ? (120 / Math.sqrt(1000)) * Math.sqrt(Mg_mM / 1000) : 0);
         Na_eq = Math.max(Na_eq, 1e-6);
         let tmVal = 0;
 
@@ -2269,7 +2278,7 @@ function calculateDilution() {
             sumH += santaLuciaParams[['G','C'].includes(val[len - 1]) ? 'initGC' : 'initAT'].H; sumS += santaLuciaParams[['G','C'].includes(val[len - 1]) ? 'initGC' : 'initAT'].S;
             tmVal = ((1000 * sumH) / (sumS + (0.368 * (len - 1) * Math.log(Na_eq)) + (1.987 * Math.log((Primer_nM / 1e9) / 4)))) - 273.15;
         } else {
-            tmVal = 81.5 + (16.6 * Math.log10(Na_eq)) + (0.41 * gcPercent) - (600 / len);
+            tmVal = 81.5 + (16.6 * Math.log10(Na_eq)) + (0.41 * gcPercent) - (675 / len);
         }
         row.querySelector('.len-cell').innerText = len; row.querySelector('.gc-cell').innerText = gcPercent.toFixed(1) + '%'; row.querySelector('.tm-cell').innerText = tmVal.toFixed(2) + ' °C';
     }
@@ -2528,6 +2537,7 @@ function setScientificInputs(baseId, expId, num) {
     }
     function updateTimerTitle(type, idx, val) { type === 'countdown' ? countdowns[idx].title = val : stopwatches[idx].title = val; }
     function startCountdown(idx) {
+    stopAudio(idx);
     // 1. 核心修復：在使用者點擊「開始」的當下，立刻初始化並播放極短的靜音來解鎖 iOS 音頻限制
     if (!audioCtx) {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
