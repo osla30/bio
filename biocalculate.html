@@ -2344,7 +2344,7 @@ function calculateDilution() {
     function calculateAnimalDose() {
       const targetDose = parseFloat(document.getElementById('targetDose').value), doseB1 = parseFloat(document.getElementById('doseB1').value), doseB2 = parseFloat(document.getElementById('doseB2').value), animalWeight = parseFloat(document.getElementById('animalWeight').value), animalCount = parseFloat(document.getElementById('animalCount').value);
       if (!validateInputs([targetDose, doseB1, doseB2, animalWeight, animalCount])) { showError('animalResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']); return; }
-      showResult('animalResult', `${translations[currentLanguage]['每隻動物投藥量：']}${formatBioResult((targetDose / 1000) * animalWeight)} mg/pc\n${translations[currentLanguage]['配製藥物濃度：']}${(targetDose / (1000 / doseB1) / doseB2).toFixed(6)} mg/mL\n${translations[currentLanguage]['配製藥物總重量：']}${((targetDose / 1000) * animalWeight * animalCount).toFixed(6)} mg\n${translations[currentLanguage]['配製藥物溶液總體積：']}${((animalWeight / doseB1) * doseB2 * animalCount).toFixed(6)} mL`);
+      showResult('animalResult', `${translations[currentLanguage]['每隻動物投藥量：']}${formatBioResult((targetDose / 1000) * animalWeight)} mg/pc\n${translations[currentLanguage]['配製藥物濃度：']}${formatBioResult(targetDose / (1000 / doseB1) / doseB2)} mg/mL\n${translations[currentLanguage]['配製藥物總重量：']}${formatBioResult((targetDose / 1000) * animalWeight * animalCount)} mg\n${translations[currentLanguage]['配製藥物溶液總體積：']}${formatBioResult((animalWeight / doseB1) * doseB2 * animalCount)} mL`);
     }
     function clearAnimal() { clearFields(['targetDose', 'doseB1', 'doseB2', 'animalWeight', 'animalCount'], 'animalResult'); }
 
@@ -2457,7 +2457,7 @@ function calculateDilution() {
         } else {
             tmVal = 81.5 + (16.6 * Math.log10(Na_eq)) + (0.41 * gcPercent) - (600 / len);
         }
-        row.querySelector('.len-cell').innerText = len; row.querySelector('.gc-cell').innerText = gcPercent.toFixed(1) + '%'; row.querySelector('.tm-cell').innerText = tmVal.toFixed(2) + ' °C';
+        row.querySelector('.len-cell').innerText = len; row.querySelector('.gc-cell').innerText = gcPercent.toFixed(1) + '%'; row.querySelector('.tm-cell').innerText = parseFloat(tmVal.toFixed(2)) + ' °C';
     }
 
     function analyzeStructure(btn) {
@@ -2655,7 +2655,7 @@ function setScientificInputs(baseId, expId, num) {
         const concValue = baseResultUL * unit;
         const sciDisplayStr = formatScientific(concValue);
 
-        document.getElementById("ccResult").innerHTML = `${translations[currentLanguage]['濃度計算結果：']}${concValue.toFixed(2)} ${document.getElementById("ccUnit").selectedOptions[0].text}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplayStr} ${document.getElementById("ccUnit").selectedOptions[0].text}${totalDisplay}`;
+        document.getElementById("ccResult").innerHTML = `${translations[currentLanguage]['濃度計算結果：']}${parseFloat(concValue.toFixed(2))} ${document.getElementById("ccUnit").selectedOptions[0].text}<br>${translations[currentLanguage]['科學記號表示：']}${sciDisplayStr} ${document.getElementById("ccUnit").selectedOptions[0].text}${totalDisplay}`;
         document.getElementById("ccResult").style.display = 'block'; document.getElementById("ccVolumeCalc").style.display = 'block'; document.getElementById("ccResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     function updateCellResult() { if (document.getElementById('ccCount').value && document.getElementById('ccSquares').value && document.getElementById('ccDilution').value) calculateCellCount(); }
@@ -2674,7 +2674,7 @@ function setScientificInputs(baseId, expId, num) {
 
     // 將原本公式中的 exponent 替換為 safeExp
     calculatedCellVolUL = (base * Math.pow(10, safeExp)) / cellConcentration;
-        document.getElementById("ccVolumeResult").innerHTML = `${translations[currentLanguage]['所需體積：']}${calculatedCellVolUL.toFixed(2)} µL (${(calculatedCellVolUL / 1000).toFixed(4)} mL)`;
+        document.getElementById("ccVolumeResult").innerHTML = `${translations[currentLanguage]['所需體積：']}${parseFloat(calculatedCellVolUL.toFixed(2))} µL (${parseFloat((calculatedCellVolUL / 1000).toFixed(4))} mL)`;
         document.getElementById("ccVolumeResult").style.display = 'block'; document.getElementById('ccBatchCalc').style.display = 'block'; document.getElementById("ccVolumeResult").scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
@@ -2685,7 +2685,7 @@ function setScientificInputs(baseId, expId, num) {
         if (B * 1000 < calculatedCellVolUL) { showError('ccBatchResult', currentLanguage === 'zh' ? '每組體積小於單組所需細胞液體積，請提高每組體積 (mL)' : 'Target volume per group is less than required cell suspension volume.'); return; }
 
         const needCellVol = calculatedCellVolUL * A, mediaUL = (B * 1000 - calculatedCellVolUL) * A; 
-        document.getElementById('ccBatchResult').innerText = `${translations[currentLanguage]['所需細胞液體積：']} ${needCellVol.toFixed(2)} µL (${(needCellVol/1000).toFixed(2)} mL)\n${translations[currentLanguage]['所需添加培養基體積：']} ${mediaUL.toFixed(2)} µL (${(mediaUL/1000).toFixed(2)} mL)\n${translations[currentLanguage]['總體積：']} ${(needCellVol + mediaUL).toFixed(2)} µL (${((needCellVol + mediaUL)/1000).toFixed(2)} mL)`;
+        document.getElementById('ccBatchResult').innerText = `${translations[currentLanguage]['所需細胞液體積：']} ${parseFloat(needCellVol.toFixed(2))} µL (${parseFloat((needCellVol/1000).toFixed(2))} mL)\n${translations[currentLanguage]['所需添加培養基體積：']} ${parseFloat(mediaUL.toFixed(2))} µL (${parseFloat((mediaUL/1000).toFixed(2))} mL)\n${translations[currentLanguage]['總體積：']} ${parseFloat((needCellVol + mediaUL).toFixed(2))} µL (${parseFloat(((needCellVol + mediaUL)/1000).toFixed(2))} mL)`;
         document.getElementById('ccBatchResult').style.display = 'block'; document.getElementById('ccBatchResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     function clearCell() { clearFields(['ccCount', 'ccSquares', 'ccDilution', 'ccTargetBase', 'ccTargetExp', 'ccBatchN', 'ccBatchVol', 'ccVolume'], 'ccResult'); cellConcentration = null; calculatedCellVolUL = 0; hideResult('ccVolumeResult'); document.getElementById("ccVolumeCalc").style.display = 'none'; document.getElementById('ccBatchCalc').style.display = 'none'; document.getElementById('ccBatchResult').style.display = 'none'; }
@@ -2706,7 +2706,7 @@ function setScientificInputs(baseId, expId, num) {
     remainingCellsForFreezing = preciseVol * (base * Math.pow(10, safeExp));
 
     const remainDisplayStr = formatScientific(remainingCellsForFreezing);
-    document.getElementById('fzResult1').innerHTML = `${translations[currentLanguage]['取出後，剩餘細胞液體積：']}${(vol - takeOut).toFixed(4)} mL<br>${translations[currentLanguage]['取出後，剩餘細胞數：']}${remainDisplayStr} ${translations[currentLanguage]['個']}`;
+    document.getElementById('fzResult1').innerHTML = `${translations[currentLanguage]['取出後，剩餘細胞液體積：']}${parseFloat((vol - takeOut).toFixed(4))} mL<br>${translations[currentLanguage]['取出後，剩餘細胞數：']}${remainDisplayStr} ${translations[currentLanguage]['個']}`;
     document.getElementById('fzResult1').style.display = 'block'; 
     document.getElementById('fzStep2Calc').style.display = 'block'; 
     document.getElementById('fzResult1').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2723,7 +2723,7 @@ function setScientificInputs(baseId, expId, num) {
     const safeTExp = isNaN(tExp) ? 0 : tExp; // 留空視為 0
     const targetConc = tBase * Math.pow(10, safeTExp);
 
-    document.getElementById('fzResult2').innerHTML = `${translations[currentLanguage]['需添加凍存液體積：']}${((remainingCellsForFreezing / targetConc) * 1000).toFixed(2)} µL (${(remainingCellsForFreezing / targetConc).toFixed(4)} mL)`;
+    document.getElementById('fzResult2').innerHTML = `${translations[currentLanguage]['需添加凍存液體積：']}${parseFloat(((remainingCellsForFreezing / targetConc) * 1000).toFixed(2))} µL (${parseFloat((remainingCellsForFreezing / targetConc).toFixed(4))} mL)`;
     document.getElementById('fzResult2').style.display = 'block'; 
     document.getElementById('fzResult2').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -2798,14 +2798,14 @@ function setScientificInputs(baseId, expId, num) {
             setScientificInputs('cdilC1Base', 'cdilC1Exp', resultValue);
             showResult('cdilResult', `${translations[currentLanguage]['計算出原始細胞濃度 C₁ = ']}${formatScientific(resultValue)} ${unitText}`);
         } else if (calcType === 'v1') {
-            document.getElementById('cdilV1').value = resultValue.toFixed(4); 
-            showResult('cdilResult', `${translations[currentLanguage]['計算出原始細胞體積 V₁ = ']}${resultValue.toFixed(4)} mL`);
+           document.getElementById('cdilV1').value = parseFloat(resultValue.toFixed(4)); 
+         showResult('cdilResult', `${translations[currentLanguage]['計算出原始細胞體積 V₁ = ']}${parseFloat(resultValue.toFixed(4))} mL`);
         } else if (calcType === 'c2') {
-            setScientificInputs('cdilC2Base', 'cdilC2Exp', resultValue);
-            showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞濃度 C₂ = ']}${formatScientific(resultValue)} ${unitText}`);
+         setScientificInputs('cdilC2Base', 'cdilC2Exp', resultValue);
+         showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞濃度 C₂ = ']}${formatScientific(resultValue)} ${unitText}`);
         } else if (calcType === 'v2') {
-            document.getElementById('cdilV2').value = resultValue.toFixed(4); 
-            showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞體積 V₂ = ']}${resultValue.toFixed(4)} mL`); 
+           document.getElementById('cdilV2').value = parseFloat(resultValue.toFixed(4)); 
+         showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞體積 V₂ = ']}${parseFloat(resultValue.toFixed(4))} mL`); 
         }
     }
     function clearCellDilution() { clearFields(['cdilC1Base', 'cdilC1Exp', 'cdilC2Base', 'cdilC2Exp', 'cdilV2', 'cdilV1'], 'cdilResult'); }
