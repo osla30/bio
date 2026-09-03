@@ -870,7 +870,7 @@ footer a:hover { text-decoration: underline; }
     let calculatedCellVolUL = 0;
     let remainingCellsForFreezing = 0;
     // 紀錄各模組上一次自動計算生成的欄位，以解決 filledCount 鎖死問題
-    let lastCalcTarget = { mass: null, dilution: null, acidbase: null };
+    let lastCalcTarget = { mass: null, dilution: null, acidbase: null, primer: null, celldilution: null };
 
     const translations = {
       zh: {
@@ -2358,10 +2358,22 @@ function calculateDilution() {
 
     function calcPrimer() {
       let A = parseFloat(document.getElementById('primerAmount').value), B = parseFloat(document.getElementById('primerVolume').value), C = parseFloat(document.getElementById('primerConc').value);
-      const filledCount = (!isNaN(A)?1:0) + (!isNaN(B)?1:0) + (!isNaN(C)?1:0);
+      let filledCount = (!isNaN(A)?1:0) + (!isNaN(B)?1:0) + (!isNaN(C)?1:0);
       
-      if (filledCount < 2) { showError('primerResult', translations[currentLanguage]['請輸入任意兩個欄位']); return; }
-      if (filledCount === 3) { showError('primerResult', translations[currentLanguage]['請清空一個欄位以計算該值']); return; }
+      // --- 解除鎖死邏輯 ---
+      if (filledCount === 3 && lastCalcTarget.primer) {
+          document.getElementById(lastCalcTarget.primer).value = '';
+          if (lastCalcTarget.primer === 'primerAmount') A = NaN;
+          if (lastCalcTarget.primer === 'primerVolume') B = NaN;
+          if (lastCalcTarget.primer === 'primerConc') C = NaN;
+          filledCount = 2;
+      } else if (filledCount === 3) {
+          showError('primerResult', translations[currentLanguage]['請清空一個欄位以計算該值']); 
+          return; 
+      } else if (filledCount < 2) { 
+          showError('primerResult', translations[currentLanguage]['請輸入任意兩個欄位']); 
+          return; 
+      }
       
       // 修改：更精確的防呆與錯誤訊息
       const filledValues = [A, B, C].filter(v => !isNaN(v));
@@ -2371,22 +2383,28 @@ function calculateDilution() {
       }
       
       if (!isNaN(A) && !isNaN(B)) { 
-    let res = (A / B) * 1000;
-    document.getElementById('primerConc').value = formatBioResult(res); 
-    showResult('primerResult', `${translations[currentLanguage]['計算後濃度：']}${formatBioResult(res)} µM`); 
-     }
-     else if (!isNaN(A) && !isNaN(C)) { 
-    let res = (A / C) * 1000;
-    document.getElementById('primerVolume').value = formatBioResult(res); 
-    showResult('primerResult', `${translations[currentLanguage]['計算所需回溶水量：']}${formatBioResult(res)} µL`); 
-     }
-     else if (!isNaN(B) && !isNaN(C)) { 
-    let res = (C * B) / 1000;
-    document.getElementById('primerAmount').value = formatBioResult(res); 
-    showResult('primerResult', `${translations[currentLanguage]['計算所需Primer產量：']}${formatBioResult(res)} nmole`); 
-     }
+        lastCalcTarget.primer = 'primerConc';
+        let res = (A / B) * 1000;
+        document.getElementById('primerConc').value = formatBioResult(res); 
+        showResult('primerResult', `${translations[currentLanguage]['計算後濃度：']}${formatBioResult(res)} µM`); 
+      }
+      else if (!isNaN(A) && !isNaN(C)) { 
+        lastCalcTarget.primer = 'primerVolume';
+        let res = (A / C) * 1000;
+        document.getElementById('primerVolume').value = formatBioResult(res); 
+        showResult('primerResult', `${translations[currentLanguage]['計算所需回溶水量：']}${formatBioResult(res)} µL`); 
+      }
+      else if (!isNaN(B) && !isNaN(C)) { 
+        lastCalcTarget.primer = 'primerAmount';
+        let res = (C * B) / 1000;
+        document.getElementById('primerAmount').value = formatBioResult(res); 
+        showResult('primerResult', `${translations[currentLanguage]['計算所需Primer產量：']}${formatBioResult(res)} nmole`); 
+      }
     }
-    function clearPrimer() { clearFields(['primerAmount', 'primerVolume', 'primerConc'], 'primerResult'); }
+    function clearPrimer() { 
+        clearFields(['primerAmount', 'primerVolume', 'primerConc'], 'primerResult'); 
+        lastCalcTarget.primer = null;
+    }
 
     function calcDilute() {
       const a = parseFloat(document.getElementById('stockConc').value), b = parseFloat(document.getElementById('targetConc').value), c = parseFloat(document.getElementById('targetVol').value);
@@ -2735,8 +2753,8 @@ function setScientificInputs(baseId, expId, num) {
         const c1Exp = parseFloat(document.getElementById('cdilC1Exp').value);
         const c2Base = parseFloat(document.getElementById('cdilC2Base').value);
         const c2Exp = parseFloat(document.getElementById('cdilC2Exp').value);
-        const v2 = parseFloat(document.getElementById('cdilV2').value);
-        const v1 = parseFloat(document.getElementById('cdilV1').value);
+        let v2 = parseFloat(document.getElementById('cdilV2').value);
+        let v1 = parseFloat(document.getElementById('cdilV1').value);
         
         let c1 = NaN, c2 = NaN;
         
@@ -2754,9 +2772,33 @@ function setScientificInputs(baseId, expId, num) {
         }
         
         // 檢查是否填太少或填太多
-        const filledCount = [c1, c2, v1, v2].filter(v => !isNaN(v)).length;
-        if (filledCount < 3) { showError('cdilResult', translations[currentLanguage]['請輸入任意三個值']); return; }
-        if (filledCount > 3) { showError('cdilResult', translations[currentLanguage]['請清空一個欄位以計算該值']); return; }
+        let filledCount = [c1, c2, v1, v2].filter(v => !isNaN(v)).length;
+        
+        // --- 解除鎖死邏輯 ---
+        if (filledCount === 4 && lastCalcTarget.celldilution) {
+            if (lastCalcTarget.celldilution === 'c1') {
+                document.getElementById('cdilC1Base').value = '';
+                document.getElementById('cdilC1Exp').value = '';
+                c1 = NaN;
+            } else if (lastCalcTarget.celldilution === 'v1') {
+                document.getElementById('cdilV1').value = '';
+                v1 = NaN;
+            } else if (lastCalcTarget.celldilution === 'c2') {
+                document.getElementById('cdilC2Base').value = '';
+                document.getElementById('cdilC2Exp').value = '';
+                c2 = NaN;
+            } else if (lastCalcTarget.celldilution === 'v2') {
+                document.getElementById('cdilV2').value = '';
+                v2 = NaN;
+            }
+            filledCount = 3;
+        } else if (filledCount > 3) { 
+            showError('cdilResult', translations[currentLanguage]['請清空一個欄位以計算該值']); 
+            return; 
+        } else if (filledCount < 3) { 
+            showError('cdilResult', translations[currentLanguage]['請輸入任意三個值']); 
+            return; 
+        }
         
         // 確保輸入的數值皆大於0
         if (!validateInputs([c1, c2, v1, v2].filter(v => !isNaN(v)))) { 
@@ -2771,17 +2813,21 @@ function setScientificInputs(baseId, expId, num) {
         if (isNaN(c1)) {
             c1 = (c2 * v2) / v1; 
             calcType = 'c1';
+            lastCalcTarget.celldilution = 'c1';
             resultValue = c1;
         } else if (isNaN(v1)) { 
             resultValue = (c2 * v2) / c1;
             calcType = 'v1';
+            lastCalcTarget.celldilution = 'v1';
         } else if (isNaN(c2)) {
             c2 = (c1 * v1) / v2; 
             calcType = 'c2';
+            lastCalcTarget.celldilution = 'c2';
             resultValue = c2;
         } else if (isNaN(v2)) { 
             resultValue = (c1 * v1) / c2;
             calcType = 'v2';
+            lastCalcTarget.celldilution = 'v2';
         }
 
         // 修正 3：計算完畢並將變數補齊後，再進行物理邏輯檢查 (實際操作可濃縮，阻擋此邏輯)
@@ -2808,7 +2854,10 @@ function setScientificInputs(baseId, expId, num) {
          showResult('cdilResult', `${translations[currentLanguage]['計算出目標細胞體積 V₂ = ']}${parseFloat(resultValue.toFixed(4))} mL`); 
         }
     }
-    function clearCellDilution() { clearFields(['cdilC1Base', 'cdilC1Exp', 'cdilC2Base', 'cdilC2Exp', 'cdilV2', 'cdilV1'], 'cdilResult'); }
+    function clearCellDilution() { 
+        clearFields(['cdilC1Base', 'cdilC1Exp', 'cdilC2Base', 'cdilC2Exp', 'cdilV2', 'cdilV1'], 'cdilResult'); 
+        lastCalcTarget.celldilution = null;
+    }
 
     // === 計時器區塊 ===
     const countdowns = Array(2).fill().map(() => ({ interval: null, running: false, remaining: 0, title: '', audioLoopInterval: null, audioTimeout: null }));
