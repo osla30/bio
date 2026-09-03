@@ -469,15 +469,15 @@ footer a:hover { text-decoration: underline; }
     <div class="form-container" style="margin-top: 10px; grid-template-columns: 1fr 1fr;">
         <div class="form-row-inline">
             <label data-text="tm-na-conc">Na⁺ 濃度 (mM):</label>
-            <input type="number" id="tm-na" value="50" onchange="recalcAllTm()">
+            <input type="number" id="tm-na" value="50" oninput="recalcAllTm()">
         </div>
         <div class="form-row-inline">
             <label data-text="tm-mg-conc">Mg²⁺ 濃度 (mM):</label>
-            <input type="number" id="tm-mg" value="0" onchange="recalcAllTm()">
+            <input type="number" id="tm-mg" value="0" oninput="recalcAllTm()">
         </div>
         <div class="form-row-inline">
             <label data-text="tm-p-conc">Primer 濃度 (nM):</label>
-            <input type="number" id="tm-pconc" value="500" onchange="recalcAllTm()">
+            <input type="number" id="tm-pconc" value="500" oninput="recalcAllTm()">
         </div>
         <div class="note" style="grid-column: 1 / -1; margin-top:5px;" data-text="tm-adv-note">
           調整參數後將自動重新計算所有 Tm 值。<br>
@@ -1137,6 +1137,14 @@ footer a:hover { text-decoration: underline; }
       updateSelectOptions(lang);
       updateSolPrepList(lang);
       updateDisplayedResults();
+      // 更新 Tm 計算表的手機版 data-label
+      document.querySelectorAll('#tableBody tr').forEach(row => {
+          if(row.cells[1]) row.cells[1].setAttribute('data-label', translations[lang]['tm-seq']);
+          if(row.cells[2]) row.cells[2].setAttribute('data-label', translations[lang]['tm-len']);
+          if(row.cells[3]) row.cells[3].setAttribute('data-label', translations[lang]['tm-gc']);
+          if(row.cells[4]) row.cells[4].setAttribute('data-label', translations[lang]['tm-tm']);
+          if(row.cells[5]) row.cells[5].setAttribute('data-label', translations[lang]['tm-action']);
+      });
     }
 
     function updateSelectOptions(lang) {
@@ -1565,24 +1573,39 @@ footer a:hover { text-decoration: underline; }
     }
 
     function formatNumberLimit(numVal) {
+    if (numVal === null || numVal === undefined) return "0";
     let numStr = numVal.toString();
     if (numStr === 'NaN' || numStr === 'Infinity' || numStr === '-Infinity') return numStr;
 
-    // 使用 math.format 替代 parseFloat 以保留 BigNumber 精度
-    // precision 設為 16 (或您可改為更高的值，最大 64)。這能避免 1/3 的結果填滿整個螢幕，同時超越原生 JS 的精度流失
+    // 使用 math.format 保留 BigNumber 精度
     let formattedStr = math.format(numVal, { notation: 'auto', precision: 16, lowerExp: -7, upperExp: 12 });
 
     if (formattedStr.toLowerCase().includes('e')) {
         let parts = formattedStr.toLowerCase().split('e');
         let base = parts[0];
-        let exp = parseInt(parts[1], 10).toString(); // 去除多餘的正號（例如 e+11 變成 11）
         
-        // 轉換為上標字元
-        const supMap = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
-        let supExp = exp.split('').map(c => supMap[c] || c).join('');
+        // 修正：正規化負號字符，確保處理 ASCII 減號 (-) 與 Unicode 減號 (−)
+        let rawExpStr = parts[1].replace(/−/g, '-').trim();
+        let expNum = parseInt(rawExpStr, 10);
         
+        // 容錯防呆：若解析失敗則回退回原始格式化字串
+        if (isNaN(expNum)) return formattedStr;
+
+        let expStr = expNum.toString();
+
+        // 轉換為上標字元字典（包含兩種減號編碼）
+        const supMap = {
+            '0':'⁰', '1':'¹', '2':'²', '3':'³', '4':'⁴', 
+            '5':'⁵', '6':'⁶', '7':'⁷', '8':'⁸', '9':'⁹', 
+            '-':'⁻', '−':'⁻'
+        };
+        let supExp = expStr.split('').map(c => supMap[c] || c).join('');
+
+        // 修正：若 base 為 -0 則修正為 0
+        if (base === "-0") base = "0";
+
         return `${base} × 10${supExp}`;
-      }
+    }
     return formattedStr;
     }
 
@@ -2201,6 +2224,8 @@ function calculateDilution() {
     function toggleSoluteSource(sel) {
      const box = sel.closest('.solute-item');
       box.querySelector('.s-val').value = '';
+     const targetUnit = box.querySelector('.s-target-unit');
+     if (targetUnit) targetUnit.selectedIndex = 0; // 重置回預設 M
      const lblVal = box.querySelector('.lbl-val');
      const colon = currentLanguage === 'zh' ? '：' : ': ';
   
@@ -2344,7 +2369,7 @@ function calculateDilution() {
     function calculateAnimalDose() {
       const targetDose = parseFloat(document.getElementById('targetDose').value), doseB1 = parseFloat(document.getElementById('doseB1').value), doseB2 = parseFloat(document.getElementById('doseB2').value), animalWeight = parseFloat(document.getElementById('animalWeight').value), animalCount = parseFloat(document.getElementById('animalCount').value);
       if (!validateInputs([targetDose, doseB1, doseB2, animalWeight, animalCount])) { showError('animalResult', translations[currentLanguage]['請輸入所有欄位且數值皆大於 0']); return; }
-      showResult('animalResult', `${translations[currentLanguage]['每隻動物投藥量：']}${formatBioResult((targetDose / 1000) * animalWeight)} mg/pc\n${translations[currentLanguage]['配製藥物濃度：']}${formatBioResult(targetDose / (1000 / doseB1) / doseB2)} mg/mL\n${translations[currentLanguage]['配製藥物總重量：']}${formatBioResult((targetDose / 1000) * animalWeight * animalCount)} mg\n${translations[currentLanguage]['配製藥物溶液總體積：']}${formatBioResult((animalWeight / doseB1) * doseB2 * animalCount)} mL`);
+      showResult('animalResult', `${translations[currentLanguage]['每隻動物投藥量：']}${formatBioResult((targetDose / 1000) * animalWeight)} mg/pc\n${translations[currentLanguage]['配製藥物濃度：']}${formatBioResult((targetDose * doseB1) / (1000 * doseB2))} mg/mL\n${translations[currentLanguage]['配製藥物總重量：']}${formatBioResult((targetDose / 1000) * animalWeight * animalCount)} mg\n${translations[currentLanguage]['配製藥物溶液總體積：']}${formatBioResult((animalWeight / doseB1) * doseB2 * animalCount)} mL`);
     }
     function clearAnimal() { clearFields(['targetDose', 'doseB1', 'doseB2', 'animalWeight', 'animalCount'], 'animalResult'); }
 
@@ -2417,7 +2442,7 @@ function calculateDilution() {
     function addRow() {
         tmRowCount++;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${tmRowCount}</td><td data-label="Sequence"><input type="text" class="seq-input" placeholder="${translations[currentLanguage]['tm-placeholder']}" oninput="calculateRow(this)"></td><td data-label="Length" class="res-cell len-cell">-</td><td data-label="GC%" class="res-cell gc-cell">-</td><td data-label="Tm" class="res-cell tm-cell">-</td><td data-label="Action"><button class="btn btn-check" onclick="analyzeStructure(this)" data-text="tm-analyze">${translations[currentLanguage]['tm-analyze']}</button><button class="btn btn-del" onclick="deleteRow(this)" data-text="tm-delete">${translations[currentLanguage]['tm-delete']}</button></td>`;
+        tr.innerHTML = `<td>${tmRowCount}</td><td data-label="${translations[currentLanguage]['tm-seq']}"><input type="text" class="seq-input" placeholder="${translations[currentLanguage]['tm-placeholder']}" oninput="calculateRow(this)"></td><td data-label="${translations[currentLanguage]['tm-len']}" class="res-cell len-cell">-</td><td data-label="${translations[currentLanguage]['tm-gc']}" class="res-cell gc-cell">-</td><td data-label="${translations[currentLanguage]['tm-tm']}" class="res-cell tm-cell">-</td><td data-label="${translations[currentLanguage]['tm-action']}"><button class="btn btn-check" onclick="analyzeStructure(this)" data-text="tm-analyze">${translations[currentLanguage]['tm-analyze']}</button><button class="btn btn-del" onclick="deleteRow(this)" data-text="tm-delete">${translations[currentLanguage]['tm-delete']}</button></td>`;
         document.getElementById('tableBody').appendChild(tr); updateRowNumbers();
     }
     function deleteRow(btn) { btn.parentNode.parentNode.remove(); updateRowNumbers(); }
@@ -2430,10 +2455,7 @@ function calculateDilution() {
         let cursorStart = inputElement.selectionStart;
         let cursorEnd = inputElement.selectionEnd;
         let rawSeq = inputElement.value;
-         if (rawSeq.startsWith('>')) {
-         // 若為 FASTA 格式，直接剔除第一行標題
-             rawSeq = rawSeq.replace(/^>[^\s]+\s*/, '');
-            }
+            rawSeq = rawSeq.replace(/^>.*$/gm, '');
         let val = rawSeq.replace(/[^ATCGatcg]/g, '').toUpperCase();
 
         if (inputElement.value !== val) {
@@ -2459,7 +2481,9 @@ function calculateDilution() {
          mgInput.value = 0; // 打破靜默，強制將畫面欄位修正為 0
         } 
         let Primer_nM = parseFloat(document.getElementById('tm-pconc').value); Primer_nM = (isNaN(Primer_nM) || Primer_nM <= 0) ? 500 : Primer_nM;
-        let Na_eq = (Na_mM / 1000) + (Mg_mM > 0 ? 0.12 * Math.sqrt(Mg_mM) : 0);
+        const Na_M = Na_mM / 1000;
+        const Mg_M = Mg_mM / 1000;
+        let Na_eq = Na_M + (Mg_M > 0 ? 3.3 * Math.sqrt(Mg_M) : 0);
         Na_eq = Math.max(Na_eq, 1e-6);
         let tmVal = 0;
 
@@ -2558,9 +2582,7 @@ function calculateDilution() {
 
         // 新增：FASTA 標題過濾機制
         let rawSeq = input.value;
-        if (rawSeq.startsWith('>')) {
-            rawSeq = rawSeq.replace(/^>.*$/gm, '');
-        }
+        rawSeq = rawSeq.replace(/^>.*$/gm, '');
 
         // 替換為過濾後的字串進行 ATCG / AUCG 判定
         input.value = rawSeq.replace(type === 'dna' ? /[^atcgATCG]/g : /[^aucgAUCG]/g, '');
@@ -2683,7 +2705,10 @@ function setScientificInputs(baseId, expId, num) {
     const exponent = parseFloat(document.getElementById('ccTargetExp').value);
 
     // 僅檢查基數是否為空
-    if (isNaN(base)) { showError('ccVolumeResult', translations[currentLanguage]['請輸入目標細胞數量']); return; }
+    if (isNaN(base) || base <= 0) { 
+    showError('ccVolumeResult', currentLanguage === 'zh' ? '請輸入大於 0 的目標細胞數量' : 'Please enter target cell count greater than 0'); 
+    return;
+    }
     if (cellConcentration === null) { showError('ccVolumeResult', translations[currentLanguage]['請先計算細胞濃度']); return; }
     if (cellConcentration === 0) { showError('ccVolumeResult', currentLanguage === 'zh' ? '濃度為 0，無法計算體積' : 'Concentration is 0, cannot calculate volume'); return; }
 
@@ -2920,9 +2945,13 @@ function setScientificInputs(baseId, expId, num) {
       }, 200);
     }
     function pauseCountdown(idx) {
-    if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
-    countdowns[idx].running = false; stopAudio(idx);
-    if (countdowns[idx].targetTimestamp) countdowns[idx].remaining = Math.max(0, (countdowns[idx].targetTimestamp - Date.now()) / 1000);
+     if (countdowns[idx].interval) clearInterval(countdowns[idx].interval);
+     countdowns[idx].running = false; 
+     stopAudio(idx);
+     if (countdowns[idx].targetTimestamp) {
+     countdowns[idx].remaining = Math.max(0, Math.ceil((countdowns[idx].targetTimestamp - Date.now()) / 1000));
+     }
+     updateCountdownDisplay(idx);
     }
     function resetCountdown(idx) { pauseCountdown(idx); countdowns[idx].remaining = 0; document.getElementById(`cd-hours${idx + 1}`).value = ''; document.getElementById(`cd-minutes${idx + 1}`).value = ''; document.getElementById(`cd-seconds${idx + 1}`).value = ''; updateCountdownDisplay(idx); }
     function stopAudio(idx) { if (countdowns[idx].audioLoopInterval) clearInterval(countdowns[idx].audioLoopInterval); if (countdowns[idx].audioTimeout) clearTimeout(countdowns[idx].audioTimeout); }
