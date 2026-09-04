@@ -406,7 +406,6 @@ footer a:hover {
                     </div>
                     <div class="card-body">
                         <div id="r2_warning_box" class="alert alert-warning py-1 px-2 mb-2" style="display:none; font-size:0.85rem;"></div>
-                        <div id="chart_range_warning" class="alert alert-secondary py-1 px-2 mb-2" style="display:none; font-size:0.85rem;"></div>
                         <div class="chart-container-wrapper">
                             <canvas id="elisaChart"></canvas>
                         </div>
@@ -491,6 +490,7 @@ footer a:hover {
 </footer>
     
     <script>
+        let globalAppliedDilution = 1;
         const i18n = {
             en: {
                 title: "Bradford / BCA Protein Assay",
@@ -634,43 +634,36 @@ footer a:hover {
 
         document.addEventListener('DOMContentLoaded', () => { setLang('zh'); });
 
-        function saveAndRenderAllInputs() {
-            let savedData = {
-                stdConc: document.getElementById('std_conc_input')?.value || '',
-                stdOds: [], 
-                sampleName: document.getElementById('sample_name_input')?.value || '',
-                sampleOds: []
-            };
-            
-            let stdReps = parseInt(document.getElementById('stdReplicates').value);
-            for(let r=1; r<=stdReps; r++) {
-                savedData.stdOds.push(document.getElementById(`std_od_input_${r}`)?.value || '');
-            }
-            
-            let sampleReps = parseInt(document.getElementById('sampleReplicates').value);
-            for(let r=1; r<=sampleReps; r++) {
-                savedData.sampleOds.push(document.getElementById(`sample_od_input_${r}`)?.value || '');
-            }
+        // 全域狀態暫存
+let cachedInputData = { stdConc: '', stdOds: ['', '', ''], sampleName: '', sampleOds: ['', '', ''] };
 
-            renderStandardInputs();
-            renderSampleInputs();
+function saveAndRenderAllInputs() {
+    // 1. 抓取當下 DOM 數據存入快取 (保留既有已輸入的內容)
+    if(document.getElementById('std_conc_input')) cachedInputData.stdConc = document.getElementById('std_conc_input').value;
+    if(document.getElementById('sample_name_input')) cachedInputData.sampleName = document.getElementById('sample_name_input').value;
+    for(let r=1; r<=3; r++) {
+        if(document.getElementById(`std_od_input_${r}`)) cachedInputData.stdOds[r-1] = document.getElementById(`std_od_input_${r}`).value;
+        if(document.getElementById(`sample_od_input_${r}`)) cachedInputData.sampleOds[r-1] = document.getElementById(`sample_od_input_${r}`).value;
+    }
 
-            if(document.getElementById('std_conc_input')) document.getElementById('std_conc_input').value = savedData.stdConc;
-            
-            for(let r=1; r<=stdReps; r++) {
-                if(document.getElementById(`std_od_input_${r}`)) {
-                    document.getElementById(`std_od_input_${r}`).value = savedData.stdOds[r-1] || '';
-                }
-            }
-            
-            if(document.getElementById('sample_name_input')) document.getElementById('sample_name_input').value = savedData.sampleName;
+    // 2. 重新渲染 HTML
+    renderStandardInputs();
+    renderSampleInputs();
 
-            for(let r=1; r<=sampleReps; r++) {
-                if(document.getElementById(`sample_od_input_${r}`)) {
-                    document.getElementById(`sample_od_input_${r}`).value = savedData.sampleOds[r-1] || '';
-                }
-            }
-        }
+    // 3. 從快取中全面回填數據 (即使該欄位剛才被隱藏，數據仍在 memory 中)
+    let stdReps = parseInt(document.getElementById('stdReplicates').value);
+    let sampleReps = parseInt(document.getElementById('sampleReplicates').value);
+
+    if(document.getElementById('std_conc_input')) document.getElementById('std_conc_input').value = cachedInputData.stdConc;
+    for(let r=1; r<=stdReps; r++) {
+        if(document.getElementById(`std_od_input_${r}`)) document.getElementById(`std_od_input_${r}`).value = cachedInputData.stdOds[r-1];
+    }
+
+    if(document.getElementById('sample_name_input')) document.getElementById('sample_name_input').value = cachedInputData.sampleName;
+    for(let r=1; r<=sampleReps; r++) {
+        if(document.getElementById(`sample_od_input_${r}`)) document.getElementById(`sample_od_input_${r}`).value = cachedInputData.sampleOds[r-1];
+    }
+}
 
         function renderStandardInputs() {
             const reps = parseInt(document.getElementById('stdReplicates').value);
@@ -702,7 +695,12 @@ footer a:hover {
             const el = document.getElementById(elementId);
             if (!el || !el.value.trim()) return [];
             let raw = el.value.trim();
-            return raw.split(/\r?\n/).map(v => parseFloat(v.trim()));
+            return raw.split(/\r?\n/).map(v => {
+                let val = v.trim();
+                if (val === '') return NaN;
+                let num = Number(val);
+                return Number.isFinite(num) ? num : NaN;
+            });
         }
 
         function parseStringInput(elementId) {
@@ -758,25 +756,56 @@ footer a:hover {
         }
 
         function fitLinear(data) {
-            let n = data.length, sX=0, sY=0, sXY=0, sXX=0;
-            data.forEach(p => { sX+=p.x; sY+=p.y; sXY+=p.x*p.y; sXX+=p.x*p.x; });
-            let slope = (n*sXY - sX*sY) / (n*sXX - sX*sX);
-            let intercept = (sY - slope*sX) / n;
-            
-            if (Math.abs(slope) < 1e-10) {
-                throw new Error("Standard Curve Slope is ≈ 0 (Flat Line). Cannot calculate concentration.");
+            if (!Array.isArray(data) || data.length < 2) {
+                throw new Error("At least 2 standard points are required.");
+            }
+            if (data.some(p => !Number.isFinite(p.x) || !Number.isFinite(p.y))) {
+                throw new Error("Standard curve contains invalid numeric values.");
+            }
+            const uniqueX = new Set(data.map(p => p.x));
+            if (uniqueX.size < 2) {
+                throw new Error("Standard Curve requires at least 2 different concentration values.");
             }
 
-            let ssRes=0, ssTot=0, mY=sY/n;
-            data.forEach(p=>{ ssRes+=Math.pow(p.y-(slope*p.x+intercept),2); ssTot+=Math.pow(p.y-mY,2); });
-            let r2 = 1-(ssRes/ssTot);
+            let n = data.length, sX = 0, sY = 0, sXY = 0, sXX = 0;
+            data.forEach(p => { sX += p.x; sY += p.y; sXY += p.x * p.y; sXX += p.x * p.x; });
+            
+            const denominator = n * sXX - sX * sX;
+            if (!Number.isFinite(denominator) || Math.abs(denominator) < 1e-12) {
+                throw new Error("Standard Curve concentrations do not provide enough variation.");
+            }
+            
+            const slope = (n * sXY - sX * sY) / denominator;
+            if (!Number.isFinite(slope) || Math.abs(slope) < 1e-12) {
+                throw new Error("Standard Curve slope is zero or invalid.");
+            }
+            
+            const intercept = (sY - slope * sX) / n;
+            if (!Number.isFinite(intercept)) {
+                throw new Error("Standard Curve intercept is invalid.");
+            }
 
-            let sign = intercept >= 0 ? "+" : "-";
-            let absB = Math.abs(intercept);
-            let equationStr = `y = ${slope.toFixed(5)}x ${sign} ${absB.toFixed(5)}`;
+            let ssRes = 0, ssTot = 0, mY = sY / n;
+            data.forEach(p => { 
+                ssRes += Math.pow(p.y - (slope * p.x + intercept), 2); 
+                ssTot += Math.pow(p.y - mY, 2); 
+            });
+
+            if (!Number.isFinite(ssTot) || ssTot < 1e-15) {
+                throw new Error("Standard Curve OD values have no variation. R² cannot be calculated.");
+            }
+
+            const r2 = 1 - (ssRes / ssTot);
+            if (!Number.isFinite(r2)) {
+                throw new Error("R² calculation failed.");
+            }
+
+            const sign = intercept >= 0 ? "+" : "-";
+            const absB = Math.abs(intercept);
+            const equationStr = `y = ${slope.toFixed(5)}x ${sign} ${absB.toFixed(5)}`;
 
             return { 
-                predict: x => slope*x + intercept, 
+                predict: x => slope * x + intercept, 
                 solve: y => (y - intercept) / slope, 
                 equation: equationStr, 
                 r2: r2, 
@@ -821,15 +850,12 @@ footer a:hover {
                 let rowHtml = `<td>${escapeHTML(res.name)}</td>`;
                 if (wbData.valid) {
                     let v = wbData.vals;
-                    let protClass = (v.v_prot < 0) ? "text-danger fw-bold" : "";
                     let waterClass = (v.v_water < 0) ? "text-danger fw-bold" : "";
-                    let buffClass = (v.v_buff < 0) ? "text-danger fw-bold" : "";
-                    let totalClass = (v.v_total < 0) ? "text-danger fw-bold" : "";
                     rowHtml += `
-                        <td class="${protClass}">${v.v_prot.toFixed(2)}</td>
+                        <td>${v.v_prot.toFixed(2)}</td>
                         <td class="${waterClass}">${v.v_water.toFixed(2)}</td>
-                        <td class="${buffClass}">${v.v_buff.toFixed(2)}</td>
-                        <td class="${totalClass}">${v.v_total.toFixed(2)}</td>
+                        <td>${v.v_buff.toFixed(2)}</td>
+                        <td>${v.v_total.toFixed(2)}</td>
                     `;
                 } else {
                     let msg = "---";
@@ -880,7 +906,17 @@ footer a:hover {
             }
 
             globalStdData = getStandardData();
+            // 新增標準品檢查
+            let expectedStdCount = checkStdConc.filter(v => !isNaN(v)).length;
+            if (globalStdData.length < expectedStdCount) {
+                let skipped = expectedStdCount - globalStdData.length;
+                let msg = currentLang === 'zh'
+                    ? `注意：有 ${skipped} 筆標準品因為所有 OD 欄位皆為空值而被跳過，請確認輸入。`
+                    : `Note: ${skipped} standard(s) skipped because all OD values were empty.`;
+                alert(msg);
+            }
             let dilution = parseFloat(document.getElementById('dilutionFactor').value) || 1;
+            globalAppliedDilution = dilution;
             
             if (globalStdData.length < 2) { alert(i18n[currentLang].no_result); return; }
 
@@ -914,7 +950,8 @@ footer a:hover {
             }
 
             globalFitResult = fitModel;
-            document.getElementById('r2_score').innerHTML = `${fitModel.equation} <br> <span class="badge bg-success" style="float:right;">R² = ${fitModel.r2.toFixed(5)}</span>`;
+            let r2Class = fitModel.r2 >= 0.98 ? 'bg-success' : (fitModel.r2 >= 0.9 ? 'bg-warning text-dark' : 'bg-danger');
+            document.getElementById('r2_score').innerHTML = `${fitModel.equation} <br> <span class="badge ${r2Class}" style="float:right;">R² = ${fitModel.r2.toFixed(5)}</span>`;
 
             let warningBox = document.getElementById('r2_warning_box');
             if(fitModel.r2 < 0.98) {
@@ -925,6 +962,24 @@ footer a:hover {
             }
 
             let sampleList = getSampleData();
+            // 新增樣本檢查 (修正未輸入樣本名稱時的防呆邏輯)
+            let maxSampleODLen = 0;
+            for(let r=1; r<=sampleReps; r++) {
+                let odLen = parseBulkInput(`sample_od_input_${r}`).length;
+                if (odLen > maxSampleODLen) maxSampleODLen = odLen;
+            }
+            
+            // 預期總數為「非空名稱數」與「最大 OD 輸入行數」兩者的最大值
+            let nameCount = checkSampleNames.filter(n => n.trim() !== "").length;
+            let expectedSampleCount = Math.max(nameCount, maxSampleODLen);
+
+            if (sampleList.length < expectedSampleCount) {
+                let skipped = expectedSampleCount - sampleList.length;
+                let msg = currentLang === 'zh'
+                    ? `注意：有 ${skipped} 筆樣本因為所有 OD 欄位皆為空值而被自動跳過，請確認輸入是否疏漏。`
+                    : `Note: ${skipped} sample(s) were skipped because all OD values were empty.`;
+                alert(msg);
+            }
             let results = [];
             sampleList.forEach(item => {
                 let netOD = fixFloat(item.od - globalBlankOD); 
@@ -990,12 +1045,6 @@ footer a:hover {
     // 【修改核心】：直接將 X 軸最大值鎖定為標準品的最大濃度
     // 我們不再去檢查 sampleResults，這樣即便稀釋倍數很大，圖表也不會被拉長
     let maxX = maxStdX;
-
-    // 隱藏「超出範圍警告」，因為現在我們是故意不延伸圖表的
-    const chartWarningBox = document.getElementById('chart_range_warning');
-    if (chartWarningBox) {
-        chartWarningBox.style.display = 'none';
-    }
 
     // 產生迴歸線的點 (只畫到標準品最大值的 1.1 倍，稍微延伸一點點即可，不畫到樣本濃度去)
     let fitPoints = [];
@@ -1102,7 +1151,10 @@ footer a:hover {
             if(myChart) { myChart.destroy(); myChart = null; }
             document.getElementById('r2_score').textContent = '';
             document.getElementById('r2_warning_box').style.display = 'none';
-            globalStdData = []; globalSampleResults = []; globalBlankOD = 0;
+            globalStdData = []; globalSampleResults = []; globalFitResult = null; globalBlankOD = 0;
+
+            // 新增：必須同步徹底清空記憶快取，防止切換重複數時舊資料復活
+            cachedInputData = { stdConc: '', stdOds: ['', '', ''], sampleName: '', sampleOds: ['', '', ''] };
         }
 
         function downloadChart() {
@@ -1127,7 +1179,7 @@ footer a:hover {
 
             let csvContent = "";
             const now = new Date().toLocaleString();
-            let dilution = document.getElementById('dilutionFactor').value;
+            let dilution = globalAppliedDilution;
             
             // 修正數值 0 不顯示的問題
             const row = (arr) => arr.map(x => `"${String((x === null || x === undefined) ? "" : x).replace(/"/g, '""')}"`).join(",") + "\n";
@@ -1243,9 +1295,6 @@ footer a:hover {
                     if (!text.includes("--- Standard Curve Data ---")) {
                         throw new Error("Invalid File Format");
                     }
-
-                    // 匯入前先清空舊的圖表與計算結果，避免畫面數據與結果不一致
-                    clearData();
                     
                     parseCSVContent(text);
                     alert(i18n[currentLang].import_success);
@@ -1298,7 +1347,7 @@ footer a:hover {
                 cells.push(currentCell);
                 
                 // 判斷目前解析到的區段
-                if (cells[0] === "--- Standard Curve Data ---") {
+                if (cells[0].includes("--- Standard Curve Data ---")) {
                     mode = "std_header";
                     continue;
                 } else if (cells[0] === "--- Calculation Results ---") {
@@ -1315,8 +1364,7 @@ footer a:hover {
                 }
                 
                 if (mode === "std_data") {
-                    // 遇到空行或非數字（文字）代表該區段結束
-                    if (!cells[0] || isNaN(parseFloat(cells[0]))) { mode = null; continue; }
+                    if (!cells[0] || isNaN(parseFloat(cells[0]))) { continue; }
                     
                     stdConcs.push(cells[0]);
                     for (let r = 0; r < stdRepCount; r++) {
@@ -1332,7 +1380,8 @@ footer a:hover {
                 }
                 
                 if (mode === "sample_data") {
-                    if (!cells[0] || cells[0].startsWith('---')) { mode = null; continue; }
+                    if (!cells[0]) { continue; }
+                    if (cells[0].startsWith('---')) { mode = null; continue; }
                     
                     sampleNames.push(cells[0]);
                     for (let r = 0; r < sampleRepCount; r++) {
@@ -1341,7 +1390,10 @@ footer a:hover {
                     }
                 }
             }
-            
+
+            // CSV 內容解析無誤，準備覆蓋畫面，此時才清空舊資料
+            clearData();
+
             // 更新並重新渲染 Standard 區塊
             if (stdConcs.length > 0) {
                 document.getElementById('stdReplicates').value = stdRepCount > 0 ? (stdRepCount > 3 ? 3 : stdRepCount) : 1;
