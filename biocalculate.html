@@ -1849,8 +1849,9 @@ footer a:hover { text-decoration: underline; }
     cleaned = cleaned.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−');
     
     if (cleaned) {
-        let start = calcInputEl.selectionStart || calcExpression.length;
-        let end = calcInputEl.selectionEnd || calcExpression.length;
+            // 使用 ?? (Nullish Coalescing) 確保游標在最前方 (0) 時不會被錯誤替換為字串長度
+            let start = calcInputEl.selectionStart ?? calcExpression.length;
+            let end = calcInputEl.selectionEnd ?? calcExpression.length;
 
         if (isEvaluated) {
             calcExpression = cleaned;
@@ -2471,14 +2472,14 @@ function calculateDilution() {
         let Na_mM = parseFloat(naInput.value);
         if (isNaN(Na_mM) || Na_mM <= 0) { 
          Na_mM = 50; 
-         naInput.value = 50; // 打破靜默，強制將畫面欄位修正為預設值
+         // 移除 naInput.value = 50; 讓使用者能自由清空欄位重新輸入
         }
 
         let mgInput = document.getElementById('tm-mg');
         let Mg_mM = parseFloat(mgInput.value);
         if (isNaN(Mg_mM) || Mg_mM < 0) { 
          Mg_mM = 0; 
-         mgInput.value = 0; // 打破靜默，強制將畫面欄位修正為 0
+         // 移除 mgInput.value = 0; 
         } 
         let Primer_nM = parseFloat(document.getElementById('tm-pconc').value); Primer_nM = (isNaN(Primer_nM) || Primer_nM <= 0) ? 500 : Primer_nM;
         const Na_M = Na_mM / 1000;
@@ -2671,7 +2672,8 @@ function setScientificInputs(baseId, expId, num) {
         document.getElementById(baseId).value = 0;
         document.getElementById(expId).value = 0;
     } else {
-        const [base, exp] = num.toExponential(4).split('e');
+        // 移除 4，保留原生最高精度，避免截斷科學計算的有效位數
+        const [base, exp] = num.toExponential().split('e'); 
         document.getElementById(baseId).value = Number(base);
         document.getElementById(expId).value = Number(exp);
     }
