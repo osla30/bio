@@ -698,7 +698,7 @@ function saveAndRenderAllInputs() {
             return raw.split(/\r?\n/).map(v => {
                 let val = v.trim();
                 if (val === '') return NaN;
-                let num = Number(val);
+                let num = Number(val.replace(/,/g, ''));
                 return Number.isFinite(num) ? num : NaN;
             });
         }
@@ -739,9 +739,10 @@ function saveAndRenderAllInputs() {
 
             let maxLen = 0;
             odArrs.forEach(arr => { if(arr.length > maxLen) maxLen = arr.length; });
+            let loopLen = Math.max(maxLen, nameArr.length); // 取兩者最大值
             
             let results = [];
-            for(let i=0; i<maxLen; i++) {
+            for(let i=0; i<loopLen; i++) {
                 let validOds = [];
                 for(let r=0; r<reps; r++) {
                     if (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) validOds.push(odArrs[r][i]);
@@ -1311,7 +1312,7 @@ function saveAndRenderAllInputs() {
         function parseCSVContent(csvText) {
             const lines = csvText.split(/\r?\n/);
             let mode = null;
-            
+            let importedDilution = 1;
             let stdConcs = [];
             let stdOds = [[], [], []];
             let stdRepCount = 0;
@@ -1323,7 +1324,6 @@ function saveAndRenderAllInputs() {
             for (let i = 0; i < lines.length; i++) {
                 let rowText = lines[i];
                 if (!rowText.trim()) continue;
-                
                 // 解析 CSV 單行 (使用字元狀態機，完美處理包含逗號與引號的複雜名稱)
                 let cells = [];
                 let currentCell = '';
@@ -1345,6 +1345,11 @@ function saveAndRenderAllInputs() {
                     }
                 }
                 cells.push(currentCell);
+                
+                if (cells[0] === "Dilution Factor" && cells[1]) {
+                    importedDilution = parseFloat(cells[1]) || 1;
+                    continue;
+                }
                 
                 // 判斷目前解析到的區段
                 if (cells[0].includes("--- Standard Curve Data ---")) {
@@ -1406,15 +1411,16 @@ function saveAndRenderAllInputs() {
             }
             
             // 更新並重新渲染 Sample 區塊
-            if (sampleNames.length > 0) {
-                document.getElementById('sampleReplicates').value = sampleRepCount > 0 ? (sampleRepCount > 3 ? 3 : sampleRepCount) : 1;
-                renderSampleInputs();
-                document.getElementById('sample_name_input').value = sampleNames.join('\n');
-                for (let r = 0; r < sampleRepCount && r < 3; r++) {
-                    let el = document.getElementById(`sample_od_input_${r+1}`);
-                    if (el) el.value = sampleOds[r].join('\n');
-                }
+        if (sampleNames.length > 0) {
+            document.getElementById('sampleReplicates').value = sampleRepCount > 0 ? (sampleRepCount > 3 ? 3 : sampleRepCount) : 1;
+            renderSampleInputs();
+            document.getElementById('sample_name_input').value = sampleNames.join('\n');
+            for (let r = 0; r < sampleRepCount && r < 3; r++) {
+                let el = document.getElementById(`sample_od_input_${r+1}`);
+                if (el) el.value = sampleOds[r].join('\n');
             }
+            }
+            document.getElementById('dilutionFactor').value = importedDilution;
         }
     </script>
 </body>
