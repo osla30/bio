@@ -719,13 +719,16 @@ function saveAndRenderAllInputs() {
             let data = [];
             for(let i=0; i<concArr.length; i++) {
                 if (isNaN(concArr[i])) continue;
-                let validOds = [];
+                let rawOdsToStore = []; // 用於記錄原始位置，包含空值
+                let validOdsForAvg = []; // 純計算平均用
                 for(let r=0; r<reps; r++) {
-                    if (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) validOds.push(odArrs[r][i]);
+                    let val = (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) ? odArrs[r][i] : null;
+                    rawOdsToStore.push(val);
+                    if (val !== null) validOdsForAvg.push(val);
                 }
-                if (validOds.length > 0) {
-                    let avgOd = fixFloat(validOds.reduce((a,b) => a + b, 0) / validOds.length);
-                    data.push({ x: concArr[i], y: avgOd, rawOds: validOds });
+                if (validOdsForAvg.length > 0) {
+                    let avgOd = fixFloat(validOdsForAvg.reduce((a,b) => a + b, 0) / validOdsForAvg.length);
+                    data.push({ x: concArr[i], y: avgOd, rawOds: rawOdsToStore });
                 }
             }
             return data;
@@ -743,14 +746,19 @@ function saveAndRenderAllInputs() {
             
             let results = [];
             for(let i=0; i<loopLen; i++) {
-                let validOds = [];
+                let rawOdsToStore = [];
+                let validOdsForAvg = [];
                 for(let r=0; r<reps; r++) {
-                    if (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) validOds.push(odArrs[r][i]);
+                    let val = (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) ? odArrs[r][i] : null;
+                    rawOdsToStore.push(val);
+                    if (val !== null) validOdsForAvg.push(val);
                 }
-                if(validOds.length > 0) {
-                    let avgOd = fixFloat(validOds.reduce((a,b) => a + b, 0) / validOds.length);
-                    let sName = (nameArr[i] && nameArr[i].trim() !== "") ? nameArr[i] : `S${i+1}`;
-                    results.push({ id: i+1, name: sName, od: avgOd, rawOds: validOds });
+                let sName = (nameArr[i] && nameArr[i].trim() !== "") ? nameArr[i] : `S${i+1}`;
+                if(validOdsForAvg.length > 0) {
+                    let avgOd = fixFloat(validOdsForAvg.reduce((a,b) => a + b, 0) / validOdsForAvg.length);
+                    results.push({ id: i+1, name: sName, od: avgOd, rawOds: rawOdsToStore });
+                } else {
+                    results.push({ id: i+1, name: sName, od: NaN, rawOds: rawOdsToStore });
                 }
             }
             return results;
@@ -947,6 +955,14 @@ function saveAndRenderAllInputs() {
             } catch(e) {
                 console.error(e);
                 alert("Calculation Failed: " + e.message); 
+                // 阻斷狀態污染：強制清空舊結果與圖表
+                document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted p-4" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
+                document.getElementById('recipeTableBody').innerHTML = `<tr><td colspan="5" class="text-muted py-3" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
+                document.getElementById('r2_score').textContent = '';
+                document.getElementById('r2_warning_box').style.display = 'none';
+                if(myChart) { myChart.destroy(); myChart = null; }
+                globalFitResult = null; 
+                globalSampleResults = [];
                 return;
             }
 
@@ -963,28 +979,17 @@ function saveAndRenderAllInputs() {
             }
 
             let sampleList = getSampleData();
-            // 新增樣本檢查 (修正未輸入樣本名稱時的防呆邏輯)
-            let maxSampleODLen = 0;
-            for(let r=1; r<=sampleReps; r++) {
-                let odLen = parseBulkInput(`sample_od_input_${r}`).length;
-                if (odLen > maxSampleODLen) maxSampleODLen = odLen;
-            }
-            
-            // 預期總數為「非空名稱數」與「最大 OD 輸入行數」兩者的最大值
-            let nameCount = checkSampleNames.filter(n => n.trim() !== "").length;
-            let expectedSampleCount = Math.max(nameCount, maxSampleODLen);
-
-            if (sampleList.length < expectedSampleCount) {
-                let skipped = expectedSampleCount - sampleList.length;
-                let msg = currentLang === 'zh'
-                    ? `注意：有 ${skipped} 筆樣本因為所有 OD 欄位皆為空值而被自動跳過，請確認輸入是否疏漏。`
-                    : `Note: ${skipped} sample(s) were skipped because all OD values were empty.`;
-                alert(msg);
-            }
             let results = [];
             sampleList.forEach(item => {
-                let netOD = fixFloat(item.od - globalBlankOD); 
-                let conc = fitModel.solve(netOD);    
+            // 新增 NaN 攔截，若無 OD 數據則直接標記錯誤，跳過後續迴歸運算
+             if (isNaN(item.od)) {
+             results.push({ ...item, netOD: NaN, conc: NaN, note: "No Data", statusType: "danger" });
+             return;
+             }
+                let rawNet = item.od - globalBlankOD;
+                // 若差值在極微小範圍內（小於 1e-9），強制歸零避免 -0.0000
+                let netOD = fixFloat(Math.abs(rawNet) < 1e-9 ? 0 : rawNet);
+                let conc = fitModel.solve(netOD);  
                 let note = "";
                 let statusType = "ok"; 
 
@@ -1025,8 +1030,9 @@ function saveAndRenderAllInputs() {
 
                 tbody.innerHTML += `<tr>
                     <td>${escapeHTML(res.name)}</td>
-                    <td>${res.od.toFixed(4)}</td>
-                    <td class="text-muted">${res.netOD.toFixed(4)}</td> <td class="${valClass}">${valStr}</td>
+                    <td>${isNaN(res.od) ? "---" : res.od.toFixed(4)}</td>
+                    <td class="text-muted">${isNaN(res.netOD) ? "---" : res.netOD.toFixed(4)}</td> 
+                    <td class="${valClass}">${valStr}</td>
                     <td>${statusBadge}</td>
                 </tr>`;
             });
@@ -1147,15 +1153,20 @@ function saveAndRenderAllInputs() {
         function clearData() {
             renderStandardInputs(); 
             renderSampleInputs(); 
-            document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted">${i18n[currentLang].no_result}</td></tr>`;
-            document.getElementById('recipeTableBody').innerHTML = `<tr><td colspan="5" class="text-muted py-3">${i18n[currentLang].no_result}</td></tr>`;
+            document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted p-4" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
+            document.getElementById('recipeTableBody').innerHTML = `<tr><td colspan="5" class="text-muted py-3" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
             if(myChart) { myChart.destroy(); myChart = null; }
             document.getElementById('r2_score').textContent = '';
             document.getElementById('r2_warning_box').style.display = 'none';
             globalStdData = []; globalSampleResults = []; globalFitResult = null; globalBlankOD = 0;
-
-            // 新增：必須同步徹底清空記憶快取，防止切換重複數時舊資料復活
             cachedInputData = { stdConc: '', stdOds: ['', '', ''], sampleName: '', sampleOds: ['', '', ''] };
+
+            // 重置稀釋倍數與 Western Blot 參數為初始值
+            document.getElementById('dilutionFactor').value = '1';
+            document.getElementById('wb_mass').value = '20';
+            document.getElementById('wb_vol').value = '20';
+            document.getElementById('wb_buffer').value = '4';
+            document.getElementById('wb_n').value = '2';
         }
 
         function downloadChart() {
@@ -1210,7 +1221,7 @@ function saveAndRenderAllInputs() {
 
             globalStdData.forEach(pt => {
                 let r = [pt.x];
-                for(let i=0; i<maxStdReps; i++) r.push((pt.rawOds && pt.rawOds[i] !== undefined) ? pt.rawOds[i] : "");
+                for(let i=0; i<maxStdReps; i++) r.push((pt.rawOds && pt.rawOds[i] !== null && pt.rawOds[i] !== undefined) ? pt.rawOds[i] : "");
                 r.push(pt.y.toFixed(4), (pt.y - globalBlankOD).toFixed(4));
                 csvContent += row(r);
             });
@@ -1229,9 +1240,14 @@ function saveAndRenderAllInputs() {
 
             globalSampleResults.forEach(res => {
                 let r = [res.name];
-                for(let i=0; i<maxSampleReps; i++) r.push((res.rawOds && res.rawOds[i] !== undefined) ? res.rawOds[i] : "");
-                let concVal = (typeof res.conc==='number' && !isNaN(res.conc) ? res.conc.toFixed(4) : "NaN");
-                r.push(res.od.toFixed(4), res.netOD.toFixed(4), concVal, (res.note||"OK"));
+                for(let i=0; i<maxSampleReps; i++) r.push((res.rawOds && res.rawOds[i] !== null && res.rawOds[i] !== undefined) ? res.rawOds[i] : "");
+                
+                // 加入 NaN 判斷，若無數值則輸出 "---" 以對齊網頁 UI
+                let odStr = isNaN(res.od) ? "---" : res.od.toFixed(4);
+                let netOdStr = isNaN(res.netOD) ? "---" : res.netOD.toFixed(4);
+                let concStr = (typeof res.conc === 'number' && !isNaN(res.conc)) ? res.conc.toFixed(4) : "---";
+                
+                r.push(odStr, netOdStr, concStr, (res.note || "OK"));
                 csvContent += row(r);
             });
             csvContent += row([]); 
@@ -1313,6 +1329,7 @@ function saveAndRenderAllInputs() {
             const lines = csvText.split(/\r?\n/);
             let mode = null;
             let importedDilution = 1;
+            let importedWbMass = null, importedWbVol = null, importedWbBuffer = null, importedWbN = null;
             let stdConcs = [];
             let stdOds = [[], [], []];
             let stdRepCount = 0;
@@ -1359,7 +1376,16 @@ function saveAndRenderAllInputs() {
                     mode = "sample_header";
                     continue;
                 } else if (cells[0] === "--- Western Blot Recipe Calculation ---") {
-                    break; // 讀取到配方計算區即停止
+                    mode = "wb_data"; // 修正：改變 mode 以脫離 sample_data 狀態，防止將參數誤判為樣本
+                    continue;
+                }
+
+                if (mode === "wb_data") {
+                    if (cells[0] === "Target Mass (µg)" && cells[1]) importedWbMass = cells[1];
+                    if (cells[0] === "Target Vol (µL)" && cells[1]) importedWbVol = cells[1];
+                    if (cells[0] === "Buffer (X)" && cells[1]) importedWbBuffer = cells[1];
+                    if (cells[0] === "Replicates (n)" && cells[1]) importedWbN = cells[1];
+                    continue;
                 }
                 
                 if (mode === "std_header") {
@@ -1421,6 +1447,13 @@ function saveAndRenderAllInputs() {
             }
             }
             document.getElementById('dilutionFactor').value = importedDilution;
+            
+            // 新增：將 CSV 中讀取的 WB 參數回填到輸入框
+            if (importedWbMass !== null) document.getElementById('wb_mass').value = importedWbMass;
+            if (importedWbVol !== null) document.getElementById('wb_vol').value = importedWbVol;
+            if (importedWbBuffer !== null) document.getElementById('wb_buffer').value = importedWbBuffer;
+            if (importedWbN !== null) document.getElementById('wb_n').value = importedWbN;
+            calculate();
         }
     </script>
 </body>
