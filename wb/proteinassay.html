@@ -844,7 +844,8 @@ function saveAndRenderAllInputs() {
             let targetMass = parseFloat(document.getElementById('wb_mass').value) || 0;
             let targetVol = parseFloat(document.getElementById('wb_vol').value) || 0;
             let bufferX = parseFloat(document.getElementById('wb_buffer').value) || 1;
-            let prepN = parseFloat(document.getElementById('wb_n').value) || 1;
+            let prepNRaw = parseFloat(document.getElementById('wb_n').value);
+            let prepN = isNaN(prepNRaw) ? 1 : prepNRaw;
 
             let tbody = document.getElementById('recipeTableBody');
             tbody.innerHTML = '';
@@ -927,14 +928,30 @@ function saveAndRenderAllInputs() {
             let dilution = parseFloat(document.getElementById('dilutionFactor').value) || 1;
             globalAppliedDilution = dilution;
             
-            if (globalStdData.length < 2) { alert(i18n[currentLang].no_result); return; }
+if (globalStdData.length < 2) { 
+    alert(currentLang === 'zh' ? "計算失敗：需要至少 2 個有效的標準品數據點才能繪製標準曲線。" : "Calculation Failed: At least 2 standard points are required."); 
+    forceClearOutputs();
+    return; 
+}
 
-            let blankPoint = globalStdData.find(d => d.x === 0);
-            
-            if (!blankPoint) {
-                alert(i18n[currentLang].err_no_blank);
-                return;
-            }
+let blankPoint = globalStdData.find(d => d.x === 0);
+
+if (!blankPoint) {
+    alert(i18n[currentLang].err_no_blank);
+    forceClearOutputs();
+    return;
+}
+
+// 建立一個內部函式來統一清除輸出狀態，避免程式碼重複
+function forceClearOutputs() {
+    document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted p-4" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
+    document.getElementById('recipeTableBody').innerHTML = `<tr><td colspan="5" class="text-muted py-3" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
+    document.getElementById('r2_score').textContent = '';
+    document.getElementById('r2_warning_box').style.display = 'none';
+    if(myChart) { myChart.destroy(); myChart = null; }
+    globalFitResult = null; 
+    globalSampleResults = [];
+}
 
             globalBlankOD = blankPoint.y; 
 
@@ -1160,6 +1177,9 @@ function saveAndRenderAllInputs() {
             document.getElementById('r2_warning_box').style.display = 'none';
             globalStdData = []; globalSampleResults = []; globalFitResult = null; globalBlankOD = 0;
             cachedInputData = { stdConc: '', stdOds: ['', '', ''], sampleName: '', sampleOds: ['', '', ''] };
+            if (document.getElementById('csvFileInput')) {
+            document.getElementById('csvFileInput').value = '';
+            }
 
             // 重置稀釋倍數與 Western Blot 參數為初始值
             document.getElementById('dilutionFactor').value = '1';
@@ -1256,7 +1276,8 @@ function saveAndRenderAllInputs() {
             let targetMass = parseFloat(document.getElementById('wb_mass').value) || 0;
             let targetVol = parseFloat(document.getElementById('wb_vol').value) || 0;
             let bufferX = parseFloat(document.getElementById('wb_buffer').value) || 1;
-            let prepN = parseFloat(document.getElementById('wb_n').value) || 1;
+            let prepNRaw = parseFloat(document.getElementById('wb_n').value);
+            let prepN = isNaN(prepNRaw) ? 1 : prepNRaw;
 
             csvContent += row(["--- Western Blot Recipe Calculation ---"]);
             csvContent += row(["Target Mass (µg)", targetMass]);
@@ -1286,7 +1307,7 @@ function saveAndRenderAllInputs() {
             });
 
             // 觸發下載
-            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             
