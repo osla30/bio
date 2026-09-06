@@ -72,4 +72,4 @@
 
 **[贊助支持小編] 👉 <a href="https://bely.cc/F7ZKIV" target="_blank">https://bely.cc/F7ZKIV</a>**
 
-*Powered by Research Spirit.*
+*Powered by <a href="https://www.youtube.com/@GrandpaCan" target="_blank">我阿公都會</a>*
