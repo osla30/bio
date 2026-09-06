@@ -390,7 +390,7 @@ footer a:hover {
 
                         <div class="mb-2">
                             <label class="form-label fw-bold" data-i18n="dilution_factor">Dilution Factor:</label>
-                            <input type="number" class="form-control" id="dilutionFactor" value="1" min="1" step="0.1" onchange="calculate()">
+                            <input type="number" class="form-control" id="dilutionFactor" value="1" min="1" step="any" onchange="calculate()">
                             <div class="form-text text-muted" data-i18n="dilution_hint">Result concentration will be multiplied by this factor.</div>
                         </div>
 
@@ -933,7 +933,12 @@ function saveAndRenderAllInputs() {
                     : `Note: ${skipped} standard(s) skipped because all OD values were empty.`;
                 alert(msg);
             }
-            let dilution = parseFloat(document.getElementById('dilutionFactor').value) || 1;
+            let rawDilution = parseFloat(document.getElementById('dilutionFactor').value);
+            // 若輸入為空、非數值，或是小於 1，皆強制設定為 1
+            let dilution = (isNaN(rawDilution) || rawDilution < 1) ? 1 : rawDilution;
+
+            // 同步將修正後的數值寫回畫面輸入框，避免畫面顯示負數但背後用 1 計算
+            document.getElementById('dilutionFactor').value = dilution;
             globalAppliedDilution = dilution;
             
 if (globalStdData.length < 2) { 
