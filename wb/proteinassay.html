@@ -311,7 +311,7 @@ footer a:hover {
                 <div style="width: 15px;"></div>
 
                 <div class="d-flex flex-wrap align-items-center justify-content-center gap-2">
-                    <a href="https://drive.google.com/file/d/1HvgRn-5JxICnZJ10wXYT3qNzNu0GsoFE/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="download-btn" download>
+                    <a href="https://drive.google.com/file/d/1HvgRn-5JxICnZJ10wXYT3qNzNu0GsoFE/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="download-btn">
                         <span class="me-1">📥</span> 
                         <span data-i18n="download_offline">Download Offline</span>
                     </a>
@@ -390,7 +390,7 @@ footer a:hover {
 
                         <div class="mb-2">
                             <label class="form-label fw-bold" data-i18n="dilution_factor">Dilution Factor:</label>
-                            <input type="number" class="form-control" id="dilutionFactor" value="1" min="1" step="0.1">
+                            <input type="number" class="form-control" id="dilutionFactor" value="1" min="1" step="0.1" onchange="calculate()">
                             <div class="form-text text-muted" data-i18n="dilution_hint">Result concentration will be multiplied by this factor.</div>
                         </div>
 
@@ -541,7 +541,9 @@ footer a:hover {
                 note_low: "Below Std Range",
                 note_neg: "Noise / Neg", 
                 err_buff_x: "Error: Buffer X ≤ 1", 
-                err_no_blank: "Error: No 'Concentration 0' point found!\n\nThe system requires a 0-concentration point to calculate the baseline (Blank).\nIf your instrument has already auto-subtracted the background, please manually add a row with '0' Concentration and '0' OD in the Standard Data."
+                err_no_blank: "Error: No 'Concentration 0' point found!\n\nThe system requires a 0-concentration point to calculate the baseline (Blank).\nIf your instrument has already auto-subtracted the background, please manually add a row with '0' Concentration and '0' OD in the Standard Data.",
+                chart_std_data: "Std Data (Blank-subtracted OD)",
+                chart_linear_fit: "Linear Fit"
             },
             zh: {
                 title: "Bradford / BCA 蛋白質定量工具",
@@ -592,7 +594,9 @@ footer a:hover {
                 note_low: "低於標準曲線",
                 note_neg: "數值異常/雜訊", 
                 err_buff_x: "錯誤：Buffer倍數 ≤ 1", 
-                err_no_blank: "錯誤：未找到「濃度 0」的數據點！\n\n本工具需要 0 濃度的數據來計算背景值 (Blank)。\n若您的機器測量時已自動扣除背景 (Auto-zero)，請務必在標準品清單中手動加入一行「濃度 0」與「OD 0」的數據，以便程式運作。"
+                err_no_blank: "錯誤：未找到「濃度 0」的數據點！\n\n本工具需要 0 濃度的數據來計算背景值 (Blank)。\n若您的機器測量時已自動扣除背景 (Auto-zero)，請務必在標準品清單中手動加入一行「濃度 0」與「OD 0」的數據，以便程式運作。",
+                chart_std_data: "標準品數據 (已扣除 Blank)",
+                chart_linear_fit: "線性擬合線"
             }
         };
 
@@ -624,11 +628,6 @@ footer a:hover {
                 if (btn.textContent.includes(lang === 'en' ? 'English' : '中文')) btn.classList.add('active');
             });
             saveAndRenderAllInputs();
-            if (myChart) {
-                myChart.options.scales.x.title.text = i18n[lang].conc_lbl;
-                myChart.options.scales.y.title.text = i18n[lang].od_net_lbl; 
-                myChart.update();
-            }
             if(globalSampleResults.length > 0) calculate(); 
         }
 
@@ -698,7 +697,9 @@ function saveAndRenderAllInputs() {
             return raw.split(/\r?\n/).map(v => {
                 let val = v.trim();
                 if (val === '') return NaN;
-                let num = Number(val.replace(/,/g, ''));
+                let cleanVal = val.replace(/,/g, '');
+                if (cleanVal === '') return NaN; // 攔截僅輸入逗號的極端狀況
+                let num = Number(cleanVal);
                 return Number.isFinite(num) ? num : NaN;
             });
         }
@@ -855,6 +856,9 @@ function saveAndRenderAllInputs() {
                 return;
             }
 
+            // 宣告一個變數用來暫存 HTML 字串
+            let recipeHtml = '';
+
             globalSampleResults.forEach(res => {
                 let wbData = getWBValues(res.conc, targetMass, targetVol, bufferX, prepN);
                 let rowHtml = `<td>${escapeHTML(res.name)}</td>`;
@@ -872,8 +876,12 @@ function saveAndRenderAllInputs() {
                     if(wbData.reason === "BuffX <= 1") msg = `<span class="text-danger">${i18n[currentLang].err_buff_x}</span>`;
                     rowHtml += `<td colspan="4" class="text-muted text-center align-middle">${msg}</td>`;
                 }
-                tbody.innerHTML += `<tr>${rowHtml}</tr>`;
+                // 【修改重點】：把資料加到字串變數中，而不是直接修改 DOM
+                recipeHtml += `<tr>${rowHtml}</tr>`;
             });
+            
+            // 迴圈結束後，一次性把組合好的字串渲染到畫面上
+            tbody.innerHTML = recipeHtml;
         }
 
         function calculate() {
@@ -890,10 +898,10 @@ function saveAndRenderAllInputs() {
             }
             
             if (stdMismatch) {
-                let msg = (currentLang === 'zh') 
-                    ? `警告：標準品的「濃度行數」與「OD 行數」不一致！\n\n這可能導致數據錯位，是否仍要繼續？`
-                    : `Warning: Standard Row count mismatch between Concentration and ODs!\nProceed anyway?`;
-                if (!confirm(msg)) return; 
+            let msg = (currentLang === 'zh') 
+                ? `警告：標準品的「濃度行數」與「OD 行數」不一致！\n\n這可能導致數據錯位，是否仍要繼續？`
+                : `Warning: Standard Row count mismatch between Concentration and ODs!\nProceed anyway?`;
+            if (!confirm(msg)) { forceClearOutputs(); return; } // 新增 forceClearOutputs()
             }
 
             // 2. 動態取得樣本選擇了幾個重複 (1~3)
@@ -912,7 +920,7 @@ function saveAndRenderAllInputs() {
                 let msg = (currentLang === 'zh') 
                     ? `警告：樣本的「名稱行數」與「OD 行數」不一致！\n\n請檢查是否漏複製或有多餘空行。\n是否仍要繼續？`
                     : `Warning: Sample Row count mismatch between Names and ODs!\nProceed anyway?`;
-                if (!confirm(msg)) return; 
+            if (!confirm(msg)) { forceClearOutputs(); return; } // 新增 forceClearOutputs()
             }
 
             globalStdData = getStandardData();
@@ -969,17 +977,25 @@ function forceClearOutputs() {
             let fitModel;
             try {
                 fitModel = fitLinear(processedStdData);
-            } catch(e) {
+            } 
+            catch(e) {
                 console.error(e);
-                alert("Calculation Failed: " + e.message); 
-                // 阻斷狀態污染：強制清空舊結果與圖表
-                document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted p-4" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
-                document.getElementById('recipeTableBody').innerHTML = `<tr><td colspan="5" class="text-muted py-3" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
-                document.getElementById('r2_score').textContent = '';
-                document.getElementById('r2_warning_box').style.display = 'none';
-                if(myChart) { myChart.destroy(); myChart = null; }
-                globalFitResult = null; 
-                globalSampleResults = [];
+                let errMsg = currentLang === 'zh' ? "計算失敗：" : "Calculation Failed: ";
+                let msg = e.message;
+        
+                if (currentLang === 'zh') {
+                    if (msg.includes("At least 2")) msg = "至少需要 2 個不同的標準品數據點。";
+                    else if (msg.includes("invalid numeric")) msg = "標準曲線包含無效的數值。";
+                    else if (msg.includes("enough variation")) msg = "標準品濃度缺乏變化，無法進行線性擬合。";
+                    else if (msg.includes("slope is zero")) msg = "標準曲線斜率為零或無效，請檢查數據。";
+                    else if (msg.includes("intercept is invalid")) msg = "標準曲線截距計算無效。";
+                    else if (msg.includes("no variation")) msg = "標準品 OD 值完全相同，無法計算 R²。";
+                    else if (msg.includes("R² calculation failed")) msg = "R² 計算過程發生錯誤。";
+                }
+                alert(errMsg + msg); 
+                
+                // 阻斷狀態污染：強制清空舊結果與圖表 (維持原本的程式碼)
+                forceClearOutputs();
                 return;
             }
 
@@ -1027,7 +1043,10 @@ function forceClearOutputs() {
             globalSampleResults = results;
 
             let tbody = document.getElementById('resultTableBody');
-            tbody.innerHTML = '';
+            
+            // 宣告一個變數用來暫存 HTML 字串
+            let resultHtml = '';
+            
             results.forEach((res) => {
                 let valStr = "---";
                 if (typeof res.conc === 'number' && !isNaN(res.conc)) {
@@ -1045,7 +1064,8 @@ function forceClearOutputs() {
                     ? `<span class="badge ${badgeClass}">${res.note}</span>` 
                     : `<span class="badge bg-success">OK</span>`;
 
-                tbody.innerHTML += `<tr>
+                // 【修改重點】：把資料加到字串變數中
+                resultHtml += `<tr>
                     <td>${escapeHTML(res.name)}</td>
                     <td>${isNaN(res.od) ? "---" : res.od.toFixed(4)}</td>
                     <td class="text-muted">${isNaN(res.netOD) ? "---" : res.netOD.toFixed(4)}</td> 
@@ -1053,6 +1073,9 @@ function forceClearOutputs() {
                     <td>${statusBadge}</td>
                 </tr>`;
             });
+
+            // 迴圈結束後，一次性把組合好的字串渲染到畫面上
+            tbody.innerHTML = resultHtml;
 
             if(typeof Chart !== 'undefined') {
                 drawChart(processedStdData, fitModel, results);
@@ -1115,8 +1138,8 @@ function forceClearOutputs() {
         type: 'scatter',
         data: {
             datasets: [
-                { label: 'Std Data (Blank-subtracted OD)', data: stdData, backgroundColor:'#0d6efd', pointRadius:5 },
-                { label: 'Linear Fit', data: fitPoints, type:'line', borderColor:'#0d6efd', borderWidth:2, pointRadius:0, borderDash:[5,5], fill:false, tension:0 },
+                { label: i18n[currentLang].chart_std_data, data: stdData, backgroundColor:'#0d6efd', pointRadius:5 },
+                { label: i18n[currentLang].chart_linear_fit, data: fitPoints, type:'line', borderColor:'#0d6efd', borderWidth:2, pointRadius:0, borderDash:[5,5], fill:false, tension:0 },
             ]
         },
         options: { 
@@ -1175,7 +1198,7 @@ function forceClearOutputs() {
             if(myChart) { myChart.destroy(); myChart = null; }
             document.getElementById('r2_score').textContent = '';
             document.getElementById('r2_warning_box').style.display = 'none';
-            globalStdData = []; globalSampleResults = []; globalFitResult = null; globalBlankOD = 0;
+            globalStdData = []; globalSampleResults = []; globalFitResult = null; globalBlankOD = 0; globalAppliedDilution = 1;
             cachedInputData = { stdConc: '', stdOds: ['', '', ''], sampleName: '', sampleOds: ['', '', ''] };
             if (document.getElementById('csvFileInput')) {
             document.getElementById('csvFileInput').value = '';
@@ -1207,6 +1230,9 @@ function forceClearOutputs() {
         //  MODIFIED EXPORT FUNCTION (CSV METHOD)
         // ==========================================
         function exportExcel() {
+            // 在驗證前強制更新全域結果
+            calculate();
+            
             if (globalSampleResults.length === 0) { alert(i18n[currentLang].no_calc_alert); return; }
 
             let csvContent = "";
@@ -1312,7 +1338,16 @@ function forceClearOutputs() {
             const url = URL.createObjectURL(blob);
             
             link.setAttribute("href", url);
-            link.setAttribute("download", "Protein_Quant_Result.csv");
+            // 取得使用者電腦當下時間並格式化為 YYYYMMDDHHmm
+            const dateObj = new Date();
+            const yyyy = dateObj.getFullYear();
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            const hh = String(dateObj.getHours()).padStart(2, '0');
+            const min = String(dateObj.getMinutes()).padStart(2, '0');
+            const timeString = `${yyyy}${mm}${dd}${hh}${min}`;
+            // 將格式化後的時間字串帶入檔名
+            link.setAttribute("download", `Protein_Quant_Result_${timeString}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -1385,12 +1420,13 @@ function forceClearOutputs() {
                 cells.push(currentCell);
                 
                 if (cells[0] === "Dilution Factor" && cells[1]) {
-                    importedDilution = parseFloat(cells[1]) || 1;
+                    let parsedDilution = parseFloat(cells[1]);
+                    importedDilution = isNaN(parsedDilution) ? 1 : parsedDilution;
                     continue;
                 }
                 
                 // 判斷目前解析到的區段
-                if (cells[0].includes("--- Standard Curve Data ---")) {
+                if (cells[0] && cells[0].includes("--- Standard Curve Data ---")) {
                     mode = "std_header";
                     continue;
                 } else if (cells[0] === "--- Calculation Results ---") {
@@ -1433,7 +1469,6 @@ function forceClearOutputs() {
                 
                 if (mode === "sample_data") {
                     if (!cells[0]) { continue; }
-                    if (cells[0].startsWith('---')) { mode = null; continue; }
                     
                     sampleNames.push(cells[0]);
                     for (let r = 0; r < sampleRepCount; r++) {
