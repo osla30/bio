@@ -9,6 +9,13 @@
     <script src="html2canvas.min.js"></script>
 
     <style>
+        /* 新增：將警告動畫抽離到獨立的 CSS 區塊 */
+        @keyframes pulseWarn {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        
         :root { --primary: #4f46e5; --bg: #f3f4f6; --card: #ffffff; --header-bg: #ffffff; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); padding: 0; margin: 0; color: #1f2937; }
         
@@ -236,11 +243,11 @@ footer a:hover {
                 
                 <div class="mode-switch">
                     <label>
-                        <input type="radio" name="mode" value="unpaired" checked onchange="updateModeInfo()">
+                        <input type="radio" name="mode" value="unpaired" checked onchange="updateModeInfo(); if(window.lastCalcResults) calculate();">
                         <span data-i18n="mode_unpaired">獨立樣本 (Unpaired)</span>
                     </label>
                     <label>
-                        <input type="radio" name="mode" value="paired" onchange="updateModeInfo()">
+                        <input type="radio" name="mode" value="paired" onchange="updateModeInfo(); if(window.lastCalcResults) calculate();">
                         <span data-i18n="mode_paired">配對樣本 (Paired)</span>
                     </label>
                 </div>
@@ -252,13 +259,13 @@ footer a:hover {
                         Post-hoc Test (多重比較策略):
                     </label>
                     <select id="posthoc-method" onchange="calculate()">
-                        <option value="dunnett">Compare with Control (Dunnett's Test)</option>
-                        <option value="tukey">Compare All Pairs (Tukey-Kramer Test)</option>
+                        <option value="dunnett" data-i18n="opt_dunnett">與 Control 比較 (Dunnett's Test)</option>
+                        <option value="tukey" data-i18n="opt_tukey">兩兩互相比較 (Tukey-Kramer Test)</option>
                     </select>
                 </div>
 
                 <div style="margin-bottom: 15px; border-top: 1px dashed #e5e7eb; padding-top: 12px; display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="log-transform" onchange="calculate()" style="width: auto; cursor: pointer;">
+                    <input type="checkbox" id="log-transform" onchange="if(window.lastCalcResults) calculate();" style="width: auto; cursor: pointer;">
                     <label for="log-transform" style="font-weight:600; font-size:0.9em; color:#374151; cursor: pointer;" data-i18n="log_transform_label">
                         使用 Log2 轉換進行統計檢定 (推薦用於變異大之樣本)
                     </label>
@@ -337,9 +344,14 @@ footer a:hover {
             'warn_paired_msg': '您正在使用多組配對 (Paired, n≥3) 模式。本工具的 RM-ANOVA 未進行 Mauchly\'s 球狀性檢定 (Sphericity) 校正，且多重比較策略較為保守。若需發表高影響因子期刊，建議使用 GraphPad Prism 進行完整驗證。',
             'warn_unpaired_title': '多重比較邊緣數值提示 (Multiple Comparisons Note)',
             'warn_unpaired_msg': '本工具之 ANOVA 事後檢定 (Post-hoc) 採用保守的線性內插法。在特定樣本數下，給星門檻會略高於 GraphPad Prism。若您的 P-value 處於邊緣且判定為 ns (不顯著)，使用專業軟體驗證或許有機會達到顯著。',
-            'alert_max_group': '⚠️ 組別數量過多：\n此工具的 Dunnett 檢定最多支援 10 組，Tukey 檢定最多支援 15 組。超過上限可能導致假陽性率增加，請減少組別後重試。',
+            'alert_max_group': '⚠️ 組別數量過多：\n此工具的 Dunnett 檢定最多支援 15 組，Tukey 檢定最多支援 15 組。超過上限可能導致假陽性率增加，請減少組別後重試。',
             'btn_download': '下載離線版',
-            'batch_note': '💡 <b>批次校正 (Batch Correction)：</b>若有不同批次（獨立轉膜）的數據，請在文字框內使用 <code>---</code> 換行分隔。工具將自動各別對齊該批次的 Control。'
+            'batch_note': '💡 <b>批次校正 (Batch Correction)：</b>若有不同批次（獨立轉膜）的數據，請在文字框內使用 <code>---</code> 換行分隔。工具將自動各別對齊該批次的 Control。',
+            'mean_sem_col': 'Mean ± SEM',
+            'mean_sem_col_log2': 'Mean ± SEM<br><small style="font-weight:normal;">(Linear / Log2)</small>',
+            'pval_vs_ctrl': 'P-value (vs Ctrl)',
+            'opt_dunnett': '與 Control 比較 (Dunnett\'s Test)',
+            'opt_tukey': '兩兩互相比較 (Tukey-Kramer Test)'
         },
         'en': {
             'app_title': 'WB Band Relative Quantitation & Normalization Tool',
@@ -390,14 +402,25 @@ footer a:hover {
             'warn_paired_msg': 'You are using Paired mode with multiple groups (n≥3). The RM-ANOVA here does not apply Mauchly\'s sphericity test/corrections, and the post-hoc strategy is conservative. For high-impact publications, verification with GraphPad Prism is recommended.',
             'warn_unpaired_title': 'Multiple Comparisons Note',
             'warn_unpaired_msg': 'The post-hoc test employs a conservative linear interpolation method. For certain sample sizes, the critical thresholds are slightly stricter than GraphPad Prism. If your result is marginally non-significant (ns), verification with specialized software might yield significance.',
-            'alert_max_group': '⚠️ Too many groups:\nDunnett test supports up to 10 groups, and Tukey up to 15 groups. Exceeding limits may increase false positive rates. Please reduce group count.',
+            'alert_max_group': '⚠️ Too many groups:\nDunnett test supports up to 15 groups, and Tukey up to 15 groups. Exceeding limits may increase false positive rates. Please reduce group count.',
             'btn_download': 'Download Offline',
-            'batch_note': '💡 <b>Batch Correction:</b> For data from independent blots/batches, separate them using <code>---</code>. The tool will normalize each batch to its own Control.'
+            'batch_note': '💡 <b>Batch Correction:</b> For data from independent blots/batches, separate them using <code>---</code>. The tool will normalize each batch to its own Control.',
+            'mean_sem_col': 'Mean ± SEM',
+            'mean_sem_col_log2': 'Mean ± SEM<br><small style="font-weight:normal;">(Linear / Log2)</small>',
+            'pval_vs_ctrl': 'P-value (vs Ctrl)',
+            'opt_dunnett': 'Compare with Control (Dunnett\'s Test)',
+            'opt_tukey': 'Compare All Pairs (Tukey-Kramer Test)'
         }
     };
-
+    function escapeHTML(str) {
+       if (!str) return '';
+       return String(str).replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+       }[tag] || tag));
+    }
     let curLang = 'zh';
     function toggleLang() {
+        saveCurrentInputs();
         curLang = curLang === 'zh' ? 'en' : 'zh';
         renderAll();
         updateModeInfo();
@@ -434,7 +457,12 @@ footer a:hover {
         7: { 2: 7.12, 3: 4.92, 4: 4.13, 5: 3.73, 6: 3.49, 7: 3.33, 8: 3.22, 9: 3.14, 10: 3.07, 12: 2.98, 15: 2.89, 20: 2.80, 30: 2.72, 60: 2.64, 120: 2.60, 999: 2.57 },
         8: { 2: 7.35, 3: 5.06, 4: 4.23, 5: 3.82, 6: 3.57, 7: 3.41, 8: 3.29, 9: 3.20, 10: 3.14, 12: 3.04, 15: 2.95, 20: 2.86, 30: 2.77, 60: 2.69, 120: 2.65, 999: 2.62 },
         9: { 2: 7.54, 3: 5.18, 4: 4.33, 5: 3.90, 6: 3.64, 7: 3.47, 8: 3.35, 9: 3.26, 10: 3.19, 12: 3.09, 15: 3.00, 20: 2.90, 30: 2.82, 60: 2.73, 120: 2.69, 999: 2.66 },
-        10: { 2: 7.71, 3: 5.28, 4: 4.41, 5: 3.97, 6: 3.71, 7: 3.53, 8: 3.41, 9: 3.32, 10: 3.24, 12: 3.14, 15: 3.04, 20: 2.95, 30: 2.86, 60: 2.77, 120: 2.73, 999: 2.69 }
+        10: { 2: 7.71, 3: 5.28, 4: 4.41, 5: 3.97, 6: 3.71, 7: 3.53, 8: 3.41, 9: 3.32, 10: 3.24, 12: 3.14, 15: 3.04, 20: 2.95, 30: 2.86, 60: 2.77, 120: 2.73, 999: 2.69 },
+        11: { 2: 7.83, 3: 5.38, 4: 4.48, 5: 4.03, 6: 3.76, 7: 3.58, 8: 3.46, 9: 3.36, 10: 3.29, 12: 3.18, 15: 3.08, 20: 2.98, 30: 2.89, 60: 2.80, 120: 2.76, 999: 2.72 },
+        12: { 2: 7.98, 3: 5.45, 4: 4.54, 5: 4.09, 6: 3.81, 7: 3.63, 8: 3.50, 9: 3.40, 10: 3.33, 12: 3.22, 15: 3.11, 20: 3.02, 30: 2.92, 60: 2.83, 120: 2.79, 999: 2.74 },
+        13: { 2: 8.09, 3: 5.53, 4: 4.60, 5: 4.14, 6: 3.85, 7: 3.67, 8: 3.54, 9: 3.44, 10: 3.36, 12: 3.25, 15: 3.15, 20: 3.05, 30: 2.95, 60: 2.86, 120: 2.81, 999: 2.77 },
+        14: { 2: 8.20, 3: 5.60, 4: 4.66, 5: 4.18, 6: 3.90, 7: 3.71, 8: 3.57, 9: 3.47, 10: 3.40, 12: 3.29, 15: 3.18, 20: 3.07, 30: 2.98, 60: 2.88, 120: 2.83, 999: 2.79 },
+        15: { 2: 8.32, 3: 5.66, 4: 4.70, 5: 4.22, 6: 3.94, 7: 3.75, 8: 3.61, 9: 3.51, 10: 3.43, 12: 3.31, 15: 3.20, 20: 3.10, 30: 3.00, 60: 2.90, 120: 2.86, 999: 2.81 }
     };
 
         const DUNNETT_D_TABLE_01 = {
@@ -446,7 +474,12 @@ footer a:hover {
         7: { 2: 16.19, 3: 8.75, 4: 6.55, 5: 5.56, 6: 5.00, 7: 4.64, 8: 4.40, 9: 4.22, 10: 4.08, 12: 3.89, 15: 3.71, 20: 3.55, 30: 3.39, 60: 3.25, 120: 3.18, 999: 3.12 },
         8: { 2: 16.69, 3: 8.98, 4: 6.72, 5: 5.68, 6: 5.10, 7: 4.74, 8: 4.48, 9: 4.30, 10: 4.16, 12: 3.96, 15: 3.78, 20: 3.60, 30: 3.44, 60: 3.29, 120: 3.22, 999: 3.16 },
         9: { 2: 17.12, 3: 9.19, 4: 6.85, 5: 5.79, 6: 5.20, 7: 4.82, 8: 4.56, 9: 4.37, 10: 4.22, 12: 4.02, 15: 3.83, 20: 3.65, 30: 3.49, 60: 3.33, 120: 3.26, 999: 3.20 },
-        10: { 2: 17.49, 3: 9.37, 4: 6.98, 5: 5.89, 6: 5.28, 7: 4.89, 8: 4.62, 9: 4.43, 10: 4.28, 12: 4.07, 15: 3.88, 20: 3.69, 30: 3.52, 60: 3.37, 120: 3.29, 999: 3.23 }
+        10: { 2: 17.49, 3: 9.37, 4: 6.98, 5: 5.89, 6: 5.28, 7: 4.89, 8: 4.62, 9: 4.43, 10: 4.28, 12: 4.07, 15: 3.88, 20: 3.69, 30: 3.52, 60: 3.37, 120: 3.29, 999: 3.23 },
+        11: { 2: 17.81, 3: 9.53, 4: 7.12, 5: 5.98, 6: 5.35, 7: 4.95, 8: 4.68, 9: 4.47, 10: 4.34, 12: 4.11, 15: 3.92, 20: 3.73, 30: 3.56, 60: 3.40, 120: 3.32, 999: 3.25 },
+        12: { 2: 18.04, 3: 9.64, 4: 7.17, 5: 6.05, 6: 5.42, 7: 5.01, 8: 4.74, 9: 4.53, 10: 4.37, 12: 4.15, 15: 3.96, 20: 3.77, 30: 3.59, 60: 3.43, 120: 3.34, 999: 3.27 },
+        13: { 2: 18.36, 3: 9.77, 4: 7.25, 5: 6.09, 6: 5.49, 7: 5.06, 8: 4.78, 9: 4.58, 10: 4.42, 12: 4.21, 15: 3.99, 20: 3.80, 30: 3.61, 60: 3.45, 120: 3.37, 999: 3.30 },
+        14: { 2: 18.55, 3: 9.89, 4: 7.35, 5: 6.18, 6: 5.54, 7: 5.12, 8: 4.83, 9: 4.61, 10: 4.45, 12: 4.23, 15: 4.03, 20: 3.82, 30: 3.64, 60: 3.48, 120: 3.39, 999: 3.32 },
+        15: { 2: 18.87, 3: 9.96, 4: 7.40, 5: 6.23, 6: 5.56, 7: 5.15, 8: 4.87, 9: 4.64, 10: 4.49, 12: 4.26, 15: 4.04, 20: 3.85, 30: 3.67, 60: 3.49, 120: 3.41, 999: 3.33 }
     };
 
         const DUNNETT_D_TABLE_001 = {
@@ -565,11 +598,22 @@ footer a:hover {
         alert(t('demo_loaded') + "\n" + t('demo_mode_msg'));
     }
 
+    // 新增：重置圖表顯示的輔助函數，用於清空舊圖表並釋放記憶體
+    function resetResultsView() {
+        const resDiv = document.getElementById('results');
+        if (resDiv) {
+            resDiv.querySelectorAll('.chart-box').forEach(plot => Plotly.purge(plot));
+            resDiv.innerHTML = `<div class="card" style="text-align:center; color:#9ca3af; padding:60px;">${t('placeholder_res')}</div>`;
+        }
+        window.lastCalcResults = null;
+    }
+
     function addGroup() {
         const name = document.getElementById('new-group').value.trim();
         if (name && !state.groups.includes(name)) {
             saveCurrentInputs(); state.groups.push(name);
             document.getElementById('new-group').value = ''; renderAll();
+            resetResultsView(); // 新增組別後，清空舊圖表避免數據不一致
         }
     }
     function removeGroup(idx) {
@@ -633,19 +677,22 @@ footer a:hover {
     function addProtein() {
         saveCurrentInputs();
         state.proteins.push({ id: state.nextId++, name: '', isHkp: false, data: {} }); renderAll();
+        resetResultsView(); // 移除 calculate()，改為安全重置畫面
     }
     function removeProtein(id) {
         saveCurrentInputs(); state.proteins = state.proteins.filter(p => p.id !== id); renderAll();
+        if (window.lastCalcResults) calculate();
     }
     function updateHkp(id) {
         saveCurrentInputs(); state.proteins.forEach(p => p.isHkp = (p.id === id)); renderAll();
+        if (window.lastCalcResults) calculate();
     }
     function saveCurrentInputs() {
         state.proteins.forEach(p => {
             const el = document.getElementById(`name-${p.id}`);
             if(el) p.name = el.value;
-            state.groups.forEach(g => {
-                const txt = document.getElementById(`txt-${p.id}-${g}`);
+            state.groups.forEach((g, gIdx) => {
+                const txt = document.getElementById(`txt-${p.id}-g${gIdx}`);
                 if(txt) p.data[g] = txt.value;
             });
         });
@@ -662,7 +709,7 @@ function renderAll() {
         // 第 0 組 Control 給予特別的背景色標示
         const style = i === 0 ? 'background:#dbeafe; border:1px solid #bfdbfe;' : '';
         
-        return `<span class="tag" style="${style}">${g} ${editBtn} ${delBtn}</span>`;
+        return `<span class="tag" style="${style}">${escapeHTML(g)} ${editBtn} ${delBtn}</span>`;
     }).join('');
 
         const phContainer = document.getElementById('posthoc-container');
@@ -689,7 +736,7 @@ function renderAll() {
             
             div.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <input id="name-${p.id}" value="${p.name}" placeholder="${t('protein_name')}" style="width:50%; font-weight:bold;">
+                    <input id="name-${p.id}" value="${escapeHTML(p.name)}" placeholder="${t('protein_name')}" style="width:50%; font-weight:bold;">
                     <label style="cursor:pointer; display:flex; align-items:center;">
                         <input type="radio" name="hkp_select" ${p.isHkp ? 'checked' : ''} onchange="updateHkp(${p.id})">
                         <span style="margin-left:5px; font-size:0.9em; font-weight:bold; color:${p.isHkp ? '#059669' : '#666'}">${t('hkp_label')}</span>
@@ -697,10 +744,10 @@ function renderAll() {
                     <button class="btn-del" onclick="removeProtein(${p.id})">${t('del')}</button>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:10px;">
-                    ${state.groups.map(g => `
+                    ${state.groups.map((g, gIdx) => `
                         <div>
-                            <label style="font-size:0.8em; font-weight:600; display:block; margin-bottom:2px;">${g}</label>
-                            <textarea id="txt-${p.id}-${g}" placeholder="Data...\n---\nData..." spellcheck="false">${p.data[g] || ''}</textarea>
+                            <label style="font-size:0.8em; font-weight:600; display:block; margin-bottom:2px;">${escapeHTML(g)}</label>
+                            <textarea id="txt-${p.id}-g${gIdx}" placeholder="Data...\n---\nData..." spellcheck="false">${escapeHTML(p.data[g] || '')}</textarea>
                         </div>
                     `).join('')}
                 </div>
@@ -719,20 +766,31 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
             const batches = [];
             
             for (let bStr of batchStrs) {
-                const tokens = bStr.replace(/ /g, " ").trim().split(/[\s,]+/);
+                if (bStr.trim() === '') continue; // 新增：忽略多餘或結尾的空白分隔符
+                // 移除逗號分割，強制只用空白字元（含換行與 Tab）進行分割，避免千分位誤判
+                const tokens = bStr.trim().split(/[\s]+/);
                 const validNums = [];
                 for (let token of tokens) {
                     if (token === '') continue; 
                     const num = Number(token);
-                    if (isNaN(num)) {
-                        throw new Error(`【資料格式錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現非法字元: "${token}"。`);
+                    if (!Number.isFinite(num)) {
+                    throw new Error(curLang === 'zh' 
+                    ? `【資料格式錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現非法字元或無效數值: "${token}"。` 
+                    : `[Format Error] Invalid character or non-finite value "${token}" found in protein [${proteinName}], group "${groupName}".`);
                     }
-                    if (num < 0) {
-                        throw new Error(`【數值錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現負值: "${token}"。`);
-                    }
+                if (num < 0) {
+                    throw new Error(curLang === 'zh' 
+                        ? `【數值錯誤】在蛋白 [${proteinName}] 的 "${groupName}" 組中發現負值: "${token}"。` 
+                        : `[Value Error] Negative value "${token}" found in protein [${proteinName}], group "${groupName}".`);
+                }
                     validNums.push(num);
                 }
                 batches.push(validNums);
+            }
+            if (batches.length === 0) {
+                throw new Error(curLang === 'zh' 
+                    ? `[${proteinName}] 的 "${groupName}" 組尚未輸入任何數據。` 
+                    : `No data entered for [${proteinName}], group "${groupName}".`);
             }
             return batches;
         };
@@ -749,14 +807,18 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                 
                 if (globalNumBatches === -1) globalNumBatches = batches.length;
                 if (batches.length !== globalNumBatches) {
-                    throw new Error(`【批次格式錯誤】各組別的批次數量不一致！請確認所有組別使用的 \`---\` 分隔數量皆相同。`);
-                }
+                throw new Error(curLang === 'zh' 
+                    ? `【批次格式錯誤】各組別的批次數量不一致！請確認所有組別使用的 \`---\` 分隔數量皆相同。` 
+                    : `[Batch Format Error] Inconsistent number of batches across groups! Ensure the number of \`---\` separators is identical for all groups.`);
+            }
 
                 batches.forEach((bVals, bIdx) => {
-                    if (bVals.length < 1) {
-                        throw new Error(`[${parsedData[p.id].name}] 的 "${g}" 組，在第 ${bIdx + 1} 批次中缺乏有效數據。`);
-                    }
-                });
+                if (bVals.length < 1) {
+                    throw new Error(curLang === 'zh'
+                        ? `[${parsedData[p.id].name}] 的 "${g}" 組，在第 ${bIdx + 1} 批次中缺乏有效數據。`
+                        : `Missing valid data in batch ${bIdx + 1} for group "${g}" in [${parsedData[p.id].name}].`);
+                }
+            });
                 
                 parsedData[p.id].vals[g] = batches;
             });
@@ -780,6 +842,11 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
     function calculate() {
         saveCurrentInputs();
         const resDiv = document.getElementById('results');
+    
+        // 新增：正確釋放 Plotly 記憶體
+        const oldPlots = resDiv.querySelectorAll('.chart-box');
+        oldPlots.forEach(plot => Plotly.purge(plot)); 
+    
         resDiv.innerHTML = '';
         window.lastCalcResults = [];
 
@@ -787,22 +854,31 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
         const isPaired = (mode === 'paired');
 
         const postHocMethod = document.getElementById('posthoc-method').value;
-        const maxGroups = postHocMethod === 'dunnett' ? 10 : 15;
+        const maxGroups = 15;
 
         if (state.groups.length > maxGroups) {
-            return alert(t('alert_max_group'));
-        }
+    resetResultsView();
+    return alert(t('alert_max_group'));
+}
 
-        const hkpObj = state.proteins.find(p => p.isHkp);
-        if (!hkpObj) return alert(t('alert_select_hkp'));
+const hkpObj = state.proteins.find(p => p.isHkp);
+if (!hkpObj) {
+    resetResultsView();
+    return alert(t('alert_select_hkp'));
+}
 
-        const targetProteins = state.proteins.filter(p => !p.isHkp);
+const targetProteins = state.proteins.filter(p => !p.isHkp);
+if (targetProteins.length === 0) {
+    resetResultsView();
+    return alert(curLang === 'zh' ? '請至少新增一個目標蛋白 (Target Protein) 進行計算！' : 'Please add at least one Target Protein to calculate!');
+}
 
         let parsed;
         try {
              parsed = validateAndParseData(isPaired, hkpObj, targetProteins);
         } catch(e) {
-             return alert(e.message);
+             resDiv.innerHTML = `<div class="card" style="text-align:center; color:#ef4444; padding:60px; font-weight:bold;">⚠️ 錯誤：${escapeHTML(e.message)}<br><span style="font-size:0.85em; font-weight:normal; color:#666; margin-top:10px; display:inline-block;">（提示：請繼續將其他組別的數據補齊，完成後再點擊「執行運算」）</span></div>`;
+          return;
         }
         // ==========================================
         // 🚨 新增：多批次 + Unpaired 未勾選 Log2 的強烈警告
@@ -832,13 +908,6 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                         </div>
                     </div>
                 </div>
-                <style>
-                    @keyframes pulseWarn {
-                        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-                        70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-                        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-                    }
-                </style>
             `;
             resDiv.innerHTML += batchLog2WarnHtml;
         }
@@ -893,7 +962,9 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                     const hBatches = hkp.vals[g];
                     
                     for (let b = 0; b < tBatches.length; b++) {
-                        if (tBatches[b].length !== hBatches[b].length) throw new Error(`${target.name} [${g}]: Target與HKP樣本數不一致`);
+                        if (tBatches[b].length !== hBatches[b].length) throw new Error(curLang === 'zh' 
+                        ? `${target.name} [${g}]: Target 與 HKP 樣本數不一致` 
+                        : `${target.name} [${g}]: Sample count mismatch between Target and HKP`);
                         rawRatios[g].push(tBatches[b].map((v, i) => {
                             if (hBatches[b][i] === 0) throw new Error(t('err_hkp_zero'));
                             return v / hBatches[b][i];
@@ -917,9 +988,13 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                         const ctrlBatchRatios = rawRatios[ctrlG][b];
                         const ctrlMeanRawLinear = jStat.mean(ctrlBatchRatios);
 
-                        if (ctrlMeanRawLinear === 0) throw new Error(`批次 ${b+1} 的 Control 平均值為 0，無法標準化。`);
+                        if (ctrlMeanRawLinear === 0) throw new Error(curLang === 'zh' 
+                        ? `批次 ${b+1} 的 Control 平均值為 0，無法標準化。` 
+                        : `Batch ${b+1}: Control mean is 0, normalization failed.`);
                         if (isPaired && ctrlBatchRatios.some(val => val === 0)) {
-                            throw new Error(`批次 ${b+1} 在配對模式下，Control 組包含數值 0，無法作為分母。`);
+                        throw new Error(curLang === 'zh' 
+                            ? `批次 ${b+1} 在配對模式下，Control 組包含數值 0，無法作為分母。` 
+                            : `Batch ${b+1}: Control group contains 0 in paired mode, cannot be used as denominator.`);
                         }
 
                         let batchLinearNorm = isPaired
@@ -932,15 +1007,19 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                         if (useLog2) {
                             batchLog2Norm = isPaired
                                 ? currentBatchRatios.map((val, i) => {
-                                    if (val <= 0) throw new Error(`【數值錯誤】在第 ${b+1} 批次發現 Target 數值為 0。Log2 轉換無法處理 0 (數學上為負無限大)。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`);
+                                    if (val <= 0) throw new Error(curLang === 'zh'
+                                    ? `【數值錯誤】在第 ${b+1} 批次發現 Target 數值為 0 或負數。Log2 轉換無法處理 0。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`
+                                    : `[Value Error] Zero or negative target value found in batch ${b+1}. Log2 transform cannot handle 0.\n💡 Tip: Uncheck "Use Log2 Transform" for Knockout experiments.`);
                                     return Math.log2(val / ctrlBatchRatios[i]);
                                   })
                                 : currentBatchRatios.map(val => {
-                                    if (val <= 0) throw new Error(`【數值錯誤】在第 ${b+1} 批次發現 Target 數值為 0。Log2 轉換無法處理 0 (數學上為負無限大)。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`);
+                                    if (val <= 0) throw new Error(curLang === 'zh'
+                                    ? `【數值錯誤】在第 ${b+1} 批次發現 Target 數值為 0 或負數。Log2 轉換無法處理 0。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`
+                                    : `[Value Error] Zero or negative target value found in batch ${b+1}. Log2 transform cannot handle 0.\n💡 Tip: Uncheck "Use Log2 Transform" for Knockout experiments.`);
                                     return Math.log2(val / ctrlMeanRawLinear);
                                   });
                         } else {
-                            batchLog2Norm = batchLinearNorm.map(v => (v > 0 ? Math.log2(v) : NaN));
+                            batchLog2Norm = batchLinearNorm.map(v => (v > 0 && Number.isFinite(v) ? Math.log2(v) : NaN));
                         }
                         flattenedLog2Norm[g].push(...batchLog2Norm);
                     }
@@ -950,7 +1029,9 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                 let allRawVals = [];
                 // 新增：安全的 Log2 轉換函數
                 const safeLog2 = (val, modeContext) => {
-                    if (val <= 0) throw new Error(`【數值錯誤】在 ${modeContext} 發現數值為 0。Log2 轉換無法處理 0 (數學上為負無限大)。\n💡 建議：若為 Knockout/無表現實驗，請取消勾選「使用 Log2 轉換」。`);
+                    if (val <= 0) throw new Error(curLang === 'zh'
+                    ? `【數值錯誤】在 ${modeContext} 發現數值為 0 或負數。Log2 轉換無法處理 0。\n💡 建議：若為 Knockout/無表現實驗，請取消勾選「使用 Log2 轉換」。`
+                    : `[Value Error] Zero or negative value found in ${modeContext}. Log2 transform cannot handle 0.\n💡 Tip: Uncheck "Use Log2 Transform" for Knockout/no-expression experiments.`);
                     return Math.log2(val);
                 };
 
@@ -984,8 +1065,10 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                                     const normVal = v / ctrlMean;
                                     
                                     if (useLog2) {
-                                        if (normVal <= 0) throw new Error(`【數值錯誤】在第 ${b+1} 批次發現計算後數值為 0 或負數。Log2 轉換無法處理 0 (數學上為負無限大)。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`);
-                                        adjustedRatios[g].push(Math.log2(normVal));
+                                        if (normVal <= 0) throw new Error(curLang === 'zh'
+                                        ? `【數值錯誤】在第 ${b+1} 批次發現計算後數值為 0 或負數。Log2 轉換無法處理 0。\n💡 建議：若為 Knockout 實驗，請取消勾選「使用 Log2 轉換」。`
+                                        : `[Value Error] Normalized value is 0 or negative in batch ${b+1}. Log2 transform cannot handle 0.\n💡 Tip: Uncheck "Use Log2 Transform" for Knockout experiments.`);
+                                        adjustedRatios[g].push(safeLog2(normVal, g));
                                     } else {
                                         adjustedRatios[g].push(normVal);
                                     }
@@ -1077,7 +1160,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                         stats[0].pText = 'Ref';
                         detailsHTML = `
                             <b>${t('stat_method')}:</b> T-test (Not Sig.)<br>
-                            <span style="color:#dc2626; font-weight:bold;">⚠️ 統計失敗：樣本數不足 (需 N ≥ 2) 無法計算標準誤與進行 T-test。</span><br>
+                            <span style="color:#dc2626; font-weight:bold;">${curLang === 'zh' ? '⚠️ 統計失敗：樣本數不足 (需 N ≥ 2) 無法計算標準誤與進行 T-test。' : '⚠️ Stat Error: Insufficient sample size (N ≥ 2 required) to calculate SEM and T-test.'}</span><br>
                             <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
                         `;
                     } else {
@@ -1104,7 +1187,8 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                         `;
                     }
                     
-                    window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars });
+                    // 修正：2 組模式沒有兩兩比較，直接傳入空陣列 []，避免 ReferenceError
+                    window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars, pairwiseSig: [] });
                     renderCard(target.name, stats, stars, detailsHTML, resDiv, maxY, []);
                 
                 } else {
@@ -1150,7 +1234,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                             pDisplay = '-';
                             detailsHTML = `
                                 <b>${t('stat_method')}:</b> RM-ANOVA (Not Sig.)<br>
-                                <span style="color:#dc2626; font-weight:bold;">⚠️ 統計失敗：配對樣本數不足 (需 N ≥ 2) 無法計算殘差自由度。</span><br>
+                                <span style="color:#dc2626; font-weight:bold;">${curLang === 'zh' ? '⚠️ 統計失敗：配對樣本數不足 (需 N ≥ 2) 無法計算殘差自由度。' : '⚠️ Stat Error: Insufficient paired samples (N ≥ 2 required) to calculate residual df.'}</span><br>
                                 <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
                             `;
                         } else {
@@ -1180,7 +1264,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                             ssTreat += n * Math.pow(treatMean - gm, 2);
                         }
 
-                        const ssError = ssTotal - ssSubj - ssTreat;
+                        const ssError = Math.max(0, ssTotal - ssSubj - ssTreat); // 新增：強制將浮點數極小負值歸零
                         
                         const dfTreat = k - 1;
                         const dfError = (n - 1) * (k - 1);
@@ -1188,9 +1272,25 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                         const msTreat = ssTreat / dfTreat;
                         const msError = ssError / dfError; 
                         
-                        const fScore = msTreat / msError;
-                        const pAnova = 1 - jStat.centralF.cdf(fScore, dfTreat, dfError);
-                        
+                        let fScore = 0;
+                        let pAnova = 1;
+
+                        if (msError === 0) {
+                          if (msTreat > 0) {
+                            fScore = Infinity; // 變異為 0 但均值有差異：F值無限大
+                            pAnova = 0;        // P值為 0 (極度顯著)
+                          }
+                         // 若 msTreat 也是 0 (完全無差異)，則維持 fScore=0, pAnova=1
+                          } else {
+                            fScore = msTreat / msError;
+                            // 修正：加入 Math.max(0, ...) 避免浮點數誤差產生負的 P-value
+                            pAnova = Math.max(0, 1 - jStat.centralF.cdf(fScore, dfTreat, dfError));
+                        }
+
+                        if (isNaN(fScore) || isNaN(pAnova)) {
+                            pAnova = (fScore > 10 || fScore === Infinity) ? 0 : 1;
+                        }
+
                         pDisplay = formatP(pAnova);
                         stats[0].pText = 'Ref';
 
@@ -1209,7 +1309,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                                     const treatRawMean = jStat.mean(treatRawVals);
                                     
                                     let seDiff = Math.sqrt((2 * msError) / n);
-                                    const tVal = Math.abs(treatRawMean - ctrlRawMean) / seDiff;
+                                    const tVal = seDiff === 0 ? (treatRawMean === ctrlRawMean ? 0 : Infinity) : Math.abs(treatRawMean - ctrlRawMean) / seDiff;
 
                                     if (q001 !== '-' && tVal > q001) { stars[i] = '***'; stats[i].pText = '< 0.001'; }
                                     else if (q01 !== '-' && tVal > q01) { stars[i] = '**'; stats[i].pText = '< 0.01'; }
@@ -1239,7 +1339,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                                         const m2 = jStat.mean(allRawVals[j]);
                                         const sampleN = allRawVals[0].length;
                                         const se = Math.sqrt(msError / sampleN); 
-                                        const qCalc = Math.abs(m1 - m2) / se;
+                                        const qCalc = se === 0 ? (m1 === m2 ? 0 : Infinity) : Math.abs(m1 - m2) / se;
                                         
                                         let star = '';
                                         if (q001 !== '-' && qCalc > q001) star = '***';
@@ -1274,7 +1374,13 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                     } else {
                         const nTotal = stats.reduce((acc, s) => acc + s.n, 0);
                         const df1 = state.groups.length - 1;
-                        const df2 = nTotal - state.groups.length;
+                        let df2 = nTotal - state.groups.length;
+
+                        // 【修正】：針對多批次獨立樣本，扣除批次校正所消耗的自由度 (Batches - 1)
+                        if (!isPaired && hasMultipleBatches) {
+                        const numBatches = target.vals[state.groups[0]].length;
+                        df2 = Math.max(1, df2 - (numBatches - 1)); // 確保自由度至少為 1
+                        }
                         
                         // 新增防呆：若有任一組別 N < 2 或總自由度 df2 <= 0，無法估算組內均方誤差 (MSE)
                         const hasInsufficientN = stats.some(s => s.n < 2) || df2 <= 0;
@@ -1284,22 +1390,51 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                             pDisplay = '-';
                             detailsHTML = `
                                 <b>${t('stat_method')}:</b> ${t('anova_ns')}<br>
-                                <span style="color:#dc2626; font-weight:bold;">⚠️ 統計失敗：樣本數不足 (每組均需 N ≥ 2) 無法計算組內變異數。</span><br>
+                                <span style="color:#dc2626; font-weight:bold;">${curLang === 'zh' ? '⚠️ 統計失敗：樣本數不足 (每組均需 N ≥ 2) 無法計算組內變異數。' : '⚠️ Stat Error: Insufficient sample size (N ≥ 2 per group required) to calculate within-group variance.'}</span><br>
                                 <span style="font-size:0.85em; color:#666">${noteText}${logNoteText}</span>
                             `;
                         } else {
-                            const fScore = jStat.anovafscore(allRawVals);
-                            const pAnova = 1 - jStat.centralF.cdf(fScore, df1, df2);
+                            // 1. 手動計算組間與組內變異數 (SS)
+                            let ssWithin = 0;
+                            let grandSum = 0;
+                            let grandN = 0;
+                            allRawVals.forEach(vals => {
+                                const groupMean = jStat.mean(vals);
+                                vals.forEach(v => {
+                                    ssWithin += Math.pow(v - groupMean, 2);
+                                    grandSum += v;
+                                    grandN++;
+                                });
+                            });
+                            const gm = grandSum / grandN;
+
+                            let ssBetween = 0;
+                            allRawVals.forEach(vals => {
+                                const groupMean = jStat.mean(vals);
+                                ssBetween += vals.length * Math.pow(groupMean - gm, 2);
+                            });
+
+                            // 2. 套用上方已校正過批次效應的 df1 與 df2 來計算 Mean Square (MS) 與 F 值
+                            const msBetween = ssBetween / df1;
+                            const mse = ssWithin / df2; 
+                            const fScore = mse === 0 ? (msBetween > 0 ? Infinity : 0) : (msBetween / mse);
+
+                            // 3. 計算正確的 P 值
+                            let pAnova;
+                            if (fScore === Infinity) {
+                                pAnova = 0; 
+                            } else {
+                                pAnova = Math.max(0, 1 - jStat.centralF.cdf(fScore, df1, df2));
+                                if (isNaN(fScore) || isNaN(pAnova)) {
+                                pAnova = (fScore > 10) ? 0 : 1;
+                                }
+                            }
+
                             pDisplay = formatP(pAnova);
                             stats[0].pText = 'Ref';
 
                             if (pAnova < 0.05) {
-                            let ssWithin = 0;
-                            allRawVals.forEach(vals => {
-                                 const m = jStat.mean(vals);
-                                 vals.forEach(v => ssWithin += Math.pow(v - m, 2));
-                            });
-                            const mse = ssWithin / df2;
+                            // (原本這裡重複計算 ssWithin 與 mse 的代碼已刪除，因為上方已經算好了，直接沿用即可)
                             
                             const kVal = Math.min(state.groups.length, 15);
 
@@ -1317,7 +1452,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                                     const nC = allRawVals[0].length;
                                     const nT = treatRawVals.length;
                                     const seDiff = Math.sqrt(mse * (1/nT + 1/nC));
-                                    const tVal = Math.abs(treatRawMean - ctrlRawMean) / seDiff;
+                                    const tVal = seDiff === 0 ? (treatRawMean === ctrlRawMean ? 0 : Infinity) : Math.abs(treatRawMean - ctrlRawMean) / seDiff;
                                     
                                     if (q001 !== '-' && tVal > q001) { stars[i] = '***'; stats[i].pText = '< 0.001'; }
                                     else if (q01 !== '-' && tVal > q01) { stars[i] = '**'; stats[i].pText = '< 0.01'; }
@@ -1349,7 +1484,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                                         const n2 = allRawVals[j].length;
                                         
                                         const se = Math.sqrt( (mse / 2) * (1 / n1 + 1 / n2) ); 
-                                        const qCalc = Math.abs(m1 - m2) / se;
+                                        const qCalc = se === 0 ? (m1 === m2 ? 0 : Infinity) : Math.abs(m1 - m2) / se;
 
                                         let star = '';
                                         if (q001 !== '-' && qCalc > q001) star = '***';
@@ -1387,12 +1522,15 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                         detailsHTML += localWarning;
                     }
 
-                    window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars });
+                    window.lastCalcResults.push({ protein: target.name, stats: stats, stars: stars, pairwiseSig: pairwiseSig });
                     renderCard(target.name, stats, stars, detailsHTML, resDiv, maxY, pairwiseSig);
                 }
-            } catch (err) { alert(err.message); console.error(err); }
-        });
-    }
+        } catch (err) { 
+            resDiv.innerHTML += `<div class="card" style="text-align:center; color:#ef4444; font-weight:bold; padding:30px; border: 1px solid #fca5a5;">⚠️ ${escapeHTML(target.name)} 發生計算錯誤：<br><span style="font-size:0.9em; font-weight:normal;">${escapeHTML(err.message)}</span></div>`;
+            console.error(err); 
+        }
+    });
+}
 
     function getLinearInterpolatedValue(x, xVals, yVals) {
         if (!xVals || xVals.length === 0) return 0;
@@ -1427,8 +1565,14 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
     function getCriticalValue(table, k, df) {
         const definedKs = Object.keys(table).map(Number).sort((a, b) => a - b);
         let targetK = k;
-        if (k > definedKs[definedKs.length - 1]) targetK = definedKs[definedKs.length - 1];
-        else if (!table[k]) {
+        
+        // 修正：DUNNETT_D_TABLE_001 的 k>10 外插值有誤差（非單調遞增），
+        // 為了避免誤判 ***，強制將 k>10 的查詢夾住在 k=10 的臨界值
+        if (table === DUNNETT_D_TABLE_001 && k > 10) {
+            return '-'; // 修正：嚴格阻斷外插，避免增加假陽性。超過 10 組時不判定 ***，自動退回判定 **
+        } else if (k > definedKs[definedKs.length - 1]) {
+            targetK = definedKs[definedKs.length - 1];
+        } else if (!table[k]) {
             for (let i = 0; i < definedKs.length; i++) {
                 if (definedKs[i] >= k) { targetK = definedKs[i]; break; }
             }
@@ -1448,7 +1592,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
         
         const maxK = 15; 
         if (k > maxK) return '-';
-        const useK = Math.min(k, maxK);
+        const useK = k; // 修正：上方已阻斷 k > 15 的情況，此處直接使用 k 即可
 
         const rawXVals = Object.keys(table).map(Number).sort((a,b)=>a-b);
         const validPairs = rawXVals.map(x => ({ x: x, y: table[x][useK] })).filter(p => p.y !== undefined);
@@ -1469,7 +1613,8 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
         
         const mode = document.querySelector('input[name="mode"]:checked').value;
         const useLog2 = document.getElementById('log-transform').checked;
-        const modeStr = (mode === 'paired' ? 'Paired' : 'Unpaired') + (useLog2 ? ' (+Log2Stats)' : '');
+        const postHoc = document.getElementById('posthoc-method') ? document.getElementById('posthoc-method').value : 'dunnett';
+        const modeStr = (mode === 'paired' ? 'Paired' : 'Unpaired') + (useLog2 ? ' (+Log2Stats)' : '') + ` [PostHoc:${postHoc}]`;
         const hkpObj = state.proteins.find(p => p.isHkp);
         const hkpName = hkpObj ? hkpObj.name : "HKP"; 
 
@@ -1498,14 +1643,15 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
             ...targetHeaders,
             ...hkpHeaders,
             'Target_Raw_Text', // 新增：用於完美還原批次格式
-            'HKP_Raw_Text'     // 新增：用於完美還原批次格式
+            'HKP_Raw_Text',     // 新增：用於完美還原批次格式
+            'All_Pairwise_Sig'  // 新增：記錄 Tukey 兩兩比較的詳細結果
         ];
         rows.push(allHeaders.join(','));
 
         const safeCSV = (str) => {
-            if (str === null || str === undefined) return '""';
-            let cleanStr = String(str).replace(/[\r\n]+/g, ' ');
-            return '"' + cleanStr.replace(/"/g, '""') + '"';
+          if (str === null || str === undefined) return '""';
+          // 【修復】：移除 .replace(/[\r\n]+/g, ' ')，讓 CSV 透過雙引號自然保留原始的換行排版
+          return '"' + String(str).replace(/"/g, '""') + '"';
         };
 
         window.lastCalcResults.forEach(item => {
@@ -1527,8 +1673,8 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                     safeCSV(modeStr),
                     safeCSV(s.group),
                     s.n,
-                    (s.rawMean !== undefined ? s.rawMean : s.mean).toFixed(4),
-                    (s.rawSEM !== undefined ? s.rawSEM : s.sem).toFixed(4)
+                    (s.rawMean !== undefined ? s.rawMean : s.mean) !== null && !isNaN(s.rawMean !== undefined ? s.rawMean : s.mean) ? (s.rawMean !== undefined ? s.rawMean : s.mean).toFixed(4) : 'NaN',
+                    (s.rawSEM !== undefined ? s.rawSEM : s.sem) !== null && !isNaN(s.rawSEM !== undefined ? s.rawSEM : s.sem) ? (s.rawSEM !== undefined ? s.rawSEM : s.sem).toFixed(4) : 'NaN'
                 ];
 
                 if (useLog2) {
@@ -1544,7 +1690,11 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                     ...paddedTarget,
                     ...paddedHkp,
                     safeCSV(s.targetRawText), // 新增：寫入原始字串
-                    safeCSV(s.hkpRawText)     // 新增：寫入原始字串
+                    safeCSV(s.hkpRawText),     // 新增：寫入原始字串
+                    // 新增：將該蛋白的所有 Tukey 兩兩比較結果組合成字串匯出 (僅在第一列顯示以防重複)
+                    idx === 0 && item.pairwiseSig && item.pairwiseSig.length > 0 
+                        ? safeCSV(item.pairwiseSig.map(p => `${item.stats[p.i].group} vs ${item.stats[p.j].group}: ${p.star}`).join(' | ')) 
+                        : '""'
                 ];
 
                 rows.push(rowData.join(','));
@@ -1556,10 +1706,21 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
-        link.setAttribute("download", "WB_Statistics_Report.csv");
+        
+        // 產生 YYYYMMDDHHmm 格式的時間戳記
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const MM = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const HH = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const timeStr = `${yyyy}${MM}${dd}${HH}${mm}`;
+        
+        link.setAttribute("download", `WB_Statistics_Report_${timeStr}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 
     function formatP(p) {
@@ -1587,7 +1748,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
         if(se === 0) return (meanDiff === 0) ? 1 : 0;
         const t = meanDiff / se;
         const df = n - 1;
-        return (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2;
+        return Math.max(0, (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2);
     }
 
     function welchTtest(arr1, arr2) {
@@ -1609,7 +1770,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
         const den = (Math.pow(v1/n1, 2) / (n1-1)) + (Math.pow(v2/n2, 2) / (n2-1));
         const df = num / den;
 
-        return (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2;
+        return Math.max(0, (1 - jStat.studentt.cdf(Math.abs(t), df)) * 2);
     }
 
     function renderCard(title, stats, stars, details, container, maxY, pairwiseSig = []) {
@@ -1619,11 +1780,11 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
         div.className = 'card';
         
         const useLog2 = document.getElementById('log-transform').checked;
-        const meanSemHeader = useLog2 ? "Mean ± SEM<br><small style='font-weight:normal;'>(Linear / Log2)</small>" : "Mean ± SEM";
+        const meanSemHeader = useLog2 ? t('mean_sem_col_log2') : t('mean_sem_col');
         
         div.innerHTML = `
-            <h3>${title}
-                <button onclick="exportCardImage(this, '${title}')" style="font-size:0.8rem; background:#4b5563; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+            <h3>${escapeHTML(title)}
+                <button onclick="exportCardImage(this)" data-title="${escapeHTML(title)}" style="font-size:0.8rem; background:#4b5563; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
             📸 匯出此區塊圖檔</button>
             </h3>
             <div id="${id}" class="chart-box"></div>
@@ -1636,7 +1797,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                         <th>${t('n_col')}</th>
                         <th>${t('raw_col')}</th>
                         <th>${meanSemHeader}</th> 
-                        <th>P-value (vs Ctrl)</th>
+                        <th>${t('pval_vs_ctrl')}</th>
                         <th>${t('sig_col')}</th>
                     </tr>
                 </thead>
@@ -1645,7 +1806,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                     const starColor = stars[i].includes('*') ? '#dc2626' : '#9ca3af';
                     return `
                     <tr>
-                        <td>${s.group}</td>
+                        <td>${escapeHTML(s.group)}</td>
                         <td>${s.n}</td>
                         <td class="raw-data">${s.rawStr}</td>
                         <td>
@@ -1751,7 +1912,7 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
             yaxis: { 
                 title: 'Relative Fold Change',
                 zeroline: true,
-                range: [0, graphTop * 1.15],
+                range: [0, graphTop],
                 gridcolor: '#f0f0f0'
             },
             xaxis: { 
@@ -1777,32 +1938,40 @@ function validateAndParseData(isPaired, hkpObj, targetProteins) {
                 filename: title + '_WB_Stats',
                 height: 500,
                 width: 700,
-                scale: 3 
+                scale: 4 
             }
         };
 
         Plotly.newPlot(id, data, layout, config);
     }
 
-function exportCardImage(btn, filename) {
+function exportCardImage(btn) {
+    const filename = btn.getAttribute('data-title');
     const card = btn.closest('.card'); 
     btn.style.display = 'none';
 
-    html2canvas(card, {
-        backgroundColor: '#ffffff',
-        scale: 2 
-    }).then(canvas => {
-        btn.style.display = 'inline-block';
-        const safeName = (filename || 'WB_Result').trim();
-        const link = document.createElement('a');
-        link.download = safeName + '_Report.png'; 
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-    }).catch(err => {
-        console.error("Image export failed:", err);
-        btn.style.display = 'inline-block'; 
-        alert("圖片匯出失敗");
+    // 修正：加入 300ms 延遲，確保 Plotly 圖表渲染與按鈕隱藏的 DOM 更新已完成
+    setTimeout(() => {
+    // 【修正】：確保瀏覽器已經完成 DOM 的重繪 (Repaint)
+    requestAnimationFrame(() => {
+        html2canvas(card, {
+            backgroundColor: '#ffffff',
+            scale: 4,
+            useCORS: true
+        }).then(canvas => {
+            btn.style.display = 'inline-block';
+            const safeName = (filename || 'WB_Result').trim().replace(/[<>:"/\\|?*]/g, '_');
+            const link = document.createElement('a');
+            link.download = safeName + '_Report.png'; 
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }).catch(err => {
+            console.error("Image export failed:", err);
+            btn.style.display = 'inline-block'; 
+            alert(curLang === 'zh' ? "圖片匯出失敗" : "Export failed");
+        });
     });
+    }, 300);
 }
 // ==========================================
 //  ADVANCED IMPORT FUNCTION (CSV METHOD)
@@ -1813,15 +1982,17 @@ function importCSV(event) {
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                const text = e.target.result;
+                const text = e.target.result.replace(/^\uFEFF/, '');
                 try {
                     parseCSVContent(text);
                     alert(t('import_success'));
                 } catch (err) {
                     console.error(err);
                     alert(curLang === 'zh' ? "CSV 解析失敗，請確認檔案是否為本工具輸出的格式。" : "Parse failed. Please ensure the file was generated by this tool.");
+                } finally {
+                    // 修正：移入 finally 區塊，確保無論成功或報錯都會清空 input，避免同檔名無法二次匯入的 bug
+                    event.target.value = '';
                 }
-                event.target.value = '';
             };
             reader.readAsText(file);
         }
@@ -1928,12 +2099,19 @@ function importCSV(event) {
 
             // 自動切換勾選狀態
             if (modeStr) {
-                document.querySelector('input[name="mode"][value="paired"]').checked = modeStr.includes('Paired');
-                document.querySelector('input[name="mode"][value="unpaired"]').checked = !modeStr.includes('Paired');
-                document.getElementById('log-transform').checked = modeStr.includes('+Log2Stats');
-                updateModeInfo();
+             document.querySelector('input[name="mode"][value="paired"]').checked = modeStr.includes('Paired');
+             document.querySelector('input[name="mode"][value="unpaired"]').checked = !modeStr.includes('Paired');
+             document.getElementById('log-transform').checked = modeStr.includes('+Log2Stats');
+    
+            const postHocMatch = modeStr.match(/\[PostHoc:(.*?)\]/);
+            if (postHocMatch && postHocMatch[1]) {
+            const phSelect = document.getElementById('posthoc-method');
+            if (phSelect) phSelect.value = postHocMatch[1];
+            }
+            updateModeInfo();
             }
             renderAll();
+            calculate();
         }
 </script>
 </body>
