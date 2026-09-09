@@ -1019,8 +1019,9 @@ if (targetProteins.length === 0) {
                                     return Math.log2(val / ctrlMeanRawLinear);
                                   });
                         } else {
-                            batchLog2Norm = batchLinearNorm.map(v => (v > 0 && Number.isFinite(v) ? Math.log2(v) : NaN));
-                        }
+    // 【優化】：未勾選 Log2 時，直接產生等長的 NaN 陣列，跳過無意義的 Math.log2 數學運算
+    batchLog2Norm = new Array(batchLinearNorm.length).fill(NaN);
+}
                         flattenedLog2Norm[g].push(...batchLog2Norm);
                     }
                 });
@@ -1517,7 +1518,20 @@ if (targetProteins.length === 0) {
                         }
                       }
                     }
+// 新增：Tukey 兩兩比較詳細清單
+if (postHocMethod === 'tukey' && pairwiseSig && pairwiseSig.length > 0) {
+    const pairListHTML = pairwiseSig.map(p =>
+        `${escapeHTML(stats[p.i].group)} vs ${escapeHTML(stats[p.j].group)}: <b style="color:#dc2626">${p.star}</b>`
+    ).join('<br>');
+    detailsHTML += `<div class="param-box"><b>${curLang === 'zh' ? '所有顯著的兩兩比較' : 'All Significant Pairwise Comparisons'}:</b><br>${pairListHTML}</div>`;
+}
 
+// 新增：Dunnett 停用 *** 提示
+if (postHocMethod === 'dunnett' && state.groups.length > 10) {
+    detailsHTML += `<div style="margin-top:8px; font-size:0.85em; color:#b45309;">
+        ${curLang === 'zh' ? 'ℹ️ 註：為避免臨界值外插誤差，Dunnett α=0.001 (***) 門檻於組數 > 10 時停用。' : 'ℹ️ Note: *** threshold for Dunnett is disabled for >10 groups to avoid extrapolation error.'}
+    </div>`;
+}
                     if (localWarning) {
                         detailsHTML += localWarning;
                     }
@@ -1533,24 +1547,28 @@ if (targetProteins.length === 0) {
 }
 
     function getLinearInterpolatedValue(x, xVals, yVals) {
-        if (!xVals || xVals.length === 0) return 0;
-        
-        const exactIdx = xVals.indexOf(x);
-        if (exactIdx !== -1) return yVals[exactIdx];
+    if (!xVals || xVals.length === 0) return 0;
+    
+    const exactIdx = xVals.indexOf(x);
+    if (exactIdx !== -1) return yVals[exactIdx];
 
-        if (x < xVals[0]) return yVals[0];
-        
-        if (x > xVals[xVals.length - 1]) return yVals[yVals.length - 1];
-        
-        for (let i = 0; i < xVals.length - 1; i++) {
-            if (x > xVals[i] && x < xVals[i+1]) {
-                const ratio = (x - xVals[i]) / (xVals[i+1] - xVals[i]);
-                return yVals[i] + ratio * (yVals[i+1] - yVals[i]);
-            }
+    if (x < xVals[0]) return yVals[0];
+    if (x > xVals[xVals.length - 1]) return yVals[yVals.length - 1];
+    
+    for (let i = 0; i < xVals.length - 1; i++) {
+        if (x > xVals[i] && x < xVals[i+1]) {
+            // 【修正】：針對 DF 採用 1/x 的調和內插法以獲得精確臨界值
+            const invX = 1 / x;
+            const invX0 = 1 / xVals[i];
+            const invX1 = 1 / xVals[i+1];
+            
+            const ratio = (invX - invX0) / (invX1 - invX0);
+            return yVals[i] + ratio * (yVals[i+1] - yVals[i]);
         }
-        
-        return yVals[yVals.length - 1]; 
     }
+    
+    return yVals[yVals.length - 1]; 
+}
 
     function getInterpolatedQ(df, k, alpha) {
         let table = null;
@@ -1609,6 +1627,15 @@ if (targetProteins.length === 0) {
         if (!window.lastCalcResults || window.lastCalcResults.length === 0) {
             alert(curLang === 'zh' ? "請先執行運算" : "Please calculate first");
             return;
+        }
+        // 新增：偵測計算失敗的蛋白
+        const targetCount = state.proteins.filter(p => !p.isHkp).length;
+        if (window.lastCalcResults.length < targetCount) {
+        const missingCount = targetCount - window.lastCalcResults.length;
+        const warnMsg = curLang === 'zh'
+            ? `⚠️ 注意：有 ${missingCount} 個蛋白因計算錯誤未納入匯出。\n\n建議先修正錯誤並重新運算。\n是否仍要繼續匯出成功的部分？`
+            : `⚠️ Warning: ${missingCount} protein(s) failed calculation and are NOT included.\n\nProceed with export anyway?`;
+        if (!confirm(warnMsg)) return;
         }
         
         const mode = document.querySelector('input[name="mode"]:checked').value;
@@ -1890,22 +1917,23 @@ if (targetProteins.length === 0) {
         }
 
         const data = [{
-            x: xIds, 
-            y: yValues,
-            type: 'bar',
-            marker: { color: colors, line: { color: '#555', width: 0.5 } },
-            error_y: {
-                type: 'data',
-                array: yErrors,
-                visible: true,
-                color: '#000000', 
-                thickness: 1.2,
-                width: 4
-            },
-            hovertemplate: '<b>%{text}</b><br>Mean: %{y:.5f}<br>SEM: %{error_y.array:.3f}<extra></extra>',
-            text: xLabels, 
-            textposition: 'none'
-        }];
+    x: xIds, 
+    y: yValues,
+    type: 'bar',
+    marker: { color: colors, line: { color: '#555', width: 0.5 } },
+    error_y: {
+        type: 'data',
+        array: yErrors,
+        visible: true,
+        color: '#000000', 
+        thickness: 1.2,
+        width: 4
+    },
+    customdata: yErrors, // 【新增】：將誤差陣列綁定為 customdata
+    hovertemplate: '<b>%{text}</b><br>Mean: %{y:.5f}<br>SEM: %{customdata:.3f}<extra></extra>', // 【修正】：改用 customdata 讀取
+    text: xLabels, 
+    textposition: 'none'
+}];
 
         const layout = {
             title: false,
