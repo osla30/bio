@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELISA 數據分析工具</title>
+<!-- 引入 Plotly.js 以提供強大的科學互動圖表支援 -->
+<script src="plotly.min.js"></script>
+<style>
+  :root{
+    --blue-50:#EFF6FF;
+    --blue-100:#DBEAFE;
+    --blue-200:#BFDBFE;
+    --blue-300:#93C5FD;
+    --blue-500:#3B82F6;
+    --blue-600:#2563EB;
+    --blue-700:#1D4ED8;
+    --blue-900:#1E3A8A;
+    --ink:#0F172A;
+    --ink-soft:#334155;
+    --gray-400:#94A3B8;
+    --gray-300:#CBD5E1;
+    --gray-200:#E2E8F0;
+    --gray-100:#F1F5F9;
+    --gray-50:#F8FAFC;
+    --amber:#F59E0B;
+    --amber-bg:#FFFBEB;
+    --teal:#0D9488;
+    --teal-bg:#F0FDFA;
+    --slate:#64748B;
+    --white:#ffffff;
+    --radius-sm:6px;
+    --radius:12px;
+    --radius-lg:18px;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px -12px rgba(30,64,175,.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    background:linear-gradient(180deg,#F5F8FF 0%, #EEF3FE 260px, #F7F9FC 600px);
+    min-height:100vh;
+    padding-bottom:80px;
+  }
+  a{color:var(--blue-600);}
+
+  /* ---------- Header ---------- */
+  .topband{
+    background: linear-gradient(120deg, var(--blue-700) 0%, var(--blue-500) 60%, #60A5FA 100%);
+    color:#fff;
+    padding:36px 24px 46px;
+  }
+  .topband-inner{max-width:1040px;margin:0 auto;}
+  .eyebrow-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .flask{
+    width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.16);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .flask svg{width:19px;height:19px;}
+  .topband h1{font-size:28px;line-height:1.25;margin:0 0 8px;font-weight:800;letter-spacing:-0.01em;}
+  .topband p{margin:0;max-width:620px;font-size:15px;line-height:1.65;color:#DCE8FF;}
+
+  .wrap{max-width:1040px;margin:-28px auto 0;padding:0 24px;position:relative;z-index:2;}
+
+  /* ---------- Sections ---------- */
+  .card{
+    background:#fff;
+    border:1px solid var(--gray-200);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    padding:26px 28px 30px;
+    margin-bottom:22px;
+  }
+  .sec-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;}
+  .sec-num{
+    width:30px;height:30px;border-radius:9px;background:var(--blue-50);
+    color:var(--blue-700);font-weight:700;font-size:14px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+    border:1px solid var(--blue-100);
+  }
+  .sec-head h2{margin:0 0 3px;font-size:17px;font-weight:700;color:var(--ink);}
+  .sec-head p{margin:0;font-size:13.5px;color:var(--slate);line-height:1.55;}
+
+  .btn{
+    font-family:var(--sans);
+    border:1px solid var(--gray-300);
+    background:#fff;
+    color:var(--ink-soft);
+    padding:8px 15px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.12s border-color, .12s background, .12s color;
+  }
+  .btn:hover{border-color:var(--blue-300); color:var(--blue-700); background:var(--blue-50);}
+  .btn-primary{background:var(--blue-600);border-color:var(--blue-600);color:#fff;}
+  .btn-primary:hover{background:var(--blue-700);border-color:var(--blue-700);color:#fff;}
+  .btn-primary.big{padding:13px 26px;font-size:15px;border-radius:10px;}
+  .btn-success{background:#198754;border-color:#198754;color:#fff;}
+  .btn-success:hover{background:#146c43;border-color:#146c43;color:#fff;}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--slate);}
+  .btn-ghost:hover{background:var(--gray-100);color:var(--ink);}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;}
+
+  textarea.paste-area{
+    width:100%;min-height:160px;resize:vertical;border:1.5px dashed var(--blue-200);
+    background:var(--blue-50);border-radius:10px;padding:12px 14px;font-family:var(--mono);
+    font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;
+  }
+  textarea.paste-area:focus{outline:none;border-color:var(--blue-400);background:#fff;}
+  .hint{font-size:12.5px;color:var(--slate);margin:-6px 0 14px;}
+
+  /* ---------- Plate grids ---------- */
+  .grid-scroll{overflow-x:auto;border-radius:10px;}
+  table.plate{border-collapse:collapse;font-family:var(--mono);}
+  table.plate th{
+    font-size:11px;color:var(--slate);font-weight:600;padding:4px 2px;text-align:center;
+    min-width:52px;
+  }
+  table.plate th.rowhead{min-width:26px;}
+  table.plate td.rowhead{
+    font-size:11.5px;font-weight:700;color:var(--ink-soft);text-align:center;
+    background:var(--gray-50);width:26px;
+  }
+  .od-input{
+    width:58px;height:32px;text-align:center;border:1px solid var(--gray-200);
+    border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--ink);
+    background:#fff;
+  }
+  .od-input:focus{outline:2px solid var(--blue-300);outline-offset:-1px;border-color:var(--blue-500);}
+  td.odcell{padding:2px;}
+
+  .well-cell{
+    touch-action: none;
+    width:50px;height:38px;border:1px solid var(--gray-200);border-radius:6px;
+    text-align:center;vertical-align:middle;font-size:11px;font-weight:700;color:var(--ink-soft);
+    background:#fff;cursor:pointer;user-select:none;line-height:1.15;
+  }
+  .well-cell .rep{display:block;font-weight:500;font-size:9px;opacity:.85;}
+  .well-cell.type-standard{background:var(--blue-500);color:#fff;border-color:var(--blue-600);}
+  .well-cell.type-unknown{background:var(--teal);color:#fff;border-color:#0f766e;}
+  .well-cell.type-control{background:var(--amber);color:#fff;border-color:#d97706;}
+  .well-cell.type-blank{background:var(--slate);color:#fff;border-color:#475569;}
+  .well-cell.selecting{box-shadow:inset 0 0 0 2px var(--blue-700);}
+  td.wellcell{padding:2px;}
+
+  /* ---------- Controls layout ---------- */
+  .ctrl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .field input[type=text], .field input[type=number], .field select{
+    width:100%;padding:8px 10px;border:1px solid var(--gray-300);border-radius:8px;
+    font-family:var(--sans);font-size:13.5px;color:var(--ink);background:#fff;
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--blue-200);outline-offset:0;border-color:var(--blue-500);}
+  .seg{display:flex;border:1px solid var(--gray-300);border-radius:8px;overflow:hidden;width:fit-content;}
+  .seg button{
+    border:none;background:#fff;padding:8px 14px;font-size:13px;font-weight:600;color:var(--slate);
+    cursor:pointer;border-right:1px solid var(--gray-300);font-family:var(--sans);
+  }
+  .seg button:last-child{border-right:none;}
+  .seg button.active{background:var(--blue-600);color:#fff;}
+
+  .type-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .type-btn{
+    padding:9px 16px;border-radius:9px;border:1.5px solid var(--gray-300);background:#fff;
+    font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;
+    color:var(--ink-soft);
+  }
+  .type-btn .dot{width:10px;height:10px;border-radius:3px;}
+  .type-btn[data-type=standard] .dot{background:var(--blue-500);}
+  .type-btn[data-type=unknown] .dot{background:var(--teal);}
+  .type-btn[data-type=control] .dot{background:var(--amber);}
+  .type-btn[data-type=blank] .dot{background:var(--slate);}
+  .type-btn[data-type=erase] .dot{background:#fff;border:1.5px solid var(--gray-400);}
+  .type-btn.active{border-color:var(--blue-600);background:var(--blue-50);color:var(--blue-700);}
+
+  .note-box{
+    background:var(--blue-50);border:1px solid var(--blue-100);border-radius:9px;
+    padding:11px 14px;font-size:12.5px;color:var(--blue-900);line-height:1.55;margin-bottom:16px;
+  }
+
+  .std-table{width:100%;border-collapse:collapse;margin-top:8px;}
+  .std-table th{text-align:left;font-size:12px;color:var(--slate);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--gray-200);}
+  .std-table td{padding:6px 8px;border-bottom:1px solid var(--gray-100);font-size:13.5px;}
+  .std-table input{width:130px;padding:6px 9px;border:1px solid var(--gray-300);border-radius:7px;font-size:13px;font-family:var(--mono);}
+  .lvl-chip{
+    display:inline-flex;align-items:center;justify-content:center;width:34px;height:24px;
+    background:var(--blue-500);color:#fff;border-radius:6px;font-size:12px;font-weight:700;font-family:var(--mono);
+  }
+
+  .checkline{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;font-size:13.5px;color:var(--ink-soft);}
+  .checkline input{margin-top:3px;}
+  .radioline{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:13.5px;color:var(--ink-soft);}
+  fieldset{border:none;padding:0;margin:0 0 18px;}
+  legend{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;padding:0;}
+
+  .empty-msg{font-size:13.5px;color:var(--slate);background:var(--gray-50);border:1px dashed var(--gray-300);border-radius:9px;padding:14px 16px;}
+
+  .action-bar{display:flex;justify-content:center;gap:12px;margin:6px 0 30px;}
+
+  /* ---------- Results ---------- */
+  #results{display:none;}
+  .fit-summary{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:20px;}
+  .fit-stat{
+    background:var(--blue-50);border:1px solid var(--blue-100);border-radius:11px;
+    padding:12px 18px;min-width:130px;
+  }
+  .fit-stat .lab{font-size:11.5px;color:var(--blue-700);font-weight:600;text-transform:none;}
+  .fit-stat .val{font-size:18px;font-weight:800;color:var(--blue-900);font-family:var(--mono);margin-top:2px;}
+  .eqn{font-family:var(--mono);font-size:13px;background:var(--gray-50);border-radius:9px;padding:12px 15px;color:var(--ink-soft);margin-bottom:20px;overflow-x:auto;}
+
+  table.results-table{width:100%;border-collapse:collapse;margin-bottom:26px;font-size:13.5px;}
+  table.results-table th{
+    text-align:left;background:var(--blue-50);color:var(--blue-800);font-weight:700;
+    padding:9px 12px;border-bottom:2px solid var(--blue-100);font-size:12.5px;
+  }
+  table.results-table td{padding:9px 12px;border-bottom:1px solid var(--gray-100);font-family:var(--mono);color:var(--ink-soft);}
+  table.results-table tr:hover td{background:var(--gray-50);}
+  .tbl-title{font-size:14.5px;font-weight:700;color:var(--ink);margin:22px 0 10px;}
+  .pill{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--sans);}
+  .pill-standard{background:var(--blue-100);color:var(--blue-700);}
+  .pill-unknown{background:#CCFBF1;color:var(--teal);}
+  .pill-control{background:var(--amber-bg);color:#B45309;}
+
+  @media (max-width:720px){
+    .ctrl-grid{grid-template-columns:1fr 1fr;}
+    .topband h1{font-size:23px;}
+  }
+
+  /* ---------- Language & Offline Switcher ---------- */
+  .language-switcher { 
+    position: absolute; top: 16px; right: 24px; 
+    display: flex; align-items: center; gap: 8px; z-index: 1000; 
+  }
+  .lang-btn { 
+    padding: 6px 12px; border: 1px solid var(--gray-300); background: #fff; 
+    cursor: pointer; border-radius: 20px; font-size: 13px; font-weight: 600; 
+    color: var(--slate); transition: all 0.2s ease; font-family: var(--sans);
+  }
+  .lang-btn:hover { background: var(--gray-100); color: var(--ink); }
+  .lang-btn.active { 
+    background: var(--blue-600); color: #fff; border-color: var(--blue-600); 
+    box-shadow: var(--shadow); 
+  }
+  #download-btn { 
+    font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 20px; 
+    border: 1px solid var(--gray-300); background: #fff; cursor: pointer; 
+    text-decoration: none; color: var(--ink); transition: all 0.2s ease; 
+    white-space: nowrap; box-shadow: var(--shadow); font-family: var(--sans);
+  }
+  #download-btn:hover { background: var(--gray-100); transform: translateY(-1px); }
+  
+  @media (max-width:720px){
+    .language-switcher { position: relative; top: 0; right: 0; justify-content: center; padding: 16px 0 0; background: var(--blue-700); }
+  }
+</style>
+</head>
+<body>
+
+<div class="language-switcher">
+  <a href="https://drive.google.com/file/d/1HFc88ZmgQsnKBEk5XC2jIQ5PcxQSXMC-/view?usp=sharing" id="download-btn" rel="noopener noreferrer" target="_blank" data-text="download-btn">下載離線版</a>
+  <button class="lang-btn active" id="lang-zh" onclick="switchLanguage('zh')">中文</button> 
+  <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">English</button>
+</div>
+
+<div class="topband">
+  <div class="topband-inner">
+    <div class="eyebrow-row">
+    </div>
+    <h1 data-text="main-title">ELISA 數據分析工具</h1>
+    <p data-text="main-desc">貼上你的 OD 原始數據、指定孔位配置與標準品濃度，選擇擬合模型，即可自動產生標準曲線並換算樣品濃度。</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 1. Data Import -->
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">1</div>
+      <div>
+        <h2 data-text="sec1-title">數據匯入</h2>
+        <p data-text="sec1-desc">將 Word、Excel 或 CSV 中的 OD 原始數據直接貼到下方文字框（純數字格式），或使用示範數據快速體驗。</p>
+      </div>
+    </div>
+    <div id="importInputArea">
+      <textarea id="pasteArea" class="paste-area" placeholder="在此貼上 OD 數據（以 Tab 或逗號分隔，8 列 × 12 欄），將自動填入 96 孔盤&#10;Paste tab/comma separated OD values here…" data-placeholder="ph-paste-area"></textarea>
+      <div class="btn-row" style="margin-bottom:18px;">
+        <button class="btn" id="btnDemo" data-text="btn-demo">載入示範數據</button>
+      </div>
+    </div>
+    
+    <div id="importGridArea" style="display:none;">
+      <div class="btn-row" style="margin-bottom:14px; justify-content: flex-end;">
+        <span style="font-size:12.5px;color:var(--slate);margin-right:auto;align-self:center;" data-text="hint-micro-adjust">可於下方孔盤直接微調單個數值</span>
+        <button class="btn btn-ghost" id="btnClearData" data-text="btn-clear-data">清除數據並重新匯入</button>
+      </div>
+      <div class="grid-scroll" id="odGridWrap"></div>
+    </div>
+  </div>
+
+  <!-- 2. Well Assignment -->
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">2</div>
+      <div>
+        <h2 data-text="sec2-title">孔位指定</h2>
+        <p data-text="sec2-desc">選擇樣品類型，設定編號規則後，於下方 96 孔盤拖曳選取孔位即可自動依序標記。</p>
+      </div>
+    </div>
+
+    <div class="type-btns" id="typeBtns">
+      <button class="type-btn active" data-type="standard"><span class="dot"></span><span data-text="btn-type-std">標準品 Standard</span></button>
+      <button class="type-btn" data-type="unknown"><span class="dot"></span><span data-text="btn-type-unk">未知樣品 Unknown</span></button>
+      <button class="type-btn" data-type="control"><span class="dot"></span><span data-text="btn-type-ctrl">對照組 Control</span></button>
+      <button class="type-btn" data-type="blank"><span class="dot"></span><span data-text="btn-type-blk">空白 Blank</span></button>
+      <button class="type-btn" data-type="erase"><span class="dot"></span><span data-text="btn-type-erase">清除標記 Erase</span></button>
+    </div>
+
+    <div class="ctrl-grid">
+      <div class="field">
+        <label data-text="lbl-start-num">起始編號 Start number</label>
+        <input type="number" id="startNumber" value="1" min="1">
+      </div>
+      <div class="field">
+        <label data-text="lbl-fill-dir">樣品填充方向 Fill direction</label>
+        <div class="seg" id="fillDirSeg">
+          <button class="active" data-val="down">↓</button>
+          <button data-val="right">→</button>
+        </div>
+      </div>
+      <div class="field">
+        <label data-text="lbl-replicates">重複次數 Replicates</label>
+        <input type="number" id="replicates" value="2" min="1" max="12">
+      </div>
+      <div class="field">
+        <label data-text="lbl-rep-dir">重複方向 Replicates direction</label>
+        <div class="seg" id="repDirSeg">
+          <button class="active" data-val="right">→</button>
+          <button data-val="down">↓</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-box" data-text="note-well-assign">備註：請將 0 pg/mL 的標準品（zero well）指定為 Blank，系統會自動處理空白值。標準曲線建議至少使用 5–7 個濃度點。</div>
+
+    <div class="btn-row" style="margin-bottom:14px;">
+      <span style="font-size:12.5px;color:var(--slate);align-self:center;" data-text="hint-drag">在孔盤上拖曳滑鼠以選取孔位 →</span>
+      <button class="btn btn-ghost" id="btnClearLayout" style="margin-left:auto;" data-text="btn-clear-layout">清除佈局</button>
+    </div>
+    <div class="grid-scroll" id="wellGridWrap"></div>
+  </div>
+
+  <!-- 3. Standard Concentrations -->
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">3</div>
+      <div>
+        <h2 data-text="sec3-title">標準品濃度</h2>
+        <p data-text="sec3-desc">請於下方 S1 輸入基準濃度，再以稀釋倍數自動填入其餘梯度。</p>
+      </div>
+    </div>
+
+    <div class="ctrl-grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="field">
+        <label data-text="lbl-conc-unit">濃度單位 Unit</label>
+        <select id="concUnit">
+          <option>pg/mL</option>
+          <option selected>ng/mL</option>
+          <option>µg/mL</option>
+          <option>mg/mL</option>
+          <option>mIU/mL</option>
+          <option>IU/mL</option>
+        </select>
+      </div>
+      <div class="field">
+        <label data-text="lbl-fold-mode">倍數方式 Multiply / Divide</label>
+        <div class="seg" id="foldModeSeg">
+          <button class="active" data-val="divide" data-text="btn-divide">除以 Divide</button>
+          <button data-val="multiply" data-text="btn-multiply">乘以 Multiply</button>
+        </div>
+      </div>
+      <div class="field">
+        <label data-text="lbl-folds">稀釋倍數 Folds</label>
+        <input type="number" id="foldsInput" value="2" min="1.01" step="0.1">
+      </div>
+      <div class="field" style="display:flex;align-items:flex-end;">
+        <button class="btn btn-primary" id="btnAutofill" style="width:100%;" data-text="btn-autofill">自動填入 Autofill-in</button>
+      </div>
+    </div>
+
+    <div id="stdConcWrap"><div class="empty-msg" data-text="msg-empty-std">請先於「孔位指定」區域標記標準品（Standard）孔位。</div></div>
+  </div>
+
+  <!-- 4. Method Settings -->
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">4</div>
+      <div>
+        <h2 data-text="sec4-title">方法設定</h2>
+        <p data-text="sec4-desc">命名實驗資訊、選擇回歸模型與正規化方式，設定完成後即可開始分析。</p>
+      </div>
+    </div>
+
+    <div class="ctrl-grid">
+      <div class="field"><label data-text="lbl-exp-name">實驗名稱 Experiment name</label><input type="text" id="expName" placeholder="Experiment 1" data-placeholder="ph-exp-name"></div>
+      <div class="field"><label data-text="lbl-sample-name">樣品名稱 Sample</label><input type="text" id="sampleName" placeholder="Serum sample" data-placeholder="ph-sample-name"></div>
+      <div class="field"><label data-text="lbl-target-name">目標蛋白 Target</label><input type="text" id="targetName" placeholder="e.g. TNF-alpha" data-placeholder="ph-target-name"></div>
+      <div class="field">
+        <label data-text="lbl-plot-scale">繪圖尺度 Plot display (僅改變視覺，不影響計算)</label>
+        <select id="plotScale">
+          <option value="normal">Normal scale</option>
+          <option value="semilog">Semi-log scale</option>
+          <option value="loglog">Log-log scale</option>
+        </select>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend data-text="lgd-reg-model">回歸模型 Regression model</legend>
+      <div class="radioline"><input type="radio" name="regModel" id="rm4pl" value="4pl" checked><label for="rm4pl" data-text="lbl-4pl">4PL（四參數邏輯回歸，建議）</label></div>
+      <div class="radioline"><input type="radio" name="regModel" id="rm5pl" value="5pl"><label for="rm5pl" data-text="lbl-5pl">5PL（五參數邏輯回歸）</label></div>
+      <div class="radioline"><input type="radio" name="regModel" id="rmlin" value="linear"><label for="rmlin" data-text="lbl-linear">Linear（線性回歸）</label></div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-text="lgd-weight">權重方法 Weighting method</legend>
+      <div class="radioline"><input type="radio" name="weightMethod" id="wtNone" value="none" checked><label for="wtNone" data-text="lbl-wt-none">無權重 (Unweighted)</label></div>
+      <div class="radioline"><input type="radio" name="weightMethod" id="wtY2" value="1/y2"><label for="wtY2" data-text="lbl-wt-y2">1/Y² (增強低濃度準確度，內建防發散上限)</label></div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-text="lgd-norm">正規化方法 Normalization method</legend>
+      <div class="radioline"><input type="radio" name="normMethod" id="normNone" value="none" checked><label for="normNone" data-text="lbl-norm-none">不正規化 No normalization</label></div>
+      <div class="radioline"><input type="radio" name="normMethod" id="normMax" value="max100"><label for="normMax" data-text="lbl-norm-max">將最大反應值設為 100%</label></div>
+      <div class="radioline"><input type="radio" name="normMethod" id="normMinMax" value="minmax"><label for="normMinMax" data-text="lbl-norm-minmax">將最大反應值設為 100%、最小值設為 0%</label></div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-text="lgd-other">其他設定 Other settings</legend>
+      <div class="checkline"><input type="checkbox" id="blankAsStd"><label for="blankAsStd" data-text="lbl-blank-std">將 Blank 作為標準品數據（0 濃度點）</label></div>
+      <div class="checkline"><input type="checkbox" id="subtractMin"><label for="subtractMin" data-text="lbl-sub-min">從所有 OD 值中扣除 Blank / 最小 OD 值</label></div>
+    </fieldset>
+
+    <div class="action-bar">
+      <button class="btn btn-primary big" id="btnAnalyze" data-text="btn-analyze">開始分析 Analyze</button>
+      <button class="btn big" id="btnClearAll" data-text="btn-clear-all">清除所有設定</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card" id="results">
+    <div class="sec-head" style="align-items:center;">
+      <div class="sec-num">✓</div>
+      <div style="flex-grow:1;">
+        <h2 id="resultsTitle" style="margin-bottom:0;" data-text="res-title">分析結果</h2>
+        <p style="margin-top:4px;" data-text="res-desc">以下為擬合的標準曲線與樣品濃度換算結果。</p>
+      </div>
+      <button class="btn btn-success" id="btnExportCSV" style="display:none;" data-text="btn-export-csv">匯出 CSV</button>
+    </div>
+
+    <div class="fit-summary" id="fitStats"></div>
+    <div class="eqn" id="eqnBox"></div>
+
+    <!-- 改用 div 以容納 Plotly.js 生成的圖表 -->
+    <div class="grid-scroll" style="display:flex; justify-content:center; margin-bottom: 24px;">
+      <div id="chartDiv" style="width:100%; max-width:640px; height:420px; border:1px solid var(--gray-200); border-radius:10px; overflow:hidden;"></div>
+    </div>
+
+    <div class="tbl-title" data-text="title-std-curve">標準曲線數據 Standard curve data</div>
+    <div class="grid-scroll"><table class="results-table" id="stdResultsTable"></table></div>
+
+    <div class="tbl-title" data-text="title-sample-res">樣品濃度換算結果 Calculated sample concentrations</div>
+    <div class="grid-scroll"><table class="results-table" id="sampleResultsTable"></table></div>
+  </div>
+
+</div>
+
+<script>
+const translations = {
+  zh: {
+    "download-btn": "下載離線版",
+    "main-title": "ELISA 數據分析工具",
+    "main-desc": "貼上你的 OD 原始數據、指定孔位配置與標準品濃度，選擇擬合模型，即可自動產生標準曲線並換算樣品濃度。",
+    "sec1-title": "數據匯入",
+    "sec1-desc": "將 Word、Excel 或 CSV 中的 OD 原始數據直接貼到下方文字框（純數字格式），或使用示範數據快速體驗。",
+    "ph-paste-area": "在此貼上 OD 數據（以 Tab 或逗號分隔，8 列 × 12 欄），將自動填入 96 孔盤\nPaste tab/comma separated OD values here…",
+    "hint-micro-adjust": "可於下方孔盤直接微調單個數值",
+    "btn-clear-data": "清除數據並重新匯入",
+    "sec2-title": "孔位指定",
+    "sec2-desc": "選擇樣品類型，設定編號規則後，於下方 96 孔盤拖曳選取孔位即可自動依序標記。",
+    "btn-type-std": "標準品 Standard",
+    "btn-type-unk": "未知樣品 Unknown",
+    "btn-type-ctrl": "對照組 Control",
+    "btn-type-blk": "空白 Blank",
+    "btn-type-erase": "清除標記 Erase",
+    "lbl-start-num": "起始編號 Start number",
+    "lbl-fill-dir": "樣品填充方向 Fill direction",
+    "lbl-replicates": "重複次數 Replicates",
+    "lbl-rep-dir": "重複方向 Replicates direction",
+    "note-well-assign": "備註：請將 0 pg/mL 的標準品（zero well）指定為 Blank，系統會自動處理空白值。標準曲線建議至少使用 5–7 個濃度點。",
+    "hint-drag": "在孔盤上拖曳滑鼠以選取孔位 →",
+    "btn-clear-layout": "清除佈局",
+    "sec3-title": "標準品濃度",
+    "sec3-desc": "請於下方 S1 輸入基準濃度，再以稀釋倍數自動填入其餘梯度。",
+    "lbl-conc-unit": "濃度單位 Unit",
+    "lbl-fold-mode": "倍數方式 Multiply / Divide",
+    "btn-divide": "除以 Divide",
+    "btn-multiply": "乘以 Multiply",
+    "lbl-folds": "稀釋倍數 Folds",
+    "btn-autofill": "自動填入 Autofill-in",
+    "msg-empty-std": "請先於「孔位指定」區域標記標準品（Standard）孔位。",
+    "sec4-title": "方法設定",
+    "sec4-desc": "命名實驗資訊、選擇回歸模型與正規化方式，設定完成後即可開始分析。",
+    "lbl-exp-name": "實驗名稱 Experiment name",
+    "ph-exp-name": "Experiment 1",
+    "lbl-sample-name": "樣品名稱 Sample",
+    "ph-sample-name": "Serum sample",
+    "lbl-target-name": "目標蛋白 Target",
+    "ph-target-name": "e.g. TNF-alpha",
+    "lbl-plot-scale": "繪圖尺度 Plot display (僅改變視覺，不影響計算)",
+    "lgd-reg-model": "回歸模型 Regression model",
+    "lbl-4pl": "4PL（四參數邏輯回歸，建議）",
+    "lbl-5pl": "5PL（五參數邏輯回歸）",
+    "lbl-linear": "Linear（線性回歸）",
+    "lgd-weight": "權重方法 Weighting method",
+    "lbl-wt-none": "無權重 (Unweighted)",
+    "lbl-wt-y2": "1/Y² (增強低濃度準確度，內建防發散上限)",
+    "lgd-norm": "正規化方法 Normalization method",
+    "lbl-norm-none": "不正規化 No normalization",
+    "lbl-norm-max": "將最大反應值設為 100%",
+    "lbl-norm-minmax": "將最大反應值設為 100%、最小值設為 0%",
+    "lgd-other": "其他設定 Other settings",
+    "lbl-blank-std": "將 Blank 作為標準品數據（0 濃度點）",
+    "lbl-sub-min": "從所有 OD 值中扣除 Blank / 最小 OD 值",
+    "btn-demo": "載入示範數據",
+    "btn-analyze": "開始分析 Analyze",
+    "btn-clear-all": "清除所有設定",
+    "res-title": "分析結果",
+    "res-desc": "以下為擬合的標準曲線與樣品濃度換算結果。",
+    "btn-export-csv": "匯出 CSV",
+    "title-std-curve": "標準曲線數據 Standard curve data",
+    "title-sample-res": "樣品濃度換算結果 Calculated sample concentrations",
+    "th-grad": "梯度",
+    "th-conc-val": "濃度值 Concentration",
+    "th-wells": "孔位數 Wells",
+    "txt-wells-unit": "孔",
+    "th-well-id": "孔位",
+    "th-known-conc": "已知濃度",
+    "th-avg-resp": "平均反應值 (已處理)",
+    "th-cv": "CV%",
+    "th-calc-conc": "回推濃度 / 換算濃度",
+    "th-recovery": "回收率%",
+    "th-sample-id": "樣品編號",
+    "th-type": "類型",
+    "th-avg-od": "平均 OD",
+    "type-unknown": "Unknown",
+    "type-control": "Control",
+    "alert-lack-std": "可用的標準品數據點不足（至少需要 3 個濃度點且已輸入對應濃度值），請確認孔位指定與標準品濃度設定。",
+    "alert-dup-std": "標準品濃度存在重複數值，請確認標準曲線設定是否正確。",
+    "alert-norm-max": "無法進行 Max = 100% 正規化：反應值皆為 0。",
+    "alert-norm-minmax": "無法進行 Min-Max 正規化：反應值無有效差異。",
+    "alert-linear-min": "Linear 至少需要 3 個有效濃度點。",
+    "alert-linear-slope": "線性標準曲線斜率接近 0，無法反算濃度。",
+    "alert-5pl-min": "5PL 至少需要 6 個有效濃度點以避免過度擬合。",
+    "alert-4pl-min": "4PL 至少需要 5 個有效濃度點。",
+    "alert-mark-std": "請先於孔位指定區域標記標準品孔位。",
+    "alert-input-std1": "請先輸入第一個（最高）標準品濃度數值。",
+    "confirm-rep-short": "最後一組將不足數。是否繼續？",
+    "chart-x-conc": "濃度 Concentration",
+    "chart-y-od": "OD 值",
+    "chart-y-resp": "反應值 (%)",
+    "chart-trace-curve": "擬合曲線",
+    "chart-trace-data": "標準品數值",
+    "chart-hover-conc": "濃度:",
+    "chart-hover-od": "OD:",
+    "chart-hover-resp": "反應值:",
+    "chart-empty": "無有效正值資料點可供對數尺度繪圖",
+    "fit-model": "回歸模型",
+    "fit-pts": "標準點數",
+    "fit-unit": "濃度單位"
+  },
+  en: {
+    "download-btn": "Offline Version",
+    "main-title": "ELISA Data Analysis Tool",
+    "main-desc": "Paste your raw OD data, specify well assignments and standard concentrations, select a fitting model to automatically generate a standard curve and calculate sample concentrations.",
+    "sec1-title": "Data Import",
+    "sec1-desc": "Paste raw OD data from Word, Excel, or CSV directly into the text box below (numbers only), or use demo data to test.",
+    "ph-paste-area": "Paste OD data here (Tab or comma separated, 8 rows × 12 cols)...",
+    "hint-micro-adjust": "You can micro-adjust individual values directly in the plate grid below",
+    "btn-clear-data": "Clear data and re-import",
+    "sec2-title": "Well Assignment",
+    "sec2-desc": "Select sample type, set numbering rules, and drag over the 96-well plate below to automatically mark wells.",
+    "btn-type-std": "Standard",
+    "btn-type-unk": "Unknown",
+    "btn-type-ctrl": "Control",
+    "btn-type-blk": "Blank",
+    "btn-type-erase": "Erase",
+    "lbl-start-num": "Start number",
+    "lbl-fill-dir": "Fill direction",
+    "lbl-replicates": "Replicates",
+    "lbl-rep-dir": "Replicates direction",
+    "note-well-assign": "Note: Assign the 0 pg/mL standard (zero well) as Blank, the system will handle it automatically. A standard curve of 5–7 concentration points is recommended.",
+    "hint-drag": "Drag mouse over the plate to select wells →",
+    "btn-clear-layout": "Clear layout",
+    "sec3-title": "Standard Concentrations",
+    "sec3-desc": "Enter the highest concentration at S1 below, then autofill the remaining gradient using a dilution factor.",
+    "lbl-conc-unit": "Unit",
+    "lbl-fold-mode": "Multiply / Divide",
+    "btn-divide": "Divide",
+    "btn-multiply": "Multiply",
+    "lbl-folds": "Folds",
+    "btn-autofill": "Autofill-in",
+    "msg-empty-std": "Please mark Standard wells in the 'Well Assignment' section first.",
+    "sec4-title": "Method Settings",
+    "sec4-desc": "Name the experiment, choose the regression model and normalization method, then start the analysis.",
+    "lbl-exp-name": "Experiment name",
+    "ph-exp-name": "Experiment 1",
+    "lbl-sample-name": "Sample",
+    "ph-sample-name": "Serum sample",
+    "lbl-target-name": "Target",
+    "ph-target-name": "e.g. TNF-alpha",
+    "lbl-plot-scale": "Plot display (visual only, does not affect calc)",
+    "lgd-reg-model": "Regression model",
+    "lbl-4pl": "4PL (Four-Parameter Logistic, recommended)",
+    "lbl-5pl": "5PL (Five-Parameter Logistic)",
+    "lbl-linear": "Linear Regression",
+    "lgd-weight": "Weighting method",
+    "lbl-wt-none": "Unweighted",
+    "lbl-wt-y2": "1/Y² (Enhances low-concentration accuracy)",
+    "lgd-norm": "Normalization method",
+    "lbl-norm-none": "No normalization",
+    "lbl-norm-max": "Set maximum response to 100%",
+    "lbl-norm-minmax": "Set max response to 100%, min to 0%",
+    "lgd-other": "Other settings",
+    "lbl-blank-std": "Treat Blank as standard data (0 concentration)",
+    "lbl-sub-min": "Subtract Blank / Minimum OD from all values",
+    "btn-demo": "Load Demo Data",
+    "btn-analyze": "Analyze",
+    "btn-clear-all": "Clear All Settings",
+    "res-title": "Analysis Results",
+    "res-desc": "Below are the fitted standard curve and calculated sample concentrations.",
+    "btn-export-csv": "Export CSV",
+    "title-std-curve": "Standard curve data",
+    "title-sample-res": "Calculated sample concentrations",
+    "th-grad": "Gradient",
+    "th-conc-val": "Concentration",
+    "th-wells": "Wells",
+    "txt-wells-unit": "wells",
+    "th-well-id": "Well ID",
+    "th-known-conc": "Known Conc.",
+    "th-avg-resp": "Avg Response",
+    "th-cv": "CV%",
+    "th-calc-conc": "Calculated Conc.",
+    "th-recovery": "Recovery%",
+    "th-sample-id": "Sample ID",
+    "th-type": "Type",
+    "th-avg-od": "Avg OD",
+    "type-unknown": "Unknown",
+    "type-control": "Control",
+    "alert-lack-std": "Insufficient standard points (at least 3 needed). Please check well assignments and concentration inputs.",
+    "alert-dup-std": "Duplicate standard concentrations detected. Please check standard curve settings.",
+    "alert-norm-max": "Cannot apply Max = 100% normalization: All responses are 0.",
+    "alert-norm-minmax": "Cannot apply Min-Max normalization: No significant difference in responses.",
+    "alert-linear-min": "Linear regression requires at least 3 valid concentration points.",
+    "alert-linear-slope": "Linear standard curve slope is close to 0, unable to calculate concentrations.",
+    "alert-5pl-min": "5PL requires at least 6 valid concentration points to avoid overfitting.",
+    "alert-4pl-min": "4PL requires at least 5 valid concentration points.",
+    "alert-mark-std": "Please mark Standard wells in the 'Well Assignment' area first.",
+    "alert-input-std1": "Please enter the first (highest) standard concentration value.",
+    "confirm-rep-short": "The last group will be incomplete. Continue?",
+    "chart-x-conc": "Concentration",
+    "chart-y-od": "OD Value",
+    "chart-y-resp": "Response (%)",
+    "chart-trace-curve": "Fitted Curve",
+    "chart-trace-data": "Standard Points",
+    "chart-hover-conc": "Conc:",
+    "chart-hover-od": "OD:",
+    "chart-hover-resp": "Response:",
+    "chart-empty": "No valid positive data points available for log scale plotting",
+    "fit-model": "Model",
+    "fit-pts": "Std Points",
+    "fit-unit": "Unit"
+  }
+};
+
+let currentLanguage = 'zh';
+
+function switchLanguage(lang) {
+  currentLanguage = lang;
+  // 切換按鈕的 active 狀態
+  document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+  
+  // 遍歷所有帶有 data-text 的元素並替換文字
+  const elements = document.querySelectorAll('[data-text]');
+  elements.forEach(el => {
+    const key = el.getAttribute('data-text');
+    if (translations[lang][key]) {
+      if (el.tagName === 'INPUT' && el.type === 'text') {
+        el.placeholder = translations[lang][key];
+      } else {
+        el.innerHTML = translations[lang][key];
+      }
+    }
+  });
+  
+  // 遍歷所有帶有 data-placeholder 的元素 (若有的話)
+  const placeholderElements = document.querySelectorAll('[data-placeholder]');
+  placeholderElements.forEach(el => {
+    const key = el.getAttribute('data-placeholder');
+    if (translations[lang][key]) {
+      el.placeholder = translations[lang][key];
+    }
+  });
+}
+
+(function(){
+  const ROWS = ['A','B','C','D','E','F','G','H'];
+  const COLS = 12;
+
+  let wells = {}; 
+  ROWS.forEach(r=>{ for(let c=1;c<=COLS;c++){ wells[r+c] = {od:null, type:null, level:null, rep:null}; } });
+
+  let standardConc = {}; 
+  let currentType = 'standard';
+  let isDragging = false;
+  let selection = new Set();
+
+  function buildOdGrid(){
+    let html = '<table class="plate"><thead><tr><th class="rowhead"></th>';
+    for(let c=1;c<=COLS;c++) html += `<th>${c}</th>`;
+    html += '</tr></thead><tbody>';
+    ROWS.forEach(r=>{
+      html += `<tr><td class="rowhead">${r}</td>`;
+      for(let c=1;c<=COLS;c++){
+        const id = r+c;
+        html += `<td class="odcell"><input class="od-input" type="text" inputmode="decimal" data-well="${id}" value=""></td>`;
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('odGridWrap').innerHTML = html;
+    document.querySelectorAll('.od-input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const id = e.target.dataset.well;
+        const v = parseFloat(e.target.value);
+        wells[id].od = isFinite(v) ? v : null;
+      });
+    });
+  }
+
+  function buildWellGrid(){
+    let html = '<table class="plate"><thead><tr><th class="rowhead"></th>';
+    for(let c=1;c<=COLS;c++) html += `<th>${c}</th>`;
+    html += '</tr></thead><tbody>';
+    ROWS.forEach(r=>{
+      html += `<tr><td class="rowhead">${r}</td>`;
+      for(let c=1;c<=COLS;c++){
+        const id = r+c;
+        html += `<td class="wellcell"><div class="well-cell" data-well="${id}"></div></td>`;
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('wellGridWrap').innerHTML = html;
+    wireWellGrid();
+    renderWellGrid();
+  }
+
+  let dragStartId = null;
+
+  function wellRowCol(id){ return {row: ROWS.indexOf(id[0]), col: parseInt(id.slice(1),10)-1}; }
+
+  function rectSelectionFrom(startId, endId){
+    const a = wellRowCol(startId), b = wellRowCol(endId);
+    const r0 = Math.min(a.row,b.row), r1 = Math.max(a.row,b.row);
+    const c0 = Math.min(a.col,b.col), c1 = Math.max(a.col,b.col);
+    const ids = new Set();
+    for(let r=r0;r<=r1;r++){
+      for(let c=c0;c<=c1;c++){
+        ids.add(ROWS[r] + (c+1));
+      }
+    }
+    return ids;
+  }
+
+  function updatePreview(idsSet){
+    document.querySelectorAll('.well-cell.selecting').forEach(c=>c.classList.remove('selecting'));
+    idsSet.forEach(id=>{
+      const cell = document.querySelector(`.well-cell[data-well="${id}"]`);
+      if(cell) cell.classList.add('selecting');
+    });
+  }
+
+  function cellFromPoint(x,y){
+    const el = document.elementFromPoint(x,y);
+    if(!el) return null;
+    const cell = el.closest ? el.closest('.well-cell') : null;
+    return cell ? cell.dataset.well : null;
+  }
+
+  function wireWellGrid(){
+    document.querySelectorAll('.well-cell').forEach(cell=>{
+      cell.addEventListener('mousedown', e=>{
+        e.preventDefault();
+        isDragging = true;
+        dragStartId = cell.dataset.well;
+        selection = new Set([dragStartId]);
+        updatePreview(selection);
+      });
+      cell.addEventListener('touchstart', e=>{
+        e.preventDefault();
+        isDragging = true;
+        dragStartId = cell.dataset.well;
+        selection = new Set([dragStartId]);
+        updatePreview(selection);
+      }, {passive:false});
+    });
+    document.addEventListener('mousemove', e=>{
+      if(!isDragging) return;
+      const id = cellFromPoint(e.clientX, e.clientY);
+      if(id){
+        selection = rectSelectionFrom(dragStartId, id);
+        updatePreview(selection);
+      }
+    });
+    document.addEventListener('touchmove', e=>{
+      e.preventDefault();
+      if(!isDragging) return;
+      const t = e.touches[0];
+      const id = cellFromPoint(t.clientX, t.clientY);
+      if(id){
+        selection = rectSelectionFrom(dragStartId, id);
+        updatePreview(selection);
+      }
+    }, {passive:false});
+    document.addEventListener('mouseup', finishSelection);
+    document.addEventListener('touchend', finishSelection);
+  }
+
+  function finishSelection(){
+    if(!isDragging) return;
+    isDragging = false;
+    if(selection.size>0) assignWells(selection, currentType);
+    document.querySelectorAll('.well-cell.selecting').forEach(c=>c.classList.remove('selecting'));
+    selection = new Set();
+    dragStartId = null;
+  }
+
+  function assignWells(idsSet, type){
+    const ids = [...idsSet];
+    if(type === 'erase'){
+      ids.forEach(id=>{ wells[id].type=null; wells[id].level=null; wells[id].rep=null; });
+      renderWellGrid();
+      renderStandardConcSection();
+      return;
+    }
+
+    const fillDir = document.querySelector('#fillDirSeg .active').dataset.val; 
+    const repDir = document.querySelector('#repDirSeg .active').dataset.val;   
+    const replicates = Math.max(1, parseInt(document.getElementById('replicates').value,10) || 1);
+    const startNum = parseInt(document.getElementById('startNumber').value,10) || 1;
+
+    if(ids.length % replicates !== 0 && type !== 'blank'){
+    const proceed = confirm(currentLanguage === 'zh' ? `目前選取 ${ids.length} 個孔，但設定為 ${replicates} 次重複，${translations[currentLanguage]['confirm-rep-short']}` : `Selected ${ids.length} wells, but set to ${replicates} replicates. ${translations[currentLanguage]['confirm-rep-short']}`);
+    if(!proceed) return;
+    }
+
+    const rc = ids.map(id=>wellRowCol(id));
+    const r0 = Math.min(...rc.map(p=>p.row)), r1 = Math.max(...rc.map(p=>p.row));
+    const c0 = Math.min(...rc.map(p=>p.col)), c1 = Math.max(...rc.map(p=>p.col));
+    const idSet = new Set(ids);
+
+    if(fillDir === repDir){
+      const order = [];
+      if(fillDir === 'down'){
+        for(let c=c0;c<=c1;c++){
+          for(let r=r0;r<=r1;r++){
+            const id = ROWS[r] + (c+1);
+            if(idSet.has(id)) order.push(id);
+          }
+        }
+      } else {
+        for(let r=r0;r<=r1;r++){
+          for(let c=c0;c<=c1;c++){
+            const id = ROWS[r] + (c+1);
+            if(idSet.has(id)) order.push(id);
+          }
+        }
+      }
+      order.forEach((id,i)=>{
+        const groupIdx = Math.floor(i/replicates);
+        const rep = (i % replicates) + 1;
+        wells[id].type = type;
+        wells[id].rep = rep;
+        wells[id].level = (type === 'blank') ? null : (startNum + groupIdx);
+      });
+      renderWellGrid();
+      renderStandardConcSection();
+      return;
+    }
+
+    const blockW = repDir === 'right' ? replicates : 1;
+    const blockH = repDir === 'right' ? 1 : replicates;
+    const numRows = r1 - r0 + 1, numCols = c1 - c0 + 1;
+    const numBlocksY = Math.ceil(numRows / blockH);
+    const numBlocksX = Math.ceil(numCols / blockW);
+    const blockOrder = [];
+
+    if(fillDir === 'down'){
+      for(let bx=0; bx<numBlocksX; bx++){
+        for(let by=0; by<numBlocksY; by++) blockOrder.push([by,bx]);
+      }
+    } else {
+      for(let by=0; by<numBlocksY; by++){
+        for(let bx=0; bx<numBlocksX; bx++) blockOrder.push([by,bx]);
+      }
+    }
+
+    let groupIdx = 0;
+    blockOrder.forEach(([by,bx])=>{
+      const rowStart = r0 + by*blockH, rowEnd = Math.min(r1, rowStart + blockH - 1);
+      const colStart = c0 + bx*blockW, colEnd = Math.min(c1, colStart + blockW - 1);
+      let repCounter = 0;
+      let usedBlock = false;
+      for(let r=rowStart; r<=rowEnd; r++){
+        for(let c=colStart; c<=colEnd; c++){
+          const id = ROWS[r] + (c+1);
+          if(!idSet.has(id)) continue;
+          usedBlock = true;
+          repCounter++;
+          wells[id].type = type;
+          wells[id].rep = repCounter;
+          wells[id].level = (type === 'blank') ? null : (startNum + groupIdx);
+        }
+      }
+      if(usedBlock) groupIdx++;
+    });
+
+    renderWellGrid();
+    renderStandardConcSection();
+  }
+
+  function prefixFor(type){
+    return type==='standard' ? 'S' : type==='unknown' ? 'U' : type==='control' ? 'C' : '';
+  }
+
+  function renderWellGrid(){
+    document.querySelectorAll('.well-cell').forEach(cell=>{
+      const id = cell.dataset.well;
+      const w = wells[id];
+      cell.className = 'well-cell';
+      let label = '';
+      if(w.type){
+        cell.classList.add('type-'+w.type);
+        if(w.type === 'blank'){
+          label = 'Blk';
+        } else {
+          label = prefixFor(w.type) + w.level;
+        }
+        const repTxt = w.rep ? `<span class="rep">r${w.rep}</span>` : '';
+        cell.innerHTML = label + repTxt;
+      } else {
+        cell.innerHTML = '';
+      }
+    });
+  }
+
+  function getStandardLevelsSorted(){
+    const levels = new Set();
+    Object.values(wells).forEach(w=>{ if(w.type==='standard' && w.level!=null) levels.add(w.level); });
+    return [...levels].sort((a,b)=>a-b);
+  }
+
+  function renderStandardConcSection(){
+    const levels = getStandardLevelsSorted();
+    const wrap = document.getElementById('stdConcWrap');
+    if(levels.length===0){
+      wrap.innerHTML = `<div class="empty-msg" data-text="msg-empty-std">${translations[currentLanguage]['msg-empty-std']}</div>`;
+      return;
+    }
+    let html = `<table class="std-table"><thead><tr><th data-text="th-grad">濃度梯度</th><th data-text="th-conc-val">濃度值 Concentration</th><th data-text="th-wells">孔位數 Wells</th></tr></thead><tbody>`;
+    levels.forEach(lv=>{
+      const nWells = Object.values(wells).filter(w=>w.type==='standard' && w.level===lv).length;
+      const val = standardConc[lv] != null ? standardConc[lv] : '';
+      html += `<tr>
+        <td><span class="lvl-chip">S${lv}</span></td>
+        <td><input type="text" inputmode="decimal" class="std-conc-input" id="std-conc-${lv}" data-level="${lv}" value="${val}"></td>
+        <td style="color:var(--slate);">${nWells} <span data-text="txt-wells-unit">孔</span></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+    document.querySelectorAll('.std-conc-input').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const lv = parseInt(e.target.dataset.level,10);
+        const v = parseFloat(e.target.value);
+        standardConc[lv] = (isFinite(v) && v >= 0) ? v : null;
+      });
+    });
+    switchLanguage(currentLanguage);
+  }
+
+  function autofillConcentrations(){
+    const levels = getStandardLevelsSorted();
+    if(levels.length===0){ alert(translations[currentLanguage]['alert-mark-std']); return; }
+    const baseInput = document.getElementById('std-conc-'+levels[0]);
+    const baseVal = parseFloat(baseInput.value);
+    if(isNaN(baseVal)){ alert(translations[currentLanguage]['alert-input-std1']); return; }
+    const fold = parseFloat(document.getElementById('foldsInput').value) || 2;
+    const mode = document.querySelector('#foldModeSeg .active').dataset.val;
+    standardConc[levels[0]] = baseVal;
+    let val = baseVal;
+    for(let i=1;i<levels.length;i++){
+      val = mode === 'divide' ? val/fold : val*fold;
+      standardConc[levels[i]] = val;
+      const el = document.getElementById('std-conc-'+levels[i]);
+      if(el) el.value = roundSig(val,5);
+    }
+  }
+
+  function roundSig(x, sig){
+  if(x===0) return 0;
+  const d = Math.ceil(Math.log10(Math.abs(x)));
+  const power = sig - d;
+  const factor = Math.pow(10, power);
+  return Math.round((x + Number.EPSILON) * factor) / factor;
+  }
+
+  function wireSeg(id){
+    document.querySelectorAll('#'+id+' button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  }
+
+  document.querySelectorAll('.type-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentType = btn.dataset.type;
+    });
+  });
+
+  function parsePasteText(text){
+    const lines = text.trim().split(/\r?\n/).filter(l=>l.trim().length>0);
+    lines.forEach((line, ri)=>{
+      if(ri>=ROWS.length) return;
+      const separator = line.includes('\t') ? '\t' : (line.includes(',') ? ',' : /\s+/);
+      const cells = line.split(separator).map(s => s.trim());
+      cells.forEach((val, ci)=>{
+        if(ci>=COLS) return;
+        const id = ROWS[ri] + (ci+1);
+        const num = parseFloat(val);
+        wells[id].od = isFinite(num) ? num : null;
+        const input = document.querySelector(`.od-input[data-well="${id}"]`);
+        if(input) input.value = isNaN(num) ? '' : num;
+      });
+    });
+  }
+
+  function showGridArea() {
+    document.getElementById('importInputArea').style.display = 'none';
+    document.getElementById('importGridArea').style.display = 'block';
+  }
+
+  function showInputArea() {
+    document.getElementById('importGridArea').style.display = 'none';
+    document.getElementById('importInputArea').style.display = 'block';
+  }
+
+  // 監聽 input 事件，偵測到任何輸入即自動解析並切換至 96 孔盤
+  document.getElementById('pasteArea').addEventListener('input', (e) => {
+    const text = e.target.value;
+    if(text.trim()) {
+      parsePasteText(text);
+      showGridArea();
+      
+      // 無縫切換：將游標焦點轉移至 A1 孔位輸入框，並定位在文字最末端
+      const a1Input = document.querySelector('.od-input[data-well="A1"]');
+      if(a1Input) {
+        a1Input.focus();
+        const len = a1Input.value.length;
+        a1Input.setSelectionRange(len, len);
+      }
+    }
+  });
+
+  document.getElementById('btnClearData').addEventListener('click', ()=>{
+    Object.keys(wells).forEach(id=> wells[id].od = null);
+    document.querySelectorAll('.od-input').forEach(inp=> inp.value='');
+    document.getElementById('pasteArea').value='';
+    showInputArea();
+    document.getElementById('results').style.display='none';
+    window.currentCsvExport = null;
+  });
+
+  function loadDemo(){
+    const rawODs = [
+      [0.2073, 0.4403, 0.4389, 0.4318, 0.1127, 0.4807, 0.4763, 0.4666, 0.1125, 0.4205, 0, 0],
+      [0.2946, 0.4712, 0.4603, 0.4661, 0.1101, 0.5017, 0.5008, 0.4859, 0.1103, 0.4552, 0, 0],
+      [0.374,  0.4777, 0.4847, 0.4748, 0.1468, 0.4815, 0.4885, 0.4892, 0.1219, 0.4364, 0, 0],
+      [0.5448, 0.5025, 0.4864, 0.4904, 0.1146, 0.4678, 0.465,  0.4563, 0.0929, 0.4492, 0, 0],
+      [0.7036, 0.5052, 0.4995, 0.4932, 0.1345, 0.5365, 0.551,  0.5398, 0.1285, 0.4312, 0, 0],
+      [1.0968, 0.5118, 0.5024, 0.4984, 0.1158, 0.5283, 0.5273, 0.5228, 0.1282, 0.4568, 0, 0],
+      [1.894,  0.5217, 0.5059, 0.5241, 0.1394, 0.5284, 0.5191, 0.518,  0.1345, 0.0757, 0, 0],
+      [3.0525, 0.5091, 0.5061, 0.5204, 0.1266, 0.4668, 0.4635, 0.4688, 0.1109, 0.0771, 0, 0]
+    ];
+
+    ROWS.forEach((r, ri) => {
+      for(let c = 1; c <= COLS; c++) {
+        const id = r + c;
+        const val = rawODs[ri][c-1];
+        wells[id].od = val !== 0 ? val : null;
+      }
+    });
+
+    document.querySelectorAll('.od-input').forEach(inp => {
+      const id = inp.dataset.well;
+      inp.value = wells[id].od !== null ? wells[id].od : '';
+    });
+
+    Object.keys(wells).forEach(id=>{ wells[id].type=null; wells[id].level=null; wells[id].rep=null; });
+
+    wells['A1'].type = 'blank';
+
+    const stdIds = ['H1','G1','F1','E1','D1','C1','B1'];
+    stdIds.forEach((id, i) => {
+      wells[id].type = 'standard';
+      wells[id].rep = 1;
+      wells[id].level = i + 1;
+    });
+
+    let uIndex = 1;
+    for(let c = 2; c <= 10; c++) {
+      for(let ri = 0; ri < 8; ri++) {
+        const id = ROWS[ri] + c;
+        wells[id].type = 'unknown';
+        wells[id].rep = 1;
+        wells[id].level = uIndex++;
+      }
+    }
+
+    renderWellGrid();
+
+    document.getElementById('concUnit').value = 'pg/mL';
+    setSeg('foldModeSeg', 'divide');
+    document.getElementById('foldsInput').value = 2;
+    
+    renderStandardConcSection();
+    if (getStandardLevelsSorted().length > 0) {
+      document.getElementById('std-conc-1').value = 2000;
+      standardConc[1] = 2000;
+      autofillConcentrations();
+    }
+
+    document.getElementById('expName').value = 'Demo Experiment';
+    document.getElementById('sampleName').value = 'Demo';
+    document.getElementById('targetName').value = '';
+    
+    document.getElementById('rm4pl').checked = true;
+    document.getElementById('wtNone').checked = true;
+    document.getElementById('normNone').checked = true;
+    document.getElementById('blankAsStd').checked = false;
+    document.getElementById('subtractMin').checked = false;
+    showGridArea();
+  }
+
+  function setSeg(id,val){
+    document.querySelectorAll('#'+id+' button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.val===val);
+    });
+  }
+
+  document.getElementById('btnDemo').addEventListener('click', loadDemo);
+
+  document.getElementById('btnClearLayout').addEventListener('click', ()=>{
+    Object.keys(wells).forEach(id=>{ wells[id].type=null; wells[id].level=null; wells[id].rep=null; });
+    standardConc = {};
+    renderWellGrid();
+    renderStandardConcSection();
+    document.getElementById('results').style.display='none';
+    window.currentCsvExport = null;
+  });
+
+  document.getElementById('btnClearAll').addEventListener('click', ()=>{
+  Object.keys(wells).forEach(id=>{ wells[id]={od:null,type:null,level:null,rep:null}; });
+  standardConc = {};
+  document.getElementById('pasteArea').value='';
+  buildOdGrid();
+  renderWellGrid();
+  renderStandardConcSection();
+  ['expName','sampleName','targetName'].forEach(id=>document.getElementById(id).value='');
+
+  // 完整重置所有方法設定
+  document.getElementById('rm4pl').checked = true;
+  document.getElementById('wtNone').checked = true;
+  document.getElementById('normNone').checked = true;
+  document.getElementById('blankAsStd').checked = false;
+  document.getElementById('subtractMin').checked = false;
+  document.getElementById('plotScale').value = 'normal';
+  document.getElementById('concUnit').value = 'ng/mL';
+  document.getElementById('foldsInput').value = 2;
+  setSeg('foldModeSeg','divide');
+  document.getElementById('startNumber').value = 1;
+  document.getElementById('replicates').value = 2;
+  setSeg('fillDirSeg','down');
+  setSeg('repDirSeg','right');
+
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.type-btn[data-type="standard"]').classList.add('active');
+  currentType = 'standard';
+
+  // 徹底隱藏結果區域避免混淆
+  document.getElementById('results').style.display='none';
+  window.currentCsvExport = null;
+  showInputArea();
+});
+
+  document.getElementById('btnAutofill').addEventListener('click', autofillConcentrations);
+
+  wireSeg('fillDirSeg'); wireSeg('repDirSeg'); wireSeg('foldModeSeg');
+  function csvEscape(v){
+  const str = String(v ?? '').replace(/"/g, '""');
+  return /^[=\+\-@]/.test(str) ? "'" + str : str;
+  }
+
+  // ---------- Math Helpers (純原生 JS 確保演算法相容性) ----------
+  function mean(arr){
+  if(!arr.length) return NaN;
+  return arr.reduce((s,v)=>s+v,0)/arr.length;
+  }
+  function stdev(arr){
+  if(arr.length<2) return 0;
+  const m = mean(arr);
+  const variance = arr.reduce((s,v)=>s + Math.pow(v-m,2),0) / (arr.length-1);
+  return Math.sqrt(variance);
+  }
+  function calcCV(arr){
+  if(!arr || arr.length < 2) return '—';
+  const m = mean(arr);
+  if(Math.abs(m) < 1e-12) return '—';
+  return (stdev(arr) / Math.abs(m) * 100).toFixed(1);
+  }
+
+  function solveLinearSystem(A,b){
+    const n = b.length;
+    const M = A.map((row,i)=>[...row, b[i]]);
+    for(let col=0; col<n; col++){
+      let maxRow=col;
+      for(let r=col+1;r<n;r++) if(Math.abs(M[r][col])>Math.abs(M[maxRow][col])) maxRow=r;
+      [M[col],M[maxRow]] = [M[maxRow],M[col]];
+      if(Math.abs(M[col][col])<1e-12) throw new Error('Singular matrix');
+      for(let r=0;r<n;r++){
+        if(r===col) continue;
+        const factor = M[r][col]/M[col][col];
+        for(let c2=col;c2<=n;c2++) M[r][c2] -= factor*M[col][c2];
+      }
+    }
+    return M.map((row,i)=> row[n]/row[i]);
+  }
+
+  function fitLM(model, xs, ys, initial, maxIter, weights){
+    let params = initial.slice();
+    let lambda = 1e-2;
+    function sseOf(p){
+      let s=0;
+      for(let i=0;i<xs.length;i++){ 
+        const r = ys[i]-model(xs[i],p); 
+        s += weights[i] * r * r; 
+      }
+      return s;
+    }
+    let curSSE = sseOf(params);
+    const n = xs.length, m = params.length;
+    for(let iter=0; iter<maxIter; iter++){
+      const J = [];
+      for(let i=0;i<n;i++){
+        const row=[];
+        const f0 = model(xs[i], params);
+        for(let j=0;j<m;j++){
+          const h = Math.max(1e-6, Math.abs(params[j])*1e-6);
+          const p2 = params.slice(); p2[j]+=h;
+          const f1 = model(xs[i], p2);
+          row.push((f1-f0)/h);
+        }
+        J.push(row);
+      }
+      const r = xs.map((x,i)=> ys[i]-model(x,params));
+      const JTJ = Array.from({length:m},()=>new Array(m).fill(0));
+      const JTr = new Array(m).fill(0);
+      for(let i=0;i<n;i++){
+        const w = weights[i];
+        for(let a=0;a<m;a++){
+          JTr[a] += w * J[i][a] * r[i];
+          for(let b=0;b<m;b++) JTJ[a][b] += w * J[i][a] * J[i][b];
+        }
+      }
+      const A = JTJ.map((row,a)=> row.map((v,b)=> a===b ? v + lambda*(v||1e-6) : v));
+      let delta;
+      try{ delta = solveLinearSystem(A, JTr); } catch(e){ break; }
+      if(delta.some(d=>!isFinite(d))) { lambda*=10; continue; }
+      const newParams = params.map((p,i)=> p+delta[i]);
+      // 加入 4PL/5PL 參數硬性限制，防止反算時產生 NaN
+      if(m >= 4) {
+      newParams[1] = Math.max(newParams[1], 1e-6);  // B (slope) 必須 > 0
+      newParams[2] = Math.max(newParams[2], 1e-12); // C (EC50) 必須 > 0
+      }
+      if(m === 5) {
+      newParams[4] = Math.max(newParams[4], 1e-6);  // E (asymmetry) 必須 > 0
+      }
+      const newSSE = sseOf(newParams);
+      if(newSSE < curSSE){
+        params = newParams; 
+        const improvement = Math.abs(curSSE-newSSE);
+        const relativeImprovement = improvement / Math.max(Math.abs(curSSE), 1e-12);
+        if(relativeImprovement < 1e-10) { curSSE=newSSE; break; }
+        curSSE = newSSE; lambda = Math.max(lambda/10, 1e-7);
+      } else {
+        lambda *= 10;
+        if(lambda>1e10) break;
+      }
+    }
+    return {params, sse: curSSE};
+  }
+
+  function model4PL(x,p){ const [A,B,C,D]=p; return D + (A-D)/(1+Math.pow(Math.max(x,1e-12)/Math.abs(C||1e-12), B)); }
+  function model5PL(x,p){ const [A,B,C,D,E]=p; return D + (A-D)/Math.pow(1+Math.pow(Math.max(x,1e-12)/Math.abs(C||1e-12), B), E); }
+  function invert4PL(y,p){ const [A,B,C,D]=p; if(Math.abs(y-D)<1e-12 || Math.abs(B)<1e-12) return NaN; const base=(A-D)/(y-D)-1; return base < 0 ? NaN : C * Math.pow(base, 1/B); }
+  function invert5PL(y,p){ const [A,B,C,D,E]=p; if(Math.abs(y-D)<1e-12 || Math.abs(E)<1e-12 || Math.abs(B)<1e-12) return NaN; const inner=Math.pow((A-D)/(y-D),1/E)-1; return inner < 0 ? NaN : C * Math.pow(inner, 1/B); }
+
+  function fitLinear(xs, ys, weights){
+    let W=0, Sx=0, Sy=0, Sxx=0, Sxy=0;
+    for(let i=0; i<xs.length; i++){
+      const w = weights[i], x = xs[i], y = ys[i];
+      W += w; Sx += w*x; Sy += w*y; Sxx += w*x*x; Sxy += w*x*y;
+    }
+    const delta = W*Sxx - Sx*Sx;
+    if (delta === 0) return {params: [0, 0]};
+    const slope = (W*Sxy - Sx*Sy)/delta;
+    const intercept = (Sxx*Sy - Sx*Sxy)/delta;
+    return {params:[slope, intercept]};
+  }
+  function modelLinear(x,p){ return p[0]*x+p[1]; }
+  function invertLinear(y,p){ return (y-p[1])/p[0]; }
+
+  function rSquared(xs, ys, model, params, weights){
+    const sumW = weights.reduce((s,w)=>s+w, 0);
+    const ymeanW = ys.reduce((s,y,i)=>s+weights[i]*y, 0) / sumW;
+    const sst = ys.reduce((s,y,i)=>s + weights[i]*(y-ymeanW)*(y-ymeanW), 0);
+    const yhat = xs.map(x=>model(x,params));
+    const sse = ys.reduce((s,y,i)=>s + weights[i]*(y-yhat[i])*(y-yhat[i]), 0);
+    return sst===0 ? 1 : 1 - sse/sst;
+  }
+
+  function getWellGroups(type){
+    const byLevel = {};
+    Object.entries(wells).forEach(([id,w])=>{
+      if(w.type===type && w.od!=null){
+        const key = w.level!=null ? w.level : 'x';
+        if(!byLevel[key]) byLevel[key]=[];
+        byLevel[key].push(w.od);
+      }
+    });
+    return byLevel;
+  }
+
+  function getWellIdsGroup(type, level){
+    const ids = [];
+    Object.entries(wells).forEach(([id,w])=>{
+      if(type === 'blank' && w.type === 'blank') {
+        ids.push(id);
+      } else if(w.type === type && w.level === level) {
+        ids.push(id);
+      }
+    });
+    return ids.join(', ');
+  }
+
+  function analyze(){
+    const regModel = document.querySelector('input[name=regModel]:checked').value;
+    const weightMethod = document.querySelector('input[name=weightMethod]:checked').value;
+    const normMethod = document.querySelector('input[name=normMethod]:checked').value;
+    const blankAsStd = document.getElementById('blankAsStd').checked;
+    const subtractMin = document.getElementById('subtractMin').checked;
+    const plotScale = document.getElementById('plotScale').value;
+    const unit = document.getElementById('concUnit').value;
+
+    const stdGroups = getWellGroups('standard');
+    const levels = Object.keys(stdGroups).map(Number).sort((a,b)=>a-b);
+
+    let xsRaw=[], ysRaw=[], levelForPoint=[];
+    levels.forEach(lv=>{
+      const conc = standardConc[lv];
+      if(conc==null || isNaN(conc)) return;
+      xsRaw.push(conc);
+      ysRaw.push(mean(stdGroups[lv]));
+      levelForPoint.push(lv);
+    });
+
+    const blankVals = Object.values(wells).filter(w=>w.type==='blank' && w.od!=null).map(w=>w.od);
+    const blankMean = blankVals.length ? mean(blankVals) : null;
+
+    if(blankAsStd && blankMean!=null){
+      xsRaw.unshift(0);
+      ysRaw.unshift(blankMean);
+      levelForPoint.unshift(0);
+    }
+
+    if(xsRaw.length < 3){
+      alert(translations[currentLanguage]['alert-lack-std']);
+      return;
+    }
+    const uniqueXs = new Set(xsRaw);
+    if(uniqueXs.size < xsRaw.length){
+      alert(translations[currentLanguage]['alert-dup-std']);
+      return;
+    }
+
+    let subVal = 0;
+    if(subtractMin){
+      subVal = blankMean!=null ? blankMean : Math.min(...ysRaw);
+    }
+    let ys = ysRaw.map(y=> y-subVal);
+
+    let normInfo = {method: normMethod};
+    if(normMethod==='max100'){
+  const mx = Math.max(...ys);
+  if(!isFinite(mx) || Math.abs(mx) < 1e-12){ alert(translations[currentLanguage]['alert-norm-max']); return; }
+  normInfo.max = mx;
+  ys = ys.map(y=> y/mx*100);
+} else if(normMethod==='minmax'){
+  const mx = Math.max(...ys), mn = Math.min(...ys);
+  if(!isFinite(mx) || !isFinite(mn) || Math.abs(mx-mn) < 1e-12){ alert(translations[currentLanguage]['alert-norm-minmax']); return; }
+  normInfo.max = mx; normInfo.min = mn;
+  ys = ys.map(y=> (y-mn)/(mx-mn)*100);
+}
+
+    function transformOD(od){
+      let v = od - subVal;
+      if(normMethod==='max100') v = v/normInfo.max*100;
+      else if(normMethod==='minmax') v = (v-normInfo.min)/(normInfo.max-normInfo.min)*100;
+      return v;
+    }
+
+    const xs = xsRaw;
+
+// 將權重計算移至 ys (已扣除背景) 產生之後
+const weights = ys.map(y => {
+  if (weightMethod === '1/y2') return 1 / Math.max(y * y, 0.01);
+  return 1;
+});
+
+let fitResult, modelFn, invertFn, paramNames, eqnStr;
+
+if(regModel==='linear'){
+  if(xs.length < 3) { alert(translations[currentLanguage]['alert-linear-min']); return; }
+  fitResult = fitLinear(xs, ys, weights);
+  if(Math.abs(fitResult.params[0]) < 1e-12) { alert(translations[currentLanguage]['alert-linear-slope']); return; }
+  modelFn = modelLinear; invertFn = invertLinear;
+  paramNames = ['slope (a)','intercept (b)'];
+  eqnStr = `y = a·x + b  →  a = ${fmt(fitResult.params[0])}, b = ${fmt(fitResult.params[1])}`;
+} else if(regModel==='5pl'){
+  if(xs.length < 6) { alert(translations[currentLanguage]['alert-5pl-min']); return; }
+  const nzX = xs.filter(x=>x>0);
+  const yAtMinX = ys[xs.indexOf(Math.min(...xs))];
+  const yAtMaxX = ys[xs.indexOf(Math.max(...xs))];
+  const isIncreasing = yAtMaxX >= yAtMinX;
+  const A0 = yAtMinX; 
+  const D0 = isIncreasing ? Math.max(...ys) : Math.min(...ys);
+  const C0 = nzX.length ? nzX[Math.floor(nzX.length/2)] : 1;
+  // 帶入 A0, D0 初始值
+  fitResult = fitLM(model5PL, xs, ys, [A0, 1, C0||1, D0, 1], 400, weights);
+  modelFn = model5PL; invertFn = invert5PL;
+  paramNames = isIncreasing 
+    ? ['A (min)','B (slope)','C (EC50)','D (max)','E (asymmetry)'] 
+    : ['A (max)','B (slope)','C (EC50)','D (min)','E (asymmetry)'];
+  const p = fitResult.params;
+  eqnStr = `y = D + (A−D) / (1+(x/C)^B)^E  →  A=${fmt(p[0])}, B=${fmt(p[1])}, C=${fmt(p[2])}, D=${fmt(p[3])}, E=${fmt(p[4])}`;
+} else {
+  if(xs.length < 5) { alert(translations[currentLanguage]['alert-4pl-min']); return; }
+  const nzX = xs.filter(x=>x>0);
+  const yAtMinX = ys[xs.indexOf(Math.min(...xs))];
+  const yAtMaxX = ys[xs.indexOf(Math.max(...xs))];
+  const isIncreasing = yAtMaxX >= yAtMinX;
+  const A0 = yAtMinX; 
+  const D0 = isIncreasing ? Math.max(...ys) : Math.min(...ys);
+  const C0 = nzX.length ? nzX[Math.floor(nzX.length/2)] : 1;
+  // 帶入 A0, D0 初始值
+  fitResult = fitLM(model4PL, xs, ys, [A0, 1, C0||1, D0], 400, weights);
+  modelFn = model4PL; invertFn = invert4PL;
+  paramNames = isIncreasing 
+    ? ['A (min)','B (slope)','C (EC50)','D (max)'] 
+    : ['A (max)','B (slope)','C (EC50)','D (min)'];
+  const p = fitResult.params;
+  eqnStr = `y = D + (A−D) / (1+(x/C)^B)  →  A=${fmt(p[0])}, B=${fmt(p[1])}, C=${fmt(p[2])}, D=${fmt(p[3])}`;
+}
+    const params = fitResult.params;
+    const r2 = rSquared(xs, ys, modelFn, params, weights);
+  
+    const expN = document.getElementById('expName').value.trim();
+    const tarN = document.getElementById('targetName').value.trim();
+    const samN = document.getElementById('sampleName').value.trim();
+    const displayTitle = [expN, tarN, samN].filter(Boolean).join(' | ');
+    document.getElementById('resultsTitle').innerText = displayTitle ? `${translations[currentLanguage]['res-title']} (${displayTitle})` : translations[currentLanguage]['res-title'];
+
+    document.getElementById('fitStats').innerHTML = `
+      <div class="fit-stat"><div class="lab" data-text="fit-model">回歸模型</div><div class="val">${regModel.toUpperCase()}</div></div>
+      <div class="fit-stat" title="R²"><div class="lab">R² ⓘ</div><div class="val">${r2.toFixed(5)}</div></div>
+      <div class="fit-stat"><div class="lab" data-text="fit-pts">標準點數</div><div class="val">${xs.length}</div></div>
+      <div class="fit-stat"><div class="lab" data-text="fit-unit">濃度單位</div><div class="val">${unit}</div></div>
+    `;
+    document.getElementById('eqnBox').innerHTML = eqnStr;
+
+    // --- CSV 內容產生 ---
+    let csvStr = '\uFEFF';
+    csvStr += `"This report is generated by ELISA Data Analysis Tool"\n\n`;
+    csvStr += `"Experiment name:","${csvEscape(document.getElementById('expName').value || 'Experiment 1')}"\n`;
+    csvStr += `"Sample name:","${csvEscape(document.getElementById('sampleName').value || '')}"\n`;
+    csvStr += `"Target:","${csvEscape(document.getElementById('targetName').value || '')}"\n`;
+    csvStr += `"Standard concentration unit:","${unit}"\n\n`;
+    
+    // 強制使用英文對照表輸出回歸模型與常規化方法，避免讀取到中文 UI 標籤
+    const modelMapEn = { '4pl': '4PL', '5pl': '5PL', 'linear': 'Linear' };
+    const modelLabelText = modelMapEn[regModel] || regModel;
+    csvStr += `"Equation:","${modelLabelText}"\n`;
+    csvStr += `"R²:","${r2.toFixed(5)}"\n`;
+    
+    // Plot scale 的選單內容預設為純英文，可直接讀取
+    const scaleSelect = document.getElementById('plotScale');
+    csvStr += `"Plot Scale:","${scaleSelect.options[scaleSelect.selectedIndex].text}"\n`;
+    
+    // 強制使用英文對照表輸出常規化方法
+    const normMapEn = { 'none': 'No normalization', 'max100': 'Max = 100%', 'minmax': 'Min-Max' };
+    const normLabel = normMapEn[normMethod] || normMethod;
+    csvStr += `"Normalization:","${normLabel}"\n`;
+    
+    let otherSettings = [];
+    if(blankAsStd) otherSettings.push('Blank as standard');
+    if(subtractMin) otherSettings.push('Subtract minimum');
+    csvStr += `"Other Settings:","${otherSettings.length ? otherSettings.join(', ') : 'None'}"\n`;
+    csvStr += `"Parameters:"," "\n`;
+    paramNames.forEach((pn, i) => {
+        csvStr += `"${pn}","${params[i].toFixed(5)}"\n`;
+    });
+    csvStr += `\n"ID","Wells","Raw Data","Raw Average","Processed Response","Concentration","Std Deviation"\n`;
+
+    // 1. CSV: Standard 數據
+    levels.forEach(lv => {
+        const raw = stdGroups[lv];
+        if(!raw) return;
+        const wellIds = getWellIdsGroup('standard', lv);
+        const rawStr = raw.map(fmt).join(', ');
+        const meanStr = fmt(mean(raw));
+        const processedStr = fmt(transformOD(mean(raw))); // 新增處理後數值
+        const concStr = fmt(standardConc[lv]);
+        const sdStr = raw.length > 1 ? stdev(raw).toFixed(4) : '---';
+        csvStr += `"S${lv}","${wellIds}","${rawStr}","${meanStr}","${processedStr}","${concStr}","${sdStr}"\n`;
+    });
+
+    // 2. CSV: Blank (BL) 數據
+    if (blankVals.length > 0) {
+        const wellIds = getWellIdsGroup('blank', null);
+        const rawStr = blankVals.map(fmt).join(', ');
+        const meanStr = fmt(blankMean);
+        const processedStr = fmt(transformOD(blankMean)); // 新增處理後數值
+        const concStr = blankAsStd ? "0.000" : "---";
+        const sdStr = blankVals.length > 1 ? stdev(blankVals).toFixed(4) : '---';
+        csvStr += `"BL","${wellIds}","${rawStr}","${meanStr}","${processedStr}","${concStr}","${sdStr}"\n`;
+    }
+
+    // 3. CSV: Unknown / Control 數據
+    ['unknown','control'].forEach(type => {
+        const groups = getWellGroups(type);
+        Object.keys(groups).map(Number).sort((a,b)=>a-b).forEach(lv => {
+            const raw = groups[lv];
+            const meanOd = mean(raw);
+            const transformed = transformOD(meanOd);
+            const conc = invertFn(transformed, params);
+            
+            const label = (type === 'unknown' ? 'U' : 'C') + lv;
+            const wellIds = getWellIdsGroup(type, lv);
+            const rawStr = raw.map(fmt).join(', ');
+            const meanStr = fmt(meanOd);
+            const processedStr = fmt(transformed); // 新增處理後數值
+            const concStr = (isFinite(conc) && conc>0) ? fmt(conc) : '---';
+            const sdStr = raw.length > 1 ? stdev(raw).toFixed(4) : '---';
+            
+            csvStr += `"${label}","${wellIds}","${rawStr}","${meanStr}","${processedStr}","${concStr}","${sdStr}"\n`;
+        });
+    });
+
+    // 4. CSV: === Raw Input (as submitted) ===
+    csvStr += `\n"=== Raw Input (as submitted) ==="\n\n`;
+    csvStr += `"OD Grid"\n`;
+    csvStr += `"",` + Array.from({length:12}, (_, i) => `"${i+1}"`).join(",") + `\n`;
+    const ROWS_ARRAY = ['A','B','C','D','E','F','G','H'];
+    ROWS_ARRAY.forEach(r => {
+        let rowVals = [];
+        for(let c=1; c<=12; c++){
+            let w = wells[r+c];
+            rowVals.push(`"${w.od !== null ? w.od : ''}"`);
+        }
+        csvStr += `"${r}",` + rowVals.join(",") + `\n`;
+    });
+
+    // 5. CSV: Well Assignment
+    csvStr += `\n"Well Assignment"\n`;
+    csvStr += `"",` + Array.from({length:12}, (_, i) => `"${i+1}"`).join(",") + `\n`;
+    ROWS_ARRAY.forEach(r => {
+        let rowVals = [];
+        for(let c=1; c<=12; c++){
+            let w = wells[r+c];
+            let label = '';
+            if(w.type === 'blank') label = 'BL';
+            else if(w.type === 'standard') label = 'S' + w.level;
+            else if(w.type === 'unknown') label = 'U' + w.level;
+            else if(w.type === 'control') label = 'C' + w.level;
+            rowVals.push(`"${label}"`);
+        }
+        csvStr += `"${r}",` + rowVals.join(",") + `\n`;
+    });
+
+    // 6. CSV: Standard Concentrations
+    csvStr += `\n"Standard Concentrations"\n`;
+    levels.forEach(lv => {
+        let c = standardConc[lv];
+        if(c !== undefined && c !== null) {
+            csvStr += `"S${lv}","${c}"\n`;
+        }
+    });
+
+    // 7. CSV: Method Settings
+    csvStr += `\n"Method Settings",""\n`;
+    csvStr += `"Regression model","${csvEscape(modelLabelText)}"\n`;
+    
+    // 強制使用英文對照表輸出權重設定
+    const weightMethodVal = document.querySelector('input[name=weightMethod]:checked').value;
+    const weightLabelMapEn = { 'none': 'Unweighted', '1/y2': '1/Y²' };
+    const weightLabelStr = weightLabelMapEn[weightMethodVal] || weightMethodVal;
+    csvStr += `"Weighting","${csvEscape(weightLabelStr)}"\n`;
+    
+    csvStr += `"Normalization","${csvEscape(normLabel)}"\n`;
+    csvStr += `"Plot scale","${csvEscape(scaleSelect.options[scaleSelect.selectedIndex].text)}"\n`;
+    csvStr += `"Blank as standard","${blankAsStd ? 'Yes' : 'No'}"\n`;
+    csvStr += `"Subtract minimum OD","${subtractMin ? 'Yes' : 'No'}"\n`;
+    
+    // 修正 B2：直接輸出完整 unit（如 pg/mL），移除 .split('/')[0] 防止單位被截斷
+    csvStr += `"Concentration unit","${csvEscape(unit)}"\n`;
+
+    // --- HTML UI 畫面渲染 ---
+    let stdRows = `<tr><th data-text="th-grad">梯度</th><th data-text="th-well-id">孔位</th><th><span data-text="th-known-conc">已知濃度</span> (${unit})</th><th data-text="th-avg-resp">平均反應值 (已處理)</th><th data-text="th-cv">CV%</th><th data-text="th-calc-conc">回推濃度</th><th data-text="th-recovery">回收率%</th></tr>`;
+    levelForPoint.forEach((lv,i)=>{
+      const raw = lv===0 && blankAsStd ? blankVals : stdGroups[lv];
+      const cv = calcCV(raw);
+      const known = xs[i];
+      const back = invertFn(ys[i], params);
+      const recovery = isFinite(back) ? (back/known*100).toFixed(1)+'%' : '—';
+      const wellIds = lv===0 ? getWellIdsGroup('blank', null) : getWellIdsGroup('standard', lv);
+      
+      stdRows += `<tr>
+        <td><span class="pill pill-standard">${lv===0?'Blk':'S'+lv}</span></td>
+        <td>${wellIds}</td>
+        <td>${fmt(known)}</td>
+        <td>${fmt(ys[i])}</td>
+        <td>${cv}</td>
+        <td>${isFinite(back)?fmt(back):'—'}</td>
+        <td>${recovery}</td>
+      </tr>`;
+    });
+    document.getElementById('stdResultsTable').innerHTML = stdRows;
+
+    let sampleRows = `<tr><th data-text="th-sample-id">樣品編號</th><th data-text="th-well-id">孔位</th><th data-text="th-type">類型</th><th data-text="th-avg-od">平均 OD</th><th data-text="th-avg-resp">平均反應值 (已處理)</th><th data-text="th-cv">CV%</th><th><span data-text="th-calc-conc">換算濃度</span> (${unit})</th></tr>`;
+    ['unknown','control'].forEach(type=>{
+      const groups = getWellGroups(type);
+      Object.keys(groups).map(Number).sort((a,b)=>a-b).forEach(lv=>{
+        const raw = groups[lv];
+        const meanOd = mean(raw);
+        const cv = calcCV(raw);
+        const transformed = transformOD(meanOd);
+        const conc = invertFn(transformed, params);
+        const label = (type==='unknown'?'U':'C')+lv;
+        const pillClass = type==='unknown' ? 'pill-unknown' : 'pill-control';
+        const wellIds = getWellIdsGroup(type, lv);
+
+        sampleRows += `<tr>
+          <td><span class="pill ${pillClass}">${label}</span></td>
+          <td>${wellIds}</td>
+          <td><span data-text="${type==='unknown'?'type-unknown':'type-control'}">${type==='unknown'?'Unknown':'Control'}</span></td>
+          <td>${fmt(meanOd)}</td>
+          <td>${fmt(transformed)}</td>
+          <td>${cv}</td>
+          <td>${isFinite(conc) && conc>0 ? fmt(conc) : '—'}</td>
+        </tr>`;
+      });
+    });
+    document.getElementById('sampleResultsTable').innerHTML = sampleRows;
+
+    window.currentCsvExport = csvStr;
+    document.getElementById('btnExportCSV').style.display = 'inline-block';
+
+    // 呼叫繪製圖表函數
+    drawChartPlotly(xs, ys, modelFn, params, plotScale, normMethod);
+
+    document.getElementById('results').style.display='block';
+    document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+    switchLanguage(currentLanguage);
+  }
+
+  function fmt(v){
+  if(v==null || !isFinite(v)) return '—';
+  return Math.round((v + Number.EPSILON) * 10000) / 10000;
+  }
+
+  // ---------- Plotly.js 繪圖邏輯 ----------
+  // 增加 normMethod 參數傳入以動態改變標籤
+  function drawChartPlotly(xs, ys, modelFn, params, plotScale, normMethod){
+    const useLogX = plotScale === 'semilog' || plotScale === 'loglog';
+    const useLogY = plotScale === 'loglog';
+
+    // 確保對數尺度下，嚴格排除非正數的 X 或 Y 值
+    const validIdx = xs.map((x,i)=>i).filter(i => 
+       (!useLogX || xs[i] > 0) && (!useLogY || ys[i] > 0)
+    );
+    const xVals = validIdx.map(i=>xs[i]);
+    const yVals = validIdx.map(i=>ys[i]);
+
+    // 空陣列防護：若無有效點則清空舊圖並顯示提示
+    if (xVals.length === 0) {
+      if (window.Plotly) Plotly.purge('chartDiv');
+      document.getElementById('chartDiv').innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748B;font-size:14px;">${translations[currentLanguage]['chart-empty']}</div>`;
+      return;
+    }
+
+    const rawXmin = Math.min(...xVals), rawXmax = Math.max(...xVals);
+    const N = 200; 
+    let curveX = [];
+    let curveY = [];
+    
+    for(let i=0; i<=N; i++){
+      let xv;
+      if(useLogX){
+        const lo = Math.log10(Math.max(rawXmin, 1e-6)), hi = Math.log10(rawXmax);
+        xv = Math.pow(10, lo + (hi - lo) * i / N);
+      } else {
+        xv = rawXmin + (rawXmax - rawXmin) * i / N;
+      }
+      const yv = modelFn(xv, params);
+      if(useLogY && yv <= 0) continue;
+      curveX.push(xv);
+      curveY.push(yv);
+    }
+
+    // 擬合曲線數據軌跡
+    const traceCurve = {
+      x: curveX,
+      y: curveY,
+      mode: 'lines',
+      type: 'scatter',
+      name: translations[currentLanguage]['chart-trace-curve'],
+      line: { color: '#2563EB', width: 2.5 },
+      hoverinfo: 'none' // 隱藏曲線上的 tooltip，避免干擾數據點
+    };
+
+    // 實際標準品數據點軌跡
+    const traceData = {
+      x: xVals,
+      y: yVals,
+      mode: 'markers',
+      type: 'scatter',
+      name: translations[currentLanguage]['chart-trace-data'],
+      marker: { size: 9, color: '#3B82F6', line: { color: '#1D4ED8', width: 1.5 } },
+      // 動態判斷：若無正規化顯示 4 位小數的 OD，若有正規化則顯示 2 位小數的反應值百分比
+      hovertemplate: `${translations[currentLanguage]['chart-hover-conc']} %{x:.2f}<br>` + (normMethod === 'none' ? `${translations[currentLanguage]['chart-hover-od']} %{y:.4f}` : `${translations[currentLanguage]['chart-hover-resp']} %{y:.2f}%`) + '<extra></extra>'
+    };
+
+    const layout = {
+      margin: { l: 60, r: 30, t: 30, b: 50 },
+      xaxis: {
+        title: { text: translations[currentLanguage]['chart-x-conc'], font: { size: 12, color: '#334155', weight: 600 } },
+        type: useLogX ? 'log' : 'linear',
+        gridcolor: '#F1F5F9',
+        zerolinecolor: '#E2E8F0',
+        tickfont: { family: 'SFMono-Regular, Consolas, monospace', size: 11, color: '#64748B' }
+      },
+      yaxis: {
+        title: { text: normMethod === 'none' ? translations[currentLanguage]['chart-y-od'] : translations[currentLanguage]['chart-y-resp'], font: { size: 12, color: '#334155', weight: 600 } },
+        type: useLogY ? 'log' : 'linear',
+        gridcolor: '#F1F5F9',
+        zerolinecolor: '#E2E8F0',
+        tickfont: { family: 'SFMono-Regular, Consolas, monospace', size: 11, color: '#64748B' }
+      },
+      plot_bgcolor: '#ffffff',
+      paper_bgcolor: '#ffffff',
+      showlegend: false,
+      hovermode: 'closest'
+    };
+
+    const config = { 
+      responsive: true, 
+      displayModeBar: true,
+      displaylogo: false,
+      modeBarButtonsToRemove: ['lasso2d', 'select2d']
+    };
+
+    Plotly.newPlot('chartDiv', [traceCurve, traceData], layout, config);
+  }
+
+  document.getElementById('btnAnalyze').addEventListener('click', analyze);
+
+  document.getElementById('btnExportCSV').addEventListener('click', () => {
+    if(!window.currentCsvExport) return;
+    const blob = new Blob([window.currentCsvExport], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (document.getElementById('expName').value || 'ELISA_Report') + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  buildOdGrid();
+  buildWellGrid();
+  renderStandardConcSection();
+  switchLanguage('zh'); // 網頁載入時預設啟動中文語系
+})();
+</script>
+</body>
+</html>
