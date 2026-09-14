@@ -51,7 +51,11 @@
   .topband{
     background: linear-gradient(120deg, var(--blue-700) 0%, var(--blue-500) 60%, #60A5FA 100%);
     color:#fff;
-    padding:36px 24px 46px;
+    padding: 10px 20px 14px; /* 大幅縮減上下留白，讓標題列變窄 */
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
   }
   .topband-inner{max-width:1040px;margin:0 auto;}
   .eyebrow-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
@@ -63,7 +67,7 @@
   .topband h1{font-size:28px;line-height:1.25;margin:0 0 8px;font-weight:800;letter-spacing:-0.01em;}
   .topband p{margin:0;max-width:620px;font-size:15px;line-height:1.65;color:#DCE8FF;}
 
-  .wrap{max-width:1040px;margin:-28px auto 0;padding:0 24px;position:relative;z-index:2;}
+  .wrap{max-width:1040px;margin:24px auto 0;padding:0 24px;position:relative;z-index:2;} /* 將負邊距改為正邊距 24px */
 
   /* ---------- Sections ---------- */
   .card{
@@ -206,7 +210,27 @@
   .action-bar{display:flex;justify-content:center;gap:12px;margin:6px 0 30px;}
 
   /* ---------- Results ---------- */
-  #results{display:none;}
+  #results{display:none; scroll-margin-top: 140px;}
+
+  /* 針對移至頂部的新按鈕增添對比樣式 */
+  .top-action-btn {
+    padding: 6px 14px; border-radius: 20px; font-size: 13.5px; font-weight: 700; font-family: var(--sans);
+    cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow);
+  }
+  .top-action-btn:hover { transform: translateY(-1px); }
+
+  /* 開始分析 (黃色/橘黃色) */
+  .btn-analyze-top { background: var(--amber); color: #fff; border: 1px solid var(--amber); }
+  .btn-analyze-top:hover { background: #D97706; border-color: #D97706; color: #fff; }
+
+  /* 清除設定 (紅色) */
+  .btn-clear-top { background: #EF4444; color: #fff; border: 1px solid #EF4444; }
+  .btn-clear-top:hover { background: #DC2626; border-color: #DC2626; color: #fff; }
+  
+  /* 匯入 CSV (淺紫色) */
+  .btn-import-top { background: #A78BFA; color: #fff; border: 1px solid #A78BFA; }
+  .btn-import-top:hover { background: #8B5CF6; border-color: #8B5CF6; color: #fff; }
+
   .fit-summary{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:20px;}
   .fit-stat{
     background:var(--blue-50);border:1px solid var(--blue-100);border-radius:11px;
@@ -236,7 +260,7 @@
 
   /* ---------- Language & Offline Switcher ---------- */
   .language-switcher { 
-    position: absolute; top: 16px; right: 24px; 
+    position: absolute; top: 14px; right: 24px; /* 配合變窄的標題列向上微調 */
     display: flex; align-items: center; gap: 8px; z-index: 1000; 
   }
   .lang-btn { 
@@ -252,13 +276,14 @@
   #download-btn { 
     font-size: 13px; font-weight: 600; padding: 6px 16px; border-radius: 20px; 
     border: 1px solid var(--gray-300); background: #fff; cursor: pointer; 
-    text-decoration: none; color: var(--ink); transition: all 0.2s ease; 
+    text-decoration: none; color: var(--slate); transition: all 0.2s ease; 
     white-space: nowrap; box-shadow: var(--shadow); font-family: var(--sans);
   }
-  #download-btn:hover { background: var(--gray-100); transform: translateY(-1px); }
+  #download-btn:hover { background: var(--gray-100); color: var(--ink); transform: translateY(-1px); }
   
   @media (max-width:720px){
-    .language-switcher { position: relative; top: 0; right: 0; justify-content: center; padding: 16px 0 0; background: var(--blue-700); }
+    /* 手機版允許按鈕換行，並移除多餘的背景色 */
+    .language-switcher { position: relative; top: 0; right: 0; justify-content: center; padding: 0 0 16px; background: transparent; flex-wrap: wrap; }
   }
   footer { text-align: center; padding: 2rem 1rem; color: #718096; font-size: 0.95rem; margin-top: 2rem; line-height: 1.6; }
   footer a, footer a:visited { color: #3182ce; text-decoration: none; font-weight: bold; }
@@ -267,13 +292,24 @@
 </head>
 <body>
 
-<div class="language-switcher">
-  <a href="https://drive.google.com/file/d/1HFc88ZmgQsnKBEk5XC2jIQ5PcxQSXMC-/view?usp=sharing" id="download-btn" rel="noopener noreferrer" target="_blank" data-text="download-btn">下載離線版</a>
-  <button class="lang-btn active" id="lang-zh" onclick="switchLanguage('zh')">中文</button> 
-  <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">English</button>
-</div>
-
 <div class="topband">
+  <div class="language-switcher">
+    <!-- 移至上方的操作按鈕 -->
+    <button class="btn top-action-btn btn-analyze-top" id="btnAnalyze" data-text="btn-analyze">開始分析 Analyze</button>
+    <button class="btn top-action-btn btn-clear-top" id="btnClearAll" data-text="btn-clear-all">清除所有設定</button>
+    
+    <!-- 匯出與匯入 CSV 按鈕 (移除隱藏設定) -->
+    <button class="btn btn-success top-action-btn" id="btnExportCSV" data-text="btn-export-csv">匯出 CSV</button>
+    <button class="btn top-action-btn btn-import-top" id="btnImportCSV" data-text="btn-import-csv">匯入 CSV</button>
+    <input type="file" id="fileImportCSV" accept=".csv" style="display:none;">
+    
+    <!-- 分隔線 -->
+    <div style="width:1px; height:20px; background:rgba(255,255,255,0.4); margin:0 4px;"></div>
+    
+    <a href="https://drive.google.com/file/d/1HFc88ZmgQsnKBEk5XC2jIQ5PcxQSXMC-/view?usp=sharing" id="download-btn" rel="noopener noreferrer" target="_blank" data-text="download-btn">下載離線版</a>
+    <button class="lang-btn active" id="lang-zh" onclick="switchLanguage('zh')">中文</button> 
+    <button class="lang-btn" id="lang-en" onclick="switchLanguage('en')">English</button>
+  </div>
   <div class="topband-inner">
     <div class="eyebrow-row">
     </div>
@@ -434,12 +470,6 @@
     </fieldset>
 
     <fieldset>
-      <legend data-text="lgd-weight">權重方法 Weighting method</legend>
-      <div class="radioline"><input type="radio" name="weightMethod" id="wtNone" value="none" checked><label for="wtNone" data-text="lbl-wt-none">無權重 (Unweighted)</label></div>
-      <div class="radioline"><input type="radio" name="weightMethod" id="wtY2" value="1/y2"><label for="wtY2" data-text="lbl-wt-y2">1/Y² (增強低濃度準確度，內建防發散上限)</label></div>
-    </fieldset>
-
-    <fieldset>
       <legend data-text="lgd-norm">正規化方法 Normalization method</legend>
       <div class="radioline"><input type="radio" name="normMethod" id="normNone" value="none" checked><label for="normNone" data-text="lbl-norm-none">不正規化 No normalization</label></div>
       <div class="radioline"><input type="radio" name="normMethod" id="normMax" value="max100"><label for="normMax" data-text="lbl-norm-max">將最大反應值設為 100%</label></div>
@@ -451,11 +481,6 @@
       <div class="checkline"><input type="checkbox" id="blankAsStd"><label for="blankAsStd" data-text="lbl-blank-std">將 Blank 作為標準品數據（0 濃度點）</label></div>
       <div class="checkline"><input type="checkbox" id="subtractMin"><label for="subtractMin" data-text="lbl-sub-min">從所有 OD 值中扣除 Blank / 最小 OD 值</label></div>
     </fieldset>
-
-    <div class="action-bar">
-      <button class="btn btn-primary big" id="btnAnalyze" data-text="btn-analyze">開始分析 Analyze</button>
-      <button class="btn big" id="btnClearAll" data-text="btn-clear-all">清除所有設定</button>
-    </div>
   </div>
 
   <!-- Results -->
@@ -466,7 +491,6 @@
         <h2 style="margin-bottom:0;"><span data-text="res-title">分析結果</span><span id="resultsTitleExtra"></span></h2>
         <p style="margin-top:4px;" data-text="res-desc">以下為擬合的標準曲線與樣品濃度換算結果。</p>
       </div>
-      <button class="btn btn-success" id="btnExportCSV" style="display:none;" data-text="btn-export-csv">匯出 CSV</button>
     </div>
 
     <div class="fit-summary" id="fitStats"></div>
@@ -535,9 +559,6 @@ const translations = {
     "lbl-4pl": "4PL（四參數邏輯回歸，建議）",
     "lbl-5pl": "5PL（五參數邏輯回歸）",
     "lbl-linear": "Linear（線性回歸）",
-    "lgd-weight": "權重方法 Weighting method",
-    "lbl-wt-none": "無權重 (Unweighted)",
-    "lbl-wt-y2": "1/Y² (增強低濃度準確度，內建防發散上限)",
     "lgd-norm": "正規化方法 Normalization method",
     "lbl-norm-none": "不正規化 No normalization",
     "lbl-norm-max": "將最大反應值設為 100%",
@@ -551,6 +572,9 @@ const translations = {
     "res-title": "分析結果",
     "res-desc": "以下為擬合的標準曲線與樣品濃度換算結果。",
     "btn-export-csv": "匯出 CSV",
+    "btn-import-csv": "匯入 CSV",
+    "msg-export-empty": "請先執行分析或確認有資料可供匯出。",
+    "msg-import-success": "CSV 匯入成功！數據已還原。",
     "title-std-curve": "標準曲線數據 Standard curve data",
     "title-sample-res": "樣品濃度換算結果 Calculated sample concentrations",
     "th-grad": "梯度",
@@ -639,9 +663,6 @@ const translations = {
     "lbl-4pl": "4PL (Four-Parameter Logistic, recommended)",
     "lbl-5pl": "5PL (Five-Parameter Logistic)",
     "lbl-linear": "Linear Regression",
-    "lgd-weight": "Weighting method",
-    "lbl-wt-none": "Unweighted",
-    "lbl-wt-y2": "1/Y² (Enhances low-concentration accuracy)",
     "lgd-norm": "Normalization method",
     "lbl-norm-none": "No normalization",
     "lbl-norm-max": "Set maximum response to 100%",
@@ -655,6 +676,9 @@ const translations = {
     "res-title": "Analysis Results",
     "res-desc": "Below are the fitted standard curve and calculated sample concentrations.",
     "btn-export-csv": "Export CSV",
+    "btn-import-csv": "Import CSV",
+    "msg-export-empty": "Please run the analysis first to generate data for export.",
+    "msg-import-success": "CSV imported successfully! Data restored.",
     "title-std-curve": "Standard curve data",
     "title-sample-res": "Calculated sample concentrations",
     "th-grad": "Gradient",
@@ -702,7 +726,8 @@ const translations = {
 
 let currentLanguage = 'zh';
 
-function switchLanguage(lang) {
+// 新增 preventReanalyze 參數，預設為 false，用於阻斷無限迴圈
+function switchLanguage(lang, preventReanalyze = false) {
   currentLanguage = lang;
   // 切換按鈕的 active 狀態
   document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
@@ -729,6 +754,15 @@ function switchLanguage(lang) {
       el.placeholder = translations[lang][key];
     }
   });
+  
+  // 修正：僅當非 analyze() 內部呼叫時，才觸發按鈕點擊，避免無限迴圈
+  const resultsDiv = document.getElementById('results');
+  if (!preventReanalyze && resultsDiv && resultsDiv.style.display === 'block') {
+    window.preventAutoScroll = true; // 新增：打上禁止捲動標記
+    const analyzeBtn = document.getElementById('btnAnalyze');
+    if (analyzeBtn) analyzeBtn.click();
+    window.preventAutoScroll = false; // 新增：執行完畢後解除標記
+  }
 }
 
 (function(){
@@ -915,6 +949,7 @@ function switchLanguage(lang) {
       });
       renderWellGrid();
       renderStandardConcSection();
+      autoUpdateStartNum(type); // 拖曳分配完成後自動更新編號
       return;
     }
 
@@ -957,6 +992,7 @@ function switchLanguage(lang) {
 
     renderWellGrid();
     renderStandardConcSection();
+    autoUpdateStartNum(type); // 拖曳分配完成後自動更新編號
   }
 
   function prefixFor(type){
@@ -982,6 +1018,18 @@ function switchLanguage(lang) {
         cell.innerHTML = '';
       }
     });
+  }
+
+  // 新增：自動計算目前類型的最大編號，並更新起始編號輸入框
+  function autoUpdateStartNum(type) {
+    if (type === 'blank' || type === 'erase') return;
+    let maxLvl = 0;
+    Object.values(wells).forEach(w => {
+      if (w.type === type && w.level != null && w.level > maxLvl) {
+        maxLvl = w.level;
+      }
+    });
+    document.getElementById('startNumber').value = maxLvl + 1;
   }
 
   function getStandardLevelsSorted(){
@@ -1016,7 +1064,8 @@ function switchLanguage(lang) {
         standardConc[lv] = (isFinite(v) && v >= 0) ? v : null;
       });
     });
-    switchLanguage(currentLanguage);
+    // 加入 true 參數，阻斷 switchLanguage 觸發 btnAnalyze.click() 的連鎖反應
+    switchLanguage(currentLanguage, true);
   }
 
   function autofillConcentrations(){
@@ -1031,7 +1080,8 @@ function switchLanguage(lang) {
     // 移除舊的 let val = baseVal;
     for(let i=1;i<levels.length;i++){
       // 基於 baseVal 進行絕對計算，避免前次的捨入誤差累積
-      let exactVal = mode === 'divide' ? baseVal / Math.pow(fold, i) : baseVal * Math.pow(fold, i);
+      let exponent = levels[i] - levels[0];
+      let exactVal = mode === 'divide' ? baseVal / Math.pow(fold, exponent) : baseVal * Math.pow(fold, exponent);
       let val = roundSig(exactVal, 5); 
       standardConc[levels[i]] = val;
       const el = document.getElementById('std-conc-'+levels[i]);
@@ -1061,11 +1111,12 @@ function switchLanguage(lang) {
       document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       currentType = btn.dataset.type;
+      autoUpdateStartNum(currentType); // 切換樣品類型時，自動讀取該類型的最大編號
     });
   });
 
   function parsePasteText(text){
-    const lines = text.trim().split(/\r?\n/).filter(l=>l.trim().length>0);
+    const lines = text.replace(/[\r\n]+$/, '').split(/\r?\n/);
     lines.forEach((line, ri)=>{
       if(ri>=ROWS.length) return;
       const separator = line.includes('\t') ? '\t' : (line.includes(',') ? ',' : /\s+/);
@@ -1181,7 +1232,6 @@ function switchLanguage(lang) {
     document.getElementById('targetName').value = '';
     
     document.getElementById('rm4pl').checked = true;
-    document.getElementById('wtNone').checked = true;
     document.getElementById('normNone').checked = true;
     document.getElementById('blankAsStd').checked = false;
     document.getElementById('subtractMin').checked = false;
@@ -1203,6 +1253,7 @@ function switchLanguage(lang) {
     renderStandardConcSection();
     document.getElementById('results').style.display='none';
     window.currentCsvExport = null;
+    document.getElementById('startNumber').value = 1; // 清除佈局後重置為 1
   });
 
   document.getElementById('btnClearAll').addEventListener('click', ()=>{
@@ -1216,7 +1267,6 @@ function switchLanguage(lang) {
 
   // 完整重置所有方法設定
   document.getElementById('rm4pl').checked = true;
-  document.getElementById('wtNone').checked = true;
   document.getElementById('normNone').checked = true;
   document.getElementById('blankAsStd').checked = false;
   document.getElementById('subtractMin').checked = false;
@@ -1303,9 +1353,11 @@ function switchLanguage(lang) {
         const f0 = model(xs[i], params);
         for(let j=0;j<m;j++){
           const h = Math.max(1e-6, Math.abs(params[j])*1e-6);
-          const p2 = params.slice(); p2[j]+=h;
+          const p2 = params.slice(); p2[j] += h;
+          const p_minus = params.slice(); p_minus[j] -= h;
           const f1 = model(xs[i], p2);
-          row.push((f1-f0)/h);
+          const f_minus = model(xs[i], p_minus);
+          row.push((f1 - f_minus) / (2 * h));
         }
         J.push(row);
       }
@@ -1327,7 +1379,9 @@ function switchLanguage(lang) {
       // 加入 4PL/5PL 參數硬性限制，防止算式溢位發散
       if(m >= 4) {
       newParams[1] = Math.min(Math.max(newParams[1], 1e-6), 50);  // B (slope) 必須 > 0，上限防護 50
-      newParams[2] = Math.max(newParams[2], 1e-12); // C (EC50) 必須 > 0
+      // 修正：增加 C (EC50) 的動態上限防護，防止極端雜訊導致演算法無窮發散
+      const maxX = Math.max(...xs);
+      newParams[2] = Math.min(Math.max(newParams[2], 1e-12), maxX * 100000);
       }
       if(m === 5) {
       newParams[4] = Math.min(Math.max(newParams[4], 1e-6), 100); // E (asymmetry) 必須 > 0，上限防護 100
@@ -1359,7 +1413,7 @@ function switchLanguage(lang) {
       W += w; Sx += w*x; Sy += w*y; Sxx += w*x*x; Sxy += w*x*y;
     }
     const delta = W*Sxx - Sx*Sx;
-    if (delta === 0) return {params: [0, 0]};
+    if (delta === 0) return {params: [NaN, NaN]};
     const slope = (W*Sxy - Sx*Sy)/delta;
     const intercept = (Sxx*Sy - Sx*Sxy)/delta;
     return {params:[slope, intercept]};
@@ -1402,7 +1456,6 @@ function switchLanguage(lang) {
 
   function analyze(){
     const regModel = document.querySelector('input[name=regModel]:checked').value;
-    const weightMethod = document.querySelector('input[name=weightMethod]:checked').value;
     const normMethod = document.querySelector('input[name=normMethod]:checked').value;
     const blankAsStd = document.getElementById('blankAsStd').checked;
     const subtractMin = document.getElementById('subtractMin').checked;
@@ -1414,11 +1467,13 @@ function switchLanguage(lang) {
 
     let xsRaw=[], ysRaw=[], levelForPoint=[];
     levels.forEach(lv=>{
-      const conc = standardConc[lv];
-      if(conc==null || isNaN(conc)) return;
-      xsRaw.push(conc);
-      ysRaw.push(mean(stdGroups[lv]));
-      levelForPoint.push(lv);
+    const conc = standardConc[lv];
+    const rawODs = stdGroups[lv];
+    // 檢查 rawODs 是否存在及包含有效資料
+    if(conc==null || isNaN(conc) || !rawODs || rawODs.length === 0) return;
+    xsRaw.push(conc);
+    ysRaw.push(mean(rawODs));
+    levelForPoint.push(lv);
     });
 
     const blankVals = Object.values(wells).filter(w=>w.type==='blank' && w.od!=null).map(w=>w.od);
@@ -1449,7 +1504,10 @@ function switchLanguage(lang) {
     let normInfo = {method: normMethod};
     if(normMethod==='max100'){
   const mx = Math.max(...ys);
-  if(!isFinite(mx) || mx < 1e-12){ alert(translations[currentLanguage]['alert-norm-max']); return; }
+  if(!isFinite(mx) || mx <= 0){ 
+  alert(currentLanguage === 'zh' ? '無法進行正規化：扣除背景後最大反應值為負數或零，請檢查 Blank OD 是否異常過高。' : 'Cannot normalize: Max response is ≤ 0 after subtraction. Please check if Blank OD is abnormally high.'); 
+  return; 
+  }
   normInfo.max = mx;
   ys = ys.map(y=> y/mx*100);
 } else if(normMethod==='minmax'){
@@ -1475,39 +1533,47 @@ function switchLanguage(lang) {
     const yAtMaxX = ys[xs.indexOf(Math.max(...xs))];
     const isCurveIncreasing = yAtMaxX >= yAtMinX; // 判斷是正相關還是負相關(競爭型)
 
-    // 修改：新增 isHtml 參數，網頁渲染時包覆翻譯標籤，CSV 匯出時維持純文字
-    function getConcStr(conc, y, isHtml = false) {
-  // 1. 優先檢查是否超出實際標準品的反應值邊界 (OOR)
-  let key = null;
-  if (isCurveIncreasing) {
-    if (y > maxStdY) key = 'oor-high';
-    if (y < minStdY) key = 'oor-low';
-  } else {
-    if (y < minStdY) key = 'oor-high'; 
-    if (y > maxStdY) key = 'oor-low';
-  }
-  
-  // 若觸發 OOR，強制攔截並輸出警告，不再理會迴歸算出的天文數字
-  if (key) {
-    return isHtml 
-      ? `<span data-text="${key}">${translations[currentLanguage][key]}</span>`
-      : translations[currentLanguage][key];
-  }
+    const minStdX = Math.min(...xs);
+    const maxStdX = Math.max(...xs);
 
-  // 2. 若未超出邊界，再檢查反算出的濃度是否為有效的正實數
-  if (isFinite(conc) && conc >= 0) return fmt(conc); 
-  
-  return '—'; 
-}
+    // 新增：isStandard 參數，用於標準品的反推，避免因為迴歸擬合的正常偏差導致標準品被誤判為 OOR
+    function getConcStr(conc, y, isHtml = false, isStandard = false) {
+      if (isFinite(conc)) {
+        if (!isStandard) {
+          const epsilon = (maxStdX - minStdX) * 1e-7;
+          if (conc > maxStdX + epsilon) {
+            return isHtml ? `<span data-text="oor-high">${translations[currentLanguage]['oor-high']}</span>` : translations['en']['oor-high'];
+          }
+          if (conc < minStdX - epsilon) {
+            return isHtml ? `<span data-text="oor-low">${translations[currentLanguage]['oor-low']}</span>` : translations['en']['oor-low'];
+          }
+          if (conc < 0) {
+            return isHtml ? `<span data-text="oor-low">${translations[currentLanguage]['oor-low']}</span>` : translations['en']['oor-low'];
+          }
+        }
+        if (conc >= 0) return fmt(conc);
+      }
+      
+      if (!isStandard) {
+        let key = null;
+        if (isCurveIncreasing) {
+          if (y > maxStdY) key = 'oor-high';
+          if (y < minStdY) key = 'oor-low';
+        } else {
+          if (y < minStdY) key = 'oor-high'; 
+          if (y > maxStdY) key = 'oor-low';
+        }
+        if (key) {
+          return isHtml 
+            ? `<span data-text="${key}">${translations[currentLanguage][key]}</span>`
+            : translations['en'][key];
+        }
+      }
 
-// 修正：權重必須基於實際送入回歸的 ys 陣列來計算權重，並取絕對值防範扣除誤差產生的負數
-const weights = ys.map(y => {
-  if (weightMethod === '1/y2') {
-    const safeY = Math.max(Math.abs(y), 1e-4);
-    return 1 / (safeY * safeY);
-  }
-  return 1;
-});
+      return '—'; 
+    }
+
+const weights = ys.map(() => 1);
 
 let fitResult, modelFn, invertFn, paramNames, eqnStr;
 
@@ -1520,7 +1586,6 @@ if(regModel==='linear'){
   eqnStr = `y = a·x + b  →  a = ${fmtParam(fitResult.params[0])}, b = ${fmtParam(fitResult.params[1])}`;
 } else if(regModel==='5pl'){
   if(xs.length < 6) { alert(translations[currentLanguage]['alert-5pl-min']); return; }
-  const nzX = xs.filter(x=>x>0);
   const yAtMinX = ys[xs.indexOf(Math.min(...xs))];
   const yAtMaxX = ys[xs.indexOf(Math.max(...xs))];
   const isIncreasing = yAtMaxX >= yAtMinX;
@@ -1544,7 +1609,6 @@ const C0 = bestC0;
   eqnStr = `y = D + (A−D) / (1+(x/C)^B)^E  →  A=${fmtParam(p[0])}, B=${fmtParam(p[1])}, C=${fmtParam(p[2])}, D=${fmtParam(p[3])}, E=${fmtParam(p[4])}`;
 } else {
   if(xs.length < 5) { alert(translations[currentLanguage]['alert-4pl-min']); return; }
-  const nzX = xs.filter(x=>x>0);
   const yAtMinX = ys[xs.indexOf(Math.min(...xs))];
   const yAtMaxX = ys[xs.indexOf(Math.max(...xs))];
   const isIncreasing = yAtMaxX >= yAtMinX;
@@ -1641,7 +1705,7 @@ const C0 = bestC0;
         const processedStr = fmt(transformed);
         const cvStr = calcCV(raw);
         const back = invertFn(transformed, params); 
-        const concStr = getConcStr(back, transformed);
+        const concStr = getConcStr(back, transformed, false, true);
         const recoveryStr = (isFinite(back) && back >= 0 && known > 0) ? (back/known*100).toFixed(1)+'%' : '---';
         
         csvStr += `"S${lv}","${wellIds}","${knownStr}","${rawStr}","${meanStr}","${processedStr}","${cvStr}","${concStr}","${recoveryStr}"\n`;
@@ -1660,7 +1724,7 @@ const C0 = bestC0;
         let recoveryStr = "---";
         if (blankAsStd) {
             const back = invertFn(transformed, params);
-            concStr = getConcStr(back, transformed);
+            concStr = getConcStr(back, transformed, false, true);
             // 空白點已知濃度為 0，不計算 Recovery 以免除以零
         }
         csvStr += `"BL","${wellIds}","${knownStr}","${rawStr}","${meanStr}","${processedStr}","${cvStr}","${concStr}","${recoveryStr}"\n`;
@@ -1681,7 +1745,7 @@ const C0 = bestC0;
             const processedStr = fmt(transformed); 
             const cvStr = calcCV(raw);
             const conc = invertFn(transformed, params);
-            const concStr = getConcStr(conc, transformed);
+            const concStr = getConcStr(conc, transformed, false, false);
             
             csvStr += `"${label}","${wellIds}","${knownStr}","${rawStr}","${meanStr}","${processedStr}","${cvStr}","${concStr}","---"\n`;
         });
@@ -1729,14 +1793,7 @@ const C0 = bestC0;
 
     // 7. CSV: Method Settings
     csvStr += `\n"Method Settings",""\n`;
-    csvStr += `"Regression model","${csvEscape(modelLabelText)}"\n`;
-    
-    // 強制使用英文對照表輸出權重設定
-    const weightMethodVal = document.querySelector('input[name=weightMethod]:checked').value;
-    const weightLabelMapEn = { 'none': 'Unweighted', '1/y2': '1/Y²' };
-    const weightLabelStr = weightLabelMapEn[weightMethodVal] || weightMethodVal;
-    csvStr += `"Weighting","${csvEscape(weightLabelStr)}"\n`;
-    
+    csvStr += `"Regression model","${csvEscape(modelLabelText)}"\n`;   
     csvStr += `"Normalization","${csvEscape(normLabel)}"\n`;
     csvStr += `"Plot scale","${csvEscape(scaleSelect.options[scaleSelect.selectedIndex].text)}"\n`;
     csvStr += `"Blank as standard","${blankAsStd ? 'Yes' : 'No'}"\n`;
@@ -1784,7 +1841,7 @@ const C0 = bestC0;
         <td>${fmt(meanOd)}</td> <!-- 修改：新增輸出平均 OD 數值 -->
         <td>${fmt(ys[i])}</td>
         <td>${cv}</td>
-        <td>${getConcStr(back, ys[i], true)}</td>
+        <td>${getConcStr(back, ys[i], true, true)}</td>
         <td>${recovery}</td>
       </tr>`;
     });
@@ -1810,7 +1867,7 @@ const C0 = bestC0;
           <td>${fmt(meanOd)}</td>
           <td>${fmt(transformed)}</td>
           <td>${cv}</td>
-          <td>${getConcStr(conc, transformed, true)}</td>
+          <td>${getConcStr(conc, transformed, true, false)}</td>
         </tr>`;
       });
     });
@@ -1823,8 +1880,14 @@ const C0 = bestC0;
     drawChartPlotly(xs, ys, modelFn, params, plotScale, normMethod);
 
     document.getElementById('results').style.display='block';
-    document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
-    switchLanguage(currentLanguage);
+    
+    // 新增判斷：若非語系切換觸發的分析，才執行畫面捲動
+    if (!window.preventAutoScroll) {
+      document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    
+    // 傳入 true，通知 switchLanguage 這是分析結束後的文字替換，切勿再次觸發分析
+    switchLanguage(currentLanguage, true);
   }
 
   function fmt(v){
@@ -1862,14 +1925,16 @@ const C0 = bestC0;
     }
 
     const rawXmin = Math.min(...xVals), rawXmax = Math.max(...xVals);
-    const N = 200; 
+    const N = 200;
+    const positiveXs = xVals.filter(x => x > 0);
+    const minLogX = positiveXs.length > 0 ? Math.min(...positiveXs) / 5 : 1e-6; 
     let curveX = [];
     let curveY = [];
     
     for(let i=0; i<=N; i++){
       let xv;
       if(useLogX){
-        const lo = Math.log10(Math.max(rawXmin, 1e-6)), hi = Math.log10(rawXmax);
+        const lo = Math.log10(minLogX), hi = Math.log10(rawXmax);
         xv = Math.pow(10, lo + (hi - lo) * i / N);
       } else {
         xv = rawXmin + (rawXmax - rawXmin) * i / N;
@@ -1904,20 +1969,25 @@ const C0 = bestC0;
     };
 
     const layout = {
-      margin: { l: 60, r: 30, t: 30, b: 50 },
+      // 擴大左側與下方的留白，避免放大的標題被裁切
+      margin: { l: 70, r: 30, t: 40, b: 60 },
       xaxis: {
-        title: { text: translations[currentLanguage]['chart-x-conc'], font: { size: 12, color: '#334155', weight: 600 } },
+        // 放大座標軸標題至 18
+        title: { text: translations[currentLanguage]['chart-x-conc'], font: { size: 18, color: '#334155', weight: 600 } },
         type: useLogX ? 'log' : 'linear',
         gridcolor: '#F1F5F9',
         zerolinecolor: '#E2E8F0',
-        tickfont: { family: 'SFMono-Regular, Consolas, monospace', size: 11, color: '#64748B' }
+        // 放大刻度數字至 14
+        tickfont: { family: 'SFMono-Regular, Consolas, monospace', size: 14, color: '#64748B' }
       },
       yaxis: {
-        title: { text: normMethod === 'none' ? translations[currentLanguage]['chart-y-od'] : translations[currentLanguage]['chart-y-resp'], font: { size: 12, color: '#334155', weight: 600 } },
+        // 放大座標軸標題至 18
+        title: { text: normMethod === 'none' ? translations[currentLanguage]['chart-y-od'] : translations[currentLanguage]['chart-y-resp'], font: { size: 18, color: '#334155', weight: 600 } },
         type: useLogY ? 'log' : 'linear',
         gridcolor: '#F1F5F9',
         zerolinecolor: '#E2E8F0',
-        tickfont: { family: 'SFMono-Regular, Consolas, monospace', size: 11, color: '#64748B' }
+        // 放大刻度數字至 14
+        tickfont: { family: 'SFMono-Regular, Consolas, monospace', size: 14, color: '#64748B' }
       },
       plot_bgcolor: '#ffffff',
       paper_bgcolor: '#ffffff',
@@ -1929,7 +1999,15 @@ const C0 = bestC0;
       responsive: true, 
       displayModeBar: true,
       displaylogo: false,
-      modeBarButtonsToRemove: ['lasso2d', 'select2d']
+      modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+      // 修正：強制設定下載圖示存檔時的高解析度與尺寸
+      toImageButtonOptions: {
+        format: 'png', // 支援 png, svg, jpeg, webp
+        filename: 'ELISA_Standard_Curve',
+        width: 1200,   // 設定基礎寬度
+        height: 800,   // 設定基礎高度
+        scale: 2       // 放大兩倍，最終輸出將為 2400 x 1600 像素的高畫質圖片
+      }
     };
 
     Plotly.newPlot('chartDiv', [traceCurve, traceData], layout, config);
@@ -1938,7 +2016,10 @@ const C0 = bestC0;
   document.getElementById('btnAnalyze').addEventListener('click', analyze);
 
   document.getElementById('btnExportCSV').addEventListener('click', () => {
-    if(!window.currentCsvExport) return;
+    if(!window.currentCsvExport) {
+      alert(translations[currentLanguage]['msg-export-empty']);
+      return;
+    }
     const blob = new Blob([window.currentCsvExport], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1947,6 +2028,148 @@ const C0 = bestC0;
     a.click();
     URL.revokeObjectURL(url);
   });
+
+  // ========== CSV 匯入與解析邏輯 ==========
+  document.getElementById('btnImportCSV').addEventListener('click', () => {
+    document.getElementById('fileImportCSV').click();
+  });
+
+  document.getElementById('fileImportCSV').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        parseImportedCSV(evt.target.result);
+        e.target.value = ''; // 重置 input 讓下次選同一個檔案仍能觸發
+      } catch (err) {
+        alert('CSV parse error: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  function parseImportedCSV(csvText) {
+    const lines = csvText.replace(/\r\n/g, '\n').split('\n');
+    let mode = 'meta'; 
+    let repCounters = {};
+    
+    // 1. 初始化清空現有狀態
+    Object.keys(wells).forEach(id => { wells[id] = {od: null, type: null, level: null, rep: null}; });
+    standardConc = {};
+    document.getElementById('pasteArea').value = '';
+
+    // CSV 逗號引號安全解析器
+    const parseLine = (str) => {
+        let result = [], curr = '', inQuotes = false;
+        for(let j=0; j<str.length; j++){
+            if(str[j] === '"') {
+                if(inQuotes && str[j+1] === '"') { curr += '"'; j++; }
+                else { inQuotes = !inQuotes; }
+            } else if(str[j] === ',' && !inQuotes) { 
+                result.push(curr); curr = ''; 
+            } else { curr += str[j]; }
+        }
+        result.push(curr);
+        return result;
+    };
+
+    // 2. 逐行掃描並辨識區塊
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if(!line) continue;
+      const c = parseLine(line);
+
+      // 檢查是否進入特定區塊
+      if (c[0] === "OD Grid") { mode = 'od_grid'; i++; continue; }
+      if (c[0] === "Well Assignment") { mode = 'well_assign'; i++; continue; }
+      if (c[0] === "Standard Concentrations") { mode = 'std_conc'; continue; }
+      if (c[0] === "Method Settings") { mode = 'method_settings'; continue; }
+      
+      // 根據區塊模式寫入資料
+      if (mode === 'meta') {
+          if (c[0] === "Experiment name:") document.getElementById('expName').value = c[1] || '';
+          if (c[0] === "Sample name:") document.getElementById('sampleName').value = c[1] || '';
+          if (c[0] === "Target:") document.getElementById('targetName').value = c[1] || '';
+      } else if (mode === 'od_grid') {
+          if(c.length >= 13 && /^[A-H]$/.test(c[0])) {
+              const r = c[0];
+              for (let col = 1; col <= 12; col++) {
+                  const val = parseFloat(c[col]);
+                  wells[r + col].od = isNaN(val) ? null : val;
+              }
+          }
+      } else if (mode === 'well_assign') {
+          if(c.length >= 13 && /^[A-H]$/.test(c[0])) {
+              const r = c[0];
+              for (let col = 1; col <= 12; col++) {
+                  const label = c[col];
+                  const id = r + col;
+                  if (!label || label === '') continue;
+                  
+                  let type = null, level = null;
+                  if (label === 'BL') { type = 'blank'; }
+                  else if (label.startsWith('S')) { type = 'standard'; level = parseInt(label.substring(1)); }
+                  else if (label.startsWith('U')) { type = 'unknown'; level = parseInt(label.substring(1)); }
+                  else if (label.startsWith('C')) { type = 'control'; level = parseInt(label.substring(1)); }
+                  
+                  if (type) {
+                      wells[id].type = type;
+                      wells[id].level = level;
+                      repCounters[label] = (repCounters[label] || 0) + 1;
+                      wells[id].rep = repCounters[label];
+                  }
+              }
+          }
+      } else if (mode === 'std_conc') {
+          if (c.length >= 2 && c[0].startsWith('S')) {
+              const level = parseInt(c[0].substring(1));
+              const val = parseFloat(c[1]);
+              if (!isNaN(level) && !isNaN(val)) standardConc[level] = val;
+          }
+      } else if (mode === 'method_settings') {
+          if (c[0] === "Regression model") {
+              const rm = c[1];
+              if (rm === '4PL') document.getElementById('rm4pl').checked = true;
+              if (rm === '5PL') document.getElementById('rm5pl').checked = true;
+              if (rm === 'Linear') document.getElementById('rmlin').checked = true;
+          }
+          if (c[0] === "Normalization") {
+              const nm = c[1];
+              if (nm === 'No normalization') document.getElementById('normNone').checked = true;
+              if (nm === 'Max = 100%') document.getElementById('normMax').checked = true;
+              if (nm === 'Min-Max') document.getElementById('normMinMax').checked = true;
+          }
+          if (c[0] === "Plot scale") {
+              const ps = c[1];
+              if (ps === 'Normal scale') document.getElementById('plotScale').value = 'normal';
+              if (ps === 'Semi-log scale') document.getElementById('plotScale').value = 'semilog';
+              if (ps === 'Log-log scale') document.getElementById('plotScale').value = 'loglog';
+          }
+          if (c[0] === "Blank as standard") document.getElementById('blankAsStd').checked = (c[1] === 'Yes');
+          if (c[0] === "Subtract minimum OD") document.getElementById('subtractMin').checked = (c[1] === 'Yes');
+          if (c[0] === "Concentration unit") document.getElementById('concUnit').value = c[1];
+      }
+    }
+    
+    // 3. 將重組後的資料回填至網頁 UI 上
+    document.querySelectorAll('.od-input').forEach(inp => {
+        const id = inp.dataset.well;
+        inp.value = wells[id].od !== null ? wells[id].od : '';
+    });
+    
+    showGridArea();
+    renderWellGrid();
+    renderStandardConcSection();
+    document.getElementById('results').style.display = 'none';
+    window.currentCsvExport = null; // 清空舊的匯出暫存
+    
+    // 校正智慧編號推移
+    autoUpdateStartNum('standard'); 
+    
+    alert(translations[currentLanguage]['msg-import-success']);
+  }
+  // ==========================================
 
   buildOdGrid();
   buildWellGrid();
