@@ -1603,8 +1603,8 @@ const C0 = bestC0;
   fitResult = fitLM(model5PL, xs, ys, [A0, 1, C0||1, D0, 1], 400, weights);
   modelFn = model5PL; invertFn = invert5PL;
   paramNames = isIncreasing 
-    ? ['A (min)','B (slope)','C (EC50)','D (max)','E (asymmetry)'] 
-    : ['A (max)','B (slope)','C (EC50)','D (min)','E (asymmetry)'];
+    ? ['A (min)','B (slope)','C (Inflection)','D (max)','E (asymmetry)'] 
+    : ['A (max)','B (slope)','C (Inflection)','D (min)','E (asymmetry)'];
   const p = fitResult.params;
   eqnStr = `y = D + (A−D) / (1+(x/C)^B)^E  →  A=${fmtParam(p[0])}, B=${fmtParam(p[1])}, C=${fmtParam(p[2])}, D=${fmtParam(p[3])}, E=${fmtParam(p[4])}`;
 } else {
@@ -1940,7 +1940,11 @@ const C0 = bestC0;
         xv = rawXmin + (rawXmax - rawXmin) * i / N;
       }
       const yv = modelFn(xv, params);
-      if(useLogY && yv <= 0) continue;
+      if(useLogY && yv <= 0) {
+          curveX.push(xv);
+          curveY.push(null); // 推入 null 讓 Plotly 安全忽略該點
+          continue;
+      }
       curveX.push(xv);
       curveY.push(yv);
     }
@@ -2043,14 +2047,15 @@ const C0 = bestC0;
         parseImportedCSV(evt.target.result);
         e.target.value = ''; // 重置 input 讓下次選同一個檔案仍能觸發
       } catch (err) {
-        alert('CSV parse error: ' + err.message);
+        const msg = currentLanguage === 'zh' ? 'CSV 解析錯誤：' : 'CSV parse error: ';
+        alert(msg + err.message);
       }
     };
     reader.readAsText(file);
   });
 
   function parseImportedCSV(csvText) {
-    const lines = csvText.replace(/\r\n/g, '\n').split('\n');
+    const lines = csvText.split(/\r?\n|\r/);
     let mode = 'meta'; 
     let repCounters = {};
     
