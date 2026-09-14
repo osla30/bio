@@ -136,7 +136,7 @@
         .card:nth-child(1) { border-top-color: #3498db; background-color: #f0f7ff; } 
         /* 2. 蛋白質電泳 - 修改為綠色系背景與邊框 */
         .card:nth-child(2) { border-top-color: #27ae60; background-color: #f0fff4; } 
-        /* 3. Western Blot - 淺橘背景 */
+        /* 3. 蛋白質分析 - 淺橘背景 */
         .card:nth-child(3) { border-top-color: #fad0c4; background-color: #fffaf0; } 
         /* 4. 核酸分析 - 淺粉背景 */
         .card:nth-child(4) { border-top-color: #fbc2eb; background-color: #fff9fe; } 
@@ -333,7 +333,7 @@
             </div>
 
             <div class="card">
-                <h2 data-i18n="cat2_title">🧪 蛋白質電泳 (PAGE)</h2>
+                <h2 data-i18n="cat2_title">🧪 蛋白質電泳</h2>
                 <div class="tool-list">
                     <div class="tool-item">
                         <div class="tool-title" data-i18n="c2_t1_title">經典SDS-PAGE 鑄膠計算器</div>
@@ -383,7 +383,7 @@
             </div>
 
             <div class="card">
-                <h2 data-i18n="cat3_title">🆆🅱 西方墨點法 (Western Blot)</h2>
+                <h2 data-i18n="cat3_title">🧪 蛋白質分析</h2>
                 <div class="tool-list">
                     <div class="tool-item">
                         <div class="tool-title" data-i18n="c3_t1_title">BCA Working Solution 體積計算器</div>
@@ -407,6 +407,14 @@
                         <div class="actions">
                             <a href="https://osla30.github.io/bio/wb/wbnormal" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
                             <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/wb/wbnormal')" data-i18n="btn_copy">複製連結</button>
+                        </div>
+                    </div>
+                    <div class="tool-item">
+                        <div class="tool-title" data-i18n="c3_t4_title">ELISA 數據分析工具</div>
+                        <div class="tool-desc" data-i18n="c3_t4_desc">貼上 OD 值、指定孔位配置與標準品濃度，選擇擬合模型，即可自動產生標準曲線並換算樣品濃度。</div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/elisa/elisa" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/elisa/elisa')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                 </div>
@@ -456,7 +464,7 @@
                 c1_t4_title: "學術科研配色",
                 c1_t4_desc: "各種學術科研配色方案",
                 
-                cat2_title: "🧪 蛋白質電泳 (PAGE)",
+                cat2_title: "🧪 蛋白質電泳",
                 c2_t1_title: "經典SDS-PAGE 鑄膠計算器",
                 c2_t1_desc: `傳統經典 鑄膠計算 (SDS-PAGE用)
                             <span class="sub-text">
@@ -477,13 +485,15 @@
                                 2X 下膠 Buffer (0.75M Tris, 0.2% SDS, pH8.8)
                             </span>`,
                             
-                cat3_title: "🆆🅱 西方墨點法 (Western Blot)",
+                cat3_title: "🧪 蛋白質分析",
                 c3_t1_title: "BCA Working Solution 體積計算器",
                 c3_t1_desc: "BCA Working Solution 體積計算",
                 c3_t2_title: "Bradford/BCA 蛋白質定量工具",
                 c3_t2_desc: "蛋白質定量計算、Western Blot 樣本配製計算",
                 c3_t3_title: "Western Blot 條帶相對定量標準化工具",
                 c3_t3_desc: "輸入條帶灰度值，即可進行相對定量與標準化分析",
+                c3_t4_title: "ELISA 數據分析工具",
+                c3_t4_desc: "貼上 OD 值、指定孔位配置與標準品濃度，選擇擬合模型，即可自動產生標準曲線並換算樣品濃度。",
                 
                 cat4_title: "🧬 核酸分析 (PCR)",
                 c4_t1_title: "qPCR 相對定量分析工具",
@@ -511,7 +521,7 @@
                 c1_t4_title: "Academic Color Palettes",
                 c1_t4_desc: "Color palettes for scientific figures and presentations",
                 
-                cat2_title: "🧪 Protein Electrophoresis (PAGE)",
+                cat2_title: "🧪 Protein Electrophoresis",
                 c2_t1_title: "Classic SDS-PAGE Gel Calculator",
                 c2_t1_desc: `Traditional gel casting calculation (for SDS-PAGE)
                             <span class="sub-text">
@@ -532,13 +542,15 @@
                                 2X Resolving Buffer (0.75M Tris, 0.2% SDS, pH8.8)
                             </span>`,
                             
-                cat3_title: "🆆🅱 Western Blot",
+                cat3_title: "🧪 Protein Analysis",
                 c3_t1_title: "BCA Working Solution Vol Calculator",
                 c3_t1_desc: "Calculate required volume for BCA working solution",
                 c3_t2_title: "Bradford/BCA Protein Assay Tool",
                 c3_t2_desc: "Protein quantification and Western Blot sample prep calculations",
                 c3_t3_title: "WB Band Normalization Tool",
                 c3_t3_desc: "Enter band densitometry values for relative quantification and normalization",
+                c3_t4_title: "ELISA Data Analysis Tool",
+                c3_t4_desc: "Paste OD values, assign plate layout and standard concentrations, select a fitting model to automatically generate a standard curve and calculate sample concentrations.",
                 
                 cat4_title: "🧬 Nucleic Acid Analysis (PCR)",
                 c4_t1_title: "qPCR Relative Quantification Tool",
