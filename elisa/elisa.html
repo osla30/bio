@@ -596,7 +596,7 @@ const translations = {
     "type-control": "Control",
     "alert-lack-std": "可用的標準品數據點不足（至少需要 3 個濃度點且已輸入對應濃度值），請確認孔位指定與標準品濃度設定。",
     "alert-dup-std": "標準品濃度存在重複數值，請確認標準曲線設定是否正確。",
-    "alert-norm-max": "無法進行 Max = 100% 正規化：反應值皆為 0。",
+    "alert-norm-max": "無法進行 Max = 100% 正規化：扣除背景後最大反應值為負數或零，請檢查 Blank OD 是否異常過高。",
     "alert-norm-minmax": "無法進行 Min-Max 正規化：反應值無有效差異。",
     "alert-linear-min": "Linear 至少需要 3 個有效濃度點。",
     "alert-linear-slope": "線性標準曲線斜率接近 0，無法反算濃度。",
@@ -700,7 +700,7 @@ const translations = {
     "type-control": "Control",
     "alert-lack-std": "Insufficient standard points (at least 3 needed). Please check well assignments and concentration inputs.",
     "alert-dup-std": "Duplicate standard concentrations detected. Please check standard curve settings.",
-    "alert-norm-max": "Cannot apply Max = 100% normalization: All responses are 0.",
+    "alert-norm-max": "Cannot apply Max = 100% normalization: Max response is ≤ 0 after subtraction. Please check if Blank OD is abnormally high.",
     "alert-norm-minmax": "Cannot apply Min-Max normalization: No significant difference in responses.",
     "alert-linear-min": "Linear regression requires at least 3 valid concentration points.",
     "alert-linear-slope": "Linear standard curve slope is close to 0, unable to calculate concentrations.",
@@ -1513,7 +1513,7 @@ function switchLanguage(lang, preventReanalyze = false) {
     if(normMethod==='max100'){
   const mx = Math.max(...ys);
   if(!isFinite(mx) || mx <= 0){ 
-  alert(currentLanguage === 'zh' ? '無法進行正規化：扣除背景後最大反應值為負數或零，請檢查 Blank OD 是否異常過高。' : 'Cannot normalize: Max response is ≤ 0 after subtraction. Please check if Blank OD is abnormally high.'); 
+  alert(translations[currentLanguage]['alert-norm-max']); 
   return; 
   }
   normInfo.max = mx;
@@ -1699,7 +1699,7 @@ const C0 = bestC0;
     
     let otherSettings = [];
     if(blankAsStd) otherSettings.push('Blank as standard');
-    if(subtractMin) otherSettings.push('Subtract minimum');
+    if(subtractMin) otherSettings.push('Subtract blank OD');
     csvStr += `"Other Settings:","${otherSettings.length ? otherSettings.join(', ') : 'None'}"\n`;
     csvStr += `"Parameters:"," "\n`;
     paramNames.forEach((pn, i) => {
@@ -1813,7 +1813,7 @@ const C0 = bestC0;
     csvStr += `"Normalization","${csvEscape(normLabel)}"\n`;
     csvStr += `"Plot scale","${csvEscape(scaleSelect.options[scaleSelect.selectedIndex].text)}"\n`;
     csvStr += `"Blank as standard","${blankAsStd ? 'Yes' : 'No'}"\n`;
-    csvStr += `"Subtract minimum OD","${subtractMin ? 'Yes' : 'No'}"\n`;
+    csvStr += `"Subtract blank OD","${subtractMin ? 'Yes' : 'No'}"\n`;
     
     // 修正 B2：直接輸出完整 unit（如 pg/mL），移除 .split('/')[0] 防止單位被截斷
     csvStr += `"Concentration unit","${csvEscape(unit)}"\n`;
@@ -2163,7 +2163,7 @@ const C0 = bestC0;
               if (ps === 'Log-log scale') document.getElementById('plotScale').value = 'loglog';
           }
           if (c[0] === "Blank as standard") document.getElementById('blankAsStd').checked = (c[1] === 'Yes');
-          if (c[0] === "Subtract minimum OD") document.getElementById('subtractMin').checked = (c[1] === 'Yes');
+          if (c[0] === "Subtract blank OD") document.getElementById('subtractMin').checked = (c[1] === 'Yes');
           if (c[0] === "Concentration unit") document.getElementById('concUnit').value = c[1];
       }
     }
