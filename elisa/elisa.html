@@ -140,14 +140,16 @@
   td.odcell{padding:2px;}
 
   .well-cell{
-    touch-action: none; /* 修正：網格內部完全禁用原生滑動，交由 JS 處理拖曳 */
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    width:50px;height:38px;border:1px solid var(--gray-200);border-radius:6px;
-    text-align:center;vertical-align:middle;font-size:11px;font-weight:700;color:var(--ink-soft);
-    background:#fff;cursor:pointer;user-select:none;line-height:1.15;
+  touch-action: none; /* 修正：網格內部完全禁用原生滑動，交由 JS 處理拖曳 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  width:50px;height:38px;border:1px solid var(--gray-200);border-radius:6px;
+  /* 改用 Flexbox 完美置中，並將字體從 11px 加大至 14px */
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:var(--ink-soft);
+  background:#fff;cursor:pointer;user-select:none;
   }
-  .well-cell .rep{display:block;font-weight:500;font-size:9px;opacity:.85;}
+  /* 已將 .well-cell .rep 樣式整行刪除，因為不再需要 */
   .well-cell.type-standard{background:var(--blue-500);color:#fff;border-color:var(--blue-600);}
   .well-cell.type-unknown{background:var(--teal);color:#fff;border-color:#0f766e;}
   .well-cell.type-control{background:var(--amber);color:#fff;border-color:#d97706;}
@@ -411,8 +413,8 @@
       <div class="field">
         <label data-text="lbl-conc-unit">濃度單位 Unit</label>
         <select id="concUnit">
-          <option>pg/mL</option>
-          <option selected>ng/mL</option>
+          <option selected>pg/mL</option>
+          <option>ng/mL</option>
           <option>µg/mL</option>
           <option>mg/mL</option>
           <option>mIU/mL</option>
@@ -479,7 +481,7 @@
     <fieldset>
       <legend data-text="lgd-other">其他設定 Other settings</legend>
       <div class="checkline"><input type="checkbox" id="blankAsStd"><label for="blankAsStd" data-text="lbl-blank-std">將 Blank 作為標準品數據（0 濃度點）</label></div>
-      <div class="checkline"><input type="checkbox" id="subtractMin"><label for="subtractMin" data-text="lbl-sub-min">從所有 OD 值中扣除 Blank / 最小 OD 值</label></div>
+      <div class="checkline"><input type="checkbox" id="subtractMin" checked><label for="subtractMin" data-text="lbl-sub-min">從所有 OD 值中扣除 Blank 背景值</label></div>
     </fieldset>
   </div>
 
@@ -565,7 +567,7 @@ const translations = {
     "lbl-norm-minmax": "將最大反應值設為 100%、最小值設為 0%",
     "lgd-other": "其他設定 Other settings",
     "lbl-blank-std": "將 Blank 作為標準品數據（0 濃度點）",
-    "lbl-sub-min": "從所有 OD 值中扣除 Blank / 最小 OD 值",
+    "lbl-sub-min": "從所有 OD 值中扣除 Blank 背景值",
     "btn-demo": "載入示範數據",
     "btn-analyze": "開始分析 Analyze",
     "btn-clear-all": "清除所有設定",
@@ -669,7 +671,7 @@ const translations = {
     "lbl-norm-minmax": "Set max response to 100%, min to 0%",
     "lgd-other": "Other settings",
     "lbl-blank-std": "Treat Blank as standard data (0 concentration)",
-    "lbl-sub-min": "Subtract Blank / Minimum OD from all values",
+    "lbl-sub-min": "Subtract Blank OD from all values",
     "btn-demo": "Load Demo Data",
     "btn-analyze": "Analyze",
     "btn-clear-all": "Clear All Settings",
@@ -770,7 +772,7 @@ function switchLanguage(lang, preventReanalyze = false) {
   const COLS = 12;
 
   let wells = {}; 
-  ROWS.forEach(r=>{ for(let c=1;c<=COLS;c++){ wells[r+c] = {od:null, type:null, level:null, rep:null}; } });
+  ROWS.forEach(r=>{ for(let c=1;c<=COLS;c++){ wells[r+c] = {od:null, type:null, level:null}; } });
 
   let standardConc = {}; 
   let currentType = 'standard';
@@ -860,7 +862,7 @@ function switchLanguage(lang, preventReanalyze = false) {
         updatePreview(selection);
       });
       cell.addEventListener('touchstart', e=>{
-        e.preventDefault();
+        if(e.cancelable) e.preventDefault();
         isDragging = true;
         dragStartId = cell.dataset.well;
         selection = new Set([dragStartId]);
@@ -902,7 +904,7 @@ function switchLanguage(lang, preventReanalyze = false) {
   function assignWells(idsSet, type){
     const ids = [...idsSet];
     if(type === 'erase'){
-      ids.forEach(id=>{ wells[id].type=null; wells[id].level=null; wells[id].rep=null; });
+      ids.forEach(id=>{ wells[id].type=null; wells[id].level=null; });
       renderWellGrid();
       renderStandardConcSection();
       return;
@@ -941,11 +943,9 @@ function switchLanguage(lang, preventReanalyze = false) {
         }
       }
       order.forEach((id,i)=>{
-        const groupIdx = Math.floor(i/replicates);
-        const rep = (i % replicates) + 1;
-        wells[id].type = type;
-        wells[id].rep = rep;
-        wells[id].level = (type === 'blank') ? null : (startNum + groupIdx);
+       const groupIdx = Math.floor(i/replicates);
+       wells[id].type = type;
+       wells[id].level = (type === 'blank') ? null : (startNum + groupIdx);
       });
       renderWellGrid();
       renderStandardConcSection();
@@ -972,22 +972,19 @@ function switchLanguage(lang, preventReanalyze = false) {
 
     let groupIdx = 0;
     blockOrder.forEach(([by,bx])=>{
-      const rowStart = r0 + by*blockH, rowEnd = Math.min(r1, rowStart + blockH - 1);
-      const colStart = c0 + bx*blockW, colEnd = Math.min(c1, colStart + blockW - 1);
-      let repCounter = 0;
-      let usedBlock = false;
-      for(let r=rowStart; r<=rowEnd; r++){
-        for(let c=colStart; c<=colEnd; c++){
-          const id = ROWS[r] + (c+1);
-          if(!idSet.has(id)) continue;
-          usedBlock = true;
-          repCounter++;
-          wells[id].type = type;
-          wells[id].rep = repCounter;
-          wells[id].level = (type === 'blank') ? null : (startNum + groupIdx);
-        }
+    const rowStart = r0 + by*blockH, rowEnd = Math.min(r1, rowStart + blockH - 1);
+    const colStart = c0 + bx*blockW, colEnd = Math.min(c1, colStart + blockW - 1);
+    let usedBlock = false;
+    for(let r=rowStart; r<=rowEnd; r++){
+      for(let c=colStart; c<=colEnd; c++){
+        const id = ROWS[r] + (c+1);
+        if(!idSet.has(id)) continue;
+        usedBlock = true;
+        wells[id].type = type;
+        wells[id].level = (type === 'blank') ? null : (startNum + groupIdx);
       }
-      if(usedBlock) groupIdx++;
+    }
+    if(usedBlock) groupIdx++;
     });
 
     renderWellGrid();
@@ -1008,12 +1005,12 @@ function switchLanguage(lang, preventReanalyze = false) {
       if(w.type){
         cell.classList.add('type-'+w.type);
         if(w.type === 'blank'){
-          label = 'Blk';
-        } else {
-          label = prefixFor(w.type) + w.level;
-        }
-        const repTxt = w.rep ? `<span class="rep">r${w.rep}</span>` : '';
-        cell.innerHTML = label + repTxt;
+      label = 'Blk';
+      } else {
+      label = prefixFor(w.type) + w.level;
+      }
+      // 移除重複次數 (r1, r2) 的顯示
+      cell.innerHTML = label;
       } else {
         cell.innerHTML = '';
       }
@@ -1039,20 +1036,23 @@ function switchLanguage(lang, preventReanalyze = false) {
   }
 
   function renderStandardConcSection(){
+    const t = translations[currentLanguage];
     const levels = getStandardLevelsSorted();
     const wrap = document.getElementById('stdConcWrap');
     if(levels.length===0){
-      wrap.innerHTML = `<div class="empty-msg" data-text="msg-empty-std">${translations[currentLanguage]['msg-empty-std']}</div>`;
+      // 修正：補回 data-text，讓空狀態提示也能即時切換語系
+      wrap.innerHTML = `<div class="empty-msg" data-text="msg-empty-std">${t['msg-empty-std']}</div>`;
       return;
     }
-    let html = `<table class="std-table"><thead><tr><th data-text="th-grad">濃度梯度</th><th data-text="th-conc-val">濃度值 Concentration</th><th data-text="th-wells">孔位數 Wells</th></tr></thead><tbody>`;
+    // 修正：表頭補回 data-text，確保語系掃描器能抓到
+    let html = `<table class="std-table"><thead><tr><th data-text="th-grad">${t['th-grad']}</th><th data-text="th-conc-val">${t['th-conc-val']}</th><th data-text="th-wells">${t['th-wells']}</th></tr></thead><tbody>`;
     levels.forEach(lv=>{
       const nWells = Object.values(wells).filter(w=>w.type==='standard' && w.level===lv).length;
       const val = standardConc[lv] != null ? standardConc[lv] : '';
       html += `<tr>
         <td><span class="lvl-chip">S${lv}</span></td>
         <td><input type="text" inputmode="decimal" class="std-conc-input" id="std-conc-${lv}" data-level="${lv}" value="${val}"></td>
-        <td style="color:var(--slate);">${nWells} <span data-text="txt-wells-unit">孔</span></td>
+        <td style="color:var(--slate);">${nWells} <span data-text="txt-wells-unit">${t['txt-wells-unit']}</span></td>
       </tr>`;
     });
     html += '</tbody></table>';
@@ -1064,8 +1064,7 @@ function switchLanguage(lang, preventReanalyze = false) {
         standardConc[lv] = (isFinite(v) && v >= 0) ? v : null;
       });
     });
-    // 加入 true 參數，阻斷 switchLanguage 觸發 btnAnalyze.click() 的連鎖反應
-    switchLanguage(currentLanguage, true);
+    // 由於已改為變數直接注入，不再需要事後呼叫 switchLanguage 進行 DOM 掃描
   }
 
   function autofillConcentrations(){
@@ -1193,26 +1192,24 @@ function switchLanguage(lang, preventReanalyze = false) {
       inp.value = wells[id].od !== null ? wells[id].od : '';
     });
 
-    Object.keys(wells).forEach(id=>{ wells[id].type=null; wells[id].level=null; wells[id].rep=null; });
+    Object.keys(wells).forEach(id=>{ wells[id].type=null; wells[id].level=null; });
 
-    wells['A1'].type = 'blank';
+  wells['A1'].type = 'blank';
 
-    const stdIds = ['H1','G1','F1','E1','D1','C1','B1'];
-    stdIds.forEach((id, i) => {
-      wells[id].type = 'standard';
-      wells[id].rep = 1;
-      wells[id].level = i + 1;
-    });
+  const stdIds = ['H1','G1','F1','E1','D1','C1','B1'];
+  stdIds.forEach((id, i) => {
+    wells[id].type = 'standard';
+    wells[id].level = i + 1;
+  });
 
-    let uIndex = 1;
-    for(let c = 2; c <= 10; c++) {
-      for(let ri = 0; ri < 8; ri++) {
-        const id = ROWS[ri] + c;
-        wells[id].type = 'unknown';
-        wells[id].rep = 1;
-        wells[id].level = uIndex++;
-      }
+  let uIndex = 1;
+  for(let c = 2; c <= 10; c++) {
+    for(let ri = 0; ri < 8; ri++) {
+      const id = ROWS[ri] + c;
+      wells[id].type = 'unknown';
+      wells[id].level = uIndex++;
     }
+  }
 
     renderWellGrid();
 
@@ -1234,7 +1231,7 @@ function switchLanguage(lang, preventReanalyze = false) {
     document.getElementById('rm4pl').checked = true;
     document.getElementById('normNone').checked = true;
     document.getElementById('blankAsStd').checked = false;
-    document.getElementById('subtractMin').checked = false;
+    document.getElementById('subtractMin').checked = true;
     showGridArea();
   }
 
@@ -1247,7 +1244,7 @@ function switchLanguage(lang, preventReanalyze = false) {
   document.getElementById('btnDemo').addEventListener('click', loadDemo);
 
   document.getElementById('btnClearLayout').addEventListener('click', ()=>{
-    Object.keys(wells).forEach(id=>{ wells[id].type=null; wells[id].level=null; wells[id].rep=null; });
+    Object.keys(wells).forEach(id=>{ wells[id].type=null; wells[id].level=null; });
     standardConc = {};
     renderWellGrid();
     renderStandardConcSection();
@@ -1257,7 +1254,7 @@ function switchLanguage(lang, preventReanalyze = false) {
   });
 
   document.getElementById('btnClearAll').addEventListener('click', ()=>{
-  Object.keys(wells).forEach(id=>{ wells[id]={od:null,type:null,level:null,rep:null}; });
+  Object.keys(wells).forEach(id=>{ wells[id]={od:null,type:null,level:null}; });
   standardConc = {};
   document.getElementById('pasteArea').value='';
   buildOdGrid();
@@ -1269,9 +1266,9 @@ function switchLanguage(lang, preventReanalyze = false) {
   document.getElementById('rm4pl').checked = true;
   document.getElementById('normNone').checked = true;
   document.getElementById('blankAsStd').checked = false;
-  document.getElementById('subtractMin').checked = false;
+  document.getElementById('subtractMin').checked = true;
   document.getElementById('plotScale').value = 'normal';
-  document.getElementById('concUnit').value = 'ng/mL';
+  document.getElementById('concUnit').value = 'pg/mL';
   document.getElementById('foldsInput').value = 2;
   setSeg('foldModeSeg','divide');
   document.getElementById('startNumber').value = 1;
@@ -1403,8 +1400,19 @@ function switchLanguage(lang, preventReanalyze = false) {
 
   function model4PL(x,p){ const [A,B,C,D]=p; return D + (A-D)/(1+Math.pow(Math.max(x,1e-12)/Math.abs(C||1e-12), B)); }
   function model5PL(x,p){ const [A,B,C,D,E]=p; return D + (A-D)/Math.pow(1+Math.pow(Math.max(x,1e-12)/Math.abs(C||1e-12), B), E); }
-  function invert4PL(y,p){ const [A,B,C,D]=p; if(Math.abs(y-D)<1e-12 || Math.abs(B)<1e-12) return NaN; const base=(A-D)/(y-D)-1; return base < 0 ? NaN : C * Math.pow(base, 1/B); }
-  function invert5PL(y,p){ const [A,B,C,D,E]=p; if(Math.abs(y-D)<1e-12 || Math.abs(E)<1e-12 || Math.abs(B)<1e-12) return NaN; const inner=Math.pow((A-D)/(y-D),1/E)-1; return inner < 0 ? NaN : C * Math.pow(inner, 1/B); }
+  function invert4PL(y,p){ 
+    const [A,B,C,D]=p; 
+    if(Math.abs(y-D)<1e-12 || Math.abs(B)<1e-12) return NaN; 
+    const base=(A-D)/(y-D)-1; 
+    // base < 0 代表 y 超出漸近線極限，無法反推
+    return base < 0 ? NaN : C * Math.pow(base, 1/B); 
+  }
+  function invert5PL(y,p){ 
+    const [A,B,C,D,E]=p; 
+    if(Math.abs(y-D)<1e-12 || Math.abs(E)<1e-12 || Math.abs(B)<1e-12) return NaN; 
+    const inner=Math.pow((A-D)/(y-D),1/E)-1; 
+    return inner < 0 ? NaN : C * Math.pow(inner, 1/B); 
+  }
 
   function fitLinear(xs, ys, weights){
     let W=0, Sx=0, Sy=0, Sxx=0, Sxy=0;
@@ -1497,7 +1505,7 @@ function switchLanguage(lang, preventReanalyze = false) {
 
     let subVal = 0;
     if(subtractMin){
-      subVal = blankMean!=null ? blankMean : Math.min(...ysRaw);
+    subVal = blankMean != null ? blankMean : 0;
     }
     let ys = ysRaw.map(y=> y-subVal);
 
@@ -1538,39 +1546,45 @@ function switchLanguage(lang, preventReanalyze = false) {
 
     // 新增：isStandard 參數，用於標準品的反推，避免因為迴歸擬合的正常偏差導致標準品被誤判為 OOR
     function getConcStr(conc, y, isHtml = false, isStandard = false) {
-      if (isFinite(conc)) {
-        if (!isStandard) {
-          const epsilon = (maxStdX - minStdX) * 1e-7;
-          if (conc > maxStdX + epsilon) {
-            return isHtml ? `<span data-text="oor-high">${translations[currentLanguage]['oor-high']}</span>` : translations['en']['oor-high'];
-          }
-          if (conc < minStdX - epsilon) {
-            return isHtml ? `<span data-text="oor-low">${translations[currentLanguage]['oor-low']}</span>` : translations['en']['oor-low'];
-          }
-          if (conc < 0) {
-            return isHtml ? `<span data-text="oor-low">${translations[currentLanguage]['oor-low']}</span>` : translations['en']['oor-low'];
-          }
-        }
-        if (conc >= 0) return fmt(conc);
-      }
-      
+      let isOOR = false;
+      let key = null;
+
       if (!isStandard) {
-        let key = null;
-        if (isCurveIncreasing) {
-          if (y > maxStdY) key = 'oor-high';
-          if (y < minStdY) key = 'oor-low';
+        const epsilon = (maxStdX - minStdX) * 1e-7;
+        // 判斷是否超出範圍 (OOR)
+        if (isFinite(conc)) {
+          if (conc > maxStdX + epsilon) { isOOR = true; key = 'oor-high'; }
+          else if (conc < minStdX - epsilon || conc < 0) { isOOR = true; key = 'oor-low'; }
         } else {
-          if (y < minStdY) key = 'oor-high'; 
-          if (y > maxStdY) key = 'oor-low';
-        }
-        if (key) {
-          return isHtml 
-            ? `<span data-text="${key}">${translations[currentLanguage][key]}</span>`
-            : translations['en'][key];
+          // 若數值發散無法計算 (NaN)，則透過 Y 值 (OD) 強制判斷高低
+          if (isCurveIncreasing) {
+            if (y > maxStdY) { isOOR = true; key = 'oor-high'; }
+            if (y < minStdY) { isOOR = true; key = 'oor-low'; }
+          } else {
+            if (y < minStdY) { isOOR = true; key = 'oor-high'; }
+            if (y > maxStdY) { isOOR = true; key = 'oor-low'; }
+          }
         }
       }
 
-      return '—'; 
+      // 1. 若在正常範圍內，直接回傳格式化數值
+      if (!isOOR) {
+        return (isFinite(conc) && conc >= 0) ? fmt(conc) : '—';
+      }
+
+      // 2. 處理 OOR 狀態標籤
+      // isHtml = true (網頁顯示)：外層保留括弧，內層 span 加上 data-text 讓系統能自動切換語系
+      // isHtml = false (CSV 匯出)：強制讀取 translations['en'] 字典，確保一律輸出英文
+      let label = isHtml 
+        ? `<span style="color:var(--slate); font-size:0.9em; margin-left:4px;">(<span data-text="${key}">${translations[currentLanguage][key]}</span>)</span>`
+        : `(${translations['en'][key]})`; 
+      
+      // 3. 組合數值與標籤
+      if (isFinite(conc)) {
+        return `${fmt(conc)} ${label}`;
+      } else {
+        return `— ${label}`;
+      }
     }
 
 const weights = ys.map(() => 1);
@@ -1580,7 +1594,7 @@ let fitResult, modelFn, invertFn, paramNames, eqnStr;
 if(regModel==='linear'){
   if(xs.length < 3) { alert(translations[currentLanguage]['alert-linear-min']); return; }
   fitResult = fitLinear(xs, ys, weights);
-  if(Math.abs(fitResult.params[0]) < 1e-12) { alert(translations[currentLanguage]['alert-linear-slope']); return; }
+  if(isNaN(fitResult.params[0]) || Math.abs(fitResult.params[0]) < 1e-12) { alert(translations[currentLanguage]['alert-linear-slope']); return; }
   modelFn = modelLinear; invertFn = invertLinear;
   paramNames = ['slope (a)','intercept (b)'];
   eqnStr = `y = a·x + b  →  a = ${fmtParam(fitResult.params[0])}, b = ${fmtParam(fitResult.params[1])}`;
@@ -1651,11 +1665,13 @@ const C0 = bestC0;
     const displayTitle = [expN, tarN, samN].filter(Boolean).join(' | ');
     document.getElementById('resultsTitleExtra').innerText = displayTitle ? ` (${displayTitle})` : '';
 
+    const t = translations[currentLanguage]; // 提取至此以供後續 UI 渲染共用
+    
     document.getElementById('fitStats').innerHTML = `
-      <div class="fit-stat"><div class="lab" data-text="fit-model">回歸模型</div><div class="val">${regModel.toUpperCase()}</div></div>
+      <div class="fit-stat"><div class="lab">${t['fit-model']}</div><div class="val">${regModel.toUpperCase()}</div></div>
       <div class="fit-stat" title="R²"><div class="lab">R²</div><div class="val">${r2.toFixed(5)}</div></div>
-      <div class="fit-stat"><div class="lab" data-text="fit-pts">標準點數</div><div class="val">${xs.length}</div></div>
-      <div class="fit-stat"><div class="lab" data-text="fit-unit">濃度單位</div><div class="val">${unit}</div></div>
+      <div class="fit-stat"><div class="lab">${t['fit-pts']}</div><div class="val">${xs.length}</div></div>
+      <div class="fit-stat"><div class="lab">${t['fit-unit']}</div><div class="val">${unit}</div></div>
     `;
     document.getElementById('eqnBox').innerHTML = eqnStr;
 
@@ -1673,9 +1689,8 @@ const C0 = bestC0;
     csvStr += `"Equation:","${modelLabelText}"\n`;
     csvStr += `"R²:","${r2.toFixed(5)}"\n`;
     
-    // Plot scale 的選單內容預設為純英文，可直接讀取
+    // 取得 Plot scale 選單內容
     const scaleSelect = document.getElementById('plotScale');
-    csvStr += `"Plot Scale:","${scaleSelect.options[scaleSelect.selectedIndex].text}"\n`;
     
     // 強制使用英文對照表輸出常規化方法
     const normMapEn = { 'none': 'No normalization', 'max100': 'Max = 100%', 'minmax': 'Min-Max' };
@@ -1688,7 +1703,8 @@ const C0 = bestC0;
     csvStr += `"Other Settings:","${otherSettings.length ? otherSettings.join(', ') : 'None'}"\n`;
     csvStr += `"Parameters:"," "\n`;
     paramNames.forEach((pn, i) => {
-    csvStr += `"${pn}","${params[i]}"\n`;
+    // 加上 ="..." 格式，強制 Excel 將其視為精確字串，避開所有自動轉換警告
+    csvStr += `"${pn}","=""${fmtParam(params[i])}"""\n`;
     });
     csvStr += `\n"ID","Wells","Known Conc. (${unit})","Raw Data","Raw Average","Processed Response","CV%","Calculated Conc. (${unit})","Recovery%"\n`;
 
@@ -1803,8 +1819,8 @@ const C0 = bestC0;
     csvStr += `"Concentration unit","${csvEscape(unit)}"\n`;
 
     // --- HTML UI 畫面渲染 ---
-    // 修改：在表頭加入 <th data-text="th-avg-od">平均 OD</th>
-    let stdRows = `<tr><th data-text="th-grad">梯度</th><th data-text="th-well-id">孔位</th><th><span data-text="th-known-conc">已知濃度</span> (${unit})</th><th data-text="th-avg-od">平均 OD</th><th data-text="th-avg-resp">平均反應值 (已處理)</th><th data-text="th-cv">CV%</th><th><span data-text="th-calc-conc">回推濃度</span> (${unit})</th><th data-text="th-recovery">回收率%</th></tr>`;
+    // 修正：直接讀取當前語系字典注入變數，徹底移除事後依賴 data-text 的二次替換閃爍
+    let stdRows = `<tr><th>${t['th-grad']}</th><th>${t['th-well-id']}</th><th>${t['th-known-conc']} (${unit})</th><th>${t['th-avg-od']}</th><th>${t['th-avg-resp']}</th><th>${t['th-cv']}</th><th>${t['th-calc-conc']} (${unit})</th><th>${t['th-recovery']}</th></tr>`;
 
     // 新增：如果未勾選「將 Blank 作為標準品數據」，但使用者確實有指定 Blank 孔位，則強制在表格第一列顯示 Blank 參考數據
     if (!blankAsStd && blankMean != null) {
@@ -1847,7 +1863,7 @@ const C0 = bestC0;
     });
     document.getElementById('stdResultsTable').innerHTML = stdRows;
 
-    let sampleRows = `<tr><th data-text="th-sample-id">樣品編號</th><th data-text="th-well-id">孔位</th><th data-text="th-type">類型</th><th data-text="th-avg-od">平均 OD</th><th data-text="th-avg-resp">平均反應值 (已處理)</th><th data-text="th-cv">CV%</th><th><span data-text="th-calc-conc">換算濃度</span> (${unit})</th></tr>`;
+    let sampleRows = `<tr><th>${t['th-sample-id']}</th><th>${t['th-well-id']}</th><th>${t['th-type']}</th><th>${t['th-avg-od']}</th><th>${t['th-avg-resp']}</th><th>${t['th-cv']}</th><th>${t['th-calc-conc']} (${unit})</th></tr>`;
     ['unknown','control'].forEach(type=>{
       const groups = getWellGroups(type);
       Object.keys(groups).map(Number).sort((a,b)=>a-b).forEach(lv=>{
@@ -1863,7 +1879,7 @@ const C0 = bestC0;
         sampleRows += `<tr>
           <td><span class="pill ${pillClass}">${label}</span></td>
           <td>${wellIds}</td>
-          <td><span data-text="${type==='unknown'?'type-unknown':'type-control'}">${type==='unknown'?'Unknown':'Control'}</span></td>
+          <td>${type==='unknown' ? t['type-unknown'] : t['type-control']}</td>
           <td>${fmt(meanOd)}</td>
           <td>${fmt(transformed)}</td>
           <td>${cv}</td>
@@ -1886,22 +1902,20 @@ const C0 = bestC0;
       document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
     }
     
-    // 傳入 true，通知 switchLanguage 這是分析結束後的文字替換，切勿再次觸發分析
-    switchLanguage(currentLanguage, true);
+    // 由於已改為變數直接注入，不再需要於分析結束後呼叫 switchLanguage 進行 DOM 掃描
   }
 
   function fmt(v){
-  if(v==null || !isFinite(v)) return '—';
+  if(v == null || v === '' || typeof v !== 'number' || !isFinite(v)) return '—';
   return Math.round((v + Number.EPSILON) * 10000) / 10000;
   }
   // 新增：專門用於迴歸參數的格式化函數（保留科學記號）
   function fmtParam(v){
-    if(v==null || !isFinite(v)) return '—';
-    // 若絕對值介於 0.001 與 100000 之外，啟動科學記號
-    if(Math.abs(v) > 0 && (Math.abs(v) < 0.001 || Math.abs(v) > 100000)) {
-      return v.toExponential(4);
-    }
-    return Math.round((v + Number.EPSILON) * 10000) / 10000;
+  if(v==null || !isFinite(v)) return '—';
+  if(Math.abs(v) > 0 && (Math.abs(v) < 0.001 || Math.abs(v) > 100000)) {
+    return v.toExponential(4);
+  }
+  return Math.round((v + Number.EPSILON) * 10000) / 10000;
   }
 
   // ---------- Plotly.js 繪圖邏輯 ----------
@@ -2057,10 +2071,9 @@ const C0 = bestC0;
   function parseImportedCSV(csvText) {
     const lines = csvText.split(/\r?\n|\r/);
     let mode = 'meta'; 
-    let repCounters = {};
-    
+
     // 1. 初始化清空現有狀態
-    Object.keys(wells).forEach(id => { wells[id] = {od: null, type: null, level: null, rep: null}; });
+    Object.keys(wells).forEach(id => { wells[id] = {od: null, type: null, level: null}; });
     standardConc = {};
     document.getElementById('pasteArea').value = '';
 
@@ -2121,8 +2134,6 @@ const C0 = bestC0;
                   if (type) {
                       wells[id].type = type;
                       wells[id].level = level;
-                      repCounters[label] = (repCounters[label] || 0) + 1;
-                      wells[id].rep = repCounters[label];
                   }
               }
           }
