@@ -1580,7 +1580,7 @@ function switchLanguage(lang, preventReanalyze = false) {
         : `(${translations['en'][key]})`; 
       
       // 3. 組合數值與標籤
-      if (isFinite(conc)) {
+      if (isFinite(conc) && conc >= 0) {
         return `${fmt(conc)} ${label}`;
       } else {
         return `— ${label}`;
