@@ -124,6 +124,23 @@
             .header-controls { position: static; transform: none; margin-top: 10px; }
             .export-btn-group { flex-direction: column; width: 100%; }
         }
+        /* 頁尾標註樣式 */
+        footer {
+           text-align: center;
+           padding: 2rem 1rem;
+           color: #718096;
+           font-size: 0.95rem;
+           margin-top: 2rem;
+           line-height: 1.6;
+        }
+        footer a, footer a:visited {
+           color: #3182ce;
+           text-decoration: none;
+           font-weight: bold;
+        }
+        footer a:hover {
+           text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -257,6 +274,9 @@
     </div>
 </div>
 
+<footer>
+ Back to <a href="https://osla30.github.io/bio/toolbox" target="_blank">ToolBox</a>
+</footer>
 
 <script>
     function hideResultSections() {
