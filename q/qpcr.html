@@ -712,15 +712,57 @@
     window.addEventListener('DOMContentLoaded', renderGlobalGroups);
 
     function renderGlobalGroups() {
-        const container = document.getElementById('global-group-tags');
-        if(!container) return;
-        container.innerHTML = GLOBAL_UI_GROUPS.map(g => `
-            <span class="global-tag ${g.isCtrl ? 'is-ctrl' : ''}">
-                ${escapeHTML(g.name)} ${g.isCtrl ? '(Control)' : ''}
-                <span onclick="toggleGlobalGroupCtrl('${g.id}')" title="切換對照組狀態">🔄</span>
-                <span onclick="removeGlobalGroup('${g.id}')" title="刪除">✕</span>
-            </span>
-        `).join('');
+    const container = document.getElementById('global-group-tags');
+    if(!container) return;
+    container.innerHTML = GLOBAL_UI_GROUPS.map(g => `
+        <span class="global-tag ${g.isCtrl ? 'is-ctrl' : ''}">
+            ${escapeHTML(g.name)} ${g.isCtrl ? '(Control)' : ''}
+            <span onclick="renameGlobalGroup('${g.id}')" title="修改名稱">✏️</span>
+            <span onclick="toggleGlobalGroupCtrl('${g.id}')" title="切換對照組狀態">🔄</span>
+            <span onclick="removeGlobalGroup('${g.id}')" title="刪除">✕</span>
+        </span>
+    `).join('');
+    }
+
+    function renameGlobalGroup(id) {
+    const group = GLOBAL_UI_GROUPS.find(g => g.id === id);
+    if (!group) return;
+
+    // 支援雙語系的提示框
+    const msg = currentLang === 'zh' ? `請輸入新的組別名稱 (原名稱: ${group.name})：` : `Enter new name for ${group.name}:`;
+    const newName = prompt(msg, group.name);
+
+    // 檢查使用者是否有輸入，且名稱有變動
+    if (newName && newName.trim() !== '' && newName.trim() !== group.name) {
+        const cleanName = newName.trim();
+
+        // 防呆：避免與現有其他組別名稱重複
+        if (GLOBAL_UI_GROUPS.some(g => g.name === cleanName)) {
+            alert(currentLang === 'zh' ? '❌ 組別名稱已存在，請使用其他名稱！' : '❌ Group name already exists!');
+            return;
+        }
+
+        // 1. 更新全域變數中的名稱
+        group.name = cleanName;
+
+        // 2. 重新渲染上方控制列的標籤
+        renderGlobalGroups();
+
+        // 3. 同步更新下方所有已產生基因區塊內的組別標題
+        document.querySelectorAll(`.group-block[data-group-id="${id}"]`).forEach(el => {
+            const header = el.querySelector('.group-header-name');
+            if (header) {
+                if (group.isCtrl) {
+                    header.innerHTML = `${escapeHTML(group.name)} <span style="color:var(--danger); font-size:0.8em;">(Control)</span>`;
+                } else {
+                    header.innerHTML = escapeHTML(group.name);
+                }
+            }
+        });
+
+        // 4. 若已有計算結果，隱藏結果區域以防名稱對應錯誤，強制重新計算
+        hideResultSections();
+    }
     }
 
     function addGlobalGroup() {
@@ -740,6 +782,8 @@
         });
         
         nameInput.value = '';
+        // 狀態變更後隱藏舊結果，強迫重新計算
+        hideResultSections();
     }
 
     function removeGlobalGroup(id) {
@@ -752,6 +796,8 @@
         GLOBAL_UI_GROUPS = GLOBAL_UI_GROUPS.filter(g => g.id !== id);
         renderGlobalGroups();
         document.querySelectorAll(`.group-block[data-group-id="${id}"]`).forEach(el => el.remove());
+        // 狀態變更後隱藏舊結果，強迫重新計算
+        hideResultSections();
     }
 
     function toggleGlobalGroupCtrl(id) {
@@ -779,6 +825,7 @@
                     }
                 });
             });
+            hideResultSections();
         }
     }
 
@@ -1114,6 +1161,13 @@ if (invalidControlGroup) {
             }
         });
 
+        // 防呆：若所有 Control 樣本都因缺乏內參而被排除，提前中止並警告
+        if (validControlCount === 0) {
+            hideResultSections();
+            alert(t('alertNoControl') + (currentLang === 'zh' ? '\n(可能因 Control 樣本缺少內參資料而被排除)' : '\n(Control samples may have been excluded due to missing reference gene data)'));
+            return;
+        }
+
         // --- Step D: 計算 ddCt 與 Fold Change ---
         const tbody = document.querySelector('#resultTable tbody');
         tbody.innerHTML = '';
@@ -1203,7 +1257,12 @@ if (invalidControlGroup) {
         document.getElementById('resultSection').classList.remove('hidden');
         document.getElementById('statsSection').classList.remove('hidden');
 
-        window.CURRENT_CONTROL_SAMPLES = new Set(controlSampleNames);
+        // 精準鎖定有效 Control 樣本 (排除掉因缺內參而被丟棄的樣本)
+        const validCtrl = new Set();
+        controlSampleNames.forEach(s => {
+            if (sampleStats[s]) validCtrl.add(s);
+        });
+        window.CURRENT_CONTROL_SAMPLES = validCtrl;
         window.CURRENT_REFS = selectedRefs.slice();
 
         // 給予瀏覽器微小緩衝時間，確保 DOM 佈局寬度已生效，Plotly 才能抓到正確解析度
