@@ -40,7 +40,6 @@
         .group-block.is-control { border-left-color: var(--danger); background-color: #fff5f5; }
         
         .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .group-control-option { display: flex; align-items: center; gap: 5px; font-weight: 600; font-size: 0.9em; cursor: pointer; color: var(--danger); }
         
         .input-row { display: flex; gap: 15px; }
         .input-col { flex: 1; }
@@ -287,8 +286,8 @@
     function escapeHTML(str) { 
     return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); 
     }
-    // --- 完整版統計臨界值表 (提供內插法使用) ---
-    // 擴充 k=30, 40 以支援高通量
+    
+    // --- Dunnett's Critical Value Tables ---
     // 1. Alpha = 0.05 (*)
     const DUNNETT_D_TABLE_05 = {
         2: { 2: 4.30, 3: 3.18, 4: 2.78, 5: 2.57, 6: 2.45, 7: 2.36, 8: 2.31, 9: 2.26, 10: 2.23, 12: 2.18, 15: 2.13, 20: 2.09, 30: 2.04, 60: 2.00, 120: 1.98, 999: 1.96 },
@@ -339,7 +338,6 @@
     };
 
     // --- Tukey's Q Table (Studentized Range) Extended to k=15 ---
-    // ✅ 完整修正版：包含 0.05, 0.01, 0.001 的 df=2~15 數據，全部對齊至 k=15
     const TUKEY_Q = {
         0.05: {
             2: {2:6.08,3:8.33,4:9.8,5:10.88,6:11.73,7:12.43,8:13.03,9:13.54,10:13.99,11:14.39,12:14.75,13:15.08,14:15.37,15:15.65},
@@ -516,13 +514,11 @@
             clearBlocks: "🗑️ 清空所有",
             dataInstr: "請輸入樣本名稱與 Ct 值。系統會自動計算<span style='color: #e74c3c; font-weight: bold;'>相同樣本名稱</span>的平均 Ct 值 <span style='color: #e74c3c; font-weight: bold;'>(技術重複)</span>。<br>若為<span style='color: #e74c3c; font-weight: bold;'>不同的獨立樣本 (生物重複)</span>，請務必使用不同名稱區分。<br><br><div style='background-color: #fff8e1; border-left: 4px solid #ffb300; padding: 10px; margin: 10px 0; border-radius: 4px; color: #795548;'><b>💡 生物重複命名與自動分組規則：</b><br>系統自動分組依賴名稱結尾的「符號＋數字」。請務必使用<b>減號 (-)、底線 (_) 或半形空白</b>作為數字前的連接符。<br>✅ <b>支援的正確命名 (將自動歸為同一組)：</b><code>WT-1</code>、<code>WT_2</code>、<code>WT 3</code> (皆自動合併為 <code>WT</code> 組)<br>❌ <b>錯誤命名 (將被系統視為各自獨立的不同組別)：</b><code>WT01</code>、<code>WT02</code>、<code>WT3</code> (缺乏連接符號，無法觸發合併機制)</div><hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'><b>全域組別設定：</b>請在上方設定您的組別，並利用 🔄 切換指定您的<b>「對照組 (Control)」</b>，系統將自動同步到下方所有基因區塊中。<br><b>設定內參：</b>請在對應的基因區塊標題旁勾選 '設為內參基因'。",
             btnCalculate: "🚀 開始計算 (Calculate)",
-            phGroupName: "自訂組別 (留空自動抓取)",
             geneNameLabel: "基因名稱：",
             isRefLabel: "設為內參基因",
             sampleLabel: "⬇️ 樣本名稱",
             ctLabel: "⬇️ Ct 值 (輸入原始數值，自動取平均)",
             addGroup: "➕ 新增組別",
-            isControlLabel: "設為對照組",
             errorRowMsg: "⚠️ 行數不符，請檢查。",
             step4: "3. 分析結果",
             exportCSV: "📊 匯出 CSV (Excel)",
@@ -553,9 +549,6 @@
             anovaSigMsg: "✅ P = {p} < 0.05 (組間有顯著差異)",
             anovaNsMsg: "⚠️ P = {p} > 0.05 (組間無顯著差異)",
             anovaNsHint: "由於 ANOVA 不顯著，統計上不建議進行個別組間比較 (Post-hoc test)。",
-            multiGroupNote: "⚠️ 檢測到多組比較 ({n} 組)。已應用 <b>Dunnett's Test</b>。",
-            groupDefault: "組別",
-            txtResult: "結果:",
             txtMethod: "方法:",
             missingTargetItem: "- 樣本 [{s}] 缺少 [{g}] 的 Ct 數據",
             confirmMissingTitle: "⚠️ 樣本與基因配對不完整（可能是命名不一致，也可能是該筆數據本來就缺漏）：\n若繼續，這些缺失數據將被排除：\n\n",
@@ -567,7 +560,7 @@
             errConflictDesc: "同一個生物樣本在不同基因中必須屬於「相同」的組別。請統一組別名稱，或檢查以下衝突：\n",
             errConflictItem: "- 樣本 [{s}] 被分到 [{g1}]，但在其他基因中被分到 [{g2}]",
             errControlInconsistent: "⚠️ 錯誤：對照組設定不一致！\n\n同一個組別內的樣本，必須「全部」被勾選為對照組，不可僅勾選部分樣本。請檢查您的區塊設定。",
-            warnMultiControl: "⚠️ 警告：您將多個不同的組別標記為對照組 (Control)！\n\n系統的 Fold Change 將以所有對照組的平均為基準，但 Dunnett's Test 僅會使用「第一個」讀取到的組別作為統計比較基準。為確保科學嚴謹性，建議僅勾選單一組別作為 Control。",
+            warnDemotedControl: "⚠️ 提示：偵測到 CSV 中有多個組別被標記為對照組 (Control)。\n為確保統計基準一致，系統僅保留第一個作為對照組，以下組別已被還原為一般組別：\n\n",
             anovaNA: "N/A (變異數過低)",
             globalGroupLabel: "🧪 全域組別設定 (將自動套用至所有基因區塊)",
             phNewGlobalGroup: "新增組別名稱 (e.g. Treat)",
@@ -592,13 +585,11 @@
             clearBlocks: "🗑️ Clear All",
             dataInstr: "Enter Sample Names and Ct Values. System auto-calculates mean Ct for <span style='color: #e74c3c; font-weight: bold;'>Same Sample Names</span> <span style='color: #e74c3c; font-weight: bold;'>(Technical Replicates)</span>.<br>For <span style='color: #e74c3c; font-weight: bold;'>Biological Replicates</span>, use unique names.<br><br><div style='background-color: #fff8e1; border-left: 4px solid #ffb300; padding: 10px; margin: 10px 0; border-radius: 4px; color: #795548;'><b>💡 Naming Rule for Biological Replicates & Grouping:</b><br>To group samples automatically, you must use a <b>hyphen (-), underscore (_), or space</b> followed by a number at the end of the name.<br>✅ <b>Supported format (Grouped together):</b> <code>WT-1</code>, <code>WT_2</code>, <code>WT 3</code> (Auto-merged into the <code>WT</code> group)<br>❌ <b>Unsupported format (Treated as independent distinct groups):</b> <code>WT01</code>, <code>WT02</code>, <code>WT3</code> (Missing the separator symbol)</div><hr style='margin:10px 0; border:0; border-top:1px dashed #ccc;'><b>Global Group Setup:</b> Define your groups in the top panel and mark your <b>Control Group</b> using 🔄. This will sync across all genes automatically.<br><b>Ref Gene:</b> Check 'Reference Gene' next to the corresponding gene name.",
             btnCalculate: "🚀 Start Calculate",
-            phGroupName: "Group Name (Auto if empty)",
             geneNameLabel: "Gene Name:",
             isRefLabel: "Set as Reference Gene",
             sampleLabel: "⬇️ Sample Names",
             ctLabel: "⬇️ Ct Values",
             addGroup: "➕ Add Group",
-            isControlLabel: "Set as Control Group",
             errorRowMsg: "⚠️ Row count mismatch.",
             step4: "3. Results",
             exportCSV: "📊 Export CSV",
@@ -621,7 +612,7 @@
             alertSelectRef: "Please select at least one Reference Gene!",
             alertDupGene: "Duplicate gene name: [{g}]. Each gene block must have a unique name.",
             alertNoControl: "No 'Control Group' found. Please check the 'Set as Control' box for one of your groups.",
-            warnMissingRef: "⚠️ Warning: Missing ref data for: {samples}",
+            warnMissingRef: "⚠️ Warning: The following samples were excluded because they are missing data for the selected reference gene(s) ({ref}):<br>{samples}",
             calibInfo: "ℹ️ Used {n} Control Samples as Calibrator",
             demoLoaded: "Demo Loaded (GAPDH, IL6, IL17)!",
             alertNoStats: "No stats available",
@@ -629,9 +620,6 @@
             anovaSigMsg: "✅ P = {p} < 0.05 (Significant)",
             anovaNsMsg: "⚠️ P = {p} > 0.05 (Not Significant)",
             anovaNsHint: "ANOVA not significant, pairwise comparison not recommended.",
-            multiGroupNote: "⚠️ Multiple comparisons ({n} groups). <b>Dunnett's Test</b> applied.",
-            groupDefault: "Group",
-            txtResult: "Result:",
             txtMethod: "Method:",
             missingTargetItem: "- Sample [{s}] is missing Ct data for [{g}]",
             confirmMissingTitle: "⚠️ Incomplete Sample-Gene pairing (may be a naming mismatch or intentionally left blank):\nIf you proceed, the following missing data will be excluded:\n\n",
@@ -643,7 +631,7 @@
             errConflictDesc: "The same biological sample must belong to the exact same group across all genes. Please unify your group names or check the following conflicts:\n",
             errConflictItem: "- Sample [{s}] assigned to [{g1}], but previously to [{g2}]",
             errControlInconsistent: "⚠️ Error: Inconsistent Control Group setup!\n\nSamples within the same group must be 'ALL' checked as the control group. Partial selection is not allowed. Please check your block settings.",
-            warnMultiControl: "⚠️ Warning: Multiple different groups are marked as Control!\n\nThe system will calculate Fold Change based on the average of all control groups, but Dunnett's Test will only use the 'first' detected group as the baseline. For scientific rigor, it is highly recommended to select only one group as the Control.",
+            warnDemotedControl: "⚠️ Note: Detected multiple groups marked as Control in the CSV.\nTo ensure consistent statistical baselines, only the first one was kept as the control. The following groups have been reverted to normal groups:\n\n",
             anovaNA: "N/A (Variance too low)",
             globalGroupLabel: "🧪 Global Group Setup (Auto-syncs to all gene blocks)",
             phNewGlobalGroup: "New Group Name (e.g. Treat)",
@@ -1105,17 +1093,6 @@ if (invalidControlGroup) {
             warningEl.style.display = 'none';
         }
 
-        // --- 新增：防呆驗證多重對照組 ---
-    if (controlSampleNames.size > 0) {
-    const uniqueControlGroups = new Set();
-    controlSampleNames.forEach(sName => {
-        uniqueControlGroups.add(getGroupName(sName));
-    });
-    if (uniqueControlGroups.size > 1) {
-        alert(t('warnMultiControl'));
-    }
-    }
-
         // --- Step C: 計算 Calibrator (Control Group Avg Delta Ct) ---
         let calibrators = {}; 
         let validControlCount = 0;
@@ -1205,7 +1182,11 @@ if (invalidControlGroup) {
                     <td>${stats.meanCt.toFixed(4)}</td>
                     <td style="color:#666">${stats.deltaCt.toFixed(4)}</td>
                     <td>${ddCt !== null ? ddCt.toFixed(4) : '-'}</td>
-                    <td style="font-weight:bold; color:${foldChange > 1.5 ? '#c0392b' : '#2c3e50'}">
+                    <td style="font-weight:bold; color:${
+                        foldChange === null ? '#2c3e50' : 
+                        (foldChange > 1.5 ? '#c0392b' : 
+                        (foldChange < (1/1.5) ? '#2980b9' : '#2c3e50'))
+                    }">
                         ${foldChange !== null ? foldChange.toFixed(4) : '-'}
                     </td>
                 `;
@@ -1742,7 +1723,8 @@ if (invalidControlGroup) {
     escapeCSV(d.method)
 ].join(",") + "\n";
         });
-        downloadBlob(csv, `qpcr_stats_${targetGene}.csv`);
+        const safeName = targetGene.replace(/[\/\\:*?"<>|]/g, '_');
+        downloadBlob(csv, `qpcr_stats_${safeName}.csv`);
     }
 
     function exportAllStatsCSV() {
@@ -1830,7 +1812,7 @@ if (invalidControlGroup) {
         reader.onload = function(e) {
             const text = e.target.result;
             parseAndLoadCSV(text);
-            event.target.value = ''; // 清空 input 以便下次能重複匯入同個檔案
+            document.getElementById('csvFileInput').value = ''; 
         };
         reader.readAsText(file, 'UTF-8');
     }
@@ -1884,8 +1866,8 @@ if (invalidControlGroup) {
 
             if (row.length < 3) continue;
 
-            const gene = row[geneIdx].replace(/^"|"$/g, '').trim();
-            const sample = row[sampleIdx].replace(/^"|"$/g, '').trim();
+            const gene = (row[geneIdx] || '').replace(/^"|"$/g, '').trim();
+            const sample = (row[sampleIdx] || '').replace(/^"|"$/g, '').trim();
             const rawCt = (row[rawCtIdx] || '').replace(/^"|"$/g, '').trim();
             
             // 讀取是否為內參與對照組標記 (相容舊版 CSV)
@@ -1917,15 +1899,33 @@ if (invalidControlGroup) {
 
         // --- 新增：從匯入的 CSV 中重建全域組別狀態 ---
         let globalGroupsMap = new Map();
+        let ctrlAlreadySet = false;
+        let demotedControlGroups = new Set(); // 記錄被降級的組別
+        
         genes.forEach(gene => {
-            Object.keys(parsedData[gene].groups).forEach(groupName => {
-                if(!globalGroupsMap.has(groupName)) {
-                    globalGroupsMap.set(groupName, { id: generateId(), name: groupName, isCtrl: parsedData[gene].groups[groupName].isCtrl });
-                } else if (parsedData[gene].groups[groupName].isCtrl) {
-                    globalGroupsMap.get(groupName).isCtrl = true;
-                }
-            });
+           Object.keys(parsedData[gene].groups).forEach(groupName => {
+           const rawIsCtrl = parsedData[gene].groups[groupName].isCtrl;
+           
+           if (!globalGroupsMap.has(groupName)) {
+            globalGroupsMap.set(groupName, { id: generateId(), name: groupName, isCtrl: false });
+           }
+           
+           if (rawIsCtrl) {
+               if (!ctrlAlreadySet) {
+                   globalGroupsMap.get(groupName).isCtrl = true;
+                   ctrlAlreadySet = true;
+               } else if (!globalGroupsMap.get(groupName).isCtrl) {
+                   demotedControlGroups.add(groupName); // 記下被降級的組別
+               }
+           }
+          });
         });
+        
+        // 若有被降級的組別，跳出多國語系提醒
+        if (demotedControlGroups.size > 0) {
+            alert(t('warnDemotedControl') + Array.from(demotedControlGroups).join(', '));
+        }
+        
         GLOBAL_UI_GROUPS = Array.from(globalGroupsMap.values());
         renderGlobalGroups();
 
