@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大鼠腦部立體定位修正計算器</title>
+    <style>
+        /* 全局變數與基礎設定 */
+        :root {
+            --teal-600: #0d9488; --teal-700: #0f766e; --cyan-700: #0e7490;
+            --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1; --slate-500: #64748b; --slate-700: #334155; --slate-800: #1e293b;
+        }
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--slate-50);
+            color: var(--slate-800);
+            margin: 0; padding-bottom: 3rem; line-height: 1.5;
+        }
+        * { box-sizing: border-box; }
+        
+        /* 隱藏數字輸入框的上下箭頭 */
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { appearance: textfield; -moz-appearance: textfield; }
+
+        /* 版面配置 */
+        .header-bg {
+            background: linear-gradient(to right, var(--cyan-700), var(--teal-600));
+            color: white; padding: 2rem 1rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .container { max-width: 1024px; margin: 0 auto; padding: 0 1rem; }
+        .card { background: white; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid var(--slate-200); overflow: hidden; }
+        .grid-2 { display: grid; gap: 2rem; padding: 1.5rem; }
+        @media(min-width: 1024px) { .grid-2 { grid-template-columns: 1fr 1fr; padding: 2rem; gap: 3rem; } }
+
+        /* 分頁標籤 */
+        .tabs-container { display: flex; background: var(--slate-50); border-bottom: 1px solid var(--slate-200); padding: 0.5rem 0.5rem 0; gap: 0.5rem; }
+        .tab-btn { flex: 1; padding: 0.75rem 1rem; border: none; cursor: pointer; border-radius: 0.5rem 0.5rem 0 0; font-size: 1rem; transition: 0.2s; }
+        .tab-btn span { display: block; font-size: 0.875rem; font-weight: normal; margin-top: 0.25rem; }
+        .tab-active { background-color: var(--teal-600); color: white; font-weight: 600; }
+        .tab-inactive { background-color: transparent; color: var(--slate-500); border-bottom: 2px solid transparent; }
+        .tab-inactive:hover { color: var(--slate-700); border-bottom: 2px solid var(--slate-300); }
+
+        /* 輸入與表單區塊 */
+        .section-title { font-size: 1.125rem; font-weight: 600; color: var(--slate-700); border-bottom: 1px solid var(--slate-100); padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+        .input-group { background: var(--slate-50); padding: 1rem; border-radius: 0.75rem; border: 1px solid var(--slate-200); margin-bottom: 1.5rem; }
+        .input-field { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--slate-300); border-radius: 0.5rem; font-size: 1rem; margin-top: 0.25rem; }
+        .input-field:focus { outline: none; border-color: var(--teal-600); box-shadow: 0 0 0 1px var(--teal-600); }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; }
+        
+        /* 按鈕與提示 */
+        .btn-small { font-size: 0.875rem; padding: 0.5rem 1rem; border-radius: 9999px; cursor: pointer; border: 1px solid; display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none; }
+        .btn-teal { background: #f0fdfa; color: var(--teal-700); border-color: #ccfbf1; }
+        .btn-teal:hover { background: #ccfbf1; }
+        .btn-slate { background: var(--slate-50); color: var(--slate-500); border-color: var(--slate-200); }
+        .btn-slate:hover { background: var(--slate-100); }
+        .warning-text { color: #d97706; font-size: 0.75rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem; }
+        .hidden { display: none !important; }
+
+        /* 結果顯示卡片 */
+        .result-box { padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid; }
+        .box-ap { background: #e7f4fc; border-color: #bae6fd; }
+        .box-ml { background: #e1f9f3; border-color: #ccfbf1; }
+        .box-dv { background: #e8fff0; border-color: #bbf7d0; }
+        .res-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .res-subtitle { font-size: 0.875rem; opacity: 0.8; font-weight: bold; }
+        .res-val { font-size: 1.5rem; font-weight: bold; font-family: monospace; text-align: right; }
+        .res-mm { font-size: 1rem; font-family: monospace; text-align: right; margin-top: 0.25rem; }
+
+        /* 底部資訊 */
+        .footer-info { background: var(--slate-100); border-top: 1px solid var(--slate-200); padding: 1.5rem 2rem; display: grid; gap: 1.5rem; font-size: 0.875rem; color: var(--slate-700); }
+        @media(min-width: 768px) { .footer-info { grid-template-columns: 1fr 1fr; } }
+        .footer-info ul { padding-left: 1.25rem; margin: 0.5rem 0 0 0; }
+        .footer-info a { color: var(--teal-600); text-decoration: none; }
+        .footer-info a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="header-bg">
+        <div class="container" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <span style="font-size: 2rem;">🔬</span>
+            <h1 style="margin: 0; font-size: 1.875rem;">大鼠腦部立體定位修正計算器</h1>
+        </div>
+        <div class="container">
+            <p style="margin: 0; opacity: 0.9; max-width: 800px;">
+                基於體重校正，適用於 90g ~ 400g 之大鼠。本工具協助研究人員修正受試大鼠因體重差異所造成的腦部座標偏差，提高立體定位注射與植入手術之準確度。
+            </p>
+        </div>
+    </div>
+
+    <div class="container" style="flex-grow: 1;">
+        <div class="card">
+            
+            <!-- 分頁切換 (Tabs) -->
+            <div class="tabs-container">
+                <button id="tab-sd" class="tab-btn tab-active" onclick="switchTab('SD')">
+                    SD 大鼠
+                    <span>預設 225g：原始座標 = 修正座標<br>【中國圖譜：Stereotaxic Atlas of Rat Brain】</span>
+                </button>
+                <button id="tab-wistar" class="tab-btn tab-inactive" onclick="switchTab('Wistar')">
+                    Wistar 大鼠
+                    <span>預設 290g：原始座標 = 修正座標<br>【歐美圖譜：The Rat Brain in Stereotaxic Coordinates】</span>
+                </button>
+            </div>
+
+            <!-- 主體兩欄式設計 -->
+            <div class="grid-2">
+                
+                <!-- 左欄：輸入區 -->
+                <div>
+                    <div class="section-title">
+                        <div><span style="margin-right: 0.5rem;">✏️</span> 輸入參數</div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="loadExample()" class="btn-small btn-teal">
+                                <span style="font-size: 0.875rem;">💡</span> 載入文獻測試範例
+                            </button>
+                            <button onclick="clearInputs()" class="btn-small btn-slate">
+                                <span style="font-size: 0.875rem;">🗑️</span> 清空
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 體重輸入 -->
+                    <div class="input-group">
+                        <label for="weight" style="display: flex; justify-content: space-between; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem;">
+                            <span>目標大鼠體重 (Target Weight)</span>
+                            <span style="color: var(--slate-500); font-weight: normal;">單位: g</span>
+                        </label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 0.75rem; top: 0.6rem; opacity: 0.5; font-size: 1.125rem;">⚖️</span>
+                            <input type="number" id="weight" step="0.1" onkeydown="return event.key !== 'e' && event.key !== 'E'" class="input-field" style="padding-left: 2.5rem; font-size: 1.125rem;">
+                        </div>
+                        <p id="weight-warning" class="warning-text hidden">
+                            <span>⚠️</span> 提醒：體重超出文獻適用範圍 (90g ~ 400g)。仍可依公式計算，但此結果超出文獻所涵蓋的體重範圍。
+                        </p>
+                    </div>
+
+                    <!-- 原始座標輸入 -->
+                    <div style="margin-top: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">
+                            <span>原始圖譜座標 (Original Coordinates)</span>
+                            <span style="color: var(--slate-500); font-weight: normal;">單位: cm</span>
+                        </div>
+                        
+                        <div class="grid-3">
+                            <div>
+                                <label for="ap" style="font-size: 0.875rem; color: var(--slate-500);">AP (前後, Y軸)</label>
+                                <input type="number" id="ap" step="0.001" onkeydown="return event.key !== 'e' && event.key !== 'E'" class="input-field" style="font-family: monospace;">
+                            </div>
+                            <div>
+                                <label for="ml" style="font-size: 0.875rem; color: var(--slate-500);">ML (左右, X軸)</label>
+                                <input type="number" id="ml" step="0.001" onkeydown="return event.key !== 'e' && event.key !== 'E'" class="input-field" style="font-family: monospace;">
+                            </div>
+                            <div>
+                                <label for="dv" style="font-size: 0.875rem; color: var(--slate-500);">DV (背腹, Z軸, 負值)</label>
+                                <input type="number" id="dv" step="0.001" onkeydown="return event.key !== 'e' && event.key !== 'E'" class="input-field" style="font-family: monospace;">
+                            </div>
+                        </div>
+                        
+                        <!-- 已移出 grid-3，並移除 grid-column 樣式，加大 margin-top -->
+                        <p id="dv-warning" class="warning-text hidden" style="margin-top: 0.75rem;">
+                            <span>⚠️</span> 提醒：DV 座標依圖譜慣例應為負值，請確認輸入正確。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 右欄：輸出區 -->
+                <div>
+                    <div class="section-title">
+                        <div><span style="margin-right: 0.5rem;">🧮</span> 修正後座標 (Corrected)</div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 0.5rem;">
+                        <!-- AP Result (淺藍色系) -->
+                        <div class="result-box box-ap">
+                            <div>
+                                <div class="res-title" style="color: #075985;">AP 軸 (Anterior-Posterior)</div>
+                                <div class="res-subtitle" style="color: #0284c7;">Bregma 吻側(+)/尾側(-)</div>
+                            </div>
+                            <div>
+                                <div class="res-val" style="color: #0369a1;" id="out-ap-cm">0.000 <span style="font-size: 0.875rem; font-weight: normal;">cm</span></div>
+                                <div class="res-mm" style="color: #0284c7;" id="out-ap-mm">0.00 mm</div>
+                            </div>
+                        </div>
+
+                        <!-- ML Result (藍綠色系) -->
+                        <div class="result-box box-ml">
+                            <div>
+                                <div class="res-title" style="color: #115e59;">ML 軸 (Medio-Lateral)</div>
+                                <div class="res-subtitle" style="color: #0d9488;">Bregma 右側(+)/左側(-)</div>
+                            </div>
+                            <div>
+                                <div class="res-val" style="color: #0f766e;" id="out-ml-cm">0.000 <span style="font-size: 0.875rem; font-weight: normal;">cm</span></div>
+                                <div class="res-mm" style="color: #0d9488;" id="out-ml-mm">0.00 mm</div>
+                            </div>
+                        </div>
+
+                        <!-- DV Result (淺綠色系) -->
+                        <div class="result-box box-dv">
+                            <div>
+                                <div class="res-title" style="color: #166534;">DV 軸 (Dorsal-Ventral)</div>
+                                <div class="res-subtitle" style="color: #16a34a;">腦表面 腹側(往下)(-)</div>
+                            </div>
+                            <div>
+                                <div class="res-val" style="color: #15803d;" id="out-dv-cm">0.000 <span style="font-size: 0.875rem; font-weight: normal;">cm</span></div>
+                                <div class="res-mm" style="color: #16a34a;" id="out-dv-mm">0.00 mm</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-info">
+                <div>
+                    <h4 style="margin: 0 0 0.5rem 0;"><span style="margin-right: 0.25rem;">ℹ️</span> 座標方向提示 (圖譜標準約定)</h4>
+                    <ul>
+                        <li><strong>AP (Y軸)：</strong> Bregma往前 為正 ➕ / Bregma往後 為負 ➖</li>
+                        <li><strong>ML (X軸)：</strong> Bregma往右 為正 ➕ / Bregma往左 為負 ➖</li>
+                        <li><strong>DV (Z軸)：</strong> 由硬腦膜/腦表面 往下 為負 ➖</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="margin: 0 0 0.5rem 0;"><span style="margin-right: 0.25rem;">📖</span> 參考文獻</h4>
+                    <p style="margin: 0; font-style: italic;">
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29960030/" target="_blank">The extended application of The Rat Brain in Stereotaxic Coordinates in rats of various body weight.</a> 
+                    </p>
+                    <p style="margin: 0.25rem 0 0 0;">Yang P, et al. Journal of Neuroscience Methods (2018).</p>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem;">doi: 10.1016/j.jneumeth.2018.06.026</p>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 1.5rem; color: var(--slate-500); font-size: 0.875rem;">
+            本工具僅供實驗室科學研究參考用途，請於實機操作前再三確認實驗動物與設備狀況。
+        </div>
+    </div>
+
+    <script>
+        // 預設狀態
+        let currentStrain = 'SD'; // 'SD' or 'Wistar'
+
+        // 取得 DOM 元素
+        const tabSD = document.getElementById('tab-sd');
+        const tabWistar = document.getElementById('tab-wistar');
+        const weightInput = document.getElementById('weight');
+        const apInput = document.getElementById('ap');
+        const mlInput = document.getElementById('ml');
+        const dvInput = document.getElementById('dv');
+        const weightWarning = document.getElementById('weight-warning');
+        const dvWarning = document.getElementById('dv-warning');
+
+        // 輸出元素
+        const outApCm = document.getElementById('out-ap-cm');
+        const outApMm = document.getElementById('out-ap-mm');
+        const outMlCm = document.getElementById('out-ml-cm');
+        const outMlMm = document.getElementById('out-ml-mm');
+        const outDvCm = document.getElementById('out-dv-cm');
+        const outDvMm = document.getElementById('out-dv-mm');
+
+        // 切換大鼠模型標籤
+        function switchTab(strain) {
+            currentStrain = strain;
+            if (strain === 'SD') {
+                tabSD.className = "tab-btn tab-active";
+                tabWistar.className = "tab-btn tab-inactive";
+            } else {
+                tabWistar.className = "tab-btn tab-active";
+                tabSD.className = "tab-btn tab-inactive";
+            }
+            
+            calculate();
+        }
+
+        // 清空輸入
+        function clearInputs() {
+                weightInput.value = '';
+                apInput.value = '';
+                mlInput.value = '';
+                dvInput.value = '';
+            resetOutputs();
+                weightWarning.classList.add('hidden');
+                dvWarning.classList.add('hidden');
+        }
+
+        // 載入論文補充 Excel 中的測試範例
+        function loadExample() {
+            if (currentStrain === 'Wistar') {
+                weightInput.value = 100;
+                apInput.value = 0;
+                mlInput.value = 0.15;
+                dvInput.value = -0.6;
+            } else {
+                weightInput.value = 100;
+                apInput.value = 0.6;
+                mlInput.value = 0.4;
+                dvInput.value = -0.5;
+            }
+            calculate();
+        }
+
+        // 核心計算公式
+        function calculate() {
+        const m = parseFloat(weightInput.value);
+        const a = apInput.value === '' ? 0 : parseFloat(apInput.value);
+        const b = mlInput.value === '' ? 0 : parseFloat(mlInput.value);
+        const c = dvInput.value === '' ? 0 : parseFloat(dvInput.value);
+
+        // 若輸入無法解析的字元，直接清空結果並中斷
+        if (isNaN(a) || isNaN(b) || isNaN(c)) { 
+            resetOutputs(); 
+            return; 
+        }
+
+            // 檢查體重範圍警告
+            if (!isNaN(m) && (m < 90 || m > 400)) {
+                weightWarning.classList.remove('hidden');
+            } else {
+                weightWarning.classList.add('hidden');
+            }
+
+            // 檢查 DV 正負號
+            if (dvInput.value !== '' && c > 0) {
+            dvWarning.classList.remove('hidden');
+            } else {
+            dvWarning.classList.add('hidden');
+            }
+
+            if (isNaN(m) || m <= 0) {
+                resetOutputs();
+                return;
+            }
+
+            let ap_prime = 0, ml_prime = 0, dv_prime = 0;
+
+            if (currentStrain === 'SD') {
+                // SD 大鼠公式 (Base: 225g)
+                const denomAP = 0.127 * Math.log(225) + 0.176;
+                const denomML = 0.049 * Math.log(225) + 0.556;
+                const denomDV = 0.077 * Math.log(225) + 0.604;
+
+                ap_prime = ((0.127 * Math.log(m) + 0.176) / denomAP) * a;
+                ml_prime = ((0.049 * Math.log(m) + 0.556) / denomML) * b;
+                dv_prime = ((0.077 * Math.log(m) + 0.604) / denomDV) * c - 0.00010 * (m - 225);
+            } else {
+                // Wistar 大鼠公式 (Base: 290g)
+                const denomAP = 0.138 * Math.log(290) + 0.177;
+                const denomML = 0.055 * Math.log(290) + 0.515;
+                const denomDV = 0.054 * Math.log(290) + 0.706;
+
+                ap_prime = ((0.138 * Math.log(m) + 0.177) / denomAP) * a;
+                ml_prime = ((0.055 * Math.log(m) + 0.515) / denomML) * b;
+                dv_prime = ((0.054 * Math.log(m) + 0.706) / denomDV) * c - 0.00012 * (m - 290);
+            }
+
+            updateDOM(ap_prime, ml_prime, dv_prime);
+        }
+
+        // 新增：安全格式化，避免 -0.00000 的顯示瑕疵
+        function formatSigned(value, decimals) {
+        let fixed = value.toFixed(decimals);
+        if (parseFloat(fixed) === 0) fixed = (0).toFixed(decimals); // 去掉負零
+        const sign = parseFloat(fixed) > 0 ? '+' : '';
+        return sign + fixed;
+        }
+
+        // 更新介面顯示
+        function updateDOM(ap, ml, dv) {
+        outApCm.innerHTML = `${formatSigned(ap, 5)} <span style="font-size: 0.875rem; font-weight: normal;">cm</span>`;
+        outMlCm.innerHTML = `${formatSigned(ml, 5)} <span style="font-size: 0.875rem; font-weight: normal;">cm</span>`;
+        outDvCm.innerHTML = `${formatSigned(dv, 5)} <span style="font-size: 0.875rem; font-weight: normal;">cm</span>`;
+
+        outApMm.innerText = `${formatSigned(ap * 10, 4)} mm`;
+        outMlMm.innerText = `${formatSigned(ml * 10, 4)} mm`;
+        outDvMm.innerText = `${formatSigned(dv * 10, 4)} mm`;
+        }
+
+        // 清空輸出區域
+        function resetOutputs() {
+            const dashes = '-.---';
+            outApCm.innerHTML = `${dashes} <span style="font-size: 0.875rem; font-weight: normal;">cm</span>`;
+            outMlCm.innerHTML = `${dashes} <span style="font-size: 0.875rem; font-weight: normal;">cm</span>`;
+            outDvCm.innerHTML = `${dashes} <span style="font-size: 0.875rem; font-weight: normal;">cm</span>`;
+            
+            outApMm.innerText = '-.-- mm';
+            outMlMm.innerText = '-.-- mm';
+            outDvMm.innerText = '-.-- mm';
+        }
+
+        // 綁定輸入事件監聽器，達到即時計算效果
+        const inputs = [weightInput, apInput, mlInput, dvInput];
+        inputs.forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+
+        // 頁面載入時初始計算
+        window.addEventListener('DOMContentLoaded', calculate);
+
+    </script>
+</body>
+</html>
