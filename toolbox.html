@@ -140,6 +140,8 @@
         .card:nth-child(3) { border-top-color: #fad0c4; background-color: #fffaf0; } 
         /* 4. 核酸分析 - 淺粉背景 */
         .card:nth-child(4) { border-top-color: #fbc2eb; background-color: #fff9fe; } 
+        /* 5. 動物實驗 - 淺紫背景 (新增此行) */
+        .card:nth-child(5) { border-top-color: #a29bfe; background-color: #f8f7ff; }
 
         .card h2 {
             margin-top: 0;
@@ -411,7 +413,7 @@
                     </div>
                     <div class="tool-item">
                         <div class="tool-title" data-i18n="c3_t4_title">ELISA 數據分析工具</div>
-                        <div class="tool-desc" data-i18n="c3_t4_desc">貼上 OD 值、指定孔位配置與標準品濃度，選擇擬合模型，即可自動產生標準曲線並換算樣品濃度。</div>
+                        <div class="tool-desc" data-i18n="c3_t4_desc">貼上 OD 值、指定孔位配置與標準品濃度，選擇擬合模型，即可自動產生標準曲線並換算樣品濃度</div>
                         <div class="actions">
                             <a href="https://osla30.github.io/bio/elisa/elisa" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
                             <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/elisa/elisa')" data-i18n="btn_copy">複製連結</button>
@@ -428,6 +430,19 @@
                         <div class="actions">
                             <a href="https://osla30.github.io/bio/q/qpcr" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
                             <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/q/qpcr')" data-i18n="btn_copy">複製連結</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h2 data-i18n="cat5_title">🐁 動物實驗</h2>
+                <div class="tool-list">
+                    <div class="tool-item">
+                        <div class="tool-title" data-i18n="c5_t1_title">大鼠腦部立體定位修正計算器</div>
+                        <div class="tool-desc" data-i18n="c5_t1_desc">修正大鼠因體重差異所造成的腦部座標偏差</div>
+                        <div class="actions">
+                            <a href="https://osla30.github.io/bio/ratbrain" target="_blank" class="btn btn-open" data-i18n="btn_open">開啟工具</a>
+                            <button class="btn btn-copy" onclick="copyToClipboard('https://osla30.github.io/bio/ratbrain')" data-i18n="btn_copy">複製連結</button>
                         </div>
                     </div>
                 </div>
@@ -492,11 +507,15 @@
                 c3_t3_title: "Western Blot 條帶相對定量標準化工具",
                 c3_t3_desc: "輸入條帶灰度值，即可進行相對定量與標準化分析",
                 c3_t4_title: "ELISA 數據分析工具",
-                c3_t4_desc: "貼上 OD 值、指定孔位配置與標準品濃度，選擇擬合模型，即可自動產生標準曲線並換算樣品濃度。",
+                c3_t4_desc: "貼上 OD 值、指定孔位配置與標準品濃度，選擇擬合模型，即可自動產生標準曲線並換算樣品濃度",
                 
                 cat4_title: "🧬 核酸分析 (PCR)",
                 c4_t1_title: "qPCR 相對定量分析工具",
                 c4_t1_desc: "以 2^(-ΔΔCt) 方法，進行 qPCR 相對定量分析",
+
+                cat5_title: "🐁 動物實驗",
+                c5_t1_title: "大鼠腦部立體定位修正計算器",
+                c5_t1_desc: "修正大鼠因體重差異所造成的腦部座標偏差",
                 
                 btn_open: "開啟工具",
                 btn_copy: "複製連結",
@@ -554,6 +573,10 @@
                 cat4_title: "🧬 Nucleic Acid Analysis",
                 c4_t1_title: "qPCR Relative Quantification Tool",
                 c4_t1_desc: "qPCR relative quantification analysis using the 2^(-ΔΔCt) method",
+
+                cat5_title: "🐁 Animal Experiments",
+                c5_t1_title: "Rat Brain Stereotaxic Coordinate Corrector",
+                c5_t1_desc: "Correct rat brain coordinate deviations caused by body weight differences",
                 
                 btn_open: "Open Tool",
                 btn_copy: "Copy Link",
