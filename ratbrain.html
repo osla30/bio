@@ -94,13 +94,13 @@
             
             <!-- 分頁切換 (Tabs) -->
             <div class="tabs-container">
-                <button id="tab-sd" class="tab-btn tab-active" onclick="switchTab('SD')">
-                    SD 大鼠
-                    <span>預設 225g：原始座標 = 修正座標<br>【中國圖譜：Stereotaxic Atlas of Rat Brain】</span>
+                <button id="tab-wistar" class="tab-btn tab-active" onclick="switchTab('Wistar')">
+                    歐美圖譜：The Rat Brain in Stereotaxic Coordinates
+                    <span>【Paxinos and Watson, 2008】<br>預設 Wistar 大鼠 290g：原始座標 = 修正後座標</span>
                 </button>
-                <button id="tab-wistar" class="tab-btn tab-inactive" onclick="switchTab('Wistar')">
-                    Wistar 大鼠
-                    <span>預設 290g：原始座標 = 修正座標<br>【歐美圖譜：The Rat Brain in Stereotaxic Coordinates】</span>
+                <button id="tab-sd" class="tab-btn tab-inactive" onclick="switchTab('SD')">
+                    中國圖譜：Stereotaxic Atlas of Rat Brain
+                    <span>【Bao and Su, 1991】<br>預設 SD 大鼠 225g：原始座標 = 修正後座標</span>
                 </button>
             </div>
 
@@ -238,7 +238,7 @@
 
     <script>
         // 預設狀態
-        let currentStrain = 'SD'; // 'SD' or 'Wistar'
+        let currentStrain = 'Wistar'; // 'SD' or 'Wistar'
 
         // 取得 DOM 元素
         const tabSD = document.getElementById('tab-sd');
