@@ -349,6 +349,27 @@ footer a:hover {
                                 <button class="btn btn-sm btn-link p-0 text-decoration-none" onclick="loadDemoData()" data-i18n="load_demo">Load Demo</button>
                             </div>
                             
+                            <!-- 新增：自帶標準品濃度下拉選單 -->
+                            <div class="mb-2">
+                                <!-- 加入 style="color: red; font-weight: bold;" 讓預設字體變紅色且明顯 -->
+                                <select class="form-select form-select-sm" id="autoStdConc" onchange="fillStandardConc()" style="color: #dc3545; font-weight: bold;">
+                                    <option value="" data-i18n="select_std_conc">選擇自帶標準品濃度</option>
+                                    
+                                    <!-- 使用 Unicode 符號 📌 或是括號來凸顯 0.75 與 0.025 -->
+                                    <option value="2,1.5,1,0.75,0.5,0.25,0.125,0" style="color: #333; font-weight: normal;">【8 - 1 ↘】2、1.5、1、(0.75)、0.5、0.25、0.125、0</option>
+                                    <option value="0,0.125,0.25,0.5,0.75,1,1.5,2" style="color: #333; font-weight: normal;">【8 - 1 ↗】0、0.125、0.25、0.5、(0.75)、1、1.5、2</option>
+                                    
+                                    <option value="2,1.5,1,0.5,0.25,0.125,0.025,0" style="color: #333; font-weight: normal;">【8 - 2 ↘】2、1.5、1、0.5、0.25、0.125、(0.025)、0</option>
+                                    <option value="0,0.025,0.125,0.25,0.5,1,1.5,2" style="color: #333; font-weight: normal;">【8 - 2 ↗】0、(0.025)、0.125、0.25、0.5、1、1.5、2</option>
+                                    
+                                    <option value="2,1.5,1,0.75,0.5,0.25,0.125,0.025,0" style="color: #333; font-weight: normal;">【9 ↘】2、1.5、1、(0.75)、0.5、0.25、0.125、(0.025)、0</option>
+                                    <option value="0,0.025,0.125,0.25,0.5,0.75,1,1.5,2" style="color: #333; font-weight: normal;">【9 ↗】0、(0.025)、0.125、0.25、0.5、(0.75)、1、1.5、2</option>
+                                    
+                                    <option value="0.25,0.125,0.05,0.025,0.005,0" style="color: #333; font-weight: normal;">【6 ↘】0.25、0.125、0.05、0.025、0.005、0</option>
+                                    <option value="0,0.005,0.025,0.05,0.125,0.25" style="color: #333; font-weight: normal;">【6 ↗】0、0.005、0.025、0.05、0.125、0.25</option>
+                                </select>
+                            </div>
+                            
                             <div class="control-row row g-2">
                                 <div class="col-12">
                                     <label class="form-label mb-1 small" data-i18n="replicates">OD Replicates</label>
@@ -495,6 +516,7 @@ footer a:hover {
             en: {
                 title: "Bradford / BCA Protein Assay",
                 settings_input: "Settings & Input",
+                select_std_conc: "Select Auto Standard Conc",
                 regression_model: "Regression Model:",
                 standard_data: "Standard Curve Data:",
                 load_demo: "Load Demo",
@@ -548,6 +570,7 @@ footer a:hover {
             zh: {
                 title: "Bradford / BCA 蛋白質定量工具",
                 settings_input: "設定與輸入",
+                select_std_conc: "選擇自帶標準品濃度",
                 regression_model: "回歸模型:",
                 standard_data: "標準品數據 (Standard):",
                 load_demo: "載入範例",
@@ -1172,6 +1195,7 @@ function forceClearOutputs() {
 }
 
         function loadDemoData() {
+            if (document.getElementById('autoStdConc')) document.getElementById('autoStdConc').value = '';
             document.getElementById('stdReplicates').value = '2'; 
             renderStandardInputs(); 
             
@@ -1209,12 +1233,33 @@ function forceClearOutputs() {
             document.getElementById('csvFileInput').value = '';
             }
 
+            // 👇 新增這行，讓清除全部時下拉選單也恢復預設
+            if (document.getElementById('autoStdConc')) {
+                document.getElementById('autoStdConc').value = '';
+            }
+
             // 重置稀釋倍數與 Western Blot 參數為初始值
             document.getElementById('dilutionFactor').value = '1';
             document.getElementById('wb_mass').value = '20';
             document.getElementById('wb_vol').value = '20';
             document.getElementById('wb_buffer').value = '4';
             document.getElementById('wb_n').value = '2';
+        }
+
+        function fillStandardConc() {
+            const select = document.getElementById('autoStdConc');
+            const concInput = document.getElementById('std_conc_input');
+            
+            if (select.value && concInput) {
+                // 將逗號替換為換行符號後填入濃度輸入框
+                concInput.value = select.value.split(',').join('\n');
+                
+                // 同步更新快取資料，確保切換重複數或語系時，剛剛填入的值不會被洗掉
+                cachedInputData.stdConc = concInput.value;
+                
+                // 填完後可將下拉選單恢復為預設選項 (選擇性)
+                // select.value = "";
+            }
         }
 
         function downloadChart() {
