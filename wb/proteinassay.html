@@ -744,7 +744,7 @@ function renderStandardInputs() {
     for (let r = 0; r < reps; r++) {
         if (ods[r].length > maxOdLen) maxOdLen = ods[r].length;
     }
-    let rowsCount = Math.max(10, concs.length, maxOdLen);
+    let rowsCount = Math.max(9, concs.length, maxOdLen);
     
     for (let i = 0; i < rowsCount; i++) {
         let row = [concs[i] !== undefined ? concs[i] : ''];
