@@ -9,6 +9,12 @@
     <script src="bootstrap.bundle.min.js"></script>
     
     <script src="chart.js"></script>
+
+    <script src="jsuites.min.js"></script>
+    <link rel="stylesheet" href="jsuites.min.css" type="text/css" />
+
+    <script src="index.min.js"></script>
+    <link rel="stylesheet" href="jspreadsheet.min.css" type="text/css" />
     
     <style>
         :root {
@@ -186,6 +192,8 @@
             border-radius: 4px;
             padding: 15px;
             margin-top: 5px;
+            overflow-x: auto; /* 新增：允許橫向捲動，避免表格超出邊界 */
+            max-width: 100%;  /* 新增：限制最大寬度為父容器的 100% */
         }
 
         .bulk-textarea {
@@ -436,7 +444,7 @@ footer a:hover {
                 <div class="card">
                     <div class="card-header" data-i18n="calculation_results">Calculation Results</div>
                     <div class="card-body p-0">
-                        <div class="table-responsive" style="max-height: 400px;">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table class="table table-hover table-striped mb-0 table-result">
                                 <thead class="sticky-top bg-light" style="z-index: 5;">
                                     <tr>
@@ -464,11 +472,11 @@ footer a:hover {
                         <div class="row g-2 mb-3 bg-light p-3 rounded">
                             <div class="col-md-3 recipe-input-group">
                                 <label data-i18n="target_protein">目標蛋白量 (µg)</label>
-                                <input type="number" class="form-control" id="wb_mass" value="20" min="0" oninput="if(this.value<0)this.value=0; calculateRecipe()">
+                                <input type="number" class="form-control" id="wb_mass" value="20" min="0" oninput="if(this.value<0) this.value=0; calculateRecipe()">
                             </div>
                             <div class="col-md-3 recipe-input-group">
                                 <label data-i18n="target_vol">單孔目標體積 (µL)</label>
-                                <input type="number" class="form-control" id="wb_vol" value="20" min="0" oninput="if(this.value<0)this.value=0; calculateRecipe()">
+                                <input type="number" class="form-control" id="wb_vol" value="20" min="0" oninput="if(this.value<0) this.value=0; calculateRecipe()">
                             </div>
                             <div class="col-md-3 recipe-input-group">
                                 <label data-i18n="buffer_x">Sample Buffer 倍數 (X)</label>
@@ -476,7 +484,7 @@ footer a:hover {
                             </div>
                             <div class="col-md-3 recipe-input-group">
                                 <label data-i18n="prep_n">配製份數 (n)</label>
-                                <input type="number" class="form-control" id="wb_n" value="2" min="0" oninput="if(this.value<0)this.value=0; calculateRecipe()">
+                                <input type="number" class="form-control" id="wb_n" value="2" min="0" oninput="if(this.value<0) this.value=0; calculateRecipe()">
                             </div>
                         </div>
 
@@ -539,13 +547,13 @@ footer a:hover {
                 no_result: "No results yet. Click Calculate to start.",
                 model_hint: "Bradford: 595nm / BCA: 562nm",
                 conc_lbl: "Conc (μg/μL)",
-                od_lbl: "Absorbance (OD)",
+                od_lbl: "OD",
                 od_net_lbl: "Blank-subtracted OD",
                 ph_col: "Paste column...",
                 no_calc_alert: "Please calculate first.",
                 sample_name_input: "Sample Name",
                 sample_name_col: "Sample Name",
-                sample_od: "Sample OD",
+                sample_od: "OD",
                 mean_od: "Mean OD",
                 col_net_od: "Blank-subtracted OD",
                 download_offline: "Offline",
@@ -593,13 +601,13 @@ footer a:hover {
                 no_result: "尚無結果，請輸入數據後點擊計算。",
                 model_hint: "Bradford：595nm / BCA： 562nm",
                 conc_lbl: "濃度 (μg/μL)",
-                od_lbl: "吸光值 (OD)",
+                od_lbl: "OD",
                 od_net_lbl: "扣除 Blank 之 OD",
                 ph_col: "請貼上整欄數據...",
                 no_calc_alert: "請先進行計算後再匯出。",
                 sample_name_input: "樣本名稱",
                 sample_name_col: "樣本名稱",
-                sample_od: "樣本 OD",
+                sample_od: "OD",
                 mean_od: "平均 OD",
                 col_net_od: "扣除 Blank 之 OD",
                 download_offline: "離線版",
@@ -623,6 +631,8 @@ footer a:hover {
             }
         };
 
+        let stdSpreadsheet = null;
+        let sampleSpreadsheet = null;
         let currentLang = 'zh';
         let globalStdData = [];
         let globalSampleResults = [];
@@ -657,136 +667,239 @@ footer a:hover {
         document.addEventListener('DOMContentLoaded', () => { setLang('zh'); });
 
         // 全域狀態暫存
-let cachedInputData = { stdConc: '', stdOds: ['', '', ''], sampleName: '', sampleOds: ['', '', ''] };
+let cachedInputData = { stdConc: [], stdOds: [[], [], []], sampleName: [], sampleOds: [[], [], []] };
 
 function saveAndRenderAllInputs() {
-    // 1. 抓取當下 DOM 數據存入快取 (保留既有已輸入的內容)
-    if(document.getElementById('std_conc_input')) cachedInputData.stdConc = document.getElementById('std_conc_input').value;
-    if(document.getElementById('sample_name_input')) cachedInputData.sampleName = document.getElementById('sample_name_input').value;
-    for(let r=1; r<=3; r++) {
-        if(document.getElementById(`std_od_input_${r}`)) cachedInputData.stdOds[r-1] = document.getElementById(`std_od_input_${r}`).value;
-        if(document.getElementById(`sample_od_input_${r}`)) cachedInputData.sampleOds[r-1] = document.getElementById(`sample_od_input_${r}`).value;
+    // 【補強】強制關閉 Jspreadsheet 正在編輯的單元格，確保切換重複數時，最後一筆輸入的數值能被正確寫入快取
+    if (stdSpreadsheet && stdSpreadsheet.edition) { try { stdSpreadsheet.closeEditor(stdSpreadsheet.edition[0], true); } catch(e){} }
+    if (sampleSpreadsheet && sampleSpreadsheet.edition) { try { sampleSpreadsheet.closeEditor(sampleSpreadsheet.edition[0], true); } catch(e){} }
+
+    // 確保輸入框失焦，捕捉正在打字尚未 Enter 的內容
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur(); 
+    }
+    // 1. 若表格已存在，抓取當下 Jspreadsheet 數據存入快取
+    if (stdSpreadsheet) {
+        let data = stdSpreadsheet.getData();
+        let concs = [], ods = [[], [], []];
+        data.forEach(row => {
+            concs.push(row[0] !== null ? row[0] : '');
+            for(let c=1; c<row.length; c++) {
+                if(c-1 < 3) ods[c-1].push(row[c] !== null ? row[c] : '');
+            }
+        });
+        cachedInputData.stdConc = [...concs];
+        // 標準品區塊替換
+let activeStdCols = stdSpreadsheet.options.columns.length - 1;
+for(let r=0; r<activeStdCols && r<3; r++) cachedInputData.stdOds[r] = [...ods[r]];
+    }
+    
+    if (sampleSpreadsheet) {
+        let data = sampleSpreadsheet.getData();
+        let names = [], ods = [[], [], []];
+        data.forEach(row => {
+            names.push(row[0] !== null ? row[0] : '');
+            for(let c=1; c<row.length; c++) {
+                if(c-1 < 3) ods[c-1].push(row[c] !== null ? row[c] : '');
+            }
+        });
+        cachedInputData.sampleName = [...names];
+        // 樣本區塊替換
+let activeSampleCols = sampleSpreadsheet.options.columns.length - 1;
+for(let r=0; r<activeSampleCols && r<3; r++) cachedInputData.sampleOds[r] = [...ods[r]];
     }
 
-    // 2. 重新渲染 HTML
+    // 2. 重新渲染 HTML (重新初始化表格)
     renderStandardInputs();
     renderSampleInputs();
+}
 
-    // 3. 從快取中全面回填數據 (即使該欄位剛才被隱藏，數據仍在 memory 中)
-    let stdReps = parseInt(document.getElementById('stdReplicates').value);
-    let sampleReps = parseInt(document.getElementById('sampleReplicates').value);
-
-    if(document.getElementById('std_conc_input')) document.getElementById('std_conc_input').value = cachedInputData.stdConc;
-    for(let r=1; r<=stdReps; r++) {
-        if(document.getElementById(`std_od_input_${r}`)) document.getElementById(`std_od_input_${r}`).value = cachedInputData.stdOds[r-1];
+function renderStandardInputs() {
+    const reps = parseInt(document.getElementById('stdReplicates').value);
+    const container = document.getElementById('stdDataContainer');
+    
+    // 【修復】正確銷毀舊的 Jspreadsheet 實例，釋放全域事件監聽器
+    if (stdSpreadsheet) {
+        stdSpreadsheet.destroy();
+        stdSpreadsheet = null;
+    }
+    container.innerHTML = ''; // 清空容器
+    
+    // 設定 Jspreadsheet 欄位 (無字元限制)
+    let columns = [
+        { type: 'text', title: i18n[currentLang].conc_lbl, width: 100, align: 'center' }
+    ];
+    for(let r=1; r<=reps; r++) {
+        columns.push({ type: 'text', title: `${i18n[currentLang].od_lbl} #${r}`, width: 75, align: 'center' });
     }
 
-    if(document.getElementById('sample_name_input')) document.getElementById('sample_name_input').value = cachedInputData.sampleName;
-    for(let r=1; r<=sampleReps; r++) {
-        if(document.getElementById(`sample_od_input_${r}`)) document.getElementById(`sample_od_input_${r}`).value = cachedInputData.sampleOds[r-1];
+    // 將快取資料轉為 Jspreadsheet 格式
+    let initialData = [];
+    let concs = cachedInputData.stdConc || [];
+    let ods = [];
+    for (let r=0; r<reps; r++) ods.push(cachedInputData.stdOds[r] || []);
+    
+    // 【修復】動態比對所有 OD 陣列的長度，避免更換濃度時造成較長的 OD 數據被截斷
+    let maxOdLen = 0;
+    for (let r = 0; r < reps; r++) {
+        if (ods[r].length > maxOdLen) maxOdLen = ods[r].length;
+    }
+    let rowsCount = Math.max(10, concs.length, maxOdLen);
+    
+    for (let i = 0; i < rowsCount; i++) {
+        let row = [concs[i] !== undefined ? concs[i] : ''];
+        for (let r = 0; r < reps; r++) {
+            row.push(ods[r][i] !== undefined ? ods[r][i] : '');
+        }
+        initialData.push(row);
+    }
+
+    stdSpreadsheet = jspreadsheet(container, {
+        data: initialData,
+        columns: columns,
+        allowInsertRow: true,
+        allowManualInsertRow: true,
+        allowDeleteRow: true,  // 新增：允許刪除行
+        allowInsertColumn: false,
+        allowDeleteColumn: false,
+        minSpareRows: 1,       // 新增：底部永遠自動保留一行空白 (打字會無限往下增生)
+        wordWrap: true
+    });
+}
+
+function renderSampleInputs() {
+    const reps = parseInt(document.getElementById('sampleReplicates').value);
+    const container = document.getElementById('sampleDataContainer');
+    
+    // 【修復】正確銷毀舊的 Jspreadsheet 實例
+    if (sampleSpreadsheet) {
+        sampleSpreadsheet.destroy();
+        sampleSpreadsheet = null;
+    }
+    container.innerHTML = '';
+    
+    let columns = [
+        { type: 'text', title: i18n[currentLang].sample_name_col, width: 120, align: 'center' }
+    ];
+    for(let r=1; r<=reps; r++) {
+        columns.push({ type: 'text', title: `${i18n[currentLang].sample_od} #${r}`, width: 75, align: 'center' });
+    }
+
+    let initialData = [];
+    let names = cachedInputData.sampleName || [];
+    let ods = [];
+    for (let r=0; r<reps; r++) ods.push(cachedInputData.sampleOds[r] || []);
+    
+    // 【修復】動態比對所有 OD 陣列的長度，避免漏填名稱時導致複製的 OD 數據被截斷
+    let maxOdLen = 0;
+    for (let r = 0; r < reps; r++) {
+        if (ods[r].length > maxOdLen) maxOdLen = ods[r].length;
+    }
+    let rowsCount = Math.max(10, names.length, maxOdLen);
+    
+    for (let i = 0; i < rowsCount; i++) {
+        let row = [names[i] !== undefined ? names[i] : ''];
+        for (let r = 0; r < reps; r++) {
+            row.push(ods[r][i] !== undefined ? ods[r][i] : '');
+        }
+        initialData.push(row);
+    }
+
+    sampleSpreadsheet = jspreadsheet(container, {
+        data: initialData,
+        columns: columns,
+        allowInsertRow: true,
+        allowManualInsertRow: true,
+        allowDeleteRow: true,  // 新增：允許刪除行
+        allowInsertColumn: false,
+        allowDeleteColumn: false,
+        minSpareRows: 1,       // 新增：底部永遠自動保留一行空白 (打字會無限往下增生)
+        wordWrap: true
+    });
+}
+
+    function getStandardData() {
+    const reps = parseInt(document.getElementById('stdReplicates').value);
+    // 【修復】加入 typeof 檢查，防止選中不具備 blur 屬性的特殊 DOM 導致報錯中斷
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur(); 
+    } 
+    let rawData = stdSpreadsheet.getData();
+    let data = [];
+let missingOds = []; // 新增：紀錄有濃度卻無有效 OD 的點
+
+for(let i=0; i<rawData.length; i++) {
+    let row = rawData[i];
+    let concStr = (row[0] !== null && row[0] !== undefined && row[0] !== '') ? String(row[0]).trim() : '';
+    let conc = concStr === '' ? NaN : Number(concStr.replace(/,/g, ''));
+    if (!Number.isFinite(conc)) continue;
+    
+    let rawOdsToStore = [];
+    let validOdsForAvg = [];
+    for(let r=0; r<reps; r++) {
+        let odStr = (row[r+1] !== null && row[r+1] !== undefined && row[r+1] !== '') ? String(row[r+1]).trim() : '';
+        let odVal = odStr === '' ? null : Number(odStr.replace(/,/g, ''));
+        if (odVal !== null && !Number.isFinite(odVal)) odVal = null;
+        rawOdsToStore.push(odVal);
+        if (odVal !== null) validOdsForAvg.push(odVal);
+    }
+    
+    if (validOdsForAvg.length > 0) {
+        let avgOd = fixFloat(validOdsForAvg.reduce((a,b) => a + b, 0) / validOdsForAvg.length);
+        data.push({ x: conc, y: avgOd, rawOds: rawOdsToStore });
+    } else if (Number.isFinite(conc)) {
+        // 新增判斷：若有輸入濃度，但 OD 完全沒有輸入
+        missingOds.push(conc);
     }
 }
 
-        function renderStandardInputs() {
-            const reps = parseInt(document.getElementById('stdReplicates').value);
-            const count = 10; 
-            const container = document.getElementById('stdDataContainer');
-            let html = `<div class="d-flex gap-2">`;
-            html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].conc_lbl.replace('(μg/μL)', '<span class="text-danger">(μg/μL)</span>')}</div><textarea id="std_conc_input" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
-            for(let r=1; r<=reps; r++) {
-                html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].od_lbl} #${r}</div><textarea id="std_od_input_${r}" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
-            }
-            html += `</div>`;
-            container.innerHTML = html;
+// 迴圈結束後，若有遺漏點則跳出提示
+if (missingOds.length > 0) {
+    let msg = currentLang === 'zh' 
+        ? `提醒：標準品濃度 [${missingOds.join(', ')}] 缺乏對應的 OD 值，已自動略過不計入標準曲線。` 
+        : `Note: Standard concentration(s) [${missingOds.join(', ')}] have no OD values and were skipped.`;
+    alert(msg);
+}
+
+return data;
+}
+
+function getSampleData() {
+    const reps = parseInt(document.getElementById('sampleReplicates').value);
+    // 【修復】加入 typeof 檢查，防止選中不具備 blur 屬性的特殊 DOM 導致報錯中斷
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+        document.activeElement.blur(); 
+    } 
+    let rawData = sampleSpreadsheet.getData();
+    let results = [];
+    
+    for(let i=0; i<rawData.length; i++) {
+        let row = rawData[i];
+        let sName = (row[0] !== null && row[0] !== undefined && row[0] !== '') ? String(row[0]).trim() : '';
+        
+        let rawOdsToStore = [];
+        let validOdsForAvg = [];
+        for(let r=0; r<reps; r++) {
+            let odStr = (row[r+1] !== null && row[r+1] !== undefined && row[r+1] !== '') ? String(row[r+1]).trim() : '';
+            let odVal = odStr === '' ? null : Number(odStr.replace(/,/g, ''));
+            if (odVal !== null && !Number.isFinite(odVal)) odVal = null;
+            rawOdsToStore.push(odVal);
+            if (odVal !== null) validOdsForAvg.push(odVal);
         }
+        
+        // 若整列都是空的則跳過
+        if (sName === '' && validOdsForAvg.length === 0) continue;
+        if (sName === "") sName = `S${i+1}`;
 
-        function renderSampleInputs() {
-            const reps = parseInt(document.getElementById('sampleReplicates').value);
-            const count = 10;
-            const container = document.getElementById('sampleDataContainer');
-            let html = `<div class="d-flex gap-2">`;
-            html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].sample_name_input}</div><textarea id="sample_name_input" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
-            for(let r=1; r<=reps; r++) {
-                html += `<div style="flex:1;"><div class="column-header">${i18n[currentLang].sample_od} #${r}</div><textarea id="sample_od_input_${r}" class="form-control bulk-textarea" rows="${count}" placeholder="${i18n[currentLang].ph_col}"></textarea></div>`;
-            }
-            html += `</div>`;
-            container.innerHTML = html;
+        if(validOdsForAvg.length > 0) {
+            let avgOd = fixFloat(validOdsForAvg.reduce((a,b) => a + b, 0) / validOdsForAvg.length);
+            results.push({ id: i+1, name: sName, od: avgOd, rawOds: rawOdsToStore });
+        } else {
+            results.push({ id: i+1, name: sName, od: NaN, rawOds: rawOdsToStore });
         }
-
-        function parseBulkInput(elementId) {
-            const el = document.getElementById(elementId);
-            if (!el || !el.value.trim()) return [];
-            let raw = el.value.trim();
-            return raw.split(/\r?\n/).map(v => {
-                let val = v.trim();
-                if (val === '') return NaN;
-                let cleanVal = val.replace(/,/g, '');
-                if (cleanVal === '') return NaN; // 攔截僅輸入逗號的極端狀況
-                let num = Number(cleanVal);
-                return Number.isFinite(num) ? num : NaN;
-            });
-        }
-
-        function parseStringInput(elementId) {
-            const el = document.getElementById(elementId);
-            if (!el || !el.value.trim()) return [];
-            let raw = el.value.trim();
-            return raw.split(/\r?\n/).map(v => v.trim());
-        }
-
-        function getStandardData() {
-            const reps = parseInt(document.getElementById('stdReplicates').value);
-            let concArr = parseBulkInput('std_conc_input');
-            let odArrs = [];
-            for(let r=1; r<=reps; r++) odArrs.push(parseBulkInput(`std_od_input_${r}`));
-
-            let data = [];
-            for(let i=0; i<concArr.length; i++) {
-                if (isNaN(concArr[i])) continue;
-                let rawOdsToStore = []; // 用於記錄原始位置，包含空值
-                let validOdsForAvg = []; // 純計算平均用
-                for(let r=0; r<reps; r++) {
-                    let val = (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) ? odArrs[r][i] : null;
-                    rawOdsToStore.push(val);
-                    if (val !== null) validOdsForAvg.push(val);
-                }
-                if (validOdsForAvg.length > 0) {
-                    let avgOd = fixFloat(validOdsForAvg.reduce((a,b) => a + b, 0) / validOdsForAvg.length);
-                    data.push({ x: concArr[i], y: avgOd, rawOds: rawOdsToStore });
-                }
-            }
-            return data;
-        }
-
-        function getSampleData() {
-            const reps = parseInt(document.getElementById('sampleReplicates').value);
-            let odArrs = [];
-            for(let r=1; r<=reps; r++) odArrs.push(parseBulkInput(`sample_od_input_${r}`));
-            let nameArr = parseStringInput('sample_name_input');
-
-            let maxLen = 0;
-            odArrs.forEach(arr => { if(arr.length > maxLen) maxLen = arr.length; });
-            let loopLen = Math.max(maxLen, nameArr.length); // 取兩者最大值
-            
-            let results = [];
-            for(let i=0; i<loopLen; i++) {
-                let rawOdsToStore = [];
-                let validOdsForAvg = [];
-                for(let r=0; r<reps; r++) {
-                    let val = (odArrs[r] && odArrs[r][i] !== undefined && !isNaN(odArrs[r][i])) ? odArrs[r][i] : null;
-                    rawOdsToStore.push(val);
-                    if (val !== null) validOdsForAvg.push(val);
-                }
-                let sName = (nameArr[i] && nameArr[i].trim() !== "") ? nameArr[i] : `S${i+1}`;
-                if(validOdsForAvg.length > 0) {
-                    let avgOd = fixFloat(validOdsForAvg.reduce((a,b) => a + b, 0) / validOdsForAvg.length);
-                    results.push({ id: i+1, name: sName, od: avgOd, rawOds: rawOdsToStore });
-                } else {
-                    results.push({ id: i+1, name: sName, od: NaN, rawOds: rawOdsToStore });
-                }
-            }
-            return results;
-        }
+    }
+    return results;
+}
 
         function fitLinear(data) {
             if (!Array.isArray(data) || data.length < 2) {
@@ -908,54 +1021,15 @@ function saveAndRenderAllInputs() {
         }
 
         function calculate() {
-            // 1. 動態取得標準品選擇了幾個重複 (1~3)
-            let stdReps = parseInt(document.getElementById('stdReplicates').value);
-            let checkStdConc = parseBulkInput('std_conc_input');
-            let stdMismatch = false;
-            
-            // 迴圈檢查每一個啟用的 OD 欄位行數是否與濃度行數一致
-            for(let r=1; r<=stdReps; r++) {
-                if (checkStdConc.length > 0 && checkStdConc.length !== parseBulkInput(`std_od_input_${r}`).length) {
-                    stdMismatch = true;
-                }
-            }
-            
-            if (stdMismatch) {
-            let msg = (currentLang === 'zh') 
-                ? `警告：標準品的「濃度行數」與「OD 行數」不一致！\n\n這可能導致數據錯位，是否仍要繼續？`
-                : `Warning: Standard Row count mismatch between Concentration and ODs!\nProceed anyway?`;
-            if (!confirm(msg)) { forceClearOutputs(); return; } // 新增 forceClearOutputs()
-            }
-
-            // 2. 動態取得樣本選擇了幾個重複 (1~3)
-            let sampleReps = parseInt(document.getElementById('sampleReplicates').value);
-            let checkSampleNames = parseStringInput('sample_name_input');
-            let sampleMismatch = false;
-            
-            // 迴圈檢查每一個啟用的 OD 欄位行數是否與名稱行數一致
-            for(let r=1; r<=sampleReps; r++) {
-                if (checkSampleNames.length > 0 && checkSampleNames.length !== parseBulkInput(`sample_od_input_${r}`).length) {
-                    sampleMismatch = true;
-                }
-            }
-
-            if (sampleMismatch) {
-                let msg = (currentLang === 'zh') 
-                    ? `警告：樣本的「名稱行數」與「OD 行數」不一致！\n\n請檢查是否漏複製或有多餘空行。\n是否仍要繼續？`
-                    : `Warning: Sample Row count mismatch between Names and ODs!\nProceed anyway?`;
-            if (!confirm(msg)) { forceClearOutputs(); return; } // 新增 forceClearOutputs()
-            }
-
-            globalStdData = getStandardData();
-            // 新增標準品檢查
-            let expectedStdCount = checkStdConc.filter(v => !isNaN(v)).length;
-            if (globalStdData.length < expectedStdCount) {
-                let skipped = expectedStdCount - globalStdData.length;
-                let msg = currentLang === 'zh'
-                    ? `注意：有 ${skipped} 筆標準品因為所有 OD 欄位皆為空值而被跳過，請確認輸入。`
-                    : `Note: ${skipped} standard(s) skipped because all OD values were empty.`;
-                alert(msg);
-            }
+    globalStdData = getStandardData();
+    
+    // 若表格未輸入任何有效標準品，防呆擋下
+    if (globalStdData.length < 2) { 
+        alert(currentLang === 'zh' ? "計算失敗：需要至少 2 個有效的標準品數據點才能繪製標準曲線。" : "Calculation Failed: At least 2 standard points are required."); 
+        forceClearOutputs();
+        return; 
+    }
+    
             let rawDilution = parseFloat(document.getElementById('dilutionFactor').value);
             // 若輸入為空、非數值，或是小於 1，皆強制設定為 1
             let dilution = (isNaN(rawDilution) || rawDilution < 1) ? 1 : rawDilution;
@@ -963,12 +1037,6 @@ function saveAndRenderAllInputs() {
             // 同步將修正後的數值寫回畫面輸入框，避免畫面顯示負數但背後用 1 計算
             document.getElementById('dilutionFactor').value = dilution;
             globalAppliedDilution = dilution;
-            
-if (globalStdData.length < 2) { 
-    alert(currentLang === 'zh' ? "計算失敗：需要至少 2 個有效的標準品數據點才能繪製標準曲線。" : "Calculation Failed: At least 2 standard points are required."); 
-    forceClearOutputs();
-    return; 
-}
 
 let blankPoint = globalStdData.find(d => d.x === 0);
 
@@ -1043,7 +1111,7 @@ function forceClearOutputs() {
             let results = [];
             sampleList.forEach(item => {
             // 新增 NaN 攔截，若無 OD 數據則直接標記錯誤，跳過後續迴歸運算
-             if (isNaN(item.od)) {
+             if (!Number.isFinite(item.od)) {
              results.push({ ...item, netOD: NaN, conc: NaN, note: "No Data", statusType: "danger" });
              return;
              }
@@ -1065,7 +1133,7 @@ function forceClearOutputs() {
                     statusType = "warning";
                 }
 
-                let finalConc = isNaN(conc) ? NaN : conc * dilution;
+                let finalConc = !Number.isFinite(conc) ? NaN : conc * dilution;
                 results.push({ ...item, netOD: netOD, conc: finalConc, note: note, statusType: statusType });
             });
             globalSampleResults = results;
@@ -1095,8 +1163,8 @@ function forceClearOutputs() {
                 // 【修改重點】：把資料加到字串變數中
                 resultHtml += `<tr>
                     <td>${escapeHTML(res.name)}</td>
-                    <td>${isNaN(res.od) ? "---" : res.od.toFixed(4)}</td>
-                    <td class="text-muted">${isNaN(res.netOD) ? "---" : res.netOD.toFixed(4)}</td> 
+                    <td>${!Number.isFinite(res.od) ? "---" : res.od.toFixed(4)}</td>
+                    <td class="text-muted">${!Number.isFinite(res.netOD) ? "---" : res.netOD.toFixed(4)}</td>
                     <td class="${valClass}">${valStr}</td>
                     <td>${statusBadge}</td>
                 </tr>`;
@@ -1194,73 +1262,81 @@ function forceClearOutputs() {
     });
 }
 
-        function loadDemoData() {
-            if (document.getElementById('autoStdConc')) document.getElementById('autoStdConc').value = '';
-            document.getElementById('stdReplicates').value = '2'; 
-            renderStandardInputs(); 
-            
-            const demoStdConc = "2.000\n1.500\n1.000\n0.750\n0.500\n0.250\n0.125\n0";
-            const demoStdOD1 = "1.5869\n1.2053\n0.8822\n0.7318\n0.4956\n0.3083\n0.192\n0.0766";
-            const demoStdOD2 = "1.6808\n1.3201\n0.9543\n0.7336\n0.5099\n0.3279\n0.2\n0.0757";
-            
-            document.getElementById('std_conc_input').value = demoStdConc;
-            document.getElementById('std_od_input_1').value = demoStdOD1;
-            document.getElementById('std_od_input_2').value = demoStdOD2;
+    function loadDemoData() {
+    if (document.getElementById('autoStdConc')) document.getElementById('autoStdConc').value = '';
+    document.getElementById('stdReplicates').value = '2'; 
+    document.getElementById('sampleReplicates').value = '2';
+    
+    cachedInputData.stdConc = ["2.000","1.500","1.000","0.750","0.500","0.250","0.125","0"];
+    cachedInputData.stdOds[0] = ["1.5869","1.2053","0.8822","0.7318","0.4956","0.3083","0.192","0.0766"];
+    cachedInputData.stdOds[1] = ["1.6808","1.3201","0.9543","0.7336","0.5099","0.3279","0.2","0.0757"];
+    cachedInputData.stdOds[2] = [];
 
-            document.getElementById('sampleReplicates').value = '2';
-            renderSampleInputs(); 
-            
-            const demoSampleName = "A\nB\nC";
-            const demoSampleOD1 = "0.2732\n0.2176\n0.2013"; 
-            const demoSampleOD2 = "0.2725\n0.2171\n0.202";
+    cachedInputData.sampleName = ["A","B","C"];
+    cachedInputData.sampleOds[0] = ["0.2732","0.2176","0.2013"]; 
+    cachedInputData.sampleOds[1] = ["0.2725","0.2171","0.202"];
+    cachedInputData.sampleOds[2] = [];
 
-            document.getElementById('sample_name_input').value = demoSampleName;
-            document.getElementById('sample_od_input_1').value = demoSampleOD1;
-            document.getElementById('sample_od_input_2').value = demoSampleOD2;
-        }
+    // 直接呼叫渲染即可，避免被原先空白的畫面反向覆蓋快取
+    renderStandardInputs(); 
+    renderSampleInputs();
+}
 
         function clearData() {
-            renderStandardInputs(); 
-            renderSampleInputs(); 
-            document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted p-4" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
-            document.getElementById('recipeTableBody').innerHTML = `<tr><td colspan="5" class="text-muted py-3" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
-            if(myChart) { myChart.destroy(); myChart = null; }
-            document.getElementById('r2_score').textContent = '';
-            document.getElementById('r2_warning_box').style.display = 'none';
-            globalStdData = []; globalSampleResults = []; globalFitResult = null; globalBlankOD = 0; globalAppliedDilution = 1;
-            cachedInputData = { stdConc: '', stdOds: ['', '', ''], sampleName: '', sampleOds: ['', '', ''] };
-            if (document.getElementById('csvFileInput')) {
-            document.getElementById('csvFileInput').value = '';
-            }
+    cachedInputData = { stdConc: [], stdOds: [[], [], []], sampleName: [], sampleOds: [[], [], []] };
+    renderStandardInputs(); 
+    renderSampleInputs();
+    
+    document.getElementById('resultTableBody').innerHTML = `<tr><td colspan="5" class="text-center text-muted p-4" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
+    document.getElementById('recipeTableBody').innerHTML = `<tr><td colspan="5" class="text-muted py-3" data-i18n="no_result">${i18n[currentLang].no_result}</td></tr>`;
+    if(myChart) { myChart.destroy(); myChart = null; }
+    document.getElementById('r2_score').textContent = '';
+    document.getElementById('r2_warning_box').style.display = 'none';
+    globalStdData = []; globalSampleResults = []; globalFitResult = null; globalBlankOD = 0; globalAppliedDilution = 1;
+    
+    if (document.getElementById('csvFileInput')) document.getElementById('csvFileInput').value = '';
+    if (document.getElementById('autoStdConc')) document.getElementById('autoStdConc').value = '';
 
-            // 👇 新增這行，讓清除全部時下拉選單也恢復預設
-            if (document.getElementById('autoStdConc')) {
-                document.getElementById('autoStdConc').value = '';
-            }
+    document.getElementById('dilutionFactor').value = '1';
+    document.getElementById('wb_mass').value = '20';
+    document.getElementById('wb_vol').value = '20';
+    document.getElementById('wb_buffer').value = '4';
+    document.getElementById('wb_n').value = '2';
+}
 
-            // 重置稀釋倍數與 Western Blot 參數為初始值
-            document.getElementById('dilutionFactor').value = '1';
-            document.getElementById('wb_mass').value = '20';
-            document.getElementById('wb_vol').value = '20';
-            document.getElementById('wb_buffer').value = '4';
-            document.getElementById('wb_n').value = '2';
+    function fillStandardConc() {
+    const select = document.getElementById('autoStdConc');
+    if (select.value) {
+        // 【修正】強制關閉 Jspreadsheet 正在編輯的單元格，確保最後輸入的數值被寫入表格實例
+        if (stdSpreadsheet && stdSpreadsheet.edition) { 
+           try { stdSpreadsheet.closeEditor(stdSpreadsheet.edition[0], true); } catch(e){} 
         }
-
-        function fillStandardConc() {
-            const select = document.getElementById('autoStdConc');
-            const concInput = document.getElementById('std_conc_input');
-            
-            if (select.value && concInput) {
-                // 將逗號替換為換行符號後填入濃度輸入框
-                concInput.value = select.value.split(',').join('\n');
-                
-                // 同步更新快取資料，確保切換重複數或語系時，剛剛填入的值不會被洗掉
-                cachedInputData.stdConc = concInput.value;
-                
-                // 填完後可將下拉選單恢復為預設選項 (選擇性)
-                // select.value = "";
-            }
+        
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur(); 
         }
+        // 先保存現有表格上的 OD 數據 (避免被清空)，但不覆蓋濃度
+        if (stdSpreadsheet) {
+            let data = stdSpreadsheet.getData();
+            let ods = [[], [], []];
+            data.forEach(row => {
+                for(let c=1; c<row.length; c++) {
+                    if(c-1 < 3) ods[c-1].push(row[c] !== null ? row[c] : '');
+                }
+            });
+            // 修正：同步使用 activeStdCols 動態偵測，避免下拉選擇濃度時清空隱藏欄位的 OD 數據
+            let activeStdCols = stdSpreadsheet.options.columns.length - 1;
+            for(let r=0; r<activeStdCols && r<3; r++) cachedInputData.stdOds[r] = [...ods[r]];
+        }
+        // 更新選擇的濃度
+        cachedInputData.stdConc = select.value.split(',');
+        
+        renderStandardInputs(); // 觸發重新渲染標準品表格
+        
+        // 填完後將下拉選單恢復為預設選項
+        select.value = "";
+    }
+}
 
         function downloadChart() {
             if (!myChart) {
@@ -1290,7 +1366,12 @@ function forceClearOutputs() {
             let dilution = globalAppliedDilution;
             
             // 修正數值 0 不顯示的問題
-            const row = (arr) => arr.map(x => `"${String((x === null || x === undefined) ? "" : x).replace(/"/g, '""')}"`).join(",") + "\n";
+            // 【修正】除了處理雙引號，強制將字串內的換行符號(\r 或 \n)替換為空格，防止 CSV 結構因隱藏換行而崩潰
+            const row = (arr) => arr.map(x => {
+                let str = String((x === null || x === undefined) ? "" : x);
+                str = str.replace(/\r?\n|\r/g, " "); // 消除換行符
+                return `"${str.replace(/"/g, '""')}"`;
+            }).join(",") + "\n";
 
             // --- PART 1: 參數與標頭 ---
             csvContent += row(["Protein Quantification Report (Bradford/BCA)"]);
@@ -1339,8 +1420,8 @@ function forceClearOutputs() {
                 for(let i=0; i<maxSampleReps; i++) r.push((res.rawOds && res.rawOds[i] !== null && res.rawOds[i] !== undefined) ? res.rawOds[i] : "");
                 
                 // 加入 NaN 判斷，若無數值則輸出 "---" 以對齊網頁 UI
-                let odStr = isNaN(res.od) ? "---" : res.od.toFixed(4);
-                let netOdStr = isNaN(res.netOD) ? "---" : res.netOD.toFixed(4);
+                let odStr = !Number.isFinite(res.od) ? "---" : res.od.toFixed(4);
+                let netOdStr = !Number.isFinite(res.netOD) ? "---" : res.netOD.toFixed(4);
                 let concStr = (typeof res.conc === 'number' && !isNaN(res.conc)) ? res.conc.toFixed(4) : "---";
                 
                 r.push(odStr, netOdStr, concStr, (res.note || "OK"));
@@ -1432,7 +1513,40 @@ function forceClearOutputs() {
         }
 
         function parseCSVContent(csvText) {
-            const lines = csvText.split(/\r?\n/);
+            // --- 修正：使用全文本狀態機，支援儲存格內換行 ---
+            let rows = [];
+            let cellsTemp = [];
+            let currentCell = '';
+            let insideQuotes = false;
+            
+            for (let i = 0; i < csvText.length; i++) {
+                let char = csvText[i];
+                let nextChar = csvText[i + 1];
+
+                if (char === '"' && insideQuotes && nextChar === '"') {
+                    currentCell += '"';
+                    i++;
+                } else if (char === '"') {
+                    insideQuotes = !insideQuotes;
+                } else if (char === ',' && !insideQuotes) {
+                    cellsTemp.push(currentCell);
+                    currentCell = '';
+                } else if ((char === '\n' || char === '\r') && !insideQuotes) {
+                    if (char === '\r' && nextChar === '\n') i++; // 略過 Windows 的 \r\n
+                    cellsTemp.push(currentCell);
+                    rows.push(cellsTemp);
+                    cellsTemp = [];
+                    currentCell = '';
+                } else {
+                    currentCell += char;
+                }
+            }
+            if (cellsTemp.length > 0 || currentCell !== '') {
+                cellsTemp.push(currentCell);
+                rows.push(cellsTemp);
+            }
+
+            // 變數初始化宣告
             let mode = null;
             let importedDilution = 1;
             let importedWbMass = null, importedWbVol = null, importedWbBuffer = null, importedWbN = null;
@@ -1444,31 +1558,11 @@ function forceClearOutputs() {
             let sampleOds = [[], [], []];
             let sampleRepCount = 0;
             
-            for (let i = 0; i < lines.length; i++) {
-                let rowText = lines[i];
-                if (!rowText.trim()) continue;
-                // 解析 CSV 單行 (使用字元狀態機，完美處理包含逗號與引號的複雜名稱)
-                let cells = [];
-                let currentCell = '';
-                let insideQuotes = false;
-                for (let c = 0; c < rowText.length; c++) {
-                    let char = rowText[c];
-                    let nextChar = rowText[c + 1];
-
-                    if (char === '"' && insideQuotes && nextChar === '"') {
-                        currentCell += '"'; // 處理雙引號跳脫 ""
-                        c++; 
-                    } else if (char === '"') {
-                        insideQuotes = !insideQuotes;
-                    } else if (char === ',' && !insideQuotes) {
-                        cells.push(currentCell);
-                        currentCell = '';
-                    } else {
-                        currentCell += char;
-                    }
-                }
-                cells.push(currentCell);
-                
+            // 替換原本的 lines 迴圈
+            for (let i = 0; i < rows.length; i++) {
+                let cells = rows[i];
+                // 過濾掉空行
+                if (cells.length === 0 || (cells.length === 1 && !cells[0].trim())) continue;
                 if (cells[0] === "Dilution Factor" && cells[1]) {
                     let parsedDilution = parseFloat(cells[1]);
                     importedDilution = isNaN(parsedDilution) ? 1 : parsedDilution;
@@ -1531,27 +1625,25 @@ function forceClearOutputs() {
             // CSV 內容解析無誤，準備覆蓋畫面，此時才清空舊資料
             clearData();
 
-            // 更新並重新渲染 Standard 區塊
-            if (stdConcs.length > 0) {
-                document.getElementById('stdReplicates').value = stdRepCount > 0 ? (stdRepCount > 3 ? 3 : stdRepCount) : 1;
-                renderStandardInputs();
-                document.getElementById('std_conc_input').value = stdConcs.join('\n');
-                for (let r = 0; r < stdRepCount && r < 3; r++) {
-                    let el = document.getElementById(`std_od_input_${r+1}`);
-                    if (el) el.value = stdOds[r].join('\n');
-                }
+        if (stdConcs.length > 0) {
+            document.getElementById('stdReplicates').value = stdRepCount > 0 ? (stdRepCount > 3 ? 3 : stdRepCount) : 1;
+            cachedInputData.stdConc = [...stdConcs];
+            for (let r = 0; r < stdRepCount && r < 3; r++) {
+                cachedInputData.stdOds[r] = [...stdOds[r]];
             }
-            
-            // 更新並重新渲染 Sample 區塊
+        }
+
         if (sampleNames.length > 0) {
             document.getElementById('sampleReplicates').value = sampleRepCount > 0 ? (sampleRepCount > 3 ? 3 : sampleRepCount) : 1;
-            renderSampleInputs();
-            document.getElementById('sample_name_input').value = sampleNames.join('\n');
+            cachedInputData.sampleName = [...sampleNames];
             for (let r = 0; r < sampleRepCount && r < 3; r++) {
-                let el = document.getElementById(`sample_od_input_${r+1}`);
-                if (el) el.value = sampleOds[r].join('\n');
+                cachedInputData.sampleOds[r] = [...sampleOds[r]];
             }
-            }
+        }
+            
+            // 透過快取資料直接重新渲染表格
+            renderStandardInputs();
+            renderSampleInputs();
             document.getElementById('dilutionFactor').value = importedDilution;
             
             // 新增：將 CSV 中讀取的 WB 參數回填到輸入框
