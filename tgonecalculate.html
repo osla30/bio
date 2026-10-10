@@ -365,6 +365,7 @@ footer a:hover {
     <p><span>2X TGOne Buffer:</span><span><span id="lower-gelsolution"></span> mL</span></p>
     <p><span>TEMED:</span><span><span id="lower-temed"></span> µL</span></p>
     <p><span>10% APS:</span><span><span id="lower-aps"></span> µL</span></p>
+    <p><span>(option) For stain-free ➜ TCE (Sigma T54801):</span><span><span id="lower-tce"></span> µL</span></p>
     <p class="total-row"><span>Total Volume:</span><span><span id="lower-total"></span> mL</span></p>
   </div>
 </div>
@@ -457,12 +458,14 @@ function calculateLowerGel() {
   const g = (b / 2) * c;                   // TEMED 
   const h = (b * 5) * c;                   // 10% APS
   const i = b * c;                         // Total
+  const k = i * 5;                         // TCE (5 µL per 1 mL total volume)
 
   document.getElementById('lower-acrylamide').textContent = toFixedNumber(d, 3);
   document.getElementById('lower-ddH₂O').textContent = toFixedNumber(f, 3);
   document.getElementById('lower-gelsolution').textContent = toFixedNumber(e, 3);
   document.getElementById('lower-temed').textContent = toFixedNumber(g, 1);
   document.getElementById('lower-aps').textContent = toFixedNumber(h, 1);
+  document.getElementById('lower-tce').textContent = toFixedNumber(k, 1);
   document.getElementById('lower-total').textContent = toFixedNumber(i, 3);
 
   const lowerResults = document.getElementById('lower-results');

@@ -367,6 +367,7 @@ footer a:hover {
     <p><span>10% SDS:</span><span><span id="lower-sds"></span> µL</span></p>
     <p><span>TEMED:</span><span><span id="lower-temed"></span> µL</span></p>
     <p><span>10% APS:</span><span><span id="lower-aps"></span> µL</span></p>
+    <p><span>(option) For stain-free ➜ TCE (Sigma T54801):</span><span><span id="lower-tce"></span> µL</span></p>
     <p class="total-row"><span>Total Volume:</span><span><span id="lower-total"></span> mL</span></p>
   </div>
 </div>
@@ -422,7 +423,7 @@ function calculateUpperGel() {
   const J = (B * C) * 10;                             
   const G = B * C;                                    
   const H = (B * 5) * C;                              
-  const I = B * C;                                    
+  const I = B * C;                                  
 
   document.getElementById('upper-acrylamide').textContent = toFixedNumber(D, 3);
   document.getElementById('upper-ddH₂O').textContent = toFixedNumber(F, 3);
@@ -461,7 +462,8 @@ function calculateLowerGel() {
   const j = (b * c) * 10;                             
   const g = (b / 2) * c;                              
   const h = (b * 5) * c;                              
-  const i = b * c;                                    
+  const i = b * c;
+  const k = i * 5;                                    
 
   document.getElementById('lower-acrylamide').textContent = toFixedNumber(d, 3);
   document.getElementById('lower-ddH₂O').textContent = toFixedNumber(f, 3);
@@ -469,6 +471,7 @@ function calculateLowerGel() {
   document.getElementById('lower-sds').textContent = toFixedNumber(j, 1);
   document.getElementById('lower-temed').textContent = toFixedNumber(g, 1);
   document.getElementById('lower-aps').textContent = toFixedNumber(h, 1);
+  document.getElementById('lower-tce').textContent = toFixedNumber(k, 1);
   document.getElementById('lower-total').textContent = toFixedNumber(i, 3);
 
   const lowerResults = document.getElementById('lower-results');
