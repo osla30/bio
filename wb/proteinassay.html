@@ -661,7 +661,7 @@ footer a:hover {
                 if (btn.textContent.includes(lang === 'en' ? 'English' : '中文')) btn.classList.add('active');
             });
             saveAndRenderAllInputs();
-            if(globalSampleResults.length > 0) calculate(); 
+            if(globalFitResult !== null) calculate(); 
         }
 
         document.addEventListener('DOMContentLoaded', () => { setLang('zh'); });
@@ -820,7 +820,9 @@ function renderSampleInputs() {
 
     function getStandardData() {
     const reps = parseInt(document.getElementById('stdReplicates').value);
-    // 【修復】加入 typeof 檢查，防止選中不具備 blur 屬性的特殊 DOM 導致報錯中斷
+    if (stdSpreadsheet && stdSpreadsheet.edition) {
+        try { stdSpreadsheet.closeEditor(stdSpreadsheet.edition[0], true); } catch(e){}
+    }
     if (document.activeElement && typeof document.activeElement.blur === 'function') {
         document.activeElement.blur(); 
     } 
@@ -866,7 +868,9 @@ return data;
 
 function getSampleData() {
     const reps = parseInt(document.getElementById('sampleReplicates').value);
-    // 【修復】加入 typeof 檢查，防止選中不具備 blur 屬性的特殊 DOM 導致報錯中斷
+    if (sampleSpreadsheet && sampleSpreadsheet.edition) { 
+        try { sampleSpreadsheet.closeEditor(sampleSpreadsheet.edition[0], true); } catch(e){}
+    }
     if (document.activeElement && typeof document.activeElement.blur === 'function') {
         document.activeElement.blur(); 
     } 
@@ -1170,8 +1174,8 @@ function forceClearOutputs() {
                 </tr>`;
             });
 
-            // 迴圈結束後，一次性把組合好的字串渲染到畫面上
-            tbody.innerHTML = resultHtml;
+            // 迴圈結束後，一次性把組合好的字串渲染到畫面上（若無樣本則顯示提示）
+            tbody.innerHTML = resultHtml || `<tr><td colspan="5" class="text-center text-muted p-4">${currentLang === 'zh' ? '標準曲線已完成計算（目前未輸入樣本數據）' : 'Standard curve calculated (No sample data entered)'}</td></tr>`;
 
             if(typeof Chart !== 'undefined') {
                 drawChart(processedStdData, fitModel, results);
@@ -1359,7 +1363,8 @@ function forceClearOutputs() {
             // 在驗證前強制更新全域結果
             calculate();
             
-            if (globalSampleResults.length === 0) { alert(i18n[currentLang].no_calc_alert); return; }
+            // 若標準曲線擬合失敗，calculate() 已經彈出過錯誤視窗，這裡直接 return 避免二次彈窗
+            if (!globalFitResult) return;
 
             let csvContent = "";
             const now = new Date().toLocaleString();
@@ -1483,6 +1488,7 @@ function forceClearOutputs() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
         // ==========================================
         //  IMPORT FUNCTION (CSV METHOD)
