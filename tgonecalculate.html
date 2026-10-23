@@ -48,10 +48,11 @@
     font-size: 24px;
     font-weight: 600;
     color: #0f172a;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   
   #download-btn {
-    margin-left: 15px;
     font-size: 13px;
     padding: 6px 14px;
     border-radius: 6px;
@@ -109,24 +110,42 @@
     border: 1px solid var(--border-color);
   }
 
-  h2 { 
-    margin-top: 0;
-    font-size: 18px;
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 2px solid #f1f5f9; 
     padding-bottom: 12px; 
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  h2 { 
+    margin: 0;
+    font-size: 18px;
     color: #1e293b;
+  }
+
+  h3.result-title {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    color: #0369a1;
+    border-bottom: 1px solid var(--result-border);
+    padding-bottom: 8px;
   }
 
   .input-group {
     display: flex;
     align-items: center;
     margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   label { 
     display: inline-block; 
-    width: 180px; 
+    width: 220px; 
     font-weight: 500;
     font-size: 15px;
   }
@@ -186,12 +205,23 @@
     border-color: #cbd5e1;
   }
   
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+
   .result { 
     margin-top: 24px; 
     background-color: var(--result-bg);
     border: 1px solid var(--result-border);
     border-radius: 8px;
     padding: 16px 20px;
+  }
+
+  .results-grid .result {
+    margin-top: 0;
   }
 
   .result p {
@@ -223,6 +253,16 @@
   
   .total-row span:first-child, .total-row span:last-child {
     color: var(--danger-color);
+  }
+
+  .protocol-note {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background-color: #f8fafc;
+    border-left: 4px solid var(--primary-color);
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--text-muted);
   }
 
   /* 隱藏語言的樣式 */
@@ -268,10 +308,12 @@ footer a:hover {
 </div>
 
 <div class="section" id="stacking-gel">
-  <h2>
-    <span class="lang-zh">上膠 (Stacking Gel)</span>
-    <span class="lang-en">Stacking Gel</span>
-  </h2>
+  <div class="section-header">
+    <h2>
+      <span class="lang-zh">上膠 (Stacking Gel)</span>
+      <span class="lang-en">Stacking Gel</span>
+    </h2>
+  </div>
   
   <div class="input-group">
     <label for="upper-percent">
@@ -319,19 +361,70 @@ footer a:hover {
 </div>
 
 <div class="section" id="resolving-gel">
-  <h2>
-    <span class="lang-zh">下膠 (Resolving Gel)</span>
-    <span class="lang-en">Resolving Gel</span>
-  </h2>
-  
-  <div class="input-group">
-    <label for="lower-percent">
-      <span class="lang-zh">下膠濃度 (%)</span>
-      <span class="lang-en">Gel Percentage (%)</span>
-    </label>
-    <input type="number" id="lower-percent" min="0" step="0.1" />
+  <div class="section-header">
+    <h2>
+      <span class="lang-zh">下膠 (Resolving Gel)</span>
+      <span class="lang-en">Resolving Gel</span>
+    </h2>
+    <div class="language-toggle">
+      <button id="mode-single" class="active" onclick="switchMode('single')">
+        <span class="lang-zh">單一固定濃度</span>
+        <span class="lang-en">Single Gel</span>
+      </button>
+      <button id="mode-gradient" onclick="switchMode('gradient')">
+        <span class="lang-zh">梯度濃度</span>
+        <span class="lang-en">Gradient Gel</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 單一濃度專用欄位 -->
+  <div id="single-inputs">
+    <div class="input-group">
+      <label for="lower-single-percent">
+        <span class="lang-zh">下膠濃度 (%)</span>
+        <span class="lang-en">Gel Percentage (%)</span>
+      </label>
+      <input type="number" id="lower-single-percent" min="0" step="0.1" />
+    </div>
   </div>
   
+  <!-- 梯度濃度專用欄位 -->
+  <div id="gradient-inputs" style="display:none;">
+    <div class="input-group">
+      <label for="lower-low-percent">
+        <span class="lang-zh">下膠低濃度 (%)</span>
+        <span class="lang-en">Low Gel Percentage (%)</span>
+      </label>
+      <input type="number" id="lower-low-percent" min="0" step="0.1" />
+    </div>
+
+    <div class="input-group">
+      <label for="lower-low-ratio">
+        <span class="lang-zh">低濃度佔比 (%)</span>
+        <span class="lang-en">Low Concentration Ratio (%)</span>
+      </label>
+      <input type="number" id="lower-low-ratio" min="0" max="100" step="1" oninput="syncRatio('low')" />
+    </div>
+
+    <div class="input-group">
+      <label for="lower-high-percent">
+        <span class="lang-zh">下膠高濃度 (%)</span>
+        <span class="lang-en">High Gel Percentage (%)</span>
+      </label>
+      <input type="number" id="lower-high-percent" min="0" step="0.1" />
+    </div>
+
+    <div class="input-group">
+      <label for="lower-high-ratio">
+        <span class="lang-zh">高濃度佔比 (%)</span>
+        <span class="lang-en">High Concentration Ratio (%)</span>
+      </label>
+      <input type="number" id="lower-high-ratio" min="0" max="100" step="1" oninput="syncRatio('high')" />
+    </div>
+  </div>
+  
+  <!-- 共用欄位：單片體積與片數 -->
   <div class="input-group">
     <label for="lower-volume">
       <span class="lang-zh">單片體積 (mL)</span>
@@ -359,14 +452,59 @@ footer a:hover {
     </button>
   </div>
 
-  <div class="result" id="lower-results" style="display:none;">
-    <p><span>30% Acrylamide：</span><span><span id="lower-acrylamide"></span> mL</span></p>
-    <p><span>ddH₂O：</span><span><span id="lower-ddH₂O"></span> mL</span></p>
-    <p><span>2X TGOne Buffer：</span><span><span id="lower-gelsolution"></span> mL</span></p>
-    <p><span>TEMED：</span><span><span id="lower-temed"></span> µL</span></p>
-    <p><span>10% APS：</span><span><span id="lower-aps"></span> µL</span></p>
-    <p><span>TCE (Sigma T54801)：<br>【Optional ➜ For stain-free】</span><span><span id="lower-tce"></span> µL</span></p>
-    <p class="total-row"><span>Total Volume：</span><span><span id="lower-total"></span> mL</span></p>
+  <!-- 單一濃度結果區塊 -->
+  <div class="result" id="lower-single-results" style="display:none;">
+    <h3 class="result-title">
+      <span class="lang-zh">固定濃度下膠配方</span>
+      <span class="lang-en">Single Concentration Resolving Gel</span>
+    </h3>
+    <p><span>30% Acrylamide：</span><span><span id="lower-single-acrylamide"></span> mL</span></p>
+    <p><span>ddH₂O：</span><span><span id="lower-single-ddH₂O"></span> mL</span></p>
+    <p><span>2X TGOne Buffer：</span><span><span id="lower-single-gelsolution"></span> mL</span></p>
+    <p><span>TEMED：</span><span><span id="lower-single-temed"></span> µL</span></p>
+    <p><span>10% APS：</span><span><span id="lower-single-aps"></span> µL</span></p>
+    <p><span>TCE (Sigma T54801)：<br>【Optional ➜ For stain-free】</span><span><span id="lower-single-tce"></span> µL</span></p>
+    <p class="total-row"><span>Total Volume：</span><span><span id="lower-single-total"></span> mL</span></p>
+  </div>
+
+  <!-- 梯度濃度結果區塊 -->
+  <div id="lower-gradient-results" style="display:none;">
+    <div class="results-grid">
+      <!-- 低濃度下膠配方 -->
+      <div class="result">
+        <h3 class="result-title">
+          <span class="lang-zh">低濃度下膠配方 (<span id="title-low-percent"></span>% | 佔 <span id="title-low-ratio"></span>%)</span>
+          <span class="lang-en">Low Conc. Resolving Gel (<span id="title-low-percent-en"></span>% | <span id="title-low-ratio-en"></span>%)</span>
+        </h3>
+        <p><span>30% Acrylamide：</span><span><span id="lower-low-acrylamide"></span> mL</span></p>
+        <p><span>ddH₂O：</span><span><span id="lower-low-ddH₂O"></span> mL</span></p>
+        <p><span>2X TGOne Buffer：</span><span><span id="lower-low-gelsolution"></span> mL</span></p>
+        <p><span>TEMED：</span><span><span id="lower-low-temed"></span> µL</span></p>
+        <p><span>10% APS：</span><span><span id="lower-low-aps"></span> µL</span></p>
+        <p><span>TCE (Sigma T54801)：<br>【Optional ➜ For stain-free】</span><span><span id="lower-low-tce"></span> µL</span></p>
+        <p class="total-row"><span>Total Volume：</span><span><span id="lower-low-total"></span> mL</span></p>
+      </div>
+
+      <!-- 高濃度下膠配方 -->
+      <div class="result">
+        <h3 class="result-title">
+          <span class="lang-zh">高濃度下膠配方 (<span id="title-high-percent"></span>% | 佔 <span id="title-high-ratio"></span>%)</span>
+          <span class="lang-en">High Conc. Resolving Gel (<span id="title-high-percent-en"></span>% | <span id="title-high-ratio-en"></span>%)</span>
+        </h3>
+        <p><span>30% Acrylamide：</span><span><span id="lower-high-acrylamide"></span> mL</span></p>
+        <p><span>ddH₂O：</span><span><span id="lower-high-ddH₂O"></span> mL</span></p>
+        <p><span>2X TGOne Buffer：</span><span><span id="lower-high-gelsolution"></span> mL</span></p>
+        <p><span>TEMED：</span><span><span id="lower-high-temed"></span> µL</span></p>
+        <p><span>10% APS：</span><span><span id="lower-high-aps"></span> µL</span></p>
+        <p><span>TCE (Sigma T54801)：<br>【Optional ➜ For stain-free】</span><span><span id="lower-high-tce"></span> µL</span></p>
+        <p class="total-row"><span>Total Volume：</span><span><span id="lower-high-total"></span> mL</span></p>
+      </div>
+    </div>
+
+    <div class="protocol-note">
+      <span class="lang-zh">💡 <strong>鑄膠提示 (Miller et al., 2016)：</strong>使用血清移液管先吸取<strong>低濃度下膠</strong>，再繼續吸取<strong>高濃度下膠</strong>至目標體積（可視需求讓 1–2 顆氣泡上升以混合界面），注入膠板時高濃度膠液將自然沉於底部，低濃度膠液覆蓋於上方。</span>
+      <span class="lang-en">💡 <strong>Casting Tip (Miller et al., 2016):</strong> Using a serological pipet, aspirate the <strong>low concentration gel</strong> solution first, followed by the <strong>high concentration gel</strong> solution (allow 1–2 bubbles to rise if interface mixing is desired). When ejected into the cassette, the high concentration solution is deposited at the bottom with the low concentration on top.</span>
+    </div>
   </div>
 </div>
 <footer>
@@ -374,6 +512,8 @@ footer a:hover {
 </footer>
 
 <script>
+let currentMode = 'single';
+
 function toFixedNumber(num, digits) {
   return Number.parseFloat(num).toFixed(digits);
 }
@@ -396,9 +536,52 @@ function switchLanguage(lang) {
   }
 }
 
+function switchMode(mode) {
+  currentMode = mode;
+  
+  const btnSingle = document.getElementById('mode-single');
+  const btnGradient = document.getElementById('mode-gradient');
+  const singleInputs = document.getElementById('single-inputs');
+  const gradientInputs = document.getElementById('gradient-inputs');
+  const singleResults = document.getElementById('lower-single-results');
+  const gradientResults = document.getElementById('lower-gradient-results');
+
+  if (mode === 'single') {
+    btnSingle.classList.add('active');
+    btnGradient.classList.remove('active');
+    singleInputs.style.display = 'block';
+    gradientInputs.style.display = 'none';
+  } else {
+    btnSingle.classList.remove('active');
+    btnGradient.classList.add('active');
+    singleInputs.style.display = 'none';
+    gradientInputs.style.display = 'block';
+  }
+  
+  singleResults.style.display = 'none';
+  gradientResults.style.display = 'none';
+}
+
 window.addEventListener('load', function() {
   switchLanguage('zh');
+  switchMode('single'); // Default mode
 });
+
+function syncRatio(changedSource) {
+  const lowInput = document.getElementById('lower-low-ratio');
+  const highInput = document.getElementById('lower-high-ratio');
+  if (changedSource === 'low') {
+    const val = parseFloat(lowInput.value);
+    if (!isNaN(val) && val >= 0 && val <= 100) {
+      highInput.value = Number((100 - val).toFixed(2));
+    }
+  } else if (changedSource === 'high') {
+    const val = parseFloat(highInput.value);
+    if (!isNaN(val) && val >= 0 && val <= 100) {
+      lowInput.value = Number((100 - val).toFixed(2));
+    }
+  }
+}
 
 function calculateUpperGel() {
   const A = parseFloat(document.getElementById('upper-percent').value);
@@ -431,49 +614,114 @@ function calculateUpperGel() {
 
   const upperResults = document.getElementById('upper-results');
   upperResults.style.display = 'block';
-  // 加上自動平滑滾動並置中
   setTimeout(() => {
     upperResults.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 50); // 50毫秒的微小延遲確保 DOM 完成渲染
+  }, 50);
+}
+
+function computeTGOneResolvingFormula(percent, singleVol, count) {
+  const totalVol = singleVol * count;
+  const d = ((percent * 2) / 30) * (singleVol / 2) * count;  // 30% Acrylamide
+  const e = (singleVol / 2) * count;                         // 2X TGOne Buffer
+  const f = e - d;                                           // ddH₂O
+  const g = (singleVol / 2) * count;                         // TEMED 
+  const h = (singleVol * 5) * count;                         // 10% APS
+  const i = totalVol;                                        // Total
+  const k = i * 5;                                           // TCE
+  return { d, e, f, g, h, i, k };
 }
 
 function calculateLowerGel() {
-  const a = parseFloat(document.getElementById('lower-percent').value);
   const b = parseFloat(document.getElementById('lower-volume').value);
   const c = parseFloat(document.getElementById('lower-count').value);
-
   const isEnglish = document.body.classList.contains('english');
-  const alertMessage = isEnglish ? 
-    'Please enter valid parameters for resolving gel (all positive numbers)' :
-    '請輸入有效的下膠參數（皆為正數）';
 
-  if (isNaN(a) || isNaN(b) || isNaN(c) || a <= 0 || b <= 0 || c <= 0) {
-    alert(alertMessage);
-    return;
+  if (currentMode === 'single') {
+    const a = parseFloat(document.getElementById('lower-single-percent').value);
+    
+    if (isNaN(a) || isNaN(b) || isNaN(c) || a <= 0 || b <= 0 || c <= 0) {
+      alert(isEnglish ? 'Please enter valid parameters for resolving gel (all positive numbers)' : '請輸入有效的下膠參數（皆為正數）');
+      return;
+    }
+
+    const res = computeTGOneResolvingFormula(a, b, c);
+    
+    document.getElementById('lower-single-acrylamide').textContent = toFixedNumber(res.d, 3);
+    document.getElementById('lower-single-ddH₂O').textContent = toFixedNumber(res.f, 3);
+    document.getElementById('lower-single-gelsolution').textContent = toFixedNumber(res.e, 3);
+    document.getElementById('lower-single-temed').textContent = toFixedNumber(res.g, 1);
+    document.getElementById('lower-single-aps').textContent = toFixedNumber(res.h, 1);
+    document.getElementById('lower-single-tce').textContent = toFixedNumber(res.k, 1);
+    document.getElementById('lower-single-total').textContent = toFixedNumber(res.i, 3);
+
+    const singleResults = document.getElementById('lower-single-results');
+    singleResults.style.display = 'block';
+    setTimeout(() => {
+      singleResults.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+
+  } else {
+    // Gradient Mode
+    const lowPercent = parseFloat(document.getElementById('lower-low-percent').value);
+    const lowRatio = parseFloat(document.getElementById('lower-low-ratio').value);
+    const highPercent = parseFloat(document.getElementById('lower-high-percent').value);
+    const highRatio = parseFloat(document.getElementById('lower-high-ratio').value);
+
+    if (
+      isNaN(lowPercent) || isNaN(lowRatio) || 
+      isNaN(highPercent) || isNaN(highRatio) || 
+      isNaN(b) || isNaN(c) || 
+      lowPercent <= 0 || lowRatio <= 0 || 
+      highPercent <= 0 || highRatio <= 0 || 
+      b <= 0 || c <= 0
+    ) {
+      alert(isEnglish ? 'Please enter valid parameters for resolving gel (all positive numbers)' : '請輸入有效的下膠參數（皆為正數）');
+      return;
+    }
+
+    if (Math.abs((lowRatio + highRatio) - 100) > 0.01) {
+      alert(isEnglish ? 'The sum of Low and High concentration ratios must equal 100%.' : '低濃度佔比與高濃度佔比總和必須為 100%');
+      return;
+    }
+
+    const lowSingleVol = b * (lowRatio / 100);
+    const highSingleVol = b * (highRatio / 100);
+
+    const lowRes = computeTGOneResolvingFormula(lowPercent, lowSingleVol, c);
+    const highRes = computeTGOneResolvingFormula(highPercent, highSingleVol, c);
+
+    document.getElementById('title-low-percent').textContent = lowPercent;
+    document.getElementById('title-low-ratio').textContent = lowRatio;
+    document.getElementById('title-low-percent-en').textContent = lowPercent;
+    document.getElementById('title-low-ratio-en').textContent = lowRatio;
+
+    document.getElementById('title-high-percent').textContent = highPercent;
+    document.getElementById('title-high-ratio').textContent = highRatio;
+    document.getElementById('title-high-percent-en').textContent = highPercent;
+    document.getElementById('title-high-ratio-en').textContent = highRatio;
+
+    document.getElementById('lower-low-acrylamide').textContent = toFixedNumber(lowRes.d, 3);
+    document.getElementById('lower-low-ddH₂O').textContent = toFixedNumber(lowRes.f, 3);
+    document.getElementById('lower-low-gelsolution').textContent = toFixedNumber(lowRes.e, 3);
+    document.getElementById('lower-low-temed').textContent = toFixedNumber(lowRes.g, 1);
+    document.getElementById('lower-low-aps').textContent = toFixedNumber(lowRes.h, 1);
+    document.getElementById('lower-low-tce').textContent = toFixedNumber(lowRes.k, 1);
+    document.getElementById('lower-low-total').textContent = toFixedNumber(lowRes.i, 3);
+
+    document.getElementById('lower-high-acrylamide').textContent = toFixedNumber(highRes.d, 3);
+    document.getElementById('lower-high-ddH₂O').textContent = toFixedNumber(highRes.f, 3);
+    document.getElementById('lower-high-gelsolution').textContent = toFixedNumber(highRes.e, 3);
+    document.getElementById('lower-high-temed').textContent = toFixedNumber(highRes.g, 1);
+    document.getElementById('lower-high-aps').textContent = toFixedNumber(highRes.h, 1);
+    document.getElementById('lower-high-tce').textContent = toFixedNumber(highRes.k, 1);
+    document.getElementById('lower-high-total').textContent = toFixedNumber(highRes.i, 3);
+
+    const gradientResults = document.getElementById('lower-gradient-results');
+    gradientResults.style.display = 'block';
+    setTimeout(() => {
+      gradientResults.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
   }
-
-  const d = ((a * 2) / 30) * (b / 2) * c;  // 30% Acrylamide
-  const e = (b / 2) * c;                   // 2X TGOne Buffer
-  const f = e - d;                         // ddH₂O
-  const g = (b / 2) * c;                   // TEMED 
-  const h = (b * 5) * c;                   // 10% APS
-  const i = b * c;                         // Total
-  const k = i * 5;                         // TCE (5 µL per 1 mL total volume)
-
-  document.getElementById('lower-acrylamide').textContent = toFixedNumber(d, 3);
-  document.getElementById('lower-ddH₂O').textContent = toFixedNumber(f, 3);
-  document.getElementById('lower-gelsolution').textContent = toFixedNumber(e, 3);
-  document.getElementById('lower-temed').textContent = toFixedNumber(g, 1);
-  document.getElementById('lower-aps').textContent = toFixedNumber(h, 1);
-  document.getElementById('lower-tce').textContent = toFixedNumber(k, 1);
-  document.getElementById('lower-total').textContent = toFixedNumber(i, 3);
-
-  const lowerResults = document.getElementById('lower-results');
-  lowerResults.style.display = 'block';
-  // 加上自動平滑滾動並置中
-  setTimeout(() => {
-    lowerResults.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 50);
 }
 
 function clearUpperInputs() {
@@ -484,10 +732,15 @@ function clearUpperInputs() {
 }
 
 function clearLowerInputs() {
-  document.getElementById('lower-percent').value = '';
+  document.getElementById('lower-single-percent').value = '';
+  document.getElementById('lower-low-percent').value = '';
+  document.getElementById('lower-low-ratio').value = '';
+  document.getElementById('lower-high-percent').value = '';
+  document.getElementById('lower-high-ratio').value = '';
   document.getElementById('lower-volume').value = '';
   document.getElementById('lower-count').value = '';
-  document.getElementById('lower-results').style.display = 'none';
+  document.getElementById('lower-single-results').style.display = 'none';
+  document.getElementById('lower-gradient-results').style.display = 'none';
 }
 </script>
 
