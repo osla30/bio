@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>科科計算器 BioCalculator | Android 封閉測試招募中</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            labcyan: {
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 質感漸變背景與平滑滾動微調 */
+    .glow-emerald {
+      box-shadow: 0 0 45px -10px rgba(16, 185, 129, 0.25);
+    }
+    .badge-pulse {
+      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+      animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse-ring {
+      to {
+        box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- 背景科技光暈特效 (純CSS) -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-labcyan-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-emerald-700/10 rounded-full blur-3xl"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-25"></div>
+  </div>
+
+  <!-- 頂部導航 -->
+  <header class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80">
+    <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-labcyan-400 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-brand-500/20">
+          🧪
+        </div>
+        <div>
+          <span class="font-bold text-base tracking-tight text-white block leading-tight">科科計算器</span>
+          <span class="text-xs text-brand-400 font-medium block">BioCalculator</span>
+        </div>
+      </div>
+      <a href="#test-guide" class="inline-flex items-center text-xs sm:text-sm font-semibold bg-brand-500 hover:bg-brand-600 active:scale-95 text-white px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 shadow-sm shadow-brand-500/25">
+        參與封閉測試
+        <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- 主視覺區塊 (Hero Section) -->
+  <main class="max-w-4xl mx-auto px-4 pt-10 pb-16 sm:pt-16 sm:pb-24">
+    
+    <div class="text-center space-y-5">
+      <!-- 狀態標籤 -->
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900 border border-brand-500/40 text-brand-400 text-xs sm:text-sm font-medium">
+        <span class="w-2 h-2 rounded-full bg-brand-400 badge-pulse"></span>
+        <span>Android Google Play 封測招募 (14天體驗)</span>
+      </div>
+
+      <!-- 主標題 -->
+      <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+        實驗台前的隨身計算神器<br>
+        <span class="bg-gradient-to-r from-brand-400 via-labcyan-400 to-teal-200 bg-clip-text text-transparent">
+          科科計算器 BioCalculator
+        </span>
+      </h1>
+
+      <!-- 副標題 -->
+      <p class="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+        專為生命科學、生化分生、細胞培養與動物實驗研究人員量身打造。整合實驗室最常用的 15 項核心運算，秒算數據、零廣告、完全離線！
+      </p>
+
+      <!-- 快速優勢標籤群 -->
+      <div class="flex flex-wrap justify-center gap-2 pt-2 text-xs sm:text-sm text-slate-300">
+        <span class="px-3 py-1 rounded-md bg-slate-900/90 border border-slate-800 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          100% 離線運作
+        </span>
+        <span class="px-3 py-1 rounded-md bg-slate-900/90 border border-slate-800 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          無干擾零廣告
+        </span>
+        <span class="px-3 py-1 rounded-md bg-slate-900/90 border border-slate-800 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          中英雙語切換
+        </span>
+        <span class="px-3 py-1 rounded-md bg-slate-900/90 border border-slate-800 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          15+ 核心計算功能
+        </span>
+      </div>
+
+      <!-- 頂部快速跳轉按鈕 -->
+      <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="#test-guide" class="w-full sm:w-auto px-7 py-3 rounded-xl bg-gradient-to-r from-brand-500 to-labcyan-600 text-white font-semibold shadow-lg shadow-brand-500/25 hover:opacity-95 active:scale-95 transition-all text-center flex items-center justify-center gap-2">
+          <span>開始 3 步驟加入封測</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </a>
+        <button onclick="copyShareText()" class="w-full sm:w-auto px-5 py-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-slate-200 font-medium transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+          複製招募邀請文
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 大核心特色 Grid -->
+    <section class="mt-16 sm:mt-20">
+      <div class="text-center mb-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-white">為什麼研究員都需要它？</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">杜絕繁複的手算與查表失誤，把寶貴時間留給實驗本身</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Feature 1 -->
+        <div class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-brand-500/40 transition-colors">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center text-xl mb-3">
+            📶
+          </div>
+          <h3 class="font-bold text-slate-100 text-base mb-1">100% 離線運作</h3>
+          <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+            無塵室、地下室實驗室或深層無訊號冷房照常運作。完全不吃行動流量，隨時待命。
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-brand-500/40 transition-colors">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center text-xl mb-3">
+            🛡️
+          </div>
+          <h3 class="font-bold text-slate-100 text-base mb-1">純淨無廣告干擾</h3>
+          <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+            戴著乳膠手套操作時最怕彈跳廣告。全介面零廣告、乾淨極簡，計時計算不卡關。
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-brand-500/40 transition-colors">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center text-xl mb-3">
+            🌐
+          </div>
+          <h3 class="font-bold text-slate-100 text-base mb-1">繁中 / 英文一鍵切換</h3>
+          <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+            支援繁體中文與專業英文雙語環境，便於跨國實驗室、外籍研究生或國際合作無縫使用。
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="bg-slate-900/60 border border-slate-800/90 rounded-2xl p-5 hover:border-brand-500/40 transition-colors">
+          <div class="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center text-xl mb-3">
+            🔬
+          </div>
+          <h3 class="font-bold text-slate-100 text-base mb-1">15 項核心實驗計算</h3>
+          <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+            摩爾濃度 (Molarity)、稀釋定律 (C1V1)、PCR引子配置、細胞血球計數繼代、動物等效劑量換算等全方位整合。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 封測 3 步驟 (核心區塊) -->
+    <section id="test-guide" class="mt-16 sm:mt-24 scroll-mt-20">
+      
+      <div class="text-center mb-6">
+        <span class="text-brand-400 text-xs font-bold tracking-wider uppercase">Installation Workflow</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">Android 封測安裝 3 步驟</h2>
+        <p class="text-slate-400 text-xs sm:text-sm mt-1">
+          請嚴格依照 <strong class="text-brand-400">1 ➜ 2 ➜ 3 順序</strong> 操作，跳過第一步將無法在商店找到此 App。
+        </p>
+      </div>
+
+      <!-- 極重要提醒 Banner -->
+      <div class="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-amber-200 mb-8 flex items-start gap-3.5">
+        <span class="text-2xl shrink-0">⚠️</span>
+        <div class="text-xs sm:text-sm leading-relaxed">
+          <strong class="font-bold text-amber-300 block text-sm sm:text-base mb-0.5">關鍵注意事項（防踩雷）：</strong>
+          三個步驟請務必使用手機 Google Play 商店<span class="underline font-bold text-white">「同一組 Google 帳號」</span>進行操作。若切換到其他帳號會顯示「找不到項目」或「找不到此應用程式」。
+        </div>
+      </div>
+
+      <!-- 步驟卡片列表 -->
+      <div class="space-y-5">
+
+        <!-- STEP 1 -->
+        <div class="p-5 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition relative overflow-hidden group">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-full bg-brand-500 text-slate-950 font-bold flex items-center justify-center text-sm">1</span>
+                <h3 class="text-base sm:text-lg font-bold text-white">加入測試者群組 (Google Groups)</h3>
+              </div>
+              <p class="text-slate-300 text-xs sm:text-sm leading-relaxed pl-9">
+                此步驟最為關鍵！點擊下方群組連結並登入您的 Google 帳號，按「加入群組」。加入後才擁有 Google Play 的封測白名單資格。
+              </p>
+            </div>
+            <div class="sm:shrink-0 pl-9 sm:pl-0">
+              <a href="https://groups.google.com/g/kkbiocalculator/about" target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-semibold text-xs sm:text-sm shadow-md shadow-brand-500/20 transition-all">
+                <span>1. 立即加入群組</span>
+                <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="p-5 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition relative overflow-hidden group">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-full bg-labcyan-500 text-slate-950 font-bold flex items-center justify-center text-sm">2</span>
+                <h3 class="text-base sm:text-lg font-bold text-white">點擊「成為測試人員」 (Web Opt-in)</h3>
+              </div>
+              <p class="text-slate-300 text-xs sm:text-sm leading-relaxed pl-9">
+                加入群組後，點進此連結開啟測試計畫頁面，點選畫面中的「成為測試人員 (BECOME A TESTER)」按鈕確認參與資格。
+              </p>
+            </div>
+            <div class="sm:shrink-0 pl-9 sm:pl-0">
+              <a href="https://play.google.com/apps/testing/com.kkbiocalculator.app" target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-xl bg-labcyan-600 hover:bg-labcyan-500 active:scale-95 text-white font-semibold text-xs sm:text-sm shadow-md shadow-labcyan-500/20 transition-all">
+                <span>2. 登記為測試人員</span>
+                <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="p-5 sm:p-6 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition relative overflow-hidden group">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-full bg-emerald-400 text-slate-950 font-bold flex items-center justify-center text-sm">3</span>
+                <h3 class="text-base sm:text-lg font-bold text-white">前往 Google Play 商店安裝</h3>
+              </div>
+              <p class="text-slate-300 text-xs sm:text-sm leading-relaxed pl-9">
+                完成上述授權後，即可前往 Google Play 商店專屬封測頁面直接下載並安裝 App！
+              </p>
+            </div>
+            <div class="sm:shrink-0 pl-9 sm:pl-0">
+              <a href="https://play.google.com/store/apps/details?id=com.kkbiocalculator.app" target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-semibold text-xs sm:text-sm shadow-md shadow-emerald-500/20 transition-all">
+                <span>3. 下載安裝 App</span>
+                <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- 第 3 步延遲排除提示 -->
+          <div class="mt-4 pt-3 border-t border-slate-800/80 text-xs text-slate-400 flex items-start gap-2 bg-slate-950/40 p-3 rounded-lg">
+            <span class="text-brand-400 font-bold">💡 排除提醒：</span>
+            <span>若此步驟開啟顯示「找不到應用程式」，通常為 Google 伺服器群組權限同步延遲。請先確認前兩步已完成，並稍等幾分鐘至數小時再次點開即可。</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 封測重要合作守則 & 回饋交流 -->
+    <section class="mt-14 sm:mt-18">
+      <div class="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-slate-900/90 via-slate-900 to-slate-950 border border-slate-800 glow-emerald">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- 保留 14 天說明 -->
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 text-brand-400 font-bold text-sm">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-400"></span>
+              封測期間協助說明
+            </div>
+            <h3 class="text-lg font-bold text-white">請保留安裝 14 天不解除</h3>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              根據 Google Play 官方最新個人開發者規範，需有 20 位以上測試人員連續安裝測試達 14 天方可正式上架發布。裝好後請協助<strong class="text-white">保留至少 14 天</strong>，每天有空打開隨意點選或計算一下即可，非常感謝您的幫忙！
+            </p>
+          </div>
+
+          <!-- Bug 回報與建議 -->
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 text-labcyan-400 font-bold text-sm">
+              <span class="w-2.5 h-2.5 rounded-full bg-labcyan-400"></span>
+              意見反應與交流
+            </div>
+            <h3 class="text-lg font-bold text-white">歡迎隨時提出 Bug 或新計算需求</h3>
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              您在實驗室中最常遇到哪些手算痛點？若有任何算式誤差、操作不順手或想要增加的功能，隨時歡迎直接回報與建議，我們一起把工具打磨到最好！
+            </p>
+          </div>
+
+        </div>
+
+        <!-- 快速分享按鈕列 -->
+        <div class="mt-8 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="text-xs text-slate-400 text-center sm:text-left">
+            想揪 Lab 學長姊、同梯或學弟妹一起加入封測？
+          </div>
+          <button onclick="copyShareText()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs sm:text-sm transition flex items-center justify-center gap-2 border border-slate-700">
+            <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+            一鍵複製邀請內文分享至 LINE / 群組
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 頁尾 -->
+  <footer class="border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-500">
+    <div class="max-w-4xl mx-auto px-4 space-y-2">
+      <p class="font-medium text-slate-400">科科計算器 BioCalculator • 實驗室隨身計算輔助軟體</p>
+      <p>專為生命科學、分子生物、生物化學、細胞與動物實驗研究設計</p>
+    </div>
+  </footer>
+
+  <!-- 浮動 Toast 提示組件 -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-brand-500 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow-xl shadow-brand-500/20 text-xs sm:text-sm opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center gap-2">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <span id="toast-msg">已成功複製分享文案！</span>
+  </div>
+
+  <!-- 一鍵複製分享文 JavaScript -->
+  <script>
+    function copyShareText() {
+      const shareContent = `【科科計算器 BioCalculator】封閉測試招募中！
+專為生命科學、分生生化、細胞培養與動物實驗量身打造的計算工具。
+100% 離線運作、零廣告、中英雙語切換、內建 15 項核心計算。
+
+Android 封測 3 步驟（請依順序）：
+1. 先加入測試群組：
+https://groups.google.com/g/kkbiocalculator/about
+
+2. 點擊「成為測試人員」：
+https://play.google.com/apps/testing/com.kkbiocalculator.app
+
+3. 前往 Play 商店安裝：
+https://play.google.com/store/apps/details?id=com.kkbiocalculator.app
+
+※ 三步驟請用手機 Play 商店登入的同一個 Google 帳號。
+※ 裝好後請協助保留 14 天不要解除安裝，每天有空打開點一下即可，非常感謝！`;
+
+      // 建立隱藏 textarea 以利在 iframe / 跨瀏覽器中相容 execCommand
+      const tempTextArea = document.createElement("textarea");
+      tempTextArea.value = shareContent;
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      try {
+        document.execCommand('copy');
+        showToast("已成功複製招募說明！可直接轉傳至 LINE/微信/群組");
+      } catch (err) {
+        showToast("複製失敗，請手動複製網址或文字");
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      const toastMsg = document.getElementById("toast-msg");
+      toastMsg.textContent = message;
+      toast.classList.remove("opacity-0", "pointer-events-none");
+      toast.classList.add("opacity-100");
+      setTimeout(() => {
+        toast.classList.remove("opacity-100");
+        toast.classList.add("opacity-0", "pointer-events-none");
+      }, 2600);
+    }
+  </script>
+</body>
+</html>
