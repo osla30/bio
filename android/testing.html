@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🧪 科科計算器 BioCalculator | Android 封閉測試暖心招募中</title>
+  <title>🧪 科科計算器 BioCalculator | Android 封閉測試招募中</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -11,20 +11,22 @@
       theme: {
         extend: {
           colors: {
-            candy: {
-              mint: '#10B981',
-              mintSoft: '#D1FAE5',
-              mintLight: '#ECFDF5',
-              sky: '#0EA5E9',
-              skySoft: '#E0F2FE',
-              yellow: '#FBBF24',
-              yellowSoft: '#FEF3C7',
-              pink: '#F472B6',
-              pinkSoft: '#FCE7F3',
-              purple: '#A855F7',
-              purpleSoft: '#F3E8FF',
-              coral: '#FB7185',
-              peach: '#FFEDD5',
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+            },
+            skysoft: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
             }
           },
           fontFamily: {
@@ -33,8 +35,7 @@
           boxShadow: {
             'cute': '0 10px 25px -5px rgba(16, 185, 129, 0.12), 0 8px 10px -6px rgba(16, 185, 129, 0.08)',
             'cute-hover': '0 20px 30px -10px rgba(16, 185, 129, 0.22)',
-            'bubble': '0 8px 0px 0px rgba(16, 185, 129, 0.2)',
-            'bubble-yellow': '0 8px 0px 0px rgba(245, 158, 11, 0.25)',
+            'bubble-amber': '0 8px 0px 0px rgba(245, 158, 11, 0.25)',
           }
         }
       }
@@ -42,24 +43,27 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
-    /* 可愛波浪與呼吸燈特效 */
+    /* 輕快波浪與彈跳呼吸效果 */
     @keyframes bounce-gentle {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
+      50% { transform: translateY(-5px); }
     }
     .animate-bounce-gentle {
       animation: bounce-gentle 3s ease-in-out infinite;
     }
-    @keyframes pulse-attention {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-      50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
-    .badge-urgent {
-      animation: pulse-attention 2s infinite;
+    .pulse-urgent {
+      animation: pulse-ring 2s infinite;
     }
-    /* 隱藏滾動條但保持滑動功能 */
+
+    /* 隱藏滾動條但保持觸控水平滑動流暢 */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -69,34 +73,34 @@
     }
   </style>
 </head>
-<body class="bg-[#FAFDFB] text-slate-700 font-sans antialiased selection:bg-emerald-200 selection:text-emerald-900 relative min-h-screen">
+<body class="bg-[#FAFDFB] text-slate-700 font-sans antialiased selection:bg-brand-200 selection:text-brand-900 relative min-h-screen">
 
-  <!-- 可愛背景裝飾圓泡泡 (純CSS，柔和溫暖) -->
+  <!-- 背景柔和可愛氣泡光暈 (純CSS裝飾) -->
   <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-    <div class="absolute -top-24 -left-24 w-96 h-96 bg-emerald-100/60 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/4 -right-24 w-80 h-80 bg-sky-100/70 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-10 left-10 w-96 h-96 bg-amber-100/60 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-1/3 right-1/4 w-72 h-72 bg-pink-100/40 rounded-full blur-3xl"></div>
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-brand-100/70 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/4 -right-24 w-80 h-80 bg-skysoft-100/80 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-10 left-10 w-96 h-96 bg-amber-100/70 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-1/3 right-1/4 w-72 h-72 bg-pink-100/50 rounded-full blur-3xl"></div>
   </div>
 
   <!-- 頂部可愛浮動導航 -->
   <header class="sticky top-3 z-40 max-w-4xl mx-auto px-4">
-    <div class="bg-white/85 backdrop-blur-md border-2 border-emerald-100 rounded-3xl shadow-sm px-4 py-2.5 flex items-center justify-between">
+    <div class="bg-white/90 backdrop-blur-md border-2 border-brand-100 rounded-3xl shadow-sm px-4 py-2.5 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-400 flex items-center justify-center text-white text-xl shadow-md shadow-emerald-200 animate-bounce-gentle">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-400 to-teal-400 flex items-center justify-center text-white text-xl shadow-md shadow-brand-200 animate-bounce-gentle">
           🧪
         </div>
         <div>
           <div class="flex items-center gap-1.5">
             <span class="font-extrabold text-base tracking-tight text-slate-800">科科計算器</span>
-            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">封測版</span>
+            <span class="bg-brand-100 text-brand-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">封測招募</span>
           </div>
-          <span class="text-xs text-emerald-600 font-semibold tracking-wide">BioCalculator</span>
+          <span class="text-xs text-brand-600 font-bold tracking-wide">BioCalculator</span>
         </div>
       </div>
       
       <div class="flex items-center gap-2">
-        <a href="#test-guide" class="inline-flex items-center text-xs sm:text-sm font-bold bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-4 py-2 rounded-2xl transition shadow-md shadow-emerald-200">
+        <a href="#test-guide" class="inline-flex items-center text-xs sm:text-sm font-black bg-brand-500 hover:bg-brand-600 active:scale-95 text-white px-4 py-2 rounded-2xl transition shadow-md shadow-brand-200">
           <span>加入封測</span>
           <span class="ml-1 text-base leading-none">🚀</span>
         </a>
@@ -104,56 +108,55 @@
     </div>
   </header>
 
-  <!-- 主區塊 (Hero Section) -->
+  <!-- 主視覺區塊 (Hero) -->
   <main class="max-w-4xl mx-auto px-4 pt-8 pb-16 sm:pt-12 sm:pb-20">
     
-    <!-- Hero 介紹標題 -->
     <div class="text-center space-y-4">
       <!-- 醒目標籤 -->
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm font-bold shadow-sm">
-        <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-        <span>🌱 Google Play 內部封測 · 尋求研究小夥伴！</span>
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-xs sm:text-sm font-bold shadow-sm">
+        <span class="inline-block w-2.5 h-2.5 rounded-full bg-brand-500 animate-ping"></span>
+        <span>🌱 Google Play 內部封測 · 招募實驗小夥伴！</span>
       </div>
 
       <!-- 大標題 -->
       <h1 class="text-3xl sm:text-5xl font-black text-slate-800 leading-tight tracking-tight">
-        實驗台前最可愛的隨身隊友<br>
-        <span class="bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500 bg-clip-text text-transparent">
+        實驗台前最可愛的隨身神器<br>
+        <span class="bg-gradient-to-r from-brand-500 via-teal-500 to-skysoft-500 bg-clip-text text-transparent">
           科科計算器 BioCalculator
         </span> 🧫
       </h1>
 
-      <!-- 副標題說明 -->
+      <!-- 副標題 -->
       <p class="text-slate-600 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed font-medium">
-        專為生命科學、生化分生、細胞房與動物實驗設計的超貼心算表助手！<br class="hidden sm:inline">
-        <span class="text-emerald-700 font-bold bg-emerald-50/90 px-2 py-0.5 rounded-md">無廣告干擾</span>、
-        <span class="text-sky-700 font-bold bg-sky-50/90 px-2 py-0.5 rounded-md">100% 完全離線</span>、
-        <span class="text-amber-700 font-bold bg-amber-50/90 px-2 py-0.5 rounded-md">15+ 常用實驗算式一鍵搞定</span> ✨
+        專為生命科學、生化分生、細胞房與動物實驗設計的超貼心算表隊友！<br class="hidden sm:inline">
+        <span class="text-brand-800 font-bold bg-brand-50 px-2 py-0.5 rounded-md">無跳出廣告干擾</span>、
+        <span class="text-skysoft-600 font-bold bg-skysoft-50 px-2 py-0.5 rounded-md">100% 完全離線</span>、
+        <span class="text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md">15+ 常用實驗算式一鍵搞定</span> ✨
       </p>
 
-      <!-- 可愛特性標籤群 -->
+      <!-- 特性標籤 -->
       <div class="flex flex-wrap justify-center gap-2.5 pt-1 text-xs sm:text-sm">
-        <span class="px-3.5 py-1.5 rounded-2xl bg-white border-2 border-emerald-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5">
-          <span class="text-emerald-500">📶</span> 離線照常算
+        <span class="px-3.5 py-1.5 rounded-2xl bg-white border-2 border-brand-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5">
+          <span class="text-brand-500">📶</span> 離線照常算
         </span>
-        <span class="px-3.5 py-1.5 rounded-2xl bg-white border-2 border-emerald-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5">
-          <span class="text-rose-400">🛡️</span> 乾淨無跳出廣告
+        <span class="px-3.5 py-1.5 rounded-2xl bg-white border-2 border-brand-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5">
+          <span class="text-rose-400">🛡️</span> 純淨零彈出廣告
         </span>
-        <span class="px-3.5 py-1.5 rounded-2xl bg-white border-2 border-emerald-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5">
-          <span class="text-sky-500">🌏</span> 繁中 / EN 雙語
+        <span class="px-3.5 py-1.5 rounded-2xl bg-white border-2 border-brand-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5">
+          <span class="text-skysoft-500">🌏</span> 繁中 / EN 一鍵切換
         </span>
-        <span class="px-3.5 py-1.5 rounded-2xl bg-white border-2 border-emerald-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5">
-          <span class="text-amber-500">🐭</span> 細胞與動物投藥全包
+        <span class="px-3.5 py-1.5 rounded-2xl bg-white border-2 border-brand-100 text-slate-700 font-bold shadow-sm flex items-center gap-1.5">
+          <span class="text-amber-500">🐭</span> 動物投藥與細胞計數
         </span>
       </div>
 
       <!-- 快速行動按鈕 -->
       <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-        <a href="#test-guide" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-extrabold text-base shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2">
+        <a href="#test-guide" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-extrabold text-base shadow-lg shadow-brand-200 transition-all flex items-center justify-center gap-2">
           <span>手刀領取 3 步驟封測資格</span>
           <span class="text-lg">👇</span>
         </a>
-        <button onclick="copyShareText()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white hover:bg-emerald-50/50 active:scale-95 border-2 border-emerald-200 text-emerald-800 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2">
+        <button onclick="copyShareText()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white hover:bg-brand-50 active:scale-95 border-2 border-brand-200 text-brand-800 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2">
           <span>📋 一鍵複製邀請文案</span>
         </button>
       </div>
@@ -163,15 +166,11 @@
     <!-- 🔥 強調重點 1：封測期間協助任務（保留 14 天） 🔥 -->
     <!-- ============================================== -->
     <section class="mt-12 sm:mt-14">
-      <div class="relative bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-3 border-amber-300 rounded-3xl p-6 sm:p-7 shadow-cute-yellow overflow-hidden border-2 border-amber-300">
-        <!-- 可愛裝飾星星 -->
+      <div class="relative bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 rounded-3xl p-6 sm:p-7 shadow-bubble-amber border-2 border-amber-300 overflow-hidden">
         <div class="absolute -right-5 -bottom-5 text-7xl opacity-15 select-none pointer-events-none">⭐</div>
-        <div class="absolute top-3 right-4 bg-amber-400 text-amber-950 font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1">
-          <span>⚠️</span> 關鍵任務
-        </div>
-
+        
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-amber-400/90 text-amber-950 flex items-center justify-center text-3xl shrink-0 shadow-md">
+          <div class="w-14 h-14 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center text-3xl shrink-0 shadow-md">
             📆
           </div>
           <div class="space-y-1.5 flex-1">
@@ -182,12 +181,12 @@
               </h2>
             </div>
             <p class="text-amber-900/90 text-sm sm:text-base leading-relaxed font-semibold">
-              根據 Google Play 最新官方個人開發者規定，<span class="bg-amber-200/90 text-amber-950 px-1.5 py-0.5 rounded-md underline decoration-amber-500 font-extrabold">必須持續擁有 20 位以上測試人員連續安裝達 14 天</span> 才能正式審核上架。
+              依據 Google Play 官方最新個人開發者發布規範，<span class="bg-amber-200 text-amber-950 px-1.5 py-0.5 rounded-md underline decoration-amber-500 font-black">需有至少 20 位測試夥伴連續安裝達 14 天</span> 方能正式審核上架。
             </p>
-            <div class="pt-1 flex flex-wrap items-center gap-2 text-xs font-bold text-amber-800">
-              <span class="bg-white/80 px-2.5 py-1 rounded-xl border border-amber-200">✅ 只要保持安裝不刪除</span>
-              <span class="bg-white/80 px-2.5 py-1 rounded-xl border border-amber-200">✅ 每天有空打開點一下即可</span>
-              <span class="bg-white/80 px-2.5 py-1 rounded-xl border border-amber-200">❤️ 實驗室好夥伴由您守護！</span>
+            <div class="pt-1 flex flex-wrap items-center gap-2 text-xs font-bold text-amber-900">
+              <span class="bg-white/90 px-3 py-1 rounded-xl border border-amber-200">✅ 只要保持安裝、不解除刪除</span>
+              <span class="bg-white/90 px-3 py-1 rounded-xl border border-amber-200">✅ 每天有空打開隨意點一下或算個數值</span>
+              <span class="bg-white/90 px-3 py-1 rounded-xl border border-amber-200">❤️ 感謝您協助實驗室專用工具順利誕生！</span>
             </div>
           </div>
         </div>
@@ -198,47 +197,50 @@
     <!-- 📱 App 截圖展示區塊 (Phone Mockup + 標籤選單) 📱 -->
     <!-- ============================================== -->
     <section class="mt-14 sm:mt-18">
-      <div class="text-center mb-7">
-        <span class="inline-block bg-sky-100 text-sky-700 text-xs font-extrabold px-3 py-1 rounded-full mb-1">
+      <div class="text-center mb-6">
+        <span class="inline-block bg-skysoft-100 text-skysoft-600 text-xs font-extrabold px-3 py-1 rounded-full mb-1">
           APP SCREENSHOTS PREVIEW
         </span>
         <h2 class="text-2xl sm:text-3xl font-black text-slate-800">搶先看 App 介面截圖</h2>
         <p class="text-xs sm:text-sm text-slate-500 mt-1">簡潔大字體、清晰卡片分組，戴手套也能輕鬆點選</p>
       </div>
 
-      <!-- 快速切換截圖 Tab 按鈕 -->
+      <!-- 截圖 Tab 切換按鈕（已解決 class 衝突問題） -->
       <div class="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-3 no-scrollbar text-xs font-bold">
-        <button onclick="switchScreen(0)" class="screen-tab px-4 py-2 rounded-2xl bg-emerald-500 text-white shadow-sm shrink-0 transition" data-index="0">
-          📋 溶液與分生主頁
+        <!-- Tab 0: 預設選中 (ACTIVE) -->
+        <button type="button" onclick="switchScreenshot(0)" class="screenshot-tab flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200 shrink-0 bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/25">
+          <span>📋</span> 溶液與分生主頁
         </button>
-        <button onclick="switchScreen(1)" class="screen-tab px-4 py-2 rounded-2xl bg-white border border-emerald-200 text-slate-600 hover:bg-emerald-50 shrink-0 transition" data-index="1">
-          🧬 細胞與鑄膠選單
+        <!-- Tab 1: 未選中 (INACTIVE) -->
+        <button type="button" onclick="switchScreenshot(1)" class="screenshot-tab flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200 shrink-0 bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300">
+          <span>🧬</span> 細胞與鑄膠選單
         </button>
-        <button onclick="switchScreen(2)" class="screen-tab px-4 py-2 rounded-2xl bg-white border border-emerald-200 text-slate-600 hover:bg-emerald-50 shrink-0 transition" data-index="2">
-          🐭 動物批量投藥計算
+        <!-- Tab 2: 未選中 (INACTIVE) -->
+        <button type="button" onclick="switchScreenshot(2)" class="screenshot-tab flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200 shrink-0 bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300">
+          <span>🐭</span> 動物批量投藥
         </button>
-        <button onclick="switchScreen(3)" class="screen-tab px-4 py-2 rounded-2xl bg-white border border-emerald-200 text-slate-600 hover:bg-emerald-50 shrink-0 transition" data-index="3">
-          ⚗️ 莫耳濃度換算
+        <!-- Tab 3: 未選中 (INACTIVE) -->
+        <button type="button" onclick="switchScreenshot(3)" class="screenshot-tab flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200 shrink-0 bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300">
+          <span>⚗️</span> 莫耳濃度換算
         </button>
-        <button onclick="switchScreen(4)" class="screen-tab px-4 py-2 rounded-2xl bg-white border border-emerald-200 text-slate-600 hover:bg-emerald-50 shrink-0 transition" data-index="4">
-          🔬 細胞計數與種植
+        <!-- Tab 4: 未選中 (INACTIVE) -->
+        <button type="button" onclick="switchScreenshot(4)" class="screenshot-tab flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold border transition-all duration-200 shrink-0 bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300">
+          <span>🔬</span> 細胞計數與種植
         </button>
       </div>
 
-      <!-- 手機外框 Mockup 展示 -->
+      <!-- 手機外框展示框 -->
       <div class="mt-4 flex flex-col items-center">
-        <div class="relative w-full max-w-[310px] sm:max-w-[340px] bg-slate-900 p-3.5 rounded-[46px] shadow-2xl border-4 border-slate-700 ring-8 ring-emerald-100">
-          <!-- 頂部聽筒與感應器打孔 -->
+        <div class="relative w-full max-w-[310px] sm:max-w-[340px] bg-slate-900 p-3.5 rounded-[46px] shadow-2xl border-4 border-slate-700 ring-8 ring-brand-100">
+          <!-- 頂部聽筒打孔 -->
           <div class="absolute top-5 left-1/2 -translate-x-1/2 w-20 h-4 bg-slate-800 rounded-full flex items-center justify-center z-20">
             <div class="w-2.5 h-2.5 rounded-full bg-slate-950"></div>
           </div>
 
-          <!-- 螢幕容器 -->
+          <!-- 螢幕視窗容器 -->
           <div class="relative rounded-[36px] overflow-hidden bg-slate-100 aspect-[9/19.5] shadow-inner flex flex-col justify-center items-center">
             
-            <!-- 5 張螢幕截圖主體 (使用本地相對路徑，並附帶優雅 fallback) -->
             <div id="screens-slider" class="w-full h-full relative">
-
               <!-- 截圖 1 -->
               <div class="screen-item absolute inset-0 transition-opacity duration-300 opacity-100 flex flex-col">
                 <img src="photo_1_2026-11-10_21-08-51.jpg" alt="科科計算器主選單-溶液與核酸" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/400x850/2563EB/ffffff?text=功能主選單+溶液+核酸';">
@@ -263,16 +265,15 @@
               <div class="screen-item absolute inset-0 transition-opacity duration-300 opacity-0 pointer-events-none flex flex-col">
                 <img src="photo_5_2026-11-10_21-08-51.jpg" alt="細胞計數種植計算" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/400x850/2563EB/ffffff?text=細胞計數與種植';">
               </div>
-
             </div>
 
-            <!-- 手機底端虛擬小橫條 Home Indicator -->
+            <!-- 底部 Home Indicator 虛擬橫條 -->
             <div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-300 rounded-full z-20 pointer-events-none"></div>
           </div>
         </div>
 
-        <!-- 截圖說明切換文字 -->
-        <div id="screen-caption" class="text-center mt-3 text-xs sm:text-sm font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-4 py-1.5 rounded-full">
+        <!-- 截圖說明動態切換欄 -->
+        <div id="screen-caption" class="text-center mt-3 text-xs sm:text-sm font-bold text-brand-800 bg-brand-50 border border-brand-200 px-4 py-1.5 rounded-full">
           💡 截圖 1/5：主選單一覽（莫耳濃度、C1V1稀釋、Primer Tm值、Ligation換算）
         </div>
       </div>
@@ -281,33 +282,33 @@
     <!-- 4 大核心特色 Grid -->
     <section class="mt-16 sm:mt-20">
       <div class="text-center mb-8">
-        <span class="inline-block bg-emerald-100 text-emerald-800 text-xs font-extrabold px-3 py-1 rounded-full mb-1">
+        <span class="inline-block bg-brand-100 text-brand-800 text-xs font-extrabold px-3 py-1 rounded-full mb-1">
           LAB ESSENTIALS
         </span>
-        <h2 class="text-2xl sm:text-3xl font-black text-slate-800">為什麼實驗室小夥伴都需要它？</h2>
-        <p class="text-xs sm:text-sm text-slate-500 mt-1">杜絕繁複的手算與公式查表失誤，讓做實驗變得更療癒</p>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-800">為什麼實驗室夥伴都需要它？</h2>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">杜絕繁複手算與查表失誤，把寶貴時間留給專注實驗</p>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <!-- Feature 1 -->
-        <div class="bg-white border-2 border-emerald-100 rounded-3xl p-5 hover:border-emerald-300 transition-all shadow-cute hover:shadow-cute-hover">
-          <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-3">
+        <div class="bg-white border-2 border-brand-100 rounded-3xl p-5 hover:border-brand-300 transition-all shadow-cute hover:shadow-cute-hover">
+          <div class="w-11 h-11 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl mb-3">
             📶
           </div>
           <h3 class="font-extrabold text-slate-800 text-base mb-1">100% 離線運作</h3>
           <p class="text-slate-500 text-xs sm:text-sm leading-relaxed font-medium">
-            無塵室、地下室暗房或深層低溫冷房訊號弱也不怕。完全不消耗網路流量，開啟極速隨時待命。
+            無塵室、地下室暗房或深層低溫冷房訊號弱也不怕。完全不耗手機流量，隨開即算。
           </p>
         </div>
 
         <!-- Feature 2 -->
-        <div class="bg-white border-2 border-sky-100 rounded-3xl p-5 hover:border-sky-300 transition-all shadow-cute hover:shadow-cute-hover">
-          <div class="w-11 h-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mb-3">
+        <div class="bg-white border-2 border-skysoft-100 rounded-3xl p-5 hover:border-skysoft-500 transition-all shadow-cute hover:shadow-cute-hover">
+          <div class="w-11 h-11 rounded-2xl bg-skysoft-50 text-skysoft-600 flex items-center justify-center text-2xl mb-3">
             🥽
           </div>
           <h3 class="font-extrabold text-slate-800 text-base mb-1">純淨無廣告干擾</h3>
           <p class="text-slate-500 text-xs sm:text-sm leading-relaxed font-medium">
-            戴著乳膠手套操作實驗時，最怕誤觸煩人的全螢幕彈跳廣告！介面極簡乾淨，計算絕不分心。
+            戴著手套操作時，最怕誤觸煩人的全螢幕彈跳廣告！介面乾淨純粹，計算絕不分心。
           </p>
         </div>
 
@@ -316,9 +317,9 @@
           <div class="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-3">
             🌐
           </div>
-          <h3 class="font-extrabold text-slate-800 text-base mb-1">中英雙語一鍵切換</h3>
+          <h3 class="font-extrabold text-slate-800 text-base mb-1">繁中 / 英文一鍵切換</h3>
           <p class="text-slate-500 text-xs sm:text-sm leading-relaxed font-medium">
-            全畫面支援繁體中文與流暢英文，不管是跨國實驗室、外籍研究生或國際生發表交流都無障礙。
+            支援繁體中文與流暢英文，便於跨國實驗室、外籍研究生或國際生交流使用。
           </p>
         </div>
 
@@ -329,7 +330,7 @@
           </div>
           <h3 class="font-extrabold text-slate-800 text-base mb-1">15 項核心實驗計算</h3>
           <p class="text-slate-500 text-xs sm:text-sm leading-relaxed font-medium">
-            Molarity 莫耳濃度、C1V1 稀釋、PCR 引子回溶與 Tm 計算、血球計數繼代、TGX/SDS 鑄膠及動物等效劑量一應俱全。
+            Molarity 莫耳濃度、C1V1 稀釋、PCR 引子回溶與 Tm 計算、血球計數盤、SDS 鑄膠及動物投藥劑量全方位整合。
           </p>
         </div>
       </div>
@@ -341,21 +342,21 @@
     <section id="test-guide" class="mt-16 sm:mt-24 scroll-mt-20">
       
       <div class="text-center mb-6">
-        <span class="inline-block bg-emerald-100 text-emerald-800 text-xs font-extrabold px-3 py-1 rounded-full mb-1">
+        <span class="inline-block bg-brand-100 text-brand-800 text-xs font-extrabold px-3 py-1 rounded-full mb-1">
           STEP-BY-STEP
         </span>
         <h2 class="text-2xl sm:text-3xl font-black text-slate-800">Android 封測安裝 3 步驟</h2>
         <p class="text-slate-500 text-xs sm:text-sm mt-1">
-          請務必照著 <strong class="text-emerald-600 font-extrabold">第 1 ➜ 第 2 ➜ 第 3 步</strong> 依序完成喔！
+          請務必嚴格依順序：<strong class="text-brand-600 font-extrabold">第 1 ➜ 第 2 ➜ 第 3 步</strong> 操作！
         </p>
       </div>
 
-      <!-- 核心前置提示：同一帳號提示 -->
+      <!-- 防踩雷帳號提醒 -->
       <div class="p-4 sm:p-5 rounded-3xl bg-amber-50 border-2 border-amber-200 text-amber-950 mb-7 flex items-start gap-3.5 shadow-sm">
         <span class="text-2xl shrink-0 mt-0.5">💡</span>
         <div class="text-xs sm:text-sm leading-relaxed font-medium">
-          <strong class="font-black text-amber-900 block text-sm sm:text-base mb-0.5">防踩雷提醒（最重要）：</strong>
-          三個步驟請確認都使用您手機 Google Play 商店中登入的<span class="underline font-black text-amber-900 bg-amber-100 px-1 rounded">「同一組 Google 帳號」</span>點選！若切換到其他帳號會顯示權限不足或找不到應用程式。
+          <strong class="font-black text-amber-900 block text-sm sm:text-base mb-0.5">關鍵防踩雷注意事項：</strong>
+          三個步驟請務必使用手機 Google Play 商店<span class="underline font-black text-amber-900 bg-amber-100 px-1 rounded">「同一組 Google 帳號」</span>操作。若切換到其他帳號會顯示「找不到項目」或權限不足！
         </div>
       </div>
 
@@ -363,20 +364,20 @@
       <div class="space-y-4">
 
         <!-- STEP 1 -->
-        <div class="p-5 sm:p-6 rounded-3xl bg-white border-2 border-emerald-100 shadow-cute hover:border-emerald-300 transition relative">
+        <div class="p-5 sm:p-6 rounded-3xl bg-white border-2 border-brand-100 shadow-cute hover:border-brand-300 transition relative">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1.5">
               <div class="flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-2xl bg-emerald-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-emerald-200">1</span>
+                <span class="w-8 h-8 rounded-2xl bg-brand-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-brand-200">1</span>
                 <h3 class="text-base sm:text-lg font-black text-slate-800">加入測試者群組 (Google Groups)</h3>
               </div>
               <p class="text-slate-600 text-xs sm:text-sm leading-relaxed pl-10 font-medium">
-                點擊下方群組連結並登入您的 Google 帳號，按「加入群組」。加入後才擁有 Google Play 的封測白名單資格。
+                此步驟最為關鍵！點擊下方群組連結並登入您的 Google 帳號，按「加入群組」。加入後才擁有 Google Play 的封測白名單資格。
               </p>
             </div>
             <div class="sm:shrink-0 pl-10 sm:pl-0">
               <a href="https://groups.google.com/g/kkbiocalculator/about" target="_blank" rel="noopener noreferrer"
-                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-200 transition-all">
+                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-brand-200 transition-all">
                 <span>1. 立即加入群組</span>
                 <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
               </a>
@@ -385,11 +386,11 @@
         </div>
 
         <!-- STEP 2 -->
-        <div class="p-5 sm:p-6 rounded-3xl bg-white border-2 border-sky-100 shadow-cute hover:border-sky-300 transition relative">
+        <div class="p-5 sm:p-6 rounded-3xl bg-white border-2 border-skysoft-100 shadow-cute hover:border-skysoft-500 transition relative">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1.5">
               <div class="flex items-center gap-2.5">
-                <span class="w-8 h-8 rounded-2xl bg-sky-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-sky-200">2</span>
+                <span class="w-8 h-8 rounded-2xl bg-skysoft-500 text-white font-black flex items-center justify-center text-sm shadow-md shadow-skysoft-100">2</span>
                 <h3 class="text-base sm:text-lg font-black text-slate-800">點擊「成為測試人員」 (Web Opt-in)</h3>
               </div>
               <p class="text-slate-600 text-xs sm:text-sm leading-relaxed pl-10 font-medium">
@@ -398,7 +399,7 @@
             </div>
             <div class="sm:shrink-0 pl-10 sm:pl-0">
               <a href="https://play.google.com/apps/testing/com.kkbiocalculator.app" target="_blank" rel="noopener noreferrer"
-                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-sky-200 transition-all">
+                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-skysoft-500 hover:bg-skysoft-600 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-skysoft-100 transition-all">
                 <span>2. 登記為測試人員</span>
                 <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
               </a>
@@ -406,7 +407,7 @@
           </div>
         </div>
 
-        <!-- STEP 3 (含超醒目畫重點提示) -->
+        <!-- STEP 3 (含超醒目延遲排錯提醒) -->
         <div class="p-5 sm:p-6 rounded-3xl bg-white border-2 border-teal-100 shadow-cute hover:border-teal-300 transition relative">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1.5">
@@ -420,7 +421,7 @@
             </div>
             <div class="sm:shrink-0 pl-10 sm:pl-0">
               <a href="https://play.google.com/store/apps/details?id=com.kkbiocalculator.app" target="_blank" rel="noopener noreferrer"
-                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-200 transition-all">
+                 class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-500 to-teal-500 hover:opacity-95 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-brand-200 transition-all">
                 <span>3. 下載安裝 App</span>
                 <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
               </a>
@@ -430,21 +431,21 @@
           <!-- ============================================== -->
           <!-- 🔥 強調重點 2：第三步驟「找不到應用程式」排錯提示 🔥 -->
           <!-- ============================================== -->
-          <div class="mt-5 p-4 sm:p-4.5 rounded-2xl bg-amber-50/90 border-2 border-amber-400 text-amber-950 shadow-sm relative overflow-hidden">
+          <div class="mt-5 p-4 sm:p-5 rounded-2xl bg-amber-50/95 border-2 border-amber-400 text-amber-950 shadow-sm relative overflow-hidden">
             <div class="flex items-start gap-3">
-              <div class="w-7 h-7 rounded-xl bg-amber-400 text-amber-950 font-black flex items-center justify-center text-sm shrink-0 mt-0.5 shadow-sm">
+              <div class="w-8 h-8 rounded-xl bg-amber-400 text-amber-950 font-black flex items-center justify-center text-base shrink-0 mt-0.5 shadow-sm">
                 ⚡
               </div>
               <div class="space-y-1 text-xs sm:text-sm">
-                <div class="flex items-center gap-1.5">
-                  <span class="bg-rose-500 text-white font-extrabold text-[11px] px-2 py-0.5 rounded-full badge-urgent">重要排錯必看</span>
-                  <strong class="font-black text-amber-950 text-sm">若此步驟顯示「找不到應用程式」該怎麼辦？</strong>
+                <div class="flex items-center gap-2">
+                  <span class="bg-rose-500 text-white font-black text-[11px] px-2.5 py-0.5 rounded-full pulse-urgent">重要排錯必看</span>
+                  <strong class="font-black text-amber-950 text-sm sm:text-base">若此步驟顯示「找不到應用程式」該怎麼辦？</strong>
                 </div>
-                <p class="leading-relaxed font-bold text-amber-900">
-                  若此步驟開啟顯示<span class="bg-yellow-200 px-1.5 py-0.5 rounded text-amber-950 underline decoration-amber-600 font-black">「找不到應用程式」</span>，通常為 <span class="text-rose-700 font-extrabold">Google 伺服器群組權限同步延遲</span>。
+                <p class="leading-relaxed font-bold text-amber-900 pt-0.5">
+                  若此步驟開啟顯示<span class="bg-yellow-200 px-1.5 py-0.5 rounded text-amber-950 underline decoration-amber-600 font-black">「找不到應用程式」</span>，通常為 <span class="text-rose-700 font-black">Google 伺服器群組權限同步延遲</span>。
                 </p>
-                <p class="leading-relaxed text-amber-900/90 font-medium">
-                  👉 請先確認前兩步已順利完成，並<strong class="bg-white/80 px-1 py-0.5 rounded text-amber-950 font-black">稍等幾分鐘至數小時再次點開</strong>即可正常進入商店下載！
+                <p class="leading-relaxed text-amber-900 font-semibold">
+                  👉 請先確認前兩步已順利完成，並<strong class="bg-white px-2 py-0.5 rounded text-amber-950 font-black border border-amber-300">稍等幾分鐘至數小時再次點開</strong>即可正常進入商店下載！
                 </p>
               </div>
             </div>
@@ -457,19 +458,19 @@
 
     <!-- 交流與協助說明小卡 -->
     <section class="mt-14 sm:mt-18">
-      <div class="p-6 sm:p-7 rounded-3xl bg-white border-2 border-emerald-100 shadow-cute">
+      <div class="p-6 sm:p-7 rounded-3xl bg-white border-2 border-brand-100 shadow-cute">
         <div class="flex flex-col md:flex-row gap-6">
           <div class="space-y-2 flex-1">
-            <div class="inline-flex items-center gap-1.5 text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+            <div class="inline-flex items-center gap-1.5 text-xs font-black text-brand-700 bg-brand-50 px-2.5 py-1 rounded-full">
               <span>💌</span> 意見回饋與新功能敲碗
             </div>
             <h3 class="text-lg font-black text-slate-800">歡迎隨時回報 Bug 或新增計算算式</h3>
             <p class="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-              您在實驗室中最常遇到哪些手算痛點？若有任何算式誤差、單位換算需求或想要新增的分子生物計算，隨時歡迎直接回報，我們一起把工具打磨成實驗好幫手！
+              您在實驗室中最常遇到哪些手算痛點？若有任何算式誤差、操作不順手或想要增加的功能，隨時歡迎直接回報與建議，我們一起把工具打磨到最好！
             </p>
           </div>
           <div class="flex flex-col justify-center shrink-0">
-            <button onclick="copyShareText()" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-200 transition flex items-center justify-center gap-2">
+            <button onclick="copyShareText()" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-brand-200 transition flex items-center justify-center gap-2">
               <span>一鍵複製邀請文案（轉傳 LINE / 群組）</span>
               <span>🔗</span>
             </button>
@@ -481,7 +482,7 @@
   </main>
 
   <!-- 頁尾 -->
-  <footer class="border-t-2 border-emerald-50 bg-white py-8 text-center text-xs text-slate-400">
+  <footer class="border-t-2 border-brand-50 bg-white py-8 text-center text-xs text-slate-400">
     <div class="max-w-4xl mx-auto px-4 space-y-1 font-medium">
       <p class="text-slate-600 font-bold">🧪 科科計算器 BioCalculator • 陪伴實驗台的安心小工具</p>
       <p>專為生命科學、生化分生、細胞房與動物實驗設計 • 內部封閉測試中</p>
@@ -494,7 +495,7 @@
     <span id="toast-msg">已成功複製招募說明！</span>
   </div>
 
-  <!-- JavaScript 交互邏輯 -->
+  <!-- JavaScript 交互邏輯 (徹底解決 Tab 切換 class 衝突) -->
   <script>
     // 截圖切換說明清單
     const screenCaptions = [
@@ -505,12 +506,17 @@
       "💡 截圖 5/5：白血球/細胞計數與種植（血球計數盤格數、稀釋倍數精確計算）"
     ];
 
+    // 核心樣式常數定義：徹底隔離 Active 與 Inactive 樣式
+    const ACTIVE_CLASSES = ['bg-brand-500', 'text-white', 'border-brand-500', 'shadow-md', 'shadow-brand-500/25'];
+    const INACTIVE_CLASSES = ['bg-white', 'text-slate-600', 'border-slate-200', 'hover:bg-slate-50', 'hover:border-slate-300'];
+
     // 切換截圖邏輯
-    function switchScreen(index) {
+    function switchScreenshot(index) {
       const items = document.querySelectorAll('.screen-item');
-      const tabs = document.querySelectorAll('.screen-tab');
+      const tabs = document.querySelectorAll('.screenshot-tab');
       const caption = document.getElementById('screen-caption');
 
+      // 1. 切換截圖淡入淡出
       items.forEach((item, i) => {
         if (i === index) {
           item.classList.remove('opacity-0', 'pointer-events-none');
@@ -521,26 +527,28 @@
         }
       });
 
+      // 2. 切換按鈕狀態（完全清除未選中 class，賦予選中 class，防止白字在淺色背景上看不見）
       tabs.forEach((tab, i) => {
         if (i === index) {
-          tab.classList.remove('bg-white', 'text-slate-600', 'border', 'border-emerald-200');
-          tab.classList.add('bg-emerald-500', 'text-white');
+          tab.classList.remove(...INACTIVE_CLASSES);
+          tab.classList.add(...ACTIVE_CLASSES);
         } else {
-          tab.classList.remove('bg-emerald-500', 'text-white');
-          tab.classList.add('bg-white', 'text-slate-600', 'border', 'border-emerald-200');
+          tab.classList.remove(...ACTIVE_CLASSES);
+          tab.classList.add(...INACTIVE_CLASSES);
         }
       });
 
+      // 3. 更新下方提示文字
       if (caption) {
         caption.textContent = screenCaptions[index];
       }
     }
 
-    // 複製招募文字到剪貼簿 (相容 iframe 與安全策略)
+    // 複製招募文字到剪貼簿 (相容 iframe / 手機瀏覽器)
     function copyShareText() {
       const shareContent = `【科科計算器 BioCalculator】Android 封閉測試招募中 🧪✨
 專為生命科學、分生生化、細胞培養與動物實驗打造的隨身計算神器！
-100% 離線運作、零廣告干擾、中英雙語切換、內建 15+ 常用計算。
+100% 離線運作、零跳出廣告、中英雙語切換、內建 15+ 常用計算。
 
 👉 Android 封測加入 3 步驟（請依順序）：
 1. 先加入測試群組 (取得資格)：
@@ -553,8 +561,8 @@ https://play.google.com/apps/testing/com.kkbiocalculator.app
 https://play.google.com/store/apps/details?id=com.kkbiocalculator.app
 
 ⭐【重要封測任務】：
-根據 Google Play 規定，需 20 人連續保留 14 天才能正式上架。
-安裝後請協助保留 14 天不解除安裝，每天有空打開點一下即可，感謝您的幫忙！❤️`;
+根據 Google Play 規定，需 20 人連續保留 14 天才能正式審核上架。
+安裝後請協助保留 14 天不要解除安裝，每天有空打開點一下即可，非常感謝您的幫忙！❤️`;
 
       const tempTextArea = document.createElement("textarea");
       tempTextArea.value = shareContent;
@@ -562,14 +570,14 @@ https://play.google.com/store/apps/details?id=com.kkbiocalculator.app
       tempTextArea.select();
       try {
         document.execCommand('copy');
-        showToast("已成功複製招募說明！可直接貼到 LINE、微信或實驗室群組囉 🎉");
+        showToast("已成功複製招募說明！可直接貼到 LINE、微信或實驗室群組 🎉");
       } catch (err) {
         showToast("複製失敗，請手動複製文字與連結");
       }
       document.body.removeChild(tempTextArea);
     }
 
-    // Toast 顯示小幫手
+    // Toast 浮動提示
     function showToast(message) {
       const toast = document.getElementById("toast");
       const toastMsg = document.getElementById("toast-msg");
